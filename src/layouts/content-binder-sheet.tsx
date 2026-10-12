@@ -3,14 +3,16 @@ import type { SvgTemplateProps } from "./types"
 import { SvgContent } from "../render/svg-content"
 import { stepAside } from "../render/step-aside"
 import { compose, type CompositionId } from "./compositions"
-import { BINDER_BODY_TOP, BINDER_HEAD_FIT, BinderHead, BinderSource, BinderStandfirst, binderBodyRect, fitBinderSource, fitBinderStandfirst } from "./binder-shared"
+import { resolveDeckFooter } from "../render/footer-marks"
+import { BINDER_BODY_TOP, BINDER_HEAD_FIT, BinderHead, BinderSource, BinderStandfirst, binderBodyRect, binderSourcePlace, fitBinderSource, fitBinderStandfirst } from "./binder-shared"
 
 /*
- * binder-sheet: proposal's ordinary content page, drawn to its 2026-10 board.
- * One frame on every content page (the binder's tabs down the right edge
- * with the page's stage lit, the claim bold in petrol, `BinderHead`, and the
- * 12px source at the foot; the deck's label and the folio are the motif's),
- * and between them the body: one of the shared compositions in the binder
+ * binder-sheet: proposal's ordinary content page, drawn to its 2026-10 print
+ * board. One frame on every content page (the running head with the part of
+ * the deck the page sits in at its right and a hairline under it, the claim
+ * bold in petrol across the measure, `BinderHead`, and the 11px source at
+ * the left of the foot; the deck's label and the folio are the motif's), and
+ * between them the body: one of the shared compositions in the binder
  * setting (`BINDER_COMPOSITIONS`) when the content has a shape the board
  * drew, or the ordinary component renderer in the same band. A page the band
  * cannot hold steps aside.
@@ -35,8 +37,10 @@ export const BINDER_COMPOSITIONS: readonly CompositionId[] = [
   "papers",
 ]
 
-export function BinderSheetContent({ ir, slide, ctx }: SvgTemplateProps) {
-  const source = fitBinderSource(slide, ctx)
+export function BinderSheetContent({ ir, slide, ctx, page, index }: SvgTemplateProps) {
+  // The source takes the left of the folio row, short of the marks the motif prints at its right.
+  const place = binderSourcePlace({ footer: page?.footer ?? resolveDeckFooter(ir), folio: index + 1, drawn: page ? page.footerRow === "motif" : true }, ctx)
+  const source = fitBinderSource(slide, ctx, place.w)
   const standfirst = fitBinderStandfirst(slide, ctx)
   const rect = binderBodyRect(source !== null, BINDER_BODY_TOP + (standfirst?.h ?? 0))
   const composed = compose({ components: slide.components, ctx, rect, setting: "binder" }, BINDER_COMPOSITIONS)
@@ -49,7 +53,7 @@ export function BinderSheetContent({ ir, slide, ctx }: SvgTemplateProps) {
       <BinderHead ir={ir} slide={slide} ctx={ctx} />
       <BinderStandfirst standfirst={standfirst} ctx={ctx} />
       {composed ?? <SvgContent components={slide.components} rect={rect} ctx={ctx} />}
-      <BinderSource source={source} ctx={ctx} />
+      <BinderSource source={source} ctx={ctx} lastBaseline={place.lastBaseline} />
     </>
   )
 }
@@ -66,7 +70,7 @@ export const layoutDef = {
   story: {
     name: "Binder Sheet",
     story:
-      "Each page is a leaf of a proposal binder, its section's tab sticking out at the right. The claim stands in petrol at the top, the case on white paper in sand cards and petrol figures, with one brick-red mark on what the page lands on.",
+      "Each page is a printed leaf of a proposal: a running head naming the part it sits in, the claim in petrol across the page, the case on white paper in ruled tables and petrol figures, with one brick-red mark on what the page lands on.",
     positioning:
       "Serves every content kind in one proposal grammar. Choose it for a proposal a client's management reads section by section, where every page should say what the client gets, what it costs and what has to be decided.",
     audience: "A client's management weighing a proposal: the owner, the plant manager, the finance lead.",

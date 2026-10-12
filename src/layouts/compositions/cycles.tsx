@@ -1,25 +1,26 @@
 import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { Lead, binderInks, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderCard, paintBinderIcon, paintBinderLine, paintChip, splitDot, splitName } from "./binder"
+import { binderInks, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderIcon, paintBinderLine, splitDot, splitName } from "./binder"
+import { BinderPlainLine, fitPlainLine, noteHeight } from "./binder-bars"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
 
 /*
  * cycles: what a store of energy earns a day, worked out place by place,
- * proposal's 2026-10 board (p08). Over the cards the formula on a bar of the
- * pale petrol, bold in petrol, with what it rests on as a white chip at the
- * right (the callout's tag). A card a place: its name at 20px in petrol, the
- * comparison's title at its right in small grey (the unit every card reads
- * in), then a line a cycle: the cycle's name as a white chip, what it buys at
- * and sells at with an arrow between, what it earns at the right in petrol;
- * a hairline; the marked row's label in small grey, after it the part of the
- * figure's cell after a " · " (「1111.3 元 · 未计尖峰」), and the day's figure at
- * 44px in petrol; at the right
- * the last row's label and its range bold. Under the cards, the warning in a
- * box outlined in the brick red, its icon in the brick red too, its title
- * bold and its text grey.
+ * proposal's 2026-10 print board (p08). Over the columns the formula bold
+ * in petrol with what it rests on in small grey at the right (the callout's
+ * tag), a hairline under both. A column a place, parted by a hairline: its
+ * name at 20px in petrol, the comparison's title at its right in small grey
+ * (the unit every column reads in), then a line a cycle: the cycle's name in
+ * small grey, what it buys at and sells at with an arrow between, what it
+ * earns at the right in petrol; a hairline; the marked row's label in small
+ * grey, after it the part of the figure's cell after a " · " (「1111.3 元 ·
+ * 未计尖峰」), and the day's figure at 44px in petrol; at the right the last
+ * row's label and its range bold. Under the columns, the warning as a line:
+ * its icon and its title in the brick red, the one thing the page lights,
+ * and its text after them.
  *
  * A cycle's cell is written "buy → sell：earns" (「谷 0.3828 → 峰 0.9566：514.1
  * 元」). The arrow is drawn, and the colon declared on the line it ends
@@ -31,15 +32,15 @@ type Callout = Extract<Component, { type: "callout" }>
  * that way, then the marked row and one labelled row (the year); then a
  * `callout` with a title and no tag.
  *
- * Declines: a formula or a chip past the bar, a name, cycle, figure or range
- * past its card, and a warning past one line.
+ * Declines: a formula and its source past the line, a name, cycle, figure or
+ * range past its column, and a warning past two lines.
  *
  * Reads: the binder inks (`./binder.tsx`).
  */
 
-const FORMULA = { top: 4, h: 52, padLeft: 24, size: 18, chip: { right: 54, h: 24, size: 12 } } as const
-const CARD = { top: 72, gap: 16, h: 280, pad: 28, name: { top: 18, size: 20, lineHeight: 30 }, unit: { top: 24, size: 12, lineHeight: 20, w: 200 }, cycles: { top: 62, step: 44, chip: { dy: 4, h: 24, size: 12 }, from: { dx: 82 }, arrow: { dx: 182, dy: 7, size: 18 }, to: { dx: 212 }, size: 15, lineHeight: 32, value: { size: 18 } }, rule: 10, day: { label: { size: 13, lineHeight: 20 }, figure: { dy: 22, size: 44, lineHeight: 56 }, year: { dy: 30, size: 20, lineHeight: 32 }, rightW: 230 } } as const
-const WARN = { gap: 16, h: 72, border: 2, icon: { x: 24, y: 22, size: 24 }, textX: 62, title: { top: 12, size: 16, lineHeight: 24 }, text: { top: 38, size: 14, lineHeight: 24 } } as const
+const FORMULA = { top: 0, lineHeight: 36, size: 18, tag: { size: 13 }, rule: 44 } as const
+const COL = { top: 64, pad: 28, h: 268, name: { top: 10, size: 20, lineHeight: 30 }, unit: { top: 16, size: 12, lineHeight: 20, w: 200 }, cycles: { top: 54, step: 44, name: { size: 13 }, from: { dx: 82 }, arrow: { dx: 182, dy: 7, size: 18 }, to: { dx: 212 }, size: 15, lineHeight: 32, value: { size: 18 } }, rule: 10, day: { label: { size: 13, lineHeight: 20 }, figure: { dy: 22, size: 44, lineHeight: 56 }, year: { dy: 30, size: 20, lineHeight: 32 }, rightW: 230 } } as const
+const WARN = { gap: 24 } as const
 
 interface Cycle {
   name: string
@@ -75,102 +76,93 @@ export const cyclesComposition: Composition = ({ components, ctx, rect, setting 
   const cycleRows = c.rows.slice(0, marked)
   if (cycleRows.some((r) => !r.label.trim())) return null
   const inks = binderInks(ctx)
-  const w = (rect.w - CARD.gap) / 2
-  const inner = w - CARD.pad * 2
-  const bottom = CARD.top + CARD.h + WARN.gap + WARN.h
-  if (rect.w < 1132 || rect.h < bottom) return null
+  const w = rect.w / 2
+  const inner = w - COL.pad
 
-  // The formula bar: the formula bold in petrol, the tag a white chip at the right.
+  // The formula bold in petrol, what it rests on in small grey at the right.
   const tagText = f.tag!.text.trim()
-  const chipW = binderWidth(tagText, FORMULA.chip.size, ctx, true) + 22
-  const formulaLine = fitBinder(f.text, { width: rect.w - FORMULA.padLeft - FORMULA.chip.right - chipW - 16, size: FORMULA.size, lineHeight: FORMULA.h, maxLines: 1, bold: true }, ctx)
+  const tagW = binderWidth(tagText, FORMULA.tag.size, ctx)
+  const formulaLine = fitBinder(f.text, { width: rect.w - tagW - 24, size: FORMULA.size, lineHeight: FORMULA.lineHeight, maxLines: 1, bold: true }, ctx)
   if (!formulaLine) return null
 
-  const cards = c.columns.map((name, i) => {
-    const title = fitBinder(name, { width: inner - CARD.unit.w - 8, size: CARD.name.size, lineHeight: CARD.name.lineHeight, maxLines: 1, bold: true }, ctx)
-    const unit = fitBinder(c.title!, { width: CARD.unit.w, size: CARD.unit.size, lineHeight: CARD.unit.lineHeight, maxLines: 1 }, ctx)
+  const cols = c.columns.map((name, i) => {
+    const title = fitBinder(name, { width: inner - COL.unit.w - 8, size: COL.name.size, lineHeight: COL.name.lineHeight, maxLines: 1, bold: true }, ctx)
+    const unit = fitBinder(c.title!, { width: COL.unit.w, size: COL.unit.size, lineHeight: COL.unit.lineHeight, maxLines: 1 }, ctx)
     const cycles = cycleRows.map((r) => readCycle(r.label.trim(), r.cells[i] ?? ""))
     if (!title || !unit || cycles.some((cy) => !cy)) return null
     for (const cy of cycles) {
-      const chipRoom = binderWidth(cy!.name, CARD.cycles.chip.size, ctx, true) + 22
-      if (chipRoom > CARD.cycles.from.dx - 6) return null
-      if (binderWidth(cy!.from, CARD.cycles.size, ctx, true) > CARD.cycles.arrow.dx - CARD.cycles.from.dx - 6) return null
-      const toW = binderWidth(cy!.to, CARD.cycles.size, ctx, true)
-      const valueW = binderWidth(cy!.value, CARD.cycles.value.size, ctx, true)
-      if (CARD.cycles.to.dx + toW + 12 + valueW > inner) return null
+      if (binderWidth(cy!.name, COL.cycles.name.size, ctx) > COL.cycles.from.dx - 8) return null
+      if (binderWidth(cy!.from, COL.cycles.size, ctx, true) > COL.cycles.arrow.dx - COL.cycles.from.dx - 6) return null
+      const toW = binderWidth(cy!.to, COL.cycles.size, ctx, true)
+      const valueW = binderWidth(cy!.value, COL.cycles.value.size, ctx, true)
+      if (COL.cycles.to.dx + toW + 12 + valueW > inner) return null
     }
     // A day's figure may carry a note after a " · ", which joins the row's label.
     const cell = (c.rows[marked]!.cells[i] ?? "").trim()
     const parts = splitDot(cell)
     const note = parts?.rest ?? ""
     const dayLabel = note ? `${c.rows[marked]!.label.trim()} · ${note}` : c.rows[marked]!.label.trim()
-    const label = fitBinder(dayLabel, { width: inner - CARD.day.rightW - 8, size: CARD.day.label.size, lineHeight: CARD.day.label.lineHeight, maxLines: 1, bold: true }, ctx)
-    const yearLabel = fitBinder(year.label, { width: CARD.day.rightW, size: CARD.day.label.size, lineHeight: CARD.day.label.lineHeight, maxLines: 1, bold: true }, ctx)
-    const yearValue = fitBinder(year.cells[i] ?? "", { width: CARD.day.rightW, size: CARD.day.year.size, lineHeight: CARD.day.year.lineHeight, maxLines: 1, bold: true }, ctx)
+    const label = fitBinder(dayLabel, { width: inner - COL.day.rightW - 8, size: COL.day.label.size, lineHeight: COL.day.label.lineHeight, maxLines: 1, bold: true }, ctx)
+    const yearLabel = fitBinder(year.label, { width: COL.day.rightW, size: COL.day.label.size, lineHeight: COL.day.label.lineHeight, maxLines: 1, bold: true }, ctx)
+    const yearValue = fitBinder(year.cells[i] ?? "", { width: COL.day.rightW, size: COL.day.year.size, lineHeight: COL.day.year.lineHeight, maxLines: 1, bold: true }, ctx)
     if (!yearLabel || !yearValue) return null
     // The day's figure may run on to the year's figure under it at the right.
-    const yearW = Math.max(binderWidth(year.label, CARD.day.label.size, ctx, true), binderWidth(year.cells[i] ?? "", CARD.day.year.size, ctx, true))
-    const figure = fitBinder(stripEmphasis(parts ? parts.name : cell), { width: inner - yearW - 16, size: CARD.day.figure.size, lineHeight: CARD.day.figure.lineHeight, maxLines: 1, bold: true }, ctx)
+    const yearW = Math.max(binderWidth(year.label, COL.day.label.size, ctx, true), binderWidth(year.cells[i] ?? "", COL.day.year.size, ctx, true))
+    const figure = fitBinder(stripEmphasis(parts ? parts.name : cell), { width: inner - yearW - 16, size: COL.day.figure.size, lineHeight: COL.day.figure.lineHeight, maxLines: 1, bold: true }, ctx)
     if (!label || !figure) return null
     return { title, unit, cycles: cycles.map((cy) => cy!), label, note, figure, yearLabel, yearValue }
   })
-  if (cards.some((card) => !card)) return null
+  if (cols.some((col) => !col)) return null
 
-  const warnTitle = fitBinder(wn.title!, { width: rect.w - WARN.textX - 24, size: WARN.title.size, lineHeight: WARN.title.lineHeight, maxLines: 1, bold: true }, ctx)
-  const warnText = fitBinder(wn.text, { width: rect.w - WARN.textX - 16, size: WARN.text.size, lineHeight: WARN.text.lineHeight, maxLines: 1 }, ctx)
-  if (!warnTitle || !warnText) return null
-  const ruleY = CARD.cycles.top + cycleRows.length * CARD.cycles.step + CARD.rule
-  const warnTop = rect.y + CARD.top + CARD.h + WARN.gap
+  const warn = fitPlainLine(wn, rect.w, ctx, 2)
+  if (!warn) return null
+  const ruleY = COL.cycles.top + cycleRows.length * COL.cycles.step + COL.rule
+  const warnTop = rect.y + COL.top + COL.h + WARN.gap
+  if (COL.top + COL.h + WARN.gap + noteHeight(warn) > rect.h) return null
 
   return (
     <g {...compositionTag("cycles")}>
       <g {...blockTag(ctx, f)} data-binder-formula-bar="">
-        <rect x={rect.x} y={rect.y + FORMULA.top} width={rect.w} height={FORMULA.h} rx={10} fill={inks.pale} />
-        {paintBinder(formulaLine, { ctx, x: rect.x + FORMULA.padLeft, top: rect.y + FORMULA.top, bold: true, fill: binderText(inks.deep, inks.pale, FORMULA.size), ground: inks.pale })}
-        {paintChip(tagText, rect.x + rect.w - FORMULA.chip.right - chipW, rect.y + FORMULA.top + (FORMULA.h - FORMULA.chip.h) / 2, { size: FORMULA.chip.size, h: FORMULA.chip.h, fg: inks.deep, bg: inks.ground }, ctx, inks).node}
+        {paintBinder(formulaLine, { ctx, x: rect.x, top: rect.y + FORMULA.top, bold: true, fill: binderText(inks.deep, inks.ground, FORMULA.size) })}
+        {paintBinderLine(tagText, { ctx, x: rect.x + rect.w, top: rect.y + FORMULA.top, lineHeight: FORMULA.lineHeight, size: FORMULA.tag.size, anchor: "end", fill: binderText(inks.muted, inks.ground, FORMULA.tag.size) })}
+        <rect x={rect.x} y={rect.y + FORMULA.rule} width={rect.w} height={1} fill={inks.line} />
       </g>
       <g {...blockTag(ctx, c)}>
-        {cards.map((card, i) => {
-          const { title, unit, cycles, label, figure, yearLabel, yearValue } = card!
-          const x = rect.x + i * (w + CARD.gap)
-          const y = rect.y + CARD.top
-          const tx = x + CARD.pad
-          const right = x + w - CARD.pad
+        {cols.map((col, i) => {
+          const { title, unit, cycles, label, figure, yearLabel, yearValue } = col!
+          const x = rect.x + i * w
+          const y = rect.y + COL.top
+          const tx = x + (i === 0 ? 0 : COL.pad)
+          const right = tx + inner
           return (
             <g key={i} data-binder-cycles={stripEmphasis(c.columns[i]!)}>
-              {paintBinderCard({ x, y, w, h: CARD.h }, inks)}
-              {paintBinder(title, { ctx, x: tx, top: y + CARD.name.top, bold: true, fill: binderText(inks.deep, inks.card, CARD.name.size), ground: inks.card })}
-              {paintBinder(unit, { ctx, x: right, top: y + CARD.unit.top, anchor: "end", fill: binderText(inks.muted, inks.card, CARD.unit.size), ground: inks.card })}
+              {i > 0 ? <rect x={x} y={y} width={1} height={COL.h} fill={inks.line} /> : null}
+              {paintBinder(title, { ctx, x: tx, top: y + COL.name.top, bold: true, fill: binderText(inks.deep, inks.ground, COL.name.size) })}
+              {paintBinder(unit, { ctx, x: right, top: y + COL.unit.top, anchor: "end", fill: binderText(inks.muted, inks.ground, COL.unit.size) })}
               {cycles.map((cy, j) => {
-                const top = y + CARD.cycles.top + j * CARD.cycles.step
-                const ink = binderText(inks.ink, inks.card, CARD.cycles.size)
+                const top = y + COL.cycles.top + j * COL.cycles.step
+                const ink = binderText(inks.ink, inks.ground, COL.cycles.size)
                 return (
                   <g key={j} data-binder-cycle={cy.name}>
-                    {paintChip(cy.name, tx, top + CARD.cycles.chip.dy, { size: CARD.cycles.chip.size, h: CARD.cycles.chip.h, fg: inks.muted, bg: inks.ground }, ctx, inks).node}
-                    {paintBinderLine(cy.from, { ctx, x: tx + CARD.cycles.from.dx, top, lineHeight: CARD.cycles.lineHeight, size: CARD.cycles.size, bold: true, fill: ink, attrs: glossBreak("→") })}
-                    {paintBinderIcon("arrow-right", tx + CARD.cycles.arrow.dx, top + CARD.cycles.arrow.dy, CARD.cycles.arrow.size, inks.muted, inks.card)}
-                    {paintBinderLine(cy.to, { ctx, x: tx + CARD.cycles.to.dx, top, lineHeight: CARD.cycles.lineHeight, size: CARD.cycles.size, bold: true, fill: ink, attrs: glossBreak(cy.sep) })}
-                    {paintBinderLine(cy.value, { ctx, x: right, top, lineHeight: CARD.cycles.lineHeight, size: CARD.cycles.value.size, bold: true, anchor: "end", fill: binderText(inks.deep, inks.card, CARD.cycles.value.size) })}
+                    {paintBinderLine(cy.name, { ctx, x: tx, top, lineHeight: COL.cycles.lineHeight, size: COL.cycles.name.size, fill: binderText(inks.muted, inks.ground, COL.cycles.name.size) })}
+                    {paintBinderLine(cy.from, { ctx, x: tx + COL.cycles.from.dx, top, lineHeight: COL.cycles.lineHeight, size: COL.cycles.size, bold: true, fill: ink, attrs: glossBreak("→") })}
+                    {paintBinderIcon("arrow-right", tx + COL.cycles.arrow.dx, top + COL.cycles.arrow.dy, COL.cycles.arrow.size, inks.muted, inks.ground)}
+                    {paintBinderLine(cy.to, { ctx, x: tx + COL.cycles.to.dx, top, lineHeight: COL.cycles.lineHeight, size: COL.cycles.size, bold: true, fill: ink, attrs: glossBreak(cy.sep) })}
+                    {paintBinderLine(cy.value, { ctx, x: right, top, lineHeight: COL.cycles.lineHeight, size: COL.cycles.value.size, bold: true, anchor: "end", fill: binderText(inks.deep, inks.ground, COL.cycles.value.size) })}
                   </g>
                 )
               })}
-              <rect x={tx} y={y + ruleY} width={right - tx} height={1} fill={inks.line} />
-              {paintBinder(label, { ctx, x: tx, top: y + ruleY + 12, bold: true, fill: binderText(inks.muted, inks.card, CARD.day.label.size), ground: inks.card })}
-              {paintBinder(figure, { ctx, x: tx, top: y + ruleY + 12 + CARD.day.figure.dy, bold: true, fill: binderText(inks.deep, inks.card, CARD.day.figure.size), ground: inks.card })}
-              {paintBinder(yearLabel, { ctx, x: right, top: y + ruleY + 12, bold: true, anchor: "end", fill: binderText(inks.muted, inks.card, CARD.day.label.size), ground: inks.card })}
-              {paintBinder(yearValue, { ctx, x: right, top: y + ruleY + 12 + CARD.day.year.dy, bold: true, anchor: "end", fill: binderText(inks.ink, inks.card, CARD.day.year.size), ground: inks.card })}
+              <rect x={tx} y={y + ruleY} width={inner} height={1} fill={inks.line} />
+              {paintBinder(label, { ctx, x: tx, top: y + ruleY + 12, bold: true, fill: binderText(inks.muted, inks.ground, COL.day.label.size) })}
+              {paintBinder(figure, { ctx, x: tx, top: y + ruleY + 12 + COL.day.figure.dy, bold: true, fill: binderText(inks.deep, inks.ground, COL.day.figure.size) })}
+              {paintBinder(yearLabel, { ctx, x: right, top: y + ruleY + 12, bold: true, anchor: "end", fill: binderText(inks.muted, inks.ground, COL.day.label.size) })}
+              {paintBinder(yearValue, { ctx, x: right, top: y + ruleY + 12 + COL.day.year.dy, bold: true, anchor: "end", fill: binderText(inks.ink, inks.ground, COL.day.year.size) })}
             </g>
           )
         })}
       </g>
-      <g {...blockTag(ctx, wn)} data-binder-warning="">
-        <Lead id="warning">
-          <rect x={rect.x + WARN.border / 2} y={warnTop + WARN.border / 2} width={rect.w - WARN.border} height={WARN.h - WARN.border} rx={12 - WARN.border / 2} fill="none" stroke={inks.fire} strokeWidth={WARN.border} />
-          {/* The icon is lit with its box: on a theme whose emphasis ink is the accent itself, it is the same ink. */}
-          {wn.icon ? paintBinderIcon(wn.icon, rect.x + WARN.icon.x, warnTop + WARN.icon.y, WARN.icon.size, inks.fireText, inks.ground) : null}
-        </Lead>
-        {paintBinder(warnTitle, { ctx, x: rect.x + WARN.textX, top: warnTop + WARN.title.top, bold: true, fill: binderText(inks.ink, inks.ground, WARN.title.size) })}
-        {paintBinder(warnText, { ctx, x: rect.x + WARN.textX, top: warnTop + WARN.text.top, fill: binderText(inks.muted, inks.ground, WARN.text.size) })}
+      <g data-binder-warning="">
+        <BinderPlainLine callout={wn} text={warn} x={rect.x} y={warnTop} ctx={ctx} lead />
       </g>
     </g>
   )

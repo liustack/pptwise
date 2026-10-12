@@ -26,19 +26,21 @@ function draw(ir: PptxIR, index: number) {
 const four = (footer: PptxIR["footer"], meta: PptxIR["meta"] = {}) => deck([slideOf("cover"), slideOf("content"), slideOf("chapter"), slideOf("ending")], footer, meta)
 
 /**
- * proposal-motif: the deck's label at the top left and the folio at the
- * bottom right of a content page. Design source
+ * proposal-motif: the deck's label at the left of the running head and the
+ * folio at the bottom right of a content page. Design source
  * `design/rounds/2026-10-06-proposal/`.
  */
 describe("ProposalMotif (the label and the folio)", () => {
-  it("sets the deck's label at the top left, the part before its first ' · ' in petrol", () => {
-    const { root } = draw(four({ page_number: true, label: "屋顶光伏与储能方案 · 呈 贵司管理层" }), 1)
-    const label = root.querySelector("[data-binder-label]")!
-    const [head, tail] = Array.from(label.querySelectorAll(":scope > text"))
-    expect(head!.textContent).toBe("屋顶光伏与储能方案")
-    expect(head!.getAttribute("fill")).toBe("#0E3B53")
-    expect(tail!.textContent!.replace(/\s/g, "")).toBe("·呈贵司管理层")
-    expect(Number(head!.getAttribute("y"))).toBeLessThan(60)
+  it("sets the deck's label at the top left in small grey, short of the stage line at the right", () => {
+    const ir = { ...four({ page_number: true, label: "屋顶光伏与储能方案 · 呈 贵司管理层" }), course: { stages: [{ label: "概要" }, { label: "算账" }] } } as PptxIR
+    ir.slides[1] = { ...ir.slides[1]!, stage: "算账" } as Slide
+    const { root } = draw(ir, 1)
+    const label = root.querySelector("[data-binder-label] text")!
+    expect(label.textContent!.replace(/\s/g, "")).toBe("屋顶光伏与储能方案·呈贵司管理层")
+    expect(label.getAttribute("font-size")).toBe("13")
+    expect(label.getAttribute("font-weight")).toBeNull()
+    expect(label.getAttribute("x")).toBe("64")
+    expect(Number(label.getAttribute("y"))).toBeLessThan(60)
   })
 
   it("prints the page number at the bottom right as PowerPoint's slide-number field, the office and notice at the left", () => {
@@ -47,7 +49,7 @@ describe("ProposalMotif (the label and the folio)", () => {
     expect(folio.textContent).toBe("2")
     expect(folio.getAttribute("data-field")).toBe("slidenum")
     expect(folio.getAttribute("text-anchor")).toBe("end")
-    expect(Number(folio.getAttribute("x"))).toBe(1196)
+    expect(Number(folio.getAttribute("x"))).toBe(1216)
     expect(Array.from(root.querySelectorAll("[data-footer='row'] text")).map((t) => t.textContent)).toContain("某某能源 · 仅供贵司内部决策")
   })
 

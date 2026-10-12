@@ -1,18 +1,11 @@
 {
   "stage": "Decide",
   "ballot": {
-    "choices": [
-      "Agree",
-      "Discuss"
-    ],
+    "choices": ["Agree", "Discuss"],
     "item_choices": [
       {
         "item": 3,
-        "choices": [
-          "Self-fund",
-          "EMC",
-          "Lease"
-        ]
+        "choices": ["Self-fund", "EMC", "Lease"]
       }
     ]
   },
@@ -36,7 +29,7 @@
     },
     {
       "type": "paragraph",
-      "text": "Book the survey"
+      "text": "Book the survey on ＿＿＿＿＿"
     }
   ],
   "notes": "Three decisions to close. First, approve a survey of the roof, switch room and connection point, which is where everything else starts. Second, send the documents, with the power bills and supply contract first. Third, say which way you lean on funding: self-funded, an energy management contract or a finance lease. It does not need settling today, but once we know, we model it that way. When the documents arrive, we work out your own numbers and survey report on your own prices."

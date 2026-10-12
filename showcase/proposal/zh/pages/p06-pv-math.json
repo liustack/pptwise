@@ -10,7 +10,7 @@
         },
         {
           "key": "how",
-          "label": ""
+          "label": "怎么取"
         },
         {
           "key": "value",
@@ -19,7 +19,7 @@
         },
         {
           "key": "kind",
-          "label": "来源性质"
+          "label": "来源"
         }
       ],
       "rows": [

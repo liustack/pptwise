@@ -7,16 +7,15 @@ import { parseSvgRoot } from "../render/serialize"
 import { validateIr } from "../validate-core"
 import { contrastRatio } from "../render/ink"
 import { chapterNumber } from "./chapter-binder-chapter"
-import { tabRun, TABS } from "./compositions/binder"
 
 await installNodePlatform()
 
 /*
- * proposal's faces, drawn to its 2026-10 board (`design/rounds/2026-10-06-proposal/`):
- * the white proposal page beside its photograph, a chapter over its
- * photograph, the sheet's frame round every content page with the binder's
- * tabs, and the close with the decisions to tick and its button; and the
- * motif's label and folio.
+ * proposal's faces, drawn to its 2026-10 board as print
+ * (`design/rounds/2026-10-06-proposal/`): the white proposal page beside its
+ * photograph, a chapter in petrol beside its photograph, the sheet's running
+ * head over every content page, and the close with the decisions to tick and
+ * a line to fill in; and the motif's label and folio.
  */
 
 const PHOTO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
@@ -103,56 +102,53 @@ describe("the binder faces on proposal", () => {
     expect(v.ok, JSON.stringify(v.errors)).toBe(true)
   })
 
-  it("cover: the date, a brick-red chip naming who it is for in white, the title in petrol, three figures and the photograph down the right", () => {
+  it("cover: the date, who it is for in small grey over the title in petrol, a brick-red rule, three figures between hairlines and the photograph down the right", () => {
     const root = page(ir, 0)
     expect(root.querySelector("[data-face='binder-cover']")).not.toBeNull()
     expect(byText(root, "2026 年 10 月")).toBeDefined()
-    expect(root.querySelector("[data-binder-lead='kicker'] rect")!.getAttribute("fill")).toBe(BRICK)
-    const kicker = root.querySelector("[data-binder-lead='kicker'] text")!
-    expect(kicker.getAttribute("fill")).toBe("#FFFFFF")
-    expect(contrastRatio(kicker.getAttribute("fill")!, BRICK)).toBeGreaterThanOrEqual(4.5)
+    const kicker = root.querySelector("[data-binder-kicker] text")!
+    expect(kicker.textContent!.replace(/\s/g, "")).toBe("呈贵司管理层")
+    expect(kicker.getAttribute("fill")).not.toBe(BRICK)
+    expect(root.querySelector("[data-binder-kicker] rect")).toBeNull()
     expect(byText(root, "让屋顶替贵司付一部分电费")!.getAttribute("fill")).toBe(PETROL)
-    expect(byText(root, "让屋顶替贵司付一部分电费")!.getAttribute("font-size")).toBe("50")
+    expect(byText(root, "让屋顶替贵司付一部分电费")!.getAttribute("font-size")).toBe("46")
+    expect(root.querySelector("[data-binder-lead='mark'] rect")!.getAttribute("fill")).toBe(BRICK)
+    expect(root.querySelectorAll("[data-binder-fact]")).toHaveLength(3)
     expect(root.querySelectorAll("[data-binder-facts] text").length).toBeGreaterThanOrEqual(6)
     const photo = root.querySelector("[data-binder-cover-photo]")!
     expect([photo.getAttribute("x"), photo.getAttribute("width")]).toEqual(["720", "560"])
     expect(byText(root, "图为 AI 生成的示意图")).toBeDefined()
-    expect(root.querySelector("[data-binder-tabs]")).toBeNull()
   })
 
-  it("sheet: the tabs with the page's stage lit, the claim in petrol ending at y150, and the motif's label and folio", () => {
-    const root = page(ir, 1)
+  it("sheet: the running head with the label at the left and the stage after its place in the course at the right, the claim in petrol, and the folio", () => {
+    const root = page(ir, 3)
     expect(root.querySelector("[data-face='binder-sheet']")).not.toBeNull()
-    const lit = root.querySelector("[data-binder-tab-lit]")!
-    expect(lit.getAttribute("data-binder-tab")).toBe("概要")
-    expect(lit.querySelector("path")!.getAttribute("fill")).toBe(PETROL)
-    expect(root.querySelectorAll("[data-binder-tab]")).toHaveLength(5)
+    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("二\u3000算账")
+    expect(root.querySelector("[data-binder-stage] text")!.getAttribute("fill")).toBe(PETROL)
+    expect(root.querySelector("[data-binder-running-head] rect")!.getAttribute("y")).toBe("64")
     const title = byText(root, "电价时段改了，光伏仍能回本，储能先算清再上")!
-    expect(title.getAttribute("font-size")).toBe("32")
-    expect(Number(title.getAttribute("y"))).toBeLessThanOrEqual(150)
+    expect(title.getAttribute("font-size")).toBe("30")
+    expect(Number(title.getAttribute("y"))).toBeLessThanOrEqual(130)
     expect(root.querySelector("[data-binder-label]")!.textContent!.replace(/\s/g, "")).toBe(LABEL.replace(/\s/g, ""))
-    expect(root.querySelector("[data-binder-folio] text")!.textContent).toBe("2")
+    expect(root.querySelector("[data-binder-folio] text")!.textContent).toBe("4")
     expect(root.querySelector("[data-binder-folio] text")!.getAttribute("data-field")).toBe("slidenum")
+    expect(root.querySelector("[data-binder-folio] text")!.getAttribute("x")).toBe("1216")
+    expect(root.querySelector("[data-binder-source] text")!.getAttribute("x")).toBe("64")
   })
 
-  it("sheet: stands a Chinese tab's name one character under another, and turns a Latin one", () => {
-    const zh = page(ir, 1).querySelector("[data-binder-tab='算账'] [data-binder-tab-name]")!
-    const chars = Array.from(zh.querySelectorAll("text"))
-    expect(chars.map((t) => t.textContent)).toEqual(["算", "账"])
-    expect(Number(chars[1]!.getAttribute("y")) - Number(chars[0]!.getAttribute("y"))).toBe(13 + TABS.tracking)
-    const en = deck([sheet("Numbers")], { course: { stages: [{ label: "Summary" }, { label: "Numbers" }] } } as Partial<PptxIR>)
-    const turned = page(en, 0).querySelector("[data-binder-tab='Numbers'] [data-binder-tab-name]")!
-    expect(turned.getAttribute("transform")).toMatch(/^rotate\(90 /)
+  it("sheet: numbers a Latin deck's stage in figures and leaves the right of the head empty for a stage the course lacks", () => {
+    const en = deck([sheet("Numbers", { heading: "Solar still pays back", components: [{ type: "paragraph", text: "Body." }], footnote: "Source: Jiangsu bidding notice" } as Partial<Slide>)], {
+      meta: { date: "October 2026" },
+      footer: { page_number: true, label: "Rooftop solar proposal" },
+      course: { stages: [{ label: "Summary" }, { label: "Numbers" }] },
+    } as Partial<PptxIR>)
+    expect(page(en, 0).querySelector("[data-binder-stage] text")!.textContent).toBe("2 Numbers")
+    const none = deck([sheet("算账")], { course: undefined } as Partial<PptxIR>)
+    expect(page(none, 0).querySelector("[data-binder-stage]")).toBeNull()
+    expect(page(none, 0).querySelector("[data-binder-running-head]")).not.toBeNull()
   })
 
-  it("sheet: declares a course too long for the tabs dropped rather than cutting a name", () => {
-    const long = deck([sheet("一"), sheet("二")], { course: { stages: ["一", "二", "三", "四", "五", "六"].map((label) => ({ label })) } } as Partial<PptxIR>)
-    expect(page(long, 0).querySelector("[data-binder-tabs]")).toBeNull()
-    expect(page(long, 0).querySelector("[data-dropped]")).not.toBeNull()
-    expect(tabRun("概要", 15, { fonts: { heading: "x", body: "x" } } as never)).toBe(2 * 15 + 2 * TABS.tracking)
-  })
-
-  it("chapter: the chapter's number in the brick red lifted to read on petrol, its name and title in white, the questions, the tabs over the photograph", () => {
+  it("chapter: petrol beside the photograph, the place in the head, the number in the brick red lifted to read on petrol, its name and title in white, the questions on ruled lines", () => {
     const root = page(ir, 2)
     expect(root.querySelector("[data-face='binder-chapter']")).not.toBeNull()
     const number = root.querySelector("[data-binder-lead='chapter-number']")!
@@ -160,10 +156,18 @@ describe("the binder faces on proposal", () => {
     // The brick red reads at 2.17 on petrol, under the 3:1 a 120px figure needs: the least step toward white.
     expect(number.querySelector("text")!.getAttribute("fill")).toBe("#c66756")
     expect(contrastRatio(number.querySelector("text")!.getAttribute("fill")!, PETROL)).toBeGreaterThanOrEqual(3)
+    expect(root.querySelector("[data-binder-place] text")!.textContent).toBe("第一部分")
+    expect(root.querySelector("[data-binder-part] text")!.textContent!.replace(/\s/g, "")).toBe("算账")
     expect(byText(root, "先算账：电价变了，屋顶还值多少")!.getAttribute("fill")).toBe("#FFFFFF")
     expect(root.querySelectorAll("[data-binder-questions] [data-binder-icon]")).toHaveLength(3)
-    expect(root.querySelector("[data-binder-tab-lit]")!.getAttribute("data-binder-tab")).toBe("算账")
+    expect(root.querySelector("[data-binder-chapter-photo] image")!.getAttribute("x")).toBe("680")
     expect(chapterNumber([{ type: "cover" }, { type: "chapter" }, { type: "content" }, { type: "chapter" }], 3)).toBe("02")
+  })
+
+  it("chapter: names the part from the page's stage when the kicker has no ' · '", () => {
+    const root = page(deck([chapter("算账", { kicker: "第一部分" })]), 0)
+    expect(root.querySelector("[data-binder-place] text")!.textContent).toBe("第一部分")
+    expect(root.querySelector("[data-binder-part] text")!.textContent!.replace(/\s/g, "")).toBe("算账")
   })
 
   it("chapter: a title on two lines moves what follows down a line", () => {
@@ -171,26 +175,34 @@ describe("the binder faces on proposal", () => {
     const one = page(deck([chapter("算账")]), 0)
     const two = page(deck([chapter("算账", { heading: long })]), 0)
     const top = (root: Element) => Number(root.querySelector("[data-binder-asks] text")!.getAttribute("y"))
-    expect(top(two) - top(one)).toBe(60)
+    expect(top(two) - top(one)).toBe(50)
   })
 
-  it("ending: the label, a card a decision with its own boxes where it has them, and the author's button", () => {
+  it("ending: the running head, a ruled row a decision with its own boxes where it has them, and the author's line to fill in", () => {
     const root = page(ir, 4)
     expect(root.querySelector("[data-face='binder-ending']")).not.toBeNull()
     expect(root.querySelector("[data-binder-label]")).not.toBeNull()
+    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("五\u3000决定")
     const decisions = Array.from(root.querySelectorAll("[data-binder-decision]"))
     expect(decisions.map((d) => Array.from(d.querySelectorAll("[data-ballot-choice]")).map((c) => c.getAttribute("data-ballot-choice")))).toEqual([
       ["同意", "再议"],
       ["同意", "再议"],
       ["自投", "EMC", "融资租赁"],
     ])
-    expect(byText(root, "01")).toBeDefined()
-    const button = root.querySelector("[data-binder-lead='ask']")!
-    expect(button.querySelector("rect")!.getAttribute("fill")).toBe(BRICK)
-    expect(byText(root, "约踏勘时间")!.getAttribute("fill")).toBe("#FFFFFF")
-    expect(contrastRatio(byText(root, "约踏勘时间")!.getAttribute("fill")!, BRICK)).toBeGreaterThanOrEqual(4.5)
+    expect(byText(root, "01")!.closest("[data-binder-lead='decision']")).not.toBeNull()
+    expect(byText(root, "01")!.getAttribute("fill")).toBe(BRICK)
+    const fill = root.querySelector("[data-binder-fill-in]")!
+    expect(byText(fill, "约踏勘时间")!.getAttribute("fill")).toBe(PETROL)
+    expect(fill.querySelectorAll("[data-binder-blank]")).toHaveLength(1)
+    expect(root.querySelector("[data-binder-lead='ask']")).toBeNull()
     expect(byText(root, "收到资料后，按贵司自己的电价出测算和踏勘报告")).toBeDefined()
-    expect(root.querySelector("[data-binder-tab-lit]")!.getAttribute("data-binder-tab")).toBe("决定")
+  })
+
+  it("ending: reads the author's blanks as lines to fill in between the words", () => {
+    const dated = ending({ components: [ending().components[0]!, { type: "paragraph", text: "约踏勘时间 ＿＿＿ 年 ＿＿ 月 ＿＿ 日" }] } as Partial<Slide>)
+    const fill = page(deck([dated]), 0).querySelector("[data-binder-fill-in]")!
+    expect(fill.querySelectorAll("[data-binder-blank]")).toHaveLength(3)
+    expect(Array.from(fill.querySelectorAll("text")).map((t) => t.textContent)).toEqual(["约踏勘时间", "年", "月", "日"])
   })
 
   it("ending: declares a ballot dropped when an item's own boxes name a card it does not have", () => {
@@ -198,9 +210,9 @@ describe("the binder faces on proposal", () => {
     expect(page(deck([wrong]), 0).querySelector("[data-dropped]")).not.toBeNull()
   })
 
-  it("draw no button where the author wrote no words for one", () => {
+  it("draw no line to fill in where the author wrote no words for one", () => {
     const silent = ending({ components: [ending().components[0]!] })
-    expect(page(deck([silent]), 0).querySelector("[data-binder-lead='ask']")).toBeNull()
+    expect(page(deck([silent]), 0).querySelector("[data-binder-fill-in]")).toBeNull()
   })
 
   it("leave the folio off the cover, the chapter and the close", () => {

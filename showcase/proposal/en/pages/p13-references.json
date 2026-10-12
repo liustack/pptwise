@@ -3,7 +3,7 @@
   "components": [
     {
       "type": "data_table",
-      "title": "None of these are our projects",
+      "title": "Project (none of them ours)",
       "columns": [
         {
           "key": "name",
@@ -15,7 +15,11 @@
         },
         {
           "key": "num",
-          "label": ""
+          "label": "Public figure"
+        },
+        {
+          "key": "kind",
+          "label": "Basis"
         }
       ],
       "rows": [
@@ -24,10 +28,8 @@
           "cells": {
             "name": "Laibao Hi-Tech, Guangming, Shenzhen",
             "scale": "2.541 MWp solar, energy contract",
-            "num": "About RMB 629,000 a year, forecast"
-          },
-          "tag": {
-            "text": "Company figure"
+            "num": "About RMB 629,000 a year, forecast",
+            "kind": "Company figure"
           }
         },
         {
@@ -35,10 +37,8 @@
           "cells": {
             "name": "Jinruida park, Zhonglou, Changzhou",
             "scale": "About 1.6 MW solar",
-            "num": "1.467 m kWh, about RMB 360,000 a year"
-          },
-          "tag": {
-            "text": "District government"
+            "num": "1.467 m kWh, about RMB 360,000 a year",
+            "kind": "District government"
           }
         },
         {
@@ -46,10 +46,8 @@
           "cells": {
             "name": "Zhigu Works, Zhonglou, Changzhou",
             "scale": "0.9 MWp solar + 1.33 MW storage",
-            "num": "Over RMB 200,000 a year"
-          },
-          "tag": {
-            "text": "District government"
+            "num": "Over RMB 200,000 a year",
+            "kind": "District government"
           }
         },
         {
@@ -57,10 +55,8 @@
           "cells": {
             "name": "Taijing plants, Gaoyou, Yangzhou",
             "scale": "40 MW solar + 80.25 MWh storage",
-            "num": "About RMB 20 m a year"
-          },
-          "tag": {
-            "text": "Power supplier"
+            "num": "About RMB 20 m a year",
+            "kind": "Power supplier"
           }
         },
         {
@@ -68,10 +64,8 @@
           "cells": {
             "name": "EGing PV, four Jiangsu sites",
             "scale": "0.81 to 3.49 MW",
-            "num": "991 to 1,098 h, 77.7% to 91.0% used on site"
-          },
-          "tag": {
-            "text": "Audited"
+            "num": "991 to 1,098 h, 77.7% to 91.0% used on site",
+            "kind": "Audited"
           },
           "emphasis": "highlight"
         }

@@ -8,21 +8,24 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * **和 brief 的区别**：brief 是先结论的咨询报告腔，藏青加一线黄、衬线、黄只当
  * 一把高亮尺；proposal 是递到客户管理层手里的说服腔，读者是老板、厂长、财务
- * 负责人。它更暖（白纸上压一层暖沙色的卡），更敢用强调色（砖红每页亮一处，
- * 而且可以是一整块结果、一枚勾选按钮），每页先说「贵司得到什么」，再算账、
- * 给方案、讲落地、请客户定事。版式也不一样：右缘一列活页夹索引签标出全稿的
- * 几个段落，当前段落那一签伸出来；封面是一张白色提案页加一张满高照片；结尾
- * 是请客户勾选的决定卡加一枚按钮。
+ * 负责人。它更暖（石油蓝的章节页配满高照片），更敢用强调色（砖红每页亮一处：
+ * 回收期这样的结果数、领头的那一行、请客户定的事的编号），每页先说「贵司得到
+ * 什么」，再算账、给方案、讲落地、请客户定事。版式照印刷品做（2026-10 印刷版
+ * 定稿）：内容页顶上一行书眉，左边是方案名，右边是这一页所在的段落（「二 算账」，
+ * 序号按 `course` 里的位置），下面一条细线。表格、数字和条目之间只用细线和 2px
+ * 墨线分隔，不铺卡片、不用胶囊签和索引签。封面是一张白色提案页加一张满高照片，
+ * 结尾是一行一件要客户定的事，右边留空方框勾选，最后一行留空让客户填日子。
  *
  * **色板来历**（设计稿 `proposal-pvess-design-gen.py` 的常量，强调色、灰和红
  * 三处按下文改过）：
  *   - `bg` `#FFFFFF` 白纸。
- *   - `surface` `#F3F0EA` 暖沙卡面（设计稿 SURF），不描边。
- *   - `primary` `#0E3B53` 石油蓝（PET）：标题、大数、深色块、亮着的索引签。
- *   - `accent` `#B8412C` 砖红：每页只亮一处，结果块、勾选按钮、关键数。设计稿
+ *   - `surface` `#F3F0EA` 暖沙（设计稿 SURF）。印刷版不再铺卡，只在照片缺位时
+ *     垫底，共享构图仍拿它当卡面。
+ *   - `primary` `#0E3B53` 石油蓝（PET）：标题、大数、书眉的段落名、章节页左半。
+ *   - `accent` `#B8412C` 砖红：每页只亮一处，结果数、领头的一行、决定的编号。设计稿
  *     是橘 `#F26B3A`（TANG），2026-10-06 维护者拍板改成砖红，原因是石油蓝配橘
  *     犯了「不要蓝配橙」的禁忌（`chart-palette-taboo.test.ts`）。砖红 HSL 色相
- *     9°，在禁忌「橙」的 15° 下限之外。砖红色块上的字一律用白，不用深墨。
+ *     9°，在禁忌「橙」的 15° 下限之外。
  *   - `emphasisInk` `#B8412C`：和 `accent` 是同一个砖红。设计稿另有一档深橘
  *     （TANGD `#C2491B`）给小字用，因为橘本身压白纸只有 3.03。砖红压白纸 5.48、
  *     压卡面 4.82，自己就能承小字，`**…**` 标记的字也走它，不再另设一档。
@@ -41,7 +44,7 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - `chartPalette` 石油蓝 `#2F6A8A`（PET2）/ 砖红 `#B8412C` / 天青 `#8DBBD3`
  *     （SKY）/ 沙 `#B0956A`。石油蓝和天青照设计稿，沙色设计稿没给，取卡面那一族
  *     的暖沙压深到能当色块。砖红和另外三格的 ΔE 是 82.8、83.9、48.3。构图里
- *     浅蓝 PETL、浅天青 SKYL、浅砖红、旧值灰 FADE 这几格不进 token，由
+ *     浅天青 SKYL、旧值灰 FADE 这两格不进 token，由
  *     `binderInks` 从这几格按设计稿的比例混出来（`layouts/compositions/binder.tsx`）。
  *
  * **对比度实测**（`render/ink.ts` 的 `contrastRatio`）：
@@ -50,11 +53,6 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     2.06 / 沙 2.86。
  *   - 压卡面：primary 10.44、text 14.40、muted 5.65、accent / emphasisInk /
  *     warning 4.82、danger 8.13、success 4.90。
- *   - 砖红色块上的字：白压砖红 5.48，深墨压砖红只有 2.99，所以结果块、胶囊签、
- *     按钮、步骤箭头、编号圆片上的字一律是白（`binderInks` 的 `onFire` 量过
- *     深墨不够 4.5，自己落到白）。
- *   - 浅砖红底（砖红 14% 压白纸，`#F5E4E1`，风险表和报价单的领头行）：墨
- *     13.31、灰 5.22。
  *   - 章节页的大号章号压石油蓝：砖红只有 2.17，不够大字的 3:1，`binderText`
  *     往白挪最小一步到 `#C66756`（3.10:1）。
  *   - 天青压白纸 2.06、沙 2.86，低于 3.0 装饰线：这两格只当色块（参照组的
@@ -107,7 +105,7 @@ export const PROPOSAL_THEME = {
     positioning: "Choose it when a client's management has to say yes to a proposal, a solution or a bid, and needs to see the money, the plan and the risks before they sign.",
     audience: "A supplier putting a proposal in front of a client's owner, plant manager and finance lead.",
     notFor: "An internal report or a research paper, where a page that asks the reader to decide reads as a sales piece.",
-    lineage: "The client proposal in a ring binder: tabbed sections, a priced quote sheet, a checklist of what the client hands over.",
+    lineage: "The printed client proposal: a running head naming each section, a priced quote sheet, a checklist of what the client hands over.",
   },
   style: PROPOSAL_TOKENS,
   menu: {

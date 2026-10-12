@@ -3,47 +3,50 @@ import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { blendOver } from "../render/ink"
 import { stripEmphasis } from "../render/emphasis"
-import { PitchScrim } from "./compositions/pitch"
 import { blockTag } from "./compositions/shared"
-import { binderInks, binderText, binderTrackedWidth, binderBaseline, fitBinder, paintBinder, paintBinderIcon, paintBinderTracked } from "./compositions/binder"
+import { resolveDeckFooter } from "../render/footer-marks"
+import { binderInks, binderText, binderTrackedWidth, binderBaseline, binderWidth, fitBinder, paintBinder, paintBinderIcon, paintBinderLine, paintBinderTracked, splitDot } from "./compositions/binder"
 import { boundarySlotBlock, fieldsLeftOut } from "./boundary-content"
 import { fitDossierTitle, dossierTitleSet } from "./dossier-shared"
-import { BinderTabsFor, BinderTitle } from "./binder-shared"
+import { paintBinderTitle } from "./binder-shared"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 
 /**
- * binder-chapter：提案书的章节页，proposal 2026-10 定稿（p03、p10）。
+ * binder-chapter：提案书的章节页，proposal 2026-10 印刷版定稿（p03、p10）。
  *
- * 满版照片（页面自己的 `background` 资产），从左往右压一层石油蓝的渐变
- * （96% → 46% 处 86% → 82% 处 25% → 右缘 10%），右缘照旧是活页夹的索引签，
- * 这一章的那一签亮着（页面的 `stage`），其余几签白底。左边一个 120px 特粗的
+ * 左半石油蓝底，右半一张出血照片（页面自己的 `background` 资产，x680 起到
+ * 页面右缘，满高），照片右下角印页面的 `footnote`（「图为 AI 生成的示意图」），
+ * 字下面压一段从下往上淡出的石油蓝。左半顶上一行书眉：左端是 deck 标签
+ * 「 · 」之前的方案名，右端是章名「 · 」之前的那段（页面的 `kicker`，「第一
+ * 部分」；章名没有「 · 」而页面写了 `stage` 时就是整段章名），14px，白 78%，
+ * 下面一条白 35% 的细线。书眉下一个 120px 粗体的
  * 砖红章号（「01」，按章节页在全稿里出现的次序数，砖红压石油蓝不够大字的
- * 3:1 时由 `binderText` 往白挪最小一步），下面一行 16px 的章名
- * （页面的 `kicker`，「第一部分 · 算账」），标题 44px 特粗白字，一行放得下
- * 就一行；再下面一行 14px 小字（页面的 `subheading`，「这一部分回答」），
- * 最后是这一章要回答的问题（页面的 `row_cards`，每项一个白色图标和一句
- * 19px 的话）。
+ * 3:1 时由 `binderText` 往白挪最小一步），下面一行 18px、字距拉开的部分名
+ * （章名「 · 」之后的那段，「算账」；章名没有「 · 」时取页面的 `stage`，
+ * 再没有就是整段章名，白 78%），标题 36px 粗体白字，一行放得下
+ * 就一行；再下面一行 14px 小字（页面的 `subheading`，「这一部分回答」），最后
+ * 是这一部分要回答的问题（页面的 `row_cards`），按细线分行，每行一个白色线条
+ * 图标和一句 16px 的话。
  *
- * 不画 motif，不画页脚（共享页脚只上内容页）。零 theme id、零 hex。
+ * 不画 motif，不画页脚（共享页脚只上内容页），不画任何分隔标签。零 theme id、
+ * 零 hex。
  */
 
 const LEFT = 64
-const NUMBER = { top: 132, size: 120, lineHeight: 124, tracking: -2 } as const
-const PART = { top: 270, size: 16, lineHeight: 24, tracking: 2, alpha: 0.72 } as const
-const TITLE = { foot: 362, size: 44, lineHeight: 60, minPt: 32, w: 1000 } as const
-const ASKS = { top: 400, size: 14, lineHeight: 22, alpha: 0.66 } as const
-const ITEMS = { top: 434, step: 46, icon: { dy: 4, size: 22 }, x: 36, size: 19, lineHeight: 32, w: 800, max: 4 } as const
-const SCRIM = [
-  { offset: "0%", opacity: 0.96 },
-  { offset: "46%", opacity: 0.86 },
-  { offset: "82%", opacity: 0.25 },
-  { offset: "100%", opacity: 0.1 },
-] as const
+const COL_W = 552
+const PHOTO_X = 680
+const HEADER = { top: 56, size: 14, lineHeight: 20, rule: 90, alpha: 0.78, ruleAlpha: 0.35 } as const
+const NUMBER = { top: 150, size: 120, lineHeight: 120, tracking: -2 } as const
+const PART = { top: 284, size: 18, lineHeight: 26, tracking: 3, alpha: 0.78 } as const
+const TITLE = { top: 324, size: 36, lineHeight: 50, minPt: 28, w: 560 } as const
+const ASKS = { gap: 24, size: 14, lineHeight: 20, alpha: 0.78 } as const
+const ITEMS = { top: 452, gap: 28, row: 54, size: 16, lineHeight: 22, maxLines: 2, pad: 16, icon: { size: 18 }, x: 32, w: 520, ruleAlpha: 0.35, lineAlpha: 0.18, max: 4, foot: 690 } as const
+const CAPTION = { right: 1240, baseline: 698, size: 12, veil: 96, alpha: 0.72 } as const
 
 /** Why the chapter cannot list `block` as its questions, or undefined when it can: it sets each as its icon and its title. */
 function questionsLeftOut(block: Component): string | undefined {
-  return block.type === "row_cards" ? fieldsLeftOut(block, "the chapter lists each question as its icon and its title on one line", { items: ["text", "sub", "highlight", "tone"] }) : undefined
+  return block.type === "row_cards" ? fieldsLeftOut(block, "the chapter lists each question as its icon and its title on a ruled line", { items: ["text", "sub", "highlight", "tone"] }) : undefined
 }
 
 /** The chapter's number: how many chapter pages run up to and including this one, two digits. */
@@ -54,48 +57,102 @@ export function chapterNumber(slides: readonly { type: string }[], index: number
 
 export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
-  const photo = slide.background?.kind === "asset"
-  // The page the words stand on: the theme's petrol on its own chapter page,
-  // the scrim's petrol over a photograph, and the author's paint on a page
-  // painted another colour, where the petrol is not there to read on.
-  const ground = inks.ground
+  const photo = slide.background?.kind === "asset" ? ctx.images?.[slide.background.asset_id] : undefined
+  // The words stand on the theme's petrol, the left half the face paints itself.
+  const ground = inks.deep
   const white = (alpha: number) => blendOver(inks.onDeep, ground, alpha)
   const number = chapterNumber(ir.slides, index)
   const kicker = slide.kicker?.trim() ? stripEmphasis(slide.kicker).trim() : ""
-  const kickerFits = !kicker || binderTrackedWidth(kicker, PART.size, PART.tracking, ctx, true) <= TITLE.w
-  const asks = slide.subheading?.trim() ? fitBinder(slide.subheading, { width: ITEMS.w, size: ASKS.size, lineHeight: ASKS.lineHeight, maxLines: 1, bold: true }, ctx) : null
+  const kickerSplit = kicker ? splitDot(kicker) : null
+  const stage = slide.stage?.trim() ? stripEmphasis(slide.stage).trim() : ""
+  // 「第一部分 · 算账」: the part's place in the running head, its name under
+  // the number. A kicker with no " · " is the place when the page names its
+  // stage, which is then the part's name, and the part's name otherwise.
+  const place = kickerSplit?.name ?? (stage ? kicker : "")
+  const part = kickerSplit ? kickerSplit.rest : stage || kicker
+  const deckLabel = resolveDeckFooter(ir).label
+  const name = deckLabel ? (splitDot(deckLabel)?.name ?? deckLabel) : ""
+  const headFits = binderWidth(name, HEADER.size, ctx) + (place ? binderWidth(place, HEADER.size, ctx) + 24 : 0) <= COL_W
+  const partFits = !part || binderTrackedWidth(part, PART.size, PART.tracking, ctx) <= TITLE.w
+  const title = fitDossierTitle(slide.heading, ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w)
+  const titleTop = part ? TITLE.top : PART.top
+  const titleBottom = titleTop + title.lines.length * TITLE.lineHeight
+  const asks = slide.subheading?.trim() ? fitBinder(slide.subheading, { width: COL_W, size: ASKS.size, lineHeight: ASKS.lineHeight, maxLines: 1 }, ctx) : null
+  const asksTop = titleBottom + ASKS.gap
+  const listTop = Math.max(ITEMS.top, asks ? asksTop + ASKS.lineHeight + 10 : titleBottom + ITEMS.gap)
   const block = boundarySlotBlock(slide, ["row_cards"]) as RowCards | undefined
-  const items = (block?.items ?? []).map((it) => ({ it, text: fitBinder(it.title, { width: ITEMS.w, size: ITEMS.size, lineHeight: ITEMS.lineHeight, maxLines: 1 }, ctx) }))
-  // A title on two lines keeps its first line where a one-line title stands
-  // and moves what follows down a line.
-  const drop = (fitDossierTitle(slide.heading, ctx, TITLE.size, TITLE.lineHeight, TITLE.minPt, TITLE.w).lines.length - 1) * TITLE.lineHeight
-  const itemsFit = block !== undefined && items.length <= ITEMS.max && items.every((i) => i.text) && questionsLeftOut(block) === undefined
+  const items = (block?.items ?? []).map((it) => ({ it, text: fitBinder(it.title, { width: ITEMS.w, size: ITEMS.size, lineHeight: ITEMS.lineHeight, maxLines: ITEMS.maxLines }, ctx) }))
+  const rowH = (lines: number) => Math.max(ITEMS.row, lines * ITEMS.lineHeight + ITEMS.pad * 2)
+  const listH = items.reduce((h, i) => h + rowH(i.text?.lines.length ?? 1), 0)
+  const itemsFit = block !== undefined && items.length <= ITEMS.max && items.every((i) => i.text) && questionsLeftOut(block) === undefined && listTop + listH <= ITEMS.foot
+  const caption = slide.footnote?.trim() ? stripEmphasis(slide.footnote).trim() : ""
+  const captionFits = !caption || (photo?.src !== undefined && binderWidth(caption, CAPTION.size, ctx) <= CAPTION.right - PHOTO_X - 24)
+  let cursor = listTop
   return (
     <>
-      {photo ? <PitchScrim id={`binder-chapter-scrim-${index}`} ink={ground} axis="x" stops={SCRIM} /> : null}
-      <BinderTabsFor ir={ir} slide={slide} ctx={ctx} onPhoto={photo} />
+      <rect data-binder-ground="" x={0} y={0} width={1280} height={720} fill={ground} />
+      {photo?.src ? (
+        <g data-binder-chapter-photo="">
+          <image href={photo.src} x={PHOTO_X} y={0} width={1280 - PHOTO_X} height={720} preserveAspectRatio="xMidYMid slice" aria-label={photo.alt || undefined} />
+          {caption && captionFits ? (
+            <>
+              <defs>
+                <linearGradient id={`binder-chapter-veil-${index}`} x1={0} y1={1} x2={0} y2={0}>
+                  <stop offset="0%" stopColor={ground} stopOpacity={CAPTION.alpha} />
+                  <stop offset="100%" stopColor={ground} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <rect x={PHOTO_X} y={720 - CAPTION.veil} width={1280 - PHOTO_X} height={CAPTION.veil} fill={`url(#binder-chapter-veil-${index})`} />
+              <g data-binder-caption="">{paintBinderLine(caption, { ctx, x: CAPTION.right, baseline: CAPTION.baseline, size: CAPTION.size, anchor: "end", fill: inks.onDeep })}</g>
+            </>
+          ) : null}
+        </g>
+      ) : null}
+      {caption && !captionFits ? <g data-dropped={1} data-dropped-kind="footnote" /> : null}
+      {name || place ? (
+        <g data-binder-chapter-head="">
+          {headFits ? (
+            <>
+              {name ? paintBinderLine(name, { ctx, x: LEFT, top: HEADER.top, lineHeight: HEADER.lineHeight, size: HEADER.size, fill: binderText(white(HEADER.alpha), ground, HEADER.size) }) : null}
+              {place ? (
+                <g data-binder-place="">{paintBinderLine(place, { ctx, x: LEFT + COL_W, top: HEADER.top, lineHeight: HEADER.lineHeight, size: HEADER.size, anchor: "end", fill: binderText(white(HEADER.alpha), ground, HEADER.size) })}</g>
+              ) : null}
+            </>
+          ) : (
+            <g data-dropped={1} data-dropped-kind="label" />
+          )}
+          <rect x={LEFT} y={HEADER.rule} width={COL_W} height={1} fill={white(HEADER.ruleAlpha)} />
+        </g>
+      ) : null}
       <g data-binder-lead="chapter-number">
         {paintBinderTracked({ ctx, text: number, x: LEFT, y: binderBaseline(NUMBER.top, NUMBER.lineHeight, NUMBER.size), size: NUMBER.size, tracking: NUMBER.tracking, bold: true, fill: binderText(inks.fire, ground, NUMBER.size) })}
       </g>
-      {kicker ? (
-        kickerFits ? (
-          <g data-binder-part="">{paintBinderTracked({ ctx, text: kicker, x: LEFT, y: binderBaseline(PART.top, PART.lineHeight, PART.size), size: PART.size, tracking: PART.tracking, bold: true, fill: binderText(white(PART.alpha), ground, PART.size) })}</g>
+      {part ? (
+        partFits ? (
+          <g data-binder-part="">
+            {paintBinderTracked({ ctx, text: part, x: LEFT, y: binderBaseline(PART.top, PART.lineHeight, PART.size), size: PART.size, tracking: PART.tracking, fill: binderText(white(PART.alpha), ground, PART.size) })}
+          </g>
         ) : (
           <g data-dropped={1} data-dropped-kind="label" />
         )
       ) : null}
-      <BinderTitle heading={slide.heading} ctx={ctx} size={TITLE.size} lineHeight={TITLE.lineHeight} minPt={TITLE.minPt} width={TITLE.w} foot={TITLE.foot + drop} ground={ground} fill={inks.onDeep} />
-      {asks ? <g data-binder-asks="">{paintBinder(asks, { ctx, x: LEFT, top: ASKS.top + drop, bold: true, fill: binderText(white(ASKS.alpha), ground, ASKS.size), ground })}</g> : null}
+      {paintBinderTitle(title, { ctx, x: LEFT, top: titleTop, fill: inks.onDeep, ground })}
+      {asks ? <g data-binder-asks="">{paintBinder(asks, { ctx, x: LEFT, top: asksTop, fill: binderText(white(ASKS.alpha), ground, ASKS.size), ground })}</g> : null}
       {slide.subheading?.trim() && !asks ? <g data-dropped={1} data-dropped-kind="label" /> : null}
       {block ? (
         itemsFit ? (
           <g {...blockTag(ctx, block)} data-binder-questions="">
+            <rect x={LEFT} y={listTop} width={COL_W} height={1} fill={white(ITEMS.ruleAlpha)} />
             {items.map(({ it, text }, i) => {
-              const y = ITEMS.top + drop + i * ITEMS.step
+              const top = cursor
+              const h = rowH(text!.lines.length)
+              cursor += h
+              const textTop = top + (h - text!.lines.length * ITEMS.lineHeight) / 2
               return (
-                <g key={i}>
-                  {it.icon ? paintBinderIcon(it.icon, LEFT, y + ITEMS.icon.dy, ITEMS.icon.size, inks.onDeep, ground) : null}
-                  {paintBinder(text!, { ctx, x: LEFT + ITEMS.x, top: y, fill: binderText(inks.onDeep, ground, ITEMS.size), ground })}
+                <g key={i} data-binder-question={i + 1}>
+                  {it.icon ? paintBinderIcon(it.icon, LEFT, top + (h - ITEMS.icon.size) / 2, ITEMS.icon.size, inks.onDeep, ground) : null}
+                  {paintBinder(text!, { ctx, x: LEFT + ITEMS.x, top: textTop, fill: binderText(inks.onDeep, ground, ITEMS.size), ground })}
+                  <rect x={LEFT} y={top + h - 1} width={COL_W} height={1} fill={white(ITEMS.lineAlpha)} />
                 </g>
               )
             })}
@@ -109,15 +166,15 @@ export function BinderChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
 }
 
 export const layoutDef = {
-  // chapter-binder-chapter.tsx: proposal's chapter page. The page's
-  // photograph under a petrol darkening from the left, the binder's tabs with
-  // the chapter's lit, the chapter's number huge in the brick red, its name,
-  // the title in white and the questions the chapter answers.
+  // chapter-binder-chapter.tsx: proposal's chapter page. Petrol on the left
+  // half and the page's photograph bled off the right, a running head over a
+  // faint rule, the chapter's number huge in the brick red, its name, the
+  // title in white and the questions the chapter answers, a ruled line each.
   id: "binder-chapter",
   kind: "standard",
   story: {
     name: "Binder Chapter",
-    story: "The page's photograph under petrol darkening from the left, the chapter's number huge in brick red, its title in white, and the questions this part answers, each with its icon. The binder's tab for the part sticks out at the right.",
+    story: "Petrol on the left half and the page's photograph bled off the right: the chapter's number huge in brick red, its name and title in white, and the questions this part answers, each on a ruled line with its icon.",
     positioning: "Opens a part of a proposal. Choose it when the client should know, before the figures, which of their questions the next pages settle.",
     audience: "A client's management reading a proposal part by part.",
     notFor: "A quiet report chapter, where a photograph and a brick-red number would read as a sales piece.",
@@ -129,7 +186,7 @@ export const layoutDef = {
     { name: "subheading", accepts: [] },
     { name: "body", accepts: ["row_cards"], capacity: 1, itemCapacity: ITEMS.max, declines: questionsLeftOut },
   ],
-  pageFields: ["kicker", "stage"],
+  pageFields: ["kicker", "stage", "footnote"],
   drawsPhoto: true,
   suppressMotif: true,
   headingFit: { maxWidth: TITLE.w, fontSize: TITLE.size, maxLines: 2, minPt: TITLE.minPt, bold: true, lineHeightRatio: TITLE.lineHeight / TITLE.size },

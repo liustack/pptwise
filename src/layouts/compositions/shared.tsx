@@ -445,15 +445,15 @@ export type CompositionId =
  *   filled, a budget cut into shares and requests to tick. See
  *   `./marquee.tsx`.
  *
- * - `binder`: proposal's 2026-10 board. A proposal handed to a client's
- *   management in a ring binder: white paper, cards of warm sand with no
- *   outline, the primary's petrol for titles, figures and the one dark block
- *   a page may carry, the chart palette's second petrol and sky for bars and
- *   steps, and the accent, a brick red, on one thing a page with white on it,
- *   small brick-red words in the theme's emphasis ink. A composition
- *   offered this setting draws the shapes that board drew and no other did:
- *   what the client gets as figure cards, a day's tariff bands, places side
- *   by side as cards, a sum worked out beside its inputs, what moves a
+ * - `binder`: proposal's 2026-10 board, set as print. A proposal handed to a
+ *   client's management in a ring binder: white paper, rows and columns
+ *   parted by hairlines and 2px ink rules, no cards or chips, the primary's
+ *   petrol for titles and figures, the chart palette's second petrol and sky
+ *   for bars and steps, and the accent, a brick red, on one thing a page as
+ *   a mark or words, small brick-red words in the theme's emphasis ink. A
+ *   composition offered this setting draws the shapes that board drew and no
+ *   other did: what the client gets as figure columns, a day's tariff bands,
+ *   places side by side, a sum worked out beside its inputs, what moves a
  *   result, what a store earns a day, what has moved, what a solution is made
  *   of, the ways to pay, public records, safeguards, a risk register with its
  *   remedies, steps with the papers that close them, a price list as one

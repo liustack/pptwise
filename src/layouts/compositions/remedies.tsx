@@ -1,17 +1,18 @@
 import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { Lead, binderInks, binderText, edgePath, fitBinder, paintBinder, paintBinderIcon } from "./binder"
+import { Lead, binderInks, binderText, fitBinder, paintBinder, paintBinderIcon } from "./binder"
 
 type Table = Extract<Component, { type: "data_table" }>
 
 /*
  * remedies: a risk register, proposal's 2026-10 board (p15). Three columns
- * under their headers in small grey and a 2px rule of petrol: a row a risk,
- * its icon in petrol and its name bold, what the public record says, and the
+ * under their headers in small grey and a 2px ink rule: a row a risk, its
+ * icon in petrol and its name bold, what the public record says, and the
  * answer bold after the column's icon in the success ink (a shield). The risk
- * the page leads with (a row marked `highlight`) sits on the brick red's tint
- * with a brick-red edge at its left. Hairlines between the rows.
+ * the page leads with (a row marked `highlight`) has its icon and name in the
+ * brick red, on the paper like the rest. Hairlines between the rows, a 2px
+ * ink rule under the last.
  *
  * Takes, in the binder setting: a `data_table` of three columns, the last
  * with an icon, no title, source or marked column, two to five rows, each
@@ -25,7 +26,7 @@ type Table = Extract<Component, { type: "data_table" }>
 const HEAD = { top: 2, size: 13, lineHeight: 20 } as const
 const COLS = { risk: 0, record: 266, answer: 722 } as const
 const RULE = 28
-const ROWS = { top: 34, step: 80, h: 74, r: 6, edge: 4, icon: { dx: 18, dy: 24, size: 22 }, name: { dx: 52, dy: 22, size: 16, lineHeight: 28, w: 206 }, record: { dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 420 }, answer: { icon: { dy: 18, size: 18 }, dx: 28, dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 370 }, hairline: 77 } as const
+const ROWS = { top: 34, step: 80, h: 74, icon: { dx: 0, dy: 24, size: 22 }, name: { dx: 32, dy: 22, size: 16, lineHeight: 28, w: 226 }, record: { dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 420 }, answer: { icon: { dy: 18, size: 18 }, dx: 28, dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 370 }, hairline: 77 } as const
 
 export const remediesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null
@@ -53,27 +54,24 @@ export const remediesComposition: Composition = ({ components, ctx, rect, settin
   return (
     <g {...compositionTag("remedies")} {...blockTag(ctx, t)}>
       {heads.map((h, i) => (h ? <g key={`h-${i}`}>{paintBinder(h, { ctx, x: rect.x + [COLS.risk, COLS.record, COLS.answer][i]!, top: rect.y + HEAD.top, bold: true, fill: headInk })}</g> : null))}
-      <rect x={rect.x} y={rect.y + RULE} width={rect.w} height={2} fill={inks.deep} />
+      <rect x={rect.x} y={rect.y + RULE} width={rect.w} height={2} fill={inks.ink} />
       {rows.map((r, i) => {
         const { row, name, record, answer, lit } = r!
         const y = rect.y + ROWS.top + i * ROWS.step
-        const ground = lit ? inks.firePale : inks.ground
+        const ground = inks.ground
+        const mark = (
+          <g data-binder-risk-lead="">
+            {paintBinderIcon(row.icon!, rect.x + ROWS.icon.dx, y + ROWS.icon.dy, ROWS.icon.size, lit ? inks.fireText : inks.deep, ground)}
+            {paintBinder(name, { ctx, x: rect.x + ROWS.name.dx, top: y + ROWS.name.dy, bold: true, fill: binderText(lit ? inks.fireText : inks.ink, ground, ROWS.name.size) })}
+          </g>
+        )
         return (
           <g key={i} data-binder-risk={stripEmphasis(cell(row, riskCol.key))}>
-            {lit ? (
-              <>
-                <rect x={rect.x} y={y} width={rect.w} height={ROWS.h} rx={ROWS.r} fill={inks.firePale} />
-                <Lead id="risk">
-                  <path d={edgePath(rect.x, y, ROWS.h, ROWS.r, ROWS.edge)} fill={inks.fire} />
-                </Lead>
-              </>
-            ) : null}
-            {paintBinderIcon(row.icon!, rect.x + ROWS.icon.dx, y + ROWS.icon.dy, ROWS.icon.size, inks.deep, ground)}
-            {paintBinder(name, { ctx, x: rect.x + ROWS.name.dx, top: y + ROWS.name.dy, bold: true, fill: binderText(inks.ink, ground, ROWS.name.size), ground })}
-            {paintBinder(record, { ctx, x: rect.x + COLS.record, top: y + ROWS.record.dy, fill: binderText(inks.ink, ground, ROWS.record.size), ground })}
+            {lit ? <Lead id="risk">{mark}</Lead> : mark}
+            {paintBinder(record, { ctx, x: rect.x + COLS.record, top: y + ROWS.record.dy, fill: binderText(inks.ink, ground, ROWS.record.size) })}
             {paintBinderIcon(answerCol.icon!, rect.x + COLS.answer, y + ROWS.answer.icon.dy, ROWS.answer.icon.size, inks.success, ground)}
-            {paintBinder(answer, { ctx, x: rect.x + COLS.answer + ROWS.answer.dx, top: y + ROWS.answer.dy, bold: true, fill: binderText(inks.ink, ground, ROWS.answer.size), ground })}
-            {i < rows.length - 1 ? <rect x={rect.x} y={y + ROWS.hairline} width={rect.w} height={1} fill={inks.line} /> : null}
+            {paintBinder(answer, { ctx, x: rect.x + COLS.answer + ROWS.answer.dx, top: y + ROWS.answer.dy, bold: true, fill: binderText(inks.ink, ground, ROWS.answer.size) })}
+            {i < rows.length - 1 ? <rect x={rect.x} y={y + ROWS.hairline} width={rect.w} height={1} fill={inks.line} /> : <rect x={rect.x} y={y + ROWS.hairline} width={rect.w} height={2} fill={inks.ink} />}
           </g>
         )
       })}

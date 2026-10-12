@@ -1,31 +1,26 @@
 import type React from "react"
-import type { Course } from "@/ir"
 import type { ComponentCtx } from "../../components/types"
 import { inkToward } from "../../components/tag"
 import { emphasisRunInk, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { Icon } from "../../render/icons"
 import { blendOver, contrastRatio, graphicInk, metaInk, readableOn } from "../../render/ink"
 import { measureTextUnits } from "../../lib/svg-text-layout"
-import { stageIndex } from "../../render/course-marks"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 
 /*
  * The binder setting: a proposal handed to a client's management in a ring
  * binder. Settled on proposal's 2026-10 board
- * (`design/rounds/2026-10-06-proposal/`).
+ * (`design/rounds/2026-10-06-proposal/`) and set as print in its second round.
  *
- * White paper, cards of warm sand (the theme's surface) over no outline, the
- * petrol of the primary for titles, figures and the one dark block a page may
- * carry, a second petrol and a pale sky from the chart palette for bars and
- * steps, and the accent, a brick red, on one thing a page: the figure the
- * page lands on, the answer block, a chip, the box to tick. Words set on the
- * accent are in the text ink where it reads there and white where it does
- * not, which on the brick red is white. Small words in the accent take the
- * theme's emphasis ink, on proposal the brick red itself, which reads on the
- * paper and the sand. Down the right edge runs a column of binder tabs, one a
- * section of the proposal, the page's own sticking out in petrol.
+ * White paper set as print is: hairlines and 2px ink rules part the rows and
+ * columns, no cards, chips or tabs. The petrol of the primary carries
+ * titles, figures and the running head, a second petrol and a pale sky from
+ * the chart palette carry bars and steps, and the accent, a brick red, is
+ * on one thing a page: the figure the page lands on, the row it leads with,
+ * the numbers of the decisions. Small words in the accent take the theme's
+ * emphasis ink, on proposal the brick red itself, which reads on the paper.
  *
- * The board's small type (11 to 15px labels, chips, notes, the source and the
+ * The board's small type (11 to 15px labels, notes, the source and the
  * folio) is under the 16px floor and carries the `binder-spec` exemption the
  * L1 audit knows.
  *
@@ -44,17 +39,15 @@ export function binderSmall(size: number): Record<string, string> {
 export interface BinderInks {
   /** The paper: the page. */
   ground: string
-  /** A card, warm sand. */
+  /** The theme's surface, warm sand: where a photograph is missing. */
   card: string
-  /** Petrol: titles, figures, a dark block, the lit tab. */
+  /** Petrol: titles, figures, the running head, the chapter's half. */
   deep: string
   /** The second petrol: bars, a peak step. */
   data: string
-  /** The second petrol at a tint over the paper: a tip's bar, a quiet chip. */
-  pale: string
   /** Sky: a reference bar, a flat step. */
   sky: string
-  /** Sky at a tint over the paper: a valley step, a verdict chip. */
+  /** Sky at a tint over the paper: a valley step. */
   skyPale: string
   /** Words. */
   ink: string
@@ -64,7 +57,7 @@ export interface BinderInks {
   fade: string
   /** Hairlines. Never words. */
   line: string
-  /** A chip's outline: the hairline a step darker. */
+  /** A bar's outline: the hairline a step darker. */
   rule: string
   /** Ticks and a blank to fill: the hairline two steps darker. */
   tick: string
@@ -72,10 +65,6 @@ export interface BinderInks {
   fire: string
   /** Small words in the brick red: the theme's emphasis ink, on proposal the brick red itself. */
   fireText: string
-  /** The brick red at a tint over the paper: a lead row. */
-  firePale: string
-  /** Words on the brick red: the text ink where it reads at 4.5, otherwise the readable ink, white on the brick red. */
-  onFire: string
   /** Words on petrol and on a photograph darkened with it. */
   onDeep: string
   /** A lesson learned the hard way: the theme's danger ink. */
@@ -84,14 +73,10 @@ export interface BinderInks {
   success: string
 }
 
-/** #E4EDF2 on the board: the second petrol at 12% over the paper. */
-const PALE_MIX = 0.12
 /** #D6E6EF on the board: the sky at 36% over the paper. */
 const SKY_PALE_MIX = 0.36
 /** #8A949C on the board: the muted ink 28% of the way to the paper. */
 const FADE_MIX = 0.28
-/** The accent at 14% over the paper: #FDEBE2 under the board's tangerine, #F5E4E1 under the brick red. */
-const FIRE_PALE_MIX = 0.14
 /** #CFC8BC and #B9B3A8 on the board: the hairline toward the text ink. */
 const RULE_MIX = 0.1
 const TICK_MIX = 0.2
@@ -109,7 +94,6 @@ export function binderInks(ctx: ComponentCtx): BinderInks {
     card: colors.surface,
     deep: colors.primary,
     data,
-    pale: blendOver(data, ground, PALE_MIX),
     sky,
     skyPale: blendOver(sky, ground, SKY_PALE_MIX),
     ink: colors.text,
@@ -120,8 +104,6 @@ export function binderInks(ctx: ComponentCtx): BinderInks {
     tick: blendOver(colors.text, line, TICK_MIX),
     fire: colors.accent,
     fireText: contrastRatio(fireText, ground) >= 4.5 ? fireText : inkToward(colors.accent, readableOn(ground), ground, 12),
-    firePale: blendOver(colors.accent, ground, FIRE_PALE_MIX),
-    onFire: contrastRatio(colors.text, colors.accent) >= 4.5 ? colors.text : readableOn(colors.accent),
     onDeep: readableOn(colors.primary),
     danger: colors.danger ?? colors.accent,
     success: colors.success ?? colors.primary,
@@ -179,6 +161,7 @@ export function paintBinder(
     anchor?: "start" | "middle" | "end"
     ground?: string
     runInk?: string
+    runWeight?: "700"
     attrs?: Record<string, string>
     lastAttrs?: Record<string, string>
   },
@@ -193,6 +176,7 @@ export function paintBinder(
     anchor: opts.anchor,
     bg: opts.ground,
     runInk: opts.runInk,
+    runWeight: opts.runWeight,
     attrs: { ...binderSmall(layout.fontSize), ...opts.attrs },
     lastAttrs: opts.lastAttrs,
   })
@@ -289,7 +273,7 @@ export function paintBinderIcon(name: string, x: number, y: number, size: number
   )
 }
 
-// ── Cards, chips and the lead ──────────────────────────────────────────
+// ── Boxes and the lead ──────────────────────────────────────────
 
 export interface Box {
   x: number
@@ -298,100 +282,12 @@ export interface Box {
   h: number
 }
 
-/** A card's corner, the board's 12px. */
-export const BINDER_CARD_R = 12
-
-/** The edge a lead row carries (precedents, remedies): the bar's left side, `edge` px deep, following its rounded corners. */
-export function edgePath(x: number, y: number, h: number, r: number, edge: number): string {
-  return [
-    `M ${x + r} ${y}`,
-    `A ${r} ${r} 0 0 0 ${x} ${y + r}`,
-    `L ${x} ${y + h - r}`,
-    `A ${r} ${r} 0 0 0 ${x + r} ${y + h}`,
-    `L ${x + r + edge} ${y + h}`,
-    `A ${r} ${r} 0 0 1 ${x + edge} ${y + h - r}`,
-    `L ${x + edge} ${y + r}`,
-    `A ${r} ${r} 0 0 1 ${x + r + edge} ${y}`,
-    "Z",
-  ].join(" ")
-}
-
-/** A card: the surface, rounded 12px, no outline unless asked. */
-export function paintBinderCard(
-  box: Box,
-  inks: BinderInks,
-  opts: { fill?: string; r?: number; stroke?: string; strokeWidth?: number; dash?: string; key?: string | number; attrs?: Record<string, string> } = {},
-): React.ReactElement {
-  const sw = opts.stroke ? (opts.strokeWidth ?? 1) : 0
-  // A stroke is drawn inside the card's box, as the board's border-box did.
-  return (
-    <rect
-      key={opts.key}
-      {...opts.attrs}
-      x={box.x + sw / 2}
-      y={box.y + sw / 2}
-      width={box.w - sw}
-      height={box.h - sw}
-      rx={Math.max(0, (opts.r ?? BINDER_CARD_R) - sw / 2)}
-      fill={opts.fill ?? inks.card}
-      stroke={opts.stroke}
-      strokeWidth={opts.stroke ? sw : undefined}
-      strokeDasharray={opts.dash}
-    />
-  )
-}
-
 /**
  * The lead on a page. Every shape a composition paints in the brick red sits
  * inside one of these groups, so a test can find what the page lights.
  */
 export function Lead({ id, children }: { id: string; children: React.ReactNode }): React.ReactElement {
   return <g data-binder-lead={id}>{children}</g>
-}
-
-export interface ChipStyle {
-  /** The words' size. */
-  size: number
-  /** The chip's height. Its ends are fully round. */
-  h: number
-  /** The words' colour, before it is held to their size on the chip. */
-  fg: string
-  /** The chip's fill, or none for an outline. */
-  bg?: string
-  /** The outline, 1.5px, when the chip has one. */
-  border?: string
-  /** The outline dashed. */
-  dash?: string
-}
-
-/** A chip's width: the words bold plus eleven pixels of air a side, as the board measured it. */
-export function chipWidth(text: string, size: number, ctx: ComponentCtx): number {
-  return Math.round(binderWidth(text, size, ctx, true) + 22)
-}
-
-/** A chip at `x`, `y`: a pill of `style.h`, its words bold and centred. Returns the shape and its width. */
-export function paintChip(text: string, x: number, y: number, style: ChipStyle, ctx: ComponentCtx, inks: BinderInks, opts: { key?: string | number; attrs?: Record<string, string> } = {}): { node: React.ReactElement; w: number } {
-  const words = stripEmphasis(text).trim()
-  const w = chipWidth(words, style.size, ctx)
-  const sw = style.border ? 1.5 : 0
-  const ground = style.bg ?? inks.ground
-  const node = (
-    <g key={opts.key} data-binder-chip={words} {...opts.attrs}>
-      <rect
-        x={x + sw / 2}
-        y={y + sw / 2}
-        width={w - sw}
-        height={style.h - sw}
-        rx={(style.h - sw) / 2}
-        fill={style.bg ?? "none"}
-        stroke={style.border}
-        strokeWidth={style.border ? sw : undefined}
-        strokeDasharray={style.dash}
-      />
-      {paintBinderLine(words, { ctx, x: x + w / 2, top: y + sw, lineHeight: style.h - sw * 2, size: style.size, bold: true, anchor: "middle", fill: binderText(style.fg, ground, style.size) })}
-    </g>
-  )
-  return { node, w }
 }
 
 /**
@@ -425,10 +321,13 @@ export function paintBinderPhoto(assetId: string, box: Box, ctx: ComponentCtx, i
   )
 }
 
-/** A box to tick, `size` square, rounded, outlined 2px in `stroke` over `fill`. */
-export function paintCheckbox(x: number, y: number, size: number, stroke: string, fill: string, opts: { r?: number; key?: string | number } = {}): React.ReactElement {
-  return <rect key={opts.key} data-binder-box="" x={x + 1} y={y + 1} width={size - 2} height={size - 2} rx={opts.r ?? 4} fill={fill} stroke={stroke} strokeWidth={2} />
+/** A box to tick as on a printed form: `size` square, square cornered, outlined 1.5px in `stroke`, empty. */
+export function paintCheckbox(x: number, y: number, size: number, stroke: string, opts: { key?: string | number } = {}): React.ReactElement {
+  const w = CHECKBOX_STROKE
+  return <rect key={opts.key} data-binder-box="" x={x + w / 2} y={y + w / 2} width={size - w} height={size - w} fill="none" stroke={stroke} strokeWidth={w} />
 }
+
+const CHECKBOX_STROKE = 1.5
 
 // ── Reading the author's words ─────────────────────────────────────────
 
@@ -489,129 +388,4 @@ export function wholeMark(text: string): boolean {
 export function blankToFill(text: string): boolean {
   const t = text.trim()
   return t.length > 0 && /^[\s—–\-－]+$/u.test(t)
-}
-
-// ── The binder tabs ────────────────────────────────────────────────────
-
-/**
- * The binder's index tabs down the right edge, one a stage of the deck's
- * `course`: from y118, 98px apart, 92px tall. The page's own stage sticks
- * out: 52px wide from x1228, petrol, its name at 15px bold in the readable
- * ink. The others sit back, 36px wide from x1244, the sand of a card (white
- * over a photograph), their names at 13px bold in the muted ink. A name in
- * Chinese stands one character under another with 6px between them; a name
- * in Latin letters is turned to read down the tab.
- */
-export const TABS = {
-  top: 118,
-  pitch: 98,
-  h: 92,
-  right: 1280,
-  lit: { w: 52, r: 8, size: 15 },
-  idle: { w: 36, r: 6, size: 13 },
-  tracking: 6,
-  latinTracking: 1,
-  max: 5,
-} as const
-
-const CJK = /[⺀-鿿豈-﫿＀-￯]/u
-
-/** Whether a tab's name is set upright one character under another, rather than turned. */
-export function tabUpright(label: string): boolean {
-  return CJK.test(label)
-}
-
-/** The length a tab's name runs along its tab. */
-export function tabRun(label: string, size: number, ctx: ComponentCtx): number {
-  const text = label.trim()
-  if (tabUpright(text)) {
-    const n = Array.from(text).length
-    return n * size + n * TABS.tracking
-  }
-  return binderTrackedWidth(text, size, TABS.latinTracking, ctx, true)
-}
-
-/** Whether every stage of `course` fits a tab: at most five, each name within its tab's length. */
-export function tabsFit(course: Course, ctx: ComponentCtx): boolean {
-  if (course.stages.length > TABS.max) return false
-  return course.stages.every((stage) => tabRun(stage.label, TABS.lit.size, ctx) <= TABS.h - 12)
-}
-
-/** The tabs, the page's stage lit. `onPhoto` sets the others white over a photograph. */
-export function BinderTabs({ course, stage, ctx, onPhoto = false }: { course: Course; stage: string; ctx: ComponentCtx; onPhoto?: boolean }): React.ReactElement | null {
-  const inks = binderInks(ctx)
-  const lit = stageIndex(course, stage)
-  if (lit < 0) return null
-  if (!tabsFit(course, ctx)) return <g data-dropped={course.stages.length} data-dropped-kind="label" />
-  const idleFill = onPhoto ? blendOver("#FFFFFF", inks.deep, 0.86) : inks.card
-  return (
-    <g data-binder-tabs="">
-      {course.stages.map((s, i) => {
-        const on = i === lit
-        const spec = on ? TABS.lit : TABS.idle
-        const x = TABS.right - spec.w
-        const y = TABS.top + i * TABS.pitch
-        const fill = on ? inks.deep : idleFill
-        const ink = on ? binderText(inks.onDeep, fill, spec.size) : binderText(inks.muted, fill, spec.size)
-        const label = s.label.trim()
-        const cx = x + spec.w / 2
-        // Rounded only at the left: the tab runs on under the page's edge.
-        const d = `M ${TABS.right} ${y} L ${x + spec.r} ${y} A ${spec.r} ${spec.r} 0 0 0 ${x} ${y + spec.r} L ${x} ${y + TABS.h - spec.r} A ${spec.r} ${spec.r} 0 0 0 ${x + spec.r} ${y + TABS.h} L ${TABS.right} ${y + TABS.h} Z`
-        return (
-          <g key={i} data-binder-tab={label} data-binder-tab-lit={on ? "1" : undefined}>
-            <path d={d} fill={fill} />
-            {tabUpright(label) ? (
-              <TabUpright label={label} cx={cx} top={y} size={spec.size} fill={ink} ctx={ctx} />
-            ) : (
-              <TabTurned label={label} cx={cx} top={y} size={spec.size} fill={ink} ctx={ctx} />
-            )}
-          </g>
-        )
-      })}
-    </g>
-  )
-}
-
-/**
- * A Chinese tab name, one character under the next with the board's 6px
- * between them, centred on the tab the way the board's vertical writing set
- * it: the space after the last character counts toward the run.
- */
-function TabUpright({ label, cx, top, size, fill, ctx }: { label: string; cx: number; top: number; size: number; fill: string; ctx: ComponentCtx }): React.ReactElement {
-  const chars = Array.from(label)
-  const step = size + TABS.tracking
-  const first = top + (TABS.h - chars.length * step) / 2
-  return (
-    <g data-binder-tab-name={label}>
-      {chars.map((ch, i) => (
-        <text
-          key={i}
-          {...binderSmall(size)}
-          {...(i < chars.length - 1 ? { "data-joins-next": "" } : {})}
-          x={cx}
-          y={Math.round((first + i * step + size * 0.88) * 100) / 100}
-          textAnchor="middle"
-          fontFamily={ctx.fonts.heading}
-          fontSize={size}
-          fontWeight="700"
-          fill={fill}
-          dominantBaseline="alphabetic"
-        >
-          {ch}
-        </text>
-      ))}
-    </g>
-  )
-}
-
-/** A Latin tab name, turned a quarter clockwise to read down the tab, centred on it. */
-function TabTurned({ label, cx, top, size, fill, ctx }: { label: string; cx: number; top: number; size: number; fill: string; ctx: ComponentCtx }): React.ReactElement {
-  const cy = top + TABS.h / 2
-  // Turned clockwise, the baseline runs down the tab at the side away from the page.
-  const baselineX = cx - size * 0.35
-  return (
-    <g data-binder-tab-name={label} transform={`rotate(90 ${baselineX} ${cy})`}>
-      {paintBinderTracked({ ctx, text: label, x: baselineX, y: cy, size, tracking: TABS.latinTracking, bold: true, anchor: "middle", fill })}
-    </g>
-  )
 }

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { binderInks, blankToFill, leadGap, splitAside, splitDot, tabsFit, wholeMark } from "./binder"
-import { testCtx } from "./__fixtures__/kit"
+import { binderInks, blankToFill, leadGap, paintCheckbox, splitAside, splitDot, wholeMark } from "./binder"
+import { renderNode, testCtx } from "./__fixtures__/kit"
 
 /*
  * The binder setting's shared pieces (`./binder.tsx`): the inks it derives
- * from a theme's tokens, and how it reads the author's words.
+ * from a theme's tokens, how it reads the author's words, and the box to tick.
  */
 
 describe("binderInks", () => {
@@ -15,19 +15,16 @@ describe("binderInks", () => {
     expect(inks.card).toBe("#F3F0EA")
     expect(inks.deep).toBe("#0E3B53")
     // The brick red the maintainer put in place of the board's tangerine: one
-    // ink for blocks and small words alike, white on it.
+    // ink for marks and small words alike.
     expect(inks.fire).toBe("#B8412C")
     expect(inks.fireText).toBe("#B8412C")
-    expect(inks.onFire).toBe("#FFFFFF")
     expect(inks.data).toBe("#2F6A8A")
     expect(inks.sky).toBe("#8DBBD3")
-    // Mixed toward the paper by the board's own proportions: the pale petrol
-    // and the pale sky as on the board (#E4EDF2, #D6E6EF), the brick red's
-    // tint, and the faded grey from the grey darkened past the board's.
+    // Mixed toward the paper by the board's own proportions: the pale sky as
+    // on the board (#D6E6EF), and the faded grey from the grey darkened past
+    // the board's.
     for (const [ink, board] of [
-      [inks.pale, "#E4EDF2"],
       [inks.skyPale, "#D6E6EF"],
-      [inks.firePale, "#F5E4E1"],
       [inks.fade, "#858D94"],
     ] as const) {
       const a = parseInt(ink.slice(1), 16)
@@ -69,13 +66,13 @@ describe("reading the author's words", () => {
   })
 })
 
-describe("the binder tabs", () => {
-  it("hold up to five stages whose names fit a tab", () => {
-    const { ctx } = testCtx("proposal")
-    const course = (labels: string[]) => ({ stages: labels.map((label) => ({ label })) })
-    expect(tabsFit(course(["概要", "算账", "方案", "落地", "决定"]), ctx)).toBe(true)
-    expect(tabsFit(course(["Summary", "Numbers", "Plan", "Delivery", "Decide"]), ctx)).toBe(true)
-    expect(tabsFit(course(["一", "二", "三", "四", "五", "六"]), ctx)).toBe(false)
-    expect(tabsFit(course(["一个很长很长的段落名字", "二"]), ctx)).toBe(false)
+describe("the box to tick", () => {
+  it("is square cornered, empty and outlined 1.5px inside its size", () => {
+    const { root } = renderNode(paintCheckbox(10, 20, 18, "#14212B"))
+    const box = root.querySelector("[data-binder-box]")!
+    expect(box.getAttribute("rx")).toBeNull()
+    expect(box.getAttribute("fill")).toBe("none")
+    expect(box.getAttribute("stroke-width")).toBe("1.5")
+    expect(Number(box.getAttribute("x")) + Number(box.getAttribute("width")) + 0.75).toBe(28)
   })
 })

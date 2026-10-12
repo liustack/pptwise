@@ -156,6 +156,10 @@ function consultingPadDeck(): PptxIR {
 // Recaptured (recap theme, 2026-10-13). recap joins the unassigned matrix:
 // 22 themes × five paths = 110 hashes. Only the five `recap|*` keys are new.
 // The other 105 paths stay byte-identical.
+//
+// Recaptured (proposal print, 2026-10-13). The proposal cover drops its
+// brick-red chip for a spaced grey line and sets its title and figures as
+// print. Only `proposal|0` moves. The other 109 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

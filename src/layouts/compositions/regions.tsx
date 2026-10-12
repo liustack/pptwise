@@ -1,23 +1,24 @@
 import type { Component } from "@/ir"
-import { blendOver } from "../../render/ink"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { Lead, binderInks, binderText, binderWidth, fitBinder, paintBinder, paintBinderCard, paintBinderIcon, paintChip, splitAside, wholeMark } from "./binder"
+import { Lead, binderBaseline, binderInks, binderText, binderWidth, fitBinder, paintBinder, paintBinderLine, splitAside, wholeMark } from "./binder"
+import { BinderPlainLine, fitPlainLine, noteHeight } from "./binder-bars"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
 
 /*
- * regions: places set side by side as cards, proposal's 2026-10 board (p05).
- * A card a column: its name at 24px in petrol, the line under it (the
- * comparison's first row, when it has no label), a hairline, then each
- * labelled row as its label in small grey over its value at 16px bold, the
- * row the page is about (`emphasis`) as its label over a figure at 36px in
- * petrol, a trailing aside in brackets on that figure set beside it as a grey
- * chip (「约 0.76（示意）」); last, the comparison's closing row with no label
- * as a verdict chip a card, sky on paper, the one marked whole (`**…**`) in
- * the brick red. Under the cards, the note as a block of petrol with its
- * icon, its title bold and its text in the paper's white.
+ * regions: places set side by side, proposal's 2026-10 print board (p05). A
+ * column a place, the columns under a hairline and parted by hairlines: its
+ * name at 24px in petrol, the line under it (the comparison's first row,
+ * when it has no label), a hairline, then each labelled row as its label in
+ * small grey over its value at 16px bold, the row the page is about
+ * (`emphasis`) as its label over a figure at 36px in petrol, a trailing
+ * aside in brackets on that figure set after it in small grey
+ * (「约 0.76（示意）」); last, the comparison's closing row with no label as
+ * a verdict a column, bold in petrol, the one marked whole (`**…**`) in the
+ * brick red. Under the columns, the note as a line after its grey icon, its
+ * title bold before its text.
  *
  * Takes, in the binder setting: a `comparison` of two to four columns with
  * no title, label column, tags, icons or recommendation: optionally a first
@@ -25,14 +26,14 @@ type Callout = Extract<Component, { type: "callout" }>
  * then optionally a last row with no label, at most one cell of which is
  * marked whole; then optionally a `callout` with a title and no tag.
  *
- * Declines: a name past one line, a line, label or value past its card, a
- * verdict wider than its card, and a note past two lines.
+ * Declines: a name past one line, a line, label or value past its column, a
+ * verdict past one line, and a note past two lines.
  *
  * Reads: the binder inks (`./binder.tsx`).
  */
 
-const CARD = { top: 4, gap: 14, pad: 28, name: { top: 20, size: 24, lineHeight: 32 }, sub: { top: 54, size: 12, lineHeight: 20 }, rule: 90, first: 104, row: { label: 18, value: 24, step: 60 }, label: { size: 12, lineHeight: 18 }, value: { size: 16, lineHeight: 24 }, figure: { size: 36, lineHeight: 46, step: 78 }, aside: { gap: 14, dy: 12, h: 24, size: 12 }, verdict: { h: 30, size: 14 }, bottom: 16 } as const
-const NOTE = { gap: 20, pad: 28, icon: { y: 22, size: 24 }, textX: 66, title: { top: 18, size: 19, lineHeight: 30 }, text: { top: 54, size: 15, lineHeight: 25, maxLines: 2 }, bottom: 16, onDeep: 0.86 } as const
+const COL = { top: 4, pad: 28, name: { top: 18, size: 24, lineHeight: 32 }, sub: { top: 52, size: 12, lineHeight: 20 }, rule: 86, first: 100, row: { label: 18, value: 24, step: 60 }, label: { size: 12, lineHeight: 18 }, value: { size: 16, lineHeight: 24 }, figure: { size: 36, lineHeight: 46, step: 78 }, aside: { gap: 10, size: 13 }, verdict: { size: 14, lineHeight: 22 }, bottom: 18 } as const
+const NOTE_GAP = 28
 
 export const regionsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null
@@ -50,99 +51,100 @@ export const regionsComposition: Composition = ({ components, ctx, rect, setting
   const callout = note as Callout | undefined
   if (callout && (!callout.title?.trim() || callout.tag)) return null
   const inks = binderInks(ctx)
-  const w = (rect.w - CARD.gap * (n - 1)) / n
-  const inner = w - CARD.pad * 2
+  const w = rect.w / n
+  const inner = (i: number) => w - (i === 0 ? 0 : COL.pad) - (i === n - 1 ? 0 : COL.pad)
 
-  const cards = c.columns.map((name, i) => {
-    const title = fitBinder(name, { width: inner, size: CARD.name.size, lineHeight: CARD.name.lineHeight, maxLines: 1, bold: true }, ctx)
-    const line = sub ? fitBinder(sub.cells[i] ?? "", { width: inner, size: CARD.sub.size, lineHeight: CARD.sub.lineHeight, maxLines: 1 }, ctx) : null
+  const cols = c.columns.map((name, i) => {
+    const title = fitBinder(name, { width: inner(i), size: COL.name.size, lineHeight: COL.name.lineHeight, maxLines: 1, bold: true }, ctx)
+    const line = sub ? fitBinder(sub.cells[i] ?? "", { width: inner(i), size: COL.sub.size, lineHeight: COL.sub.lineHeight, maxLines: 1 }, ctx) : null
     if (!title || (sub && !line)) return null
     const fields = rows.map((r) => {
-      const label = fitBinder(r.label, { width: inner, size: CARD.label.size, lineHeight: CARD.label.lineHeight, maxLines: 1, bold: true }, ctx)
+      const label = fitBinder(r.label, { width: inner(i), size: COL.label.size, lineHeight: COL.label.lineHeight, maxLines: 1, bold: true }, ctx)
       const raw = (r.cells[i] ?? "").trim()
       if (!label) return null
       if (!r.emphasis) {
-        const value = fitBinder(raw, { width: inner, size: CARD.value.size, lineHeight: CARD.value.lineHeight, maxLines: 1, bold: true }, ctx)
+        const value = fitBinder(raw, { width: inner(i), size: COL.value.size, lineHeight: COL.value.lineHeight, maxLines: 1, bold: true }, ctx)
         return value ? { label, value, figure: false as const } : null
       }
       const aside = splitAside(raw)
       const main = aside ? aside.main : raw
-      const figure = fitBinder(main, { width: inner, size: CARD.figure.size, lineHeight: CARD.figure.lineHeight, maxLines: 1, bold: true }, ctx)
+      const figure = fitBinder(main, { width: inner(i), size: COL.figure.size, lineHeight: COL.figure.lineHeight, maxLines: 1, bold: true }, ctx)
       if (!figure) return null
-      const figureW = binderWidth(main, CARD.figure.size, ctx, true)
-      const chipW = aside ? binderWidth(aside.aside, CARD.aside.size, ctx, true) + 22 : 0
-      if (aside && figureW + CARD.aside.gap + chipW > inner) return null
-      return { label, figure: true as const, value: figure, aside, figureW }
+      const figureW = binderWidth(main, COL.figure.size, ctx, true)
+      const asideText = aside ? `${aside.open}${aside.aside}${aside.close}` : ""
+      if (aside && figureW + COL.aside.gap + binderWidth(asideText, COL.aside.size, ctx) > inner(i)) return null
+      return { label, figure: true as const, value: figure, asideText, figureW }
     })
     if (fields.some((f) => !f)) return null
-    const verdict = verdicts?.cells[i]?.trim() ?? ""
-    if (verdict && binderWidth(stripEmphasis(verdict), CARD.verdict.size, ctx, true) + 22 > inner) return null
-    return { title, line, fields: fields.map((f) => f!), verdict }
+    const raw = verdicts?.cells[i]?.trim() ?? ""
+    const verdict = raw ? fitBinder(stripEmphasis(raw), { width: inner(i), size: COL.verdict.size, lineHeight: COL.verdict.lineHeight, maxLines: 1, bold: true }, ctx) : null
+    if (raw && !verdict) return null
+    return { title, line, fields: fields.map((f) => f!), verdict, lit: wholeMark(raw) }
   })
-  if (cards.some((card) => !card)) return null
+  if (cols.some((col) => !col)) return null
 
-  // Every card runs as tall as the tallest.
-  const fieldsH = rows.reduce((h, r) => h + (r.emphasis ? CARD.figure.step : CARD.row.step), 0)
-  const verdictH = verdicts ? CARD.verdict.h : 0
-  const cardH = CARD.first + fieldsH + verdictH + CARD.bottom - (verdicts ? 0 : CARD.figure.step - CARD.row.label - CARD.figure.lineHeight)
-  const noteText = callout ? fitBinder(callout.text, { width: rect.w - NOTE.textX - NOTE.pad, size: NOTE.text.size, lineHeight: NOTE.text.lineHeight, maxLines: NOTE.text.maxLines }, ctx) : null
-  const noteTitle = callout ? fitBinder(callout.title!, { width: rect.w - NOTE.textX - NOTE.pad, size: NOTE.title.size, lineHeight: NOTE.title.lineHeight, maxLines: 1, bold: true }, ctx) : null
-  if (callout && (!noteText || !noteTitle)) return null
-  const noteTop = rect.y + CARD.top + cardH + NOTE.gap
-  const noteH = callout ? NOTE.text.top + NOTE.text.lineHeight * NOTE.text.maxLines + NOTE.bottom : 0
-  if (CARD.top + cardH + (callout ? NOTE.gap + noteH : 0) > rect.h) return null
+  const fieldsH = rows.reduce((h, r) => h + (r.emphasis ? COL.figure.step : COL.row.step), 0)
+  const colH = COL.first + fieldsH + (verdicts ? COL.verdict.lineHeight : 0) + COL.bottom
+  const noteText = callout ? fitPlainLine(callout, rect.w, ctx, 2) : null
+  if (callout && !noteText) return null
+  const noteTop = rect.y + COL.top + colH + NOTE_GAP
+  if (COL.top + colH + (noteText ? NOTE_GAP + noteHeight(noteText) : 0) > rect.h) return null
 
   return (
     <g {...compositionTag("regions")}>
       <g {...blockTag(ctx, c)}>
-        {cards.map((card, i) => {
-          const { title, line, fields, verdict } = card!
-          const x = rect.x + i * (w + CARD.gap)
-          const y = rect.y + CARD.top
-          const tx = x + CARD.pad
-          let cursor = y + CARD.first
+        <rect x={rect.x} y={rect.y + COL.top} width={rect.w} height={1} fill={inks.line} />
+        {cols.map((col, i) => {
+          const { title, line, fields, verdict, lit } = col!
+          const x = rect.x + i * w
+          const y = rect.y + COL.top
+          const tx = x + (i === 0 ? 0 : COL.pad)
+          let cursor = y + COL.first
           return (
             <g key={i} data-binder-region={stripEmphasis(c.columns[i]!)}>
-              {paintBinderCard({ x, y, w, h: cardH }, inks)}
-              {paintBinder(title, { ctx, x: tx, top: y + CARD.name.top, bold: true, fill: binderText(inks.deep, inks.card, CARD.name.size), ground: inks.card })}
-              {line ? paintBinder(line, { ctx, x: tx, top: y + CARD.sub.top, fill: binderText(inks.muted, inks.card, CARD.sub.size), ground: inks.card }) : null}
-              <rect x={tx} y={y + CARD.rule} width={inner} height={1} fill={inks.line} />
+              {i > 0 ? <rect x={x} y={y} width={1} height={colH} fill={inks.line} /> : null}
+              {paintBinder(title, { ctx, x: tx, top: y + COL.name.top, bold: true, fill: binderText(inks.deep, inks.ground, COL.name.size) })}
+              {line ? paintBinder(line, { ctx, x: tx, top: y + COL.sub.top, fill: binderText(inks.muted, inks.ground, COL.sub.size) }) : null}
+              <rect x={tx} y={y + COL.rule} width={inner(i)} height={1} fill={inks.line} />
               {fields.map((f, k) => {
                 const top = cursor
-                cursor += f.figure ? CARD.figure.step : CARD.row.step
+                cursor += f.figure ? COL.figure.step : COL.row.step
                 return (
                   <g key={k}>
-                    {paintBinder(f.label, { ctx, x: tx, top, bold: true, fill: binderText(inks.muted, inks.card, CARD.label.size), ground: inks.card })}
+                    {paintBinder(f.label, { ctx, x: tx, top, bold: true, fill: binderText(inks.muted, inks.ground, COL.label.size) })}
                     {f.figure ? (
                       <>
-                        {paintBinder(f.value, { ctx, x: tx, top: top + CARD.row.label, bold: true, fill: binderText(inks.deep, inks.card, CARD.figure.size), ground: inks.card })}
-                        {f.aside
-                          ? paintChip(f.aside.aside, tx + f.figureW + CARD.aside.gap, top + CARD.row.label + CARD.aside.dy, { size: CARD.aside.size, h: CARD.aside.h, fg: inks.muted, border: inks.line }, ctx, inks, { attrs: { "data-aside-brackets": `${f.aside.open}${f.aside.close}` } }).node
-                          : null}
+                        {paintBinder(f.value, { ctx, x: tx, top: top + COL.row.label, bold: true, fill: binderText(inks.deep, inks.ground, COL.figure.size) })}
+                        {f.asideText ? (
+                          <g data-binder-aside="">
+                            {paintBinderLine(f.asideText, {
+                              ctx,
+                              x: tx + f.figureW + COL.aside.gap,
+                              baseline: binderBaseline(top + COL.row.label, COL.figure.lineHeight, COL.figure.size),
+                              size: COL.aside.size,
+                              fill: binderText(inks.muted, inks.ground, COL.aside.size),
+                            })}
+                          </g>
+                        ) : null}
                       </>
                     ) : (
-                      paintBinder(f.value, { ctx, x: tx, top: top + CARD.row.label, bold: true, fill: binderText(inks.ink, inks.card, CARD.value.size), ground: inks.card })
+                      paintBinder(f.value, { ctx, x: tx, top: top + COL.row.label, bold: true, fill: binderText(inks.ink, inks.ground, COL.value.size) })
                     )}
                   </g>
                 )
               })}
-              {verdict
-                ? wholeMark(verdict)
-                  ? <Lead id="verdict">{paintChip(verdict, tx, cursor, { size: CARD.verdict.size, h: CARD.verdict.h, fg: inks.onFire, bg: inks.fire }, ctx, inks).node}</Lead>
-                  : paintChip(verdict, tx, cursor, { size: CARD.verdict.size, h: CARD.verdict.h, fg: inks.deep, bg: inks.skyPale }, ctx, inks).node
-                : null}
+              {verdict ? (
+                lit ? (
+                  <Lead id="verdict">{paintBinder(verdict, { ctx, x: tx, top: cursor, bold: true, fill: binderText(inks.fireText, inks.ground, COL.verdict.size) })}</Lead>
+                ) : (
+                  paintBinder(verdict, { ctx, x: tx, top: cursor, bold: true, fill: binderText(inks.deep, inks.ground, COL.verdict.size) })
+                )
+              ) : null}
             </g>
           )
         })}
       </g>
-      {callout && noteText && noteTitle ? (
-        <g {...blockTag(ctx, callout)} data-binder-note="">
-          <rect x={rect.x} y={noteTop} width={rect.w} height={noteH} rx={12} fill={inks.deep} />
-          {callout.icon ? paintBinderIcon(callout.icon, rect.x + NOTE.pad, noteTop + NOTE.icon.y, NOTE.icon.size, inks.onDeep, inks.deep) : null}
-          {paintBinder(noteTitle, { ctx, x: rect.x + NOTE.textX, top: noteTop + NOTE.title.top, bold: true, fill: binderText(inks.onDeep, inks.deep, NOTE.title.size), ground: inks.deep })}
-          {paintBinder(noteText, { ctx, x: rect.x + NOTE.textX, top: noteTop + NOTE.text.top, fill: binderText(blendOver(inks.onDeep, inks.deep, NOTE.onDeep), inks.deep, NOTE.text.size), ground: inks.deep })}
-        </g>
-      ) : null}
+      {callout && noteText ? <BinderPlainLine callout={callout} text={noteText} x={rect.x} y={noteTop} ctx={ctx} /> : null}
     </g>
   )
 }

@@ -19,8 +19,8 @@ import { byText, renderNode, testCtx, texts, textOf } from "./__fixtures__/kit"
  * page.
  */
 
-/** The binder sheet's body band: x64 to x1196, y172 down to y640 over a source, y648 without one. */
-const band = (sourced: boolean) => ({ x: 64, y: 172, w: 1132, h: (sourced ? 640 : 648) - 172 })
+/** The binder sheet's body band: x64 to x1216, y176 down to y640 over a source, y648 without one. */
+const band = (sourced: boolean) => ({ x: 64, y: 176, w: 1152, h: (sourced ? 640 : 648) - 176 })
 const PIXEL = "data:image/png;base64,AAAA"
 const IMAGES = Object.fromEntries(BINDER_BOARD_IMAGES.map((id) => [id, { src: PIXEL }]))
 const chinese = (ctx: ComponentCtx): ComponentCtx => ({ ...ctx, figures: { chinese: true, groupFour: false }, images: IMAGES })
@@ -145,14 +145,15 @@ describe("the proposal board's pages on proposal", () => {
     }
   })
 
-  it("gains sets each figure at 40px, the marked one in the brick red over the sand", () => {
+  it("gains sets each figure at 40px between hairlines, the marked one in the brick red", () => {
     const { root, ctx } = draw("p02-promise")
     const figure = byText(root!, "6.1 至 7.7 年")!
     expect(figure.getAttribute("font-size")).toBe("40")
     expect(figure.closest("[data-binder-lead='gain']")).not.toBeNull()
-    expect(contrastRatio(figure.getAttribute("fill")!, binderInks(ctx).card)).toBeGreaterThanOrEqual(3)
+    expect(contrastRatio(figure.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(3)
     expect(byText(root!, "一部分白天用电")).toBeDefined()
-    expect(root!.querySelector("[data-binder-bar] text")!.getAttribute("font-weight")).toBe("700")
+    expect(Array.from(root!.querySelectorAll("rect")).some((r) => r.getAttribute("fill") === binderInks(ctx).card)).toBe(false)
+    expect(root!.querySelector("[data-binder-plain-line]")).not.toBeNull()
   })
 
   it("hours lays the day as runs as wide as their hours, coloured by step, with the midday frame and a tick every six hours", () => {
@@ -170,24 +171,28 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "苏发改价格发〔2025〕426 号")).toBeDefined()
   })
 
-  it("regions sets the aside of a figure as a chip beside it and the marked verdict in the brick red", () => {
+  it("regions prints the aside of a figure in small grey beside it and the marked verdict in the brick red", () => {
     const { root } = draw("p05-provinces")
     expect(byText(root!, "约 0.76")).toBeDefined()
-    expect(root!.querySelector("[data-binder-chip='示意']")!.getAttribute("data-aside-brackets")).toBe("（）")
-    expect(root!.querySelector("[data-binder-lead='verdict'] [data-binder-chip='白天发电多半抵峰价']")).not.toBeNull()
-    expect(root!.querySelector("[data-binder-note] rect")).not.toBeNull()
+    expect(root!.querySelector("[data-binder-aside] text")!.getAttribute("font-size")).toBe("13")
+    expect(textOf(root!.querySelector("[data-binder-lead='verdict'] text")!)).toBe("白天发电多半抵峰价")
+    expect(root!.querySelector("[data-binder-chip]")).toBeNull()
+    expect(root!.querySelector("[data-binder-plain-line]")).not.toBeNull()
   })
 
-  it("workings sets each input's symbol in a disc and the answer as a block of the brick red", () => {
+  it("workings sets each input's symbol in italic petrol on a ruled table and the answer as a brick-red figure", () => {
     const { root, ctx } = draw("p06-pv-math")
     expect(Array.from(root!.querySelectorAll("[data-binder-input]")).map((el) => el.getAttribute("data-binder-input"))).toEqual(["E", "p", "O", "I"])
     expect(byText(root!, "E")!.getAttribute("font-style")).toBe("italic")
     expect(byText(root!, "年发电量")).toBeDefined()
     expect(byText(root!, "E × p − O")).toBeDefined()
-    expect(byText(root!, "108 × 0.45 − 4.6")).toBeDefined()
-    const answer = root!.querySelector("[data-binder-lead='answer'] rect")!
+    expect(byText(root!, "= 108 × 0.45 − 4.6")).toBeDefined()
+    expect(root!.querySelector("[data-binder-lead='answer'] rect")).toBeNull()
+    const answer = byText(root!, "6.1")!
+    expect(answer.closest("[data-binder-lead='answer']")).not.toBeNull()
     expect(answer.getAttribute("fill")).toBe(binderInks(ctx).fire)
-    expect(byText(root!, "6.1 年")!.getAttribute("font-size")).toBe("60")
+    expect(answer.getAttribute("font-size")).toBe("72")
+    expect(root!.querySelector("[data-binder-inputs] rect[height='2']")!.getAttribute("fill")).toBe(binderInks(ctx).ink)
   })
 
   it("levers scales the bars to a round axis, the marked case in the brick red and the reference in the sky", () => {
@@ -218,56 +223,66 @@ describe("the proposal board's pages on proposal", () => {
     expect(byText(root!, "0.65") ?? byText(root!, "约 0.65")).toBeDefined()
   })
 
-  it("parts numbers the parts, the first in the brick red, and dashes the card whose tag is not settled", () => {
+  it("parts numbers the parts in two digits, the first in the brick red, and dashes the rule of the part whose tag is not settled", () => {
     const { root } = draw("p11-solution")
     expect(root!.querySelector("[data-binder-lead='part'] [data-binder-part-number='1']")).not.toBeNull()
+    expect(byText(root!, "01")).toBeDefined()
     const storage = root!.querySelector("[data-binder-part='储能柜']")!
-    expect(storage.querySelector("rect[stroke-dasharray]")).not.toBeNull()
-    expect(storage.querySelector("[data-binder-chip='选配']")).not.toBeNull()
+    expect(storage.querySelector("[data-binder-part-open][stroke-dasharray]")).not.toBeNull()
+    expect(textOf(storage.querySelector("[data-binder-part-tag] text")!)).toBe("选配")
+    expect(root!.querySelector("circle")).toBeNull()
   })
 
-  it("plans sets the chip under who the plan suits and the figure's line under it", () => {
+  it("plans sets the plan's whole mark in the brick red under who it suits and the figure's line under it", () => {
     const { root } = draw("p12-models")
-    expect(root!.querySelector("[data-binder-plan='合同能源管理（EMC）'] [data-binder-lead='plan'] [data-binder-chip='贵司出资 0 元']")).not.toBeNull()
+    expect(textOf(root!.querySelector("[data-binder-plan='合同能源管理（EMC）'] [data-binder-lead='plan'] text")!)).toBe("贵司出资 0 元")
     expect(byText(root!, "适合：不想占用资金")).toBeDefined()
     expect(byText(root!, "约 44.0 万元")).toBeDefined()
     expect(byText(root!, "44.0 万元减租金")!.getAttribute("font-size")).toBe("28")
   })
 
-  it("precedents sets the title as an outlined chip and the audited record on a brick-red edge", () => {
+  it("precedents heads a basis column and sets the audited record's icon, figures and basis in the brick red", () => {
     const { root } = draw("p13-references")
-    expect(root!.querySelector("[data-binder-chip='均非我方项目'] rect")!.getAttribute("fill")).toBe("none")
-    expect(root!.querySelector("[data-binder-precedent='亿晶光电江苏四座电站'] [data-binder-lead='precedent'] path")).not.toBeNull()
+    expect(byText(root!, "项目（均非我方项目）")).toBeDefined()
+    expect(byText(root!, "口径")).toBeDefined()
+    const audited = root!.querySelector("[data-binder-precedent='亿晶光电江苏四座电站'] [data-binder-lead='precedent']")!
+    expect(audited.querySelector("[data-binder-icon]")).not.toBeNull()
+    expect(Array.from(audited.querySelectorAll("text")).map(textOf)).toContain("会计师审计")
   })
 
-  it("safeguards heads its columns, reddens the lessons' icons and bolds what is done", () => {
+  it("safeguards heads its columns over ink rules, reddens the lessons' icons and bolds what is done", () => {
     const { root, ctx } = draw("p14-safety")
     expect(byText(root!, "按什么做")).toBeDefined()
     expect(root!.querySelector("[data-binder-lesson] [data-binder-icon='flame'] [stroke]")!.getAttribute("stroke")).toBe(binderInks(ctx).danger)
-    expect(root!.querySelector("[data-binder-lead='rule'] [data-binder-chip='强制性国家标准']")).not.toBeNull()
-    expect(root!.querySelector("[data-binder-panel] rect")!.getAttribute("fill")).toBe(binderInks(ctx).deep)
+    expect(textOf(root!.querySelector("[data-binder-settled] text")!)).toBe("强制性国家标准")
+    expect(root!.querySelector("[data-binder-lead]")).toBeNull()
+    expect(root!.querySelector("[data-binder-panel] rect")!.getAttribute("height")).toBe("2")
   })
 
-  it("remedies shields each answer in the success ink and tints the lead risk", () => {
+  it("remedies shields each answer in the success ink and sets the lead risk's icon and name in the brick red", () => {
     const { root, ctx } = draw("p15-risks")
     expect(root!.querySelectorAll("[data-binder-icon='shield-check']")).toHaveLength(5)
-    expect(root!.querySelector("[data-binder-risk='电价时段再调整'] rect")!.getAttribute("fill")).toBe(binderInks(ctx).firePale)
+    const lead = root!.querySelector("[data-binder-risk='电价时段再调整'] [data-binder-lead='risk']")!
+    expect(textOf(lead.querySelector("text")!)).toBe("电价时段再调整")
+    expect(Array.from(root!.querySelectorAll("rect")).some((r) => r.getAttribute("fill") === binderInks(ctx).card)).toBe(false)
   })
 
-  it("checkpoints chains the steps, the highlighted one in the brick red, and splits each step's paper off its text", () => {
+  it("checkpoints rules each step under its date, the highlighted one in the brick red, and splits each step's paper off its text", () => {
     const { root } = draw("p16-roadmap")
-    expect(root!.querySelectorAll("[data-binder-step-arrow]")).toHaveLength(6)
-    expect(root!.querySelector("[data-binder-lead='step'] [data-binder-step-arrow='3']")).not.toBeNull()
+    expect(root!.querySelectorAll("[data-binder-step-head]")).toHaveLength(6)
+    expect(root!.querySelector("polygon")).toBeNull()
+    expect(root!.querySelector("[data-binder-lead='step'] [data-binder-step-head='3']")).not.toBeNull()
     expect(byText(root!, "交贵司确认")).toBeDefined()
     expect(byText(root!, "并网意见和备案文件")).toBeDefined()
   })
 
-  it("quote prints the shared headers once, a blank to fill readable, and the lead row's chip", () => {
+  it("quote prints the shared headers once, a blank to fill readable, and the lead row's tag in the brick red", () => {
     const { root, ctx } = draw("p17-pricing")
     expect(texts(root!).filter((t) => textOf(t) === "报价项")).toHaveLength(1)
     const blank = root!.querySelector("[data-binder-blank] text")!
     expect(contrastRatio(blank.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
-    expect(root!.querySelector("[data-binder-lead='quote'] [data-binder-chip='不需要则为零']")).not.toBeNull()
+    expect(Array.from(root!.querySelectorAll("[data-binder-lead='quote'] text")).map(textOf)).toContain("不需要则为零")
+    expect(root!.querySelector("[data-binder-chip]")).toBeNull()
   })
 
   it("papers gives each paper a box to tick and closes on a line under a rule of petrol", () => {

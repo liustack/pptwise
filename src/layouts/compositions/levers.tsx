@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
-import { Lead, binderInks, binderText, binderWidth, fitBinder, leadGap, paintBinder, paintBinderCard, paintBinderIcon, paintBinderLine } from "./binder"
+import { Lead, binderInks, binderText, binderWidth, fitBinder, leadGap, paintBinder, paintBinderIcon, paintBinderLine } from "./binder"
 
 type Chart = Extract<Component, { type: "chart" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -15,9 +15,9 @@ type Callout = Extract<Component, { type: "callout" }>
  * brick red, each bar's value bold after it with its note in small grey;
  * under a dashed line the second series, a reference, its name in small grey
  * and its bars in the sky; dotted lines at the axis's round values, named
- * under the bars with the axis's unit. At the right, a card a lever (its
- * icon, its name in petrol, a few lines on it) and under them, in a box
- * outlined by a hairline, what none of the figures has taken off yet, its
+ * under the bars with the axis's unit. At the right, a lever under each
+ * hairline (its icon, its name in petrol, a few lines on it) and under them,
+ * under a hairline too, what none of the figures has taken off yet, its
  * title bold before its text.
  *
  * Takes, in the binder setting: a `chart` of `bar` on its side with one or
@@ -34,7 +34,7 @@ type Callout = Extract<Component, { type: "callout" }>
  */
 
 const PLOT = { label: { top: 4, size: 12, lineHeight: 18 }, top: 30, step: 50, caseW: 256, case: { dy: 6, size: 14, lineHeight: 22 }, bar: { x: 266, dy: 4, h: 26, r: 3 }, axisW: 400, value: { gap: 10, size: 16, lineHeight: 26 }, note: { size: 12, gap: 6 }, split: { gap: 14, dash: "4 4", w: 766 }, group: { gap: 20 }, tick: { top: 26, below: 40, label: 56, size: 12, dash: "2 4" } } as const
-const SIDE = { x: 806, w: 326, card: { h: 152, step: 168, pad: 24, icon: { dy: 22, size: 22 }, title: { dx: 56, dy: 18, size: 18, lineHeight: 30 }, text: { dy: 58, size: 14, lineHeight: 22, maxLines: 3 } }, note: { top: 340, h: 118, pad: 18, padTop: 14, size: 13, lineHeight: 21, maxLines: 4 } } as const
+const SIDE = { x: 806, w: 346, card: { h: 152, step: 168, pad: 0, icon: { dy: 20, size: 22 }, title: { dx: 32, dy: 16, size: 18, lineHeight: 30 }, text: { dy: 56, size: 14, lineHeight: 22, maxLines: 3 } }, note: { top: 340, h: 118, pad: 0, padTop: 16, size: 13, lineHeight: 21, maxLines: 4 } } as const
 
 /** A round step for the axis: the smallest of 1, 2, 5 times a power of ten that marks it at most three times. */
 function axisStep(max: number): number {
@@ -61,7 +61,7 @@ export const leversComposition: Composition = ({ components, ctx, rect, setting 
   if (ic.items.length !== 2 || (ic as { title?: string }).title || ic.items.some((it) => it.tag || (it as { tone?: string }).tone)) return null
   const callout = note as Callout | undefined
   if (callout?.tag) return null
-  if (rect.w < 1132) return null
+  if (rect.w < SIDE.x + SIDE.w) return null
   const inks = binderInks(ctx)
   const unit = ch.axes?.x_unit?.trim() ?? ""
   const all = [...main.data, ...(ref?.data ?? [])]
@@ -94,7 +94,7 @@ export const leversComposition: Composition = ({ components, ctx, rect, setting 
 
   const sideCards = ic.items.map((it) => {
     const title = fitBinder(it.title, { width: SIDE.w - SIDE.card.title.dx - SIDE.card.pad, size: SIDE.card.title.size, lineHeight: SIDE.card.title.lineHeight, maxLines: 1, bold: true }, ctx)
-    const text = fitBinder(it.text, { width: SIDE.w - SIDE.card.pad - 22, size: SIDE.card.text.size, lineHeight: SIDE.card.text.lineHeight, maxLines: SIDE.card.text.maxLines }, ctx)
+    const text = fitBinder(it.text, { width: SIDE.w, size: SIDE.card.text.size, lineHeight: SIDE.card.text.lineHeight, maxLines: SIDE.card.text.maxLines }, ctx)
     return title && text ? { it, title, text } : null
   })
   if (sideCards.some((c) => !c)) return null
@@ -146,18 +146,24 @@ export const leversComposition: Composition = ({ components, ctx, rect, setting 
           const y = rect.y + 4 + i * SIDE.card.step
           return (
             <g key={i} data-binder-lever={stripEmphasis(it.title)}>
-              {paintBinderCard({ x, y, w: SIDE.w, h: SIDE.card.h }, inks)}
-              {paintBinderIcon(it.icon, x + SIDE.card.pad, y + SIDE.card.icon.dy, SIDE.card.icon.size, inks.deep, inks.card)}
-              {paintBinder(title, { ctx, x: x + SIDE.card.title.dx, top: y + SIDE.card.title.dy, bold: true, fill: binderText(inks.deep, inks.card, SIDE.card.title.size), ground: inks.card })}
-              {paintBinder(text, { ctx, x: x + SIDE.card.pad, top: y + SIDE.card.text.dy, fill: binderText(inks.ink, inks.card, SIDE.card.text.size), ground: inks.card })}
+              <rect x={x} y={y} width={SIDE.w} height={1} fill={inks.line} />
+              {paintBinderIcon(it.icon, x, y + SIDE.card.icon.dy, SIDE.card.icon.size, inks.deep, inks.ground)}
+              {paintBinder(title, { ctx, x: x + SIDE.card.title.dx, top: y + SIDE.card.title.dy, bold: true, fill: binderText(inks.deep, inks.ground, SIDE.card.title.size) })}
+              {paintBinder(text, { ctx, x, top: y + SIDE.card.text.dy, fill: binderText(inks.ink, inks.ground, SIDE.card.text.size) })}
             </g>
           )
         })}
       </g>
       {callout && noteBody ? (
         <g {...blockTag(ctx, callout)} data-binder-caveat="">
-          {paintBinderCard({ x: rect.x + SIDE.x, y: rect.y + SIDE.note.top, w: SIDE.w, h: SIDE.note.h }, inks, { fill: "none", stroke: inks.line, strokeWidth: 1.5 })}
-          {paintBinder(noteBody, { ctx, x: rect.x + SIDE.x + SIDE.note.pad, top: rect.y + SIDE.note.top + SIDE.note.padTop, fill: binderText(inks.muted, inks.ground, SIDE.note.size), runInk: binderText(inks.ink, inks.ground, SIDE.note.size) })}
+          <rect x={rect.x + SIDE.x} y={rect.y + SIDE.note.top} width={SIDE.w} height={1} fill={inks.line} />
+          {paintBinder(noteBody, {
+            ctx,
+            x: rect.x + SIDE.x + SIDE.note.pad,
+            top: rect.y + SIDE.note.top + SIDE.note.padTop,
+            fill: binderText(inks.muted, inks.ground, SIDE.note.size),
+            runInk: binderText(inks.ink, inks.ground, SIDE.note.size),
+          })}
         </g>
       ) : null}
     </g>

@@ -2,30 +2,27 @@ import type { DecorProps } from "./types"
 import { DecorPiece } from "./decor-piece"
 import { SLIDE_NUMBER_FIELD } from "../render/footer"
 import { footerRowItems, footerRowWanted, resolveDeckFooter, type DeckFooter } from "../render/footer-marks"
-import { BINDER_SPEC, binderBaseline, binderInks, binderMeta, binderWidth } from "../layouts/compositions/binder"
-import { BinderLabelLine } from "../layouts/binder-shared"
+import { BINDER_SPEC, binderInks, binderMeta, binderText, binderWidth } from "../layouts/compositions/binder"
+import { BINDER_FOOT, BINDER_LEFT, BINDER_RIGHT, BinderLabelLine, RUNNING_HEAD, binderFolioParts, binderStageLine, binderStageWidth } from "../layouts/binder-shared"
 
 /**
- * proposal-motif —— 提案书的页眉标签与页码，proposal 2026-10 定稿（设计源
+ * proposal-motif —— 提案书的书眉标签与页码，proposal 2026-10 印刷版定稿（设计源
  * `design/rounds/2026-10-06-proposal/`）。
  *
- * 页眉（内容页，deck 要页脚时）：左上一行 deck 的标签（`footer.label`，
- * 「屋顶光伏与储能方案 · 呈 贵司管理层」），12px 粗体、字距 1px，第一个
- * 「 · 」之前石油蓝，之后灰。
+ * 书眉左端（内容页，deck 要页脚时）：一行 deck 的标签（`footer.label`，
+ * 「屋顶光伏与储能方案 · 呈 贵司管理层」），13px 灰色常规体，右边给书眉右端
+ * 的段落名（脸画的「一 算账」）留出 24px。书眉下的细线也是脸画的。
  *
- * 页脚（内容页）：右下角页码，13px 灰色粗体，右对齐在 x1196（右缘留给活页夹
- * 的索引签），前面是草稿和保密标记；左下是发文单位（`meta.organization`）和
- * `footer.notice`。页码是 PowerPoint 的页码字段，挪页时自己会变。本 motif 在
- * `footer-roles.ts` 里记为 `"row"`：页脚这一行（连同 `label`）由它来印，共享
- * 页脚让位。页码和其余标记只上内容页，跟全 deck 的页脚规矩一致。
+ * 页脚（内容页）：右下角页码，13px 墨色粗体，右对齐在 x1216，前面是草稿和保密
+ * 标记；左下是发文单位（`meta.organization`）和 `footer.notice`，11px 灰。页码是
+ * PowerPoint 的页码字段，挪页时自己会变。本 motif 在 `footer-roles.ts` 里记为
+ * `"row"`：页脚这一行（连同 `label`）由它来印，共享页脚让位。页码和其余标记
+ * 只上内容页，跟全 deck 的页脚规矩一致。来源是脸画的，落在这一行的左端，有
+ * 发文单位时落在它上面一行。
  *
  * 封面、章节页和结尾页的脸自己画全，不要 motif。小字带 `binder-spec` 豁免。
  * 零 theme id、零 hex。
  */
-
-const LEFT = 64
-const RIGHT = 1196
-const FOLIO = { top: 678, lineHeight: 20, size: 13, groupGap: 24, quiet: 12 } as const
 
 /** Whether this page carries the folio: the page decision first, the deck's own marks when rendered alone. */
 function drawsRow({ ir, slide, page }: DecorProps): boolean {
@@ -37,11 +34,12 @@ export function ProposalMotif(props: DecorProps) {
   const { ir, slide, page, ctx } = props
   if (slide.type !== "content" || !drawsRow(props)) return null
   const footer: DeckFooter = page?.footer ?? resolveDeckFooter(ir)
+  const stageW = binderStageWidth(binderStageLine(ir, slide, ctx), ctx)
   return (
     <>
       {footer.label ? (
         <DecorPiece id="label" role="structure">
-          <BinderLabelLine text={footer.label} ctx={ctx} />
+          <BinderLabelLine text={footer.label} ctx={ctx} right={BINDER_RIGHT - (stageW > 0 ? stageW + RUNNING_HEAD.gap : 0)} />
         </DecorPiece>
       ) : null}
       <DecorPiece id="folio" role="structure">
@@ -55,23 +53,32 @@ export function ProposalMotif(props: DecorProps) {
 function ProposalFolio({ ir, slide, ctx, index, footer }: DecorProps & { footer: DeckFooter }) {
   const inks = binderInks(ctx)
   const meta = binderMeta(inks.muted, inks.ground)
-  const y = binderBaseline(FOLIO.top, FOLIO.lineHeight, FOLIO.size)
-  const quietY = binderBaseline(FOLIO.top, FOLIO.lineHeight, FOLIO.quiet)
-  const text = (content: string, x: number, anchor: "start" | "end", size: number, baseline: number, bold: boolean, extra: Record<string, string> = {}) => (
-    <text {...BINDER_SPEC} {...extra} x={x} y={baseline} textAnchor={anchor === "end" ? "end" : undefined} fontFamily={bold ? ctx.fonts.heading : ctx.fonts.body} fontSize={size} fontWeight={bold ? "700" : undefined} fill={meta} dominantBaseline="alphabetic">
+  const y = BINDER_FOOT.baseline
+  const text = (content: string, x: number, anchor: "start" | "end", size: number, bold: boolean, fill: string, extra: Record<string, string> = {}) => (
+    <text
+      {...BINDER_SPEC}
+      {...extra}
+      x={x}
+      y={y}
+      textAnchor={anchor === "end" ? "end" : undefined}
+      fontFamily={bold ? ctx.fonts.heading : ctx.fonts.body}
+      fontSize={size}
+      fontWeight={bold ? "700" : undefined}
+      fill={fill}
+      dominantBaseline="alphabetic"
+    >
       {content}
     </text>
   )
-  const leftText = [footer.organization, footer.notice].filter((part): part is string => Boolean(part)).join(" · ")
-  const rightText = [footer.draft, footer.confidentiality?.placement === "footer" ? footer.confidentiality.text : null].filter((part): part is string => Boolean(part)).join(" · ")
+  const { left, right } = binderFolioParts(footer)
   const pageIndex = index ?? Math.max(0, ir.slides.indexOf(slide))
   const number = String(pageIndex + 1)
-  const numberLeft = RIGHT - binderWidth(number, FOLIO.size, ctx, true)
+  const numberLeft = BINDER_RIGHT - binderWidth(number, BINDER_FOOT.folio, ctx, true)
   return (
     <g data-footer="row">
-      {leftText ? text(leftText, LEFT, "start", FOLIO.quiet, quietY, false) : null}
-      {rightText ? text(rightText, footer.pageNumber ? numberLeft - FOLIO.groupGap : RIGHT, "end", FOLIO.quiet, quietY, false) : null}
-      {footer.pageNumber ? <g data-binder-folio="">{text(number, RIGHT, "end", FOLIO.size, y, true, { "data-field": SLIDE_NUMBER_FIELD })}</g> : null}
+      {left ? text(left, BINDER_LEFT, "start", BINDER_FOOT.size, false, meta) : null}
+      {right ? text(right, footer.pageNumber ? numberLeft - BINDER_FOOT.gap : BINDER_RIGHT, "end", BINDER_FOOT.size, false, meta) : null}
+      {footer.pageNumber ? <g data-binder-folio="">{text(number, BINDER_RIGHT, "end", BINDER_FOOT.folio, true, binderText(inks.ink, inks.ground, BINDER_FOOT.folio), { "data-field": SLIDE_NUMBER_FIELD })}</g> : null}
     </g>
   )
 }

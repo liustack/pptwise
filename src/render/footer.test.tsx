@@ -307,7 +307,7 @@ describe("the footer row, when the deck asks for it", () => {
       expect(texts(row)).toEqual([ORG, "讨论稿 · 内部资料，请勿外传", String(index + 1)])
       const number = row.querySelector('[data-field="slidenum"]')!
       expect(number.textContent).toBe(String(index + 1))
-      expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1196", "end"])
+      expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1216", "end"])
       for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("binder-spec")
       const label = root.querySelector("[data-binder-label]")!
       expect(label.textContent).toBe("2026 年中期业绩 | 2026.08")
