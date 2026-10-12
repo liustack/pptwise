@@ -1,5 +1,23 @@
 # @liustack/pptwise
 
+## 0.44.0 - 2026-10-12
+
+### Minor Changes
+
+- adba7ad: `pptwise brand extract` keeps the theme's own fonts. `--brand-fonts` puts the template's Latin heading and body fonts ahead of them, keeps the theme's Chinese faces, and warns when a template font is off the safe font list (the slides then use the next safe face) or has no exact width table (long lines may overflow).
+- ee02e5e: `pptwise theme fork --brand <hex>` repaints a theme around a brand color, and `--brand '<hex>,<hex>'` adds the company's second color. The brand goes into the color the theme shows most as it is. A page-filling field takes it unchanged and the words on it switch to an ink that reads. A slot that writes the deck's headings keeps the theme's own color when the brand would not read there, and the brand goes to the rules and marks instead. A mark or chart series that does not stand off the ground moves its lightness just far enough, never gaining chroma, so dark themes get no neon. The other colors are drawn from the brand's own hue (a neighbour within 30 degrees when more shades are needed), the chart leads with the brand, and single-color charts stay single-colored. The theme keeps its own ground, text, surface and contrast floor. `pptwise brand extract` does the same with the template's accent1 and accent2. `--primary` and the other anchor flags keep their literal meaning and cannot be combined with `--brand`.
+
+### Patch Changes
+
+- ae002fa: `theme fork --brand` and `brand extract` no longer derive a shade that reads as another color: a light red that looks pink, a pale orange that looks peach, a dark orange that looks brown. Where no shade of the brand keeps its name, the theme's own grey or ink stands in, and marked words keep the theme's own emphasis ink.
+- 2ab8ee0: `brand extract` without `--from` now repaints bulletin instead of brief. Across the brand colors we tested, bulletin is the business theme that keeps a brand color as given and on its face, while brief cannot set a bright brand color in its headings and leaves it to a short rule. Pass `--from brief` to keep the old choice.
+- 72e1637: A repainted theme fills bars, blocks, and chart series with the brand color exactly as given, and the words and values set on them take an ink that reads there. Only a slot that mostly draws rules, short lines, and small marks is still darkened or lightened to stand 3:1 off the page.
+- f404114: A theme whose charts are one color among inks (swiss, ink, journal, memo, ledger, luxe, runway, stage) keeps them that way when a company names a second color: the second color goes only to the theme's marks outside the chart. The command now says where the second color actually went, or that it is not used.
+- 37832d9: When a theme's pages work its main color into something else before painting it, such as homeroom darkening its primary into a blackboard, a brand that would no longer look like itself there goes to the theme's other colored slot instead, and the reworked field keeps the theme's own color. The command says so and names the color the field would have come out.
+- 3fc14c0: The DSH cards' "Full screen" and "Open" buttons now read "Preview" (预览) with DSH's browse icon, since they open the deck in DSH's right sidebar, the same place DSH previews a presented file.
+- 1ee9ddd: lecture's blackboard frame and chalk ledge take their wood from the theme's warning color instead of its accent, so a fork that repaints the accent changes the chalk and keeps the wood. lecture itself looks the same.
+- 58405ac: Charts on the seal, panel and console faces now show a brand that leads a repainted palette. These faces draw their first series in the theme's mark and used to skip the palette's lead for the rest, so a fork that kept its own mark (vermilion with an orange brand) never drew the brand at all.
+
 ## 0.43.0 - 2026-10-11
 
 ### Minor Changes

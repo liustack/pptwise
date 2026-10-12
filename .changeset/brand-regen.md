@@ -1,5 +1,0 @@
----
-"@liustack/pptwise": minor
----
-
-`pptwise theme fork --brand <hex>` repaints a theme around a brand color, and `--brand '<hex>,<hex>'` adds the company's second color. The brand goes into the color the theme shows most as it is. A page-filling field takes it unchanged and the words on it switch to an ink that reads. A slot that writes the deck's headings keeps the theme's own color when the brand would not read there, and the brand goes to the rules and marks instead. A mark or chart series that does not stand off the ground moves its lightness just far enough, never gaining chroma, so dark themes get no neon. The other colors are drawn from the brand's own hue (a neighbour within 30 degrees when more shades are needed), the chart leads with the brand, and single-color charts stay single-colored. The theme keeps its own ground, text, surface and contrast floor. `pptwise brand extract` does the same with the template's accent1 and accent2. `--primary` and the other anchor flags keep their literal meaning and cannot be combined with `--brand`.
