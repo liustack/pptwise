@@ -9,7 +9,7 @@ import { hexToOklch, hueDistance, oklabDistance } from "../palette-rebase"
 import type { ThemeFile } from "../schema"
 import { isChromatic, measureBrandFace, renderBrandSample, type BrandFace } from "./brand-face"
 import { colorName } from "./color-name"
-import { isSingleColorPalette, parseBrandOption, regenerateFromBrand, type BrandColors, type BrandRegenResult } from "./brand-regen"
+import { describePlacement, isSingleColorPalette, parseBrandOption, regenerateFromBrand, type BrandColors, type BrandRegenResult } from "./brand-regen"
 import { themeFileFromPreset } from "../presets"
 
 installNodePlatform()
@@ -82,6 +82,22 @@ function strayHues(id: string, colors: BrandColors): string[] {
     return !family.some((f) => hueDistance(h, f) <= 30)
   })
 }
+
+describe("a brand with no color in it", () => {
+  it("says the theme is repainted in grey when the brand is a grey, a black or a white", () => {
+    for (const grey of ["#838383", "#111111", "#FAFAFA"]) {
+      const { placement } = regen("bulletin", grey)
+      expect(placement.brand.neutral, grey).toBe(true)
+      expect(describePlacement(placement).join("\n"), grey).toMatch(/has no color in it.*repainted in grey/)
+    }
+  })
+
+  it("says nothing of the kind for a colored brand", () => {
+    const { placement } = regen("bulletin", ORANGE)
+    expect(placement.brand.neutral).toBeUndefined()
+    expect(describePlacement(placement).join("\n")).not.toMatch(/repainted in grey/)
+  })
+})
 
 describe("rule 1: the brand goes in as it is, and the words change ink", () => {
   it("fills bulletin's cover field with Berlin's orange as it is", () => {

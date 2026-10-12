@@ -17,7 +17,7 @@ import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { resolveLayoutId } from "../render/layout-selection"
 import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
-import { buildThmxBytes, BRAND_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
   runAssemble,
@@ -33,6 +33,7 @@ import {
   runNarratives,
   runSchema,
   runThemeNew,
+  runThemeFork,
   runThemes,
   runValidate,
 } from "./commands"
@@ -1728,6 +1729,21 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(written.version).toBe(2)
     expect(written).not.toHaveProperty("base")
     expect(written.menu).toEqual(expect.objectContaining({ cover: expect.anything(), chapter: expect.anything() }))
+  })
+
+  it("brand extract says the template has no colored brand color when its accent1 is a grey", async () => {
+    const d = await freshDir()
+    const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
+    const out = join(d, "grey.theme.json")
+    const msg = await runBrandExtract(src, { output: out })
+    expect(msg).toMatch(/the template has no colored brand color/)
+    expect(msg).toMatch(/repainted in grey/)
+  })
+
+  it("theme fork --brand says a grey brand repaints the theme in grey", async () => {
+    const d = await freshDir()
+    const msg = await runThemeFork("bulletin", { brand: "#838383", output: join(d, "grey.theme.json"), cwd: d })
+    expect(msg).toMatch(/--brand #838383 has no color in it.*repainted in grey/)
   })
 
   it("brand extract repaints bulletin when no --from is given", async () => {

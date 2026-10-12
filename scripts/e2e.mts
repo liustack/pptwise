@@ -276,16 +276,19 @@ console.log(`footer leg OK (${numberedPages} content pages carry the slide-numbe
 // A template whose palette is all grey used to be refused, by a check on
 // its dk1/lt1 ground that the repainted theme never keeps. It now extracts:
 // the theme keeps the donor's own ground and text, and only the brand color
-// comes from the template.
+// comes from the template, and the command says the theme comes out grey.
 const greyBrandFixturePath = join(OUT, "brand-fixture-grey.pptx")
 writeFileSync(
   greyBrandFixturePath,
   Buffer.from(await buildThmxBytes({ schemeName: "Grey E2E Brand", colors: PATHOLOGICAL_THMX_COLORS })),
 )
 const greyBrandThemePath = join(brandWorkspace, "themes", "grey-e2e-brand.theme.json")
-const greyBrandStdout = sh("node", ["dist/cli.js", "brand", "extract", greyBrandFixturePath, "-o", greyBrandThemePath])
+const greyBrandStdout = sh("node", ["dist/cli.js", "brand", "extract", greyBrandFixturePath, "--force", "-o", greyBrandThemePath])
 if (!existsSync(greyBrandThemePath)) {
   throw new Error(`e2e: brand leg — a grey template wrote no theme file: ${greyBrandStdout}`)
+}
+if (!/the template has no colored brand color/.test(greyBrandStdout)) {
+  throw new Error(`e2e: brand leg — a grey template did not say it has no colored brand color: ${greyBrandStdout}`)
 }
 if (!/stay bulletin's/.test(greyBrandStdout)) {
   throw new Error(`e2e: brand leg — a grey template did not keep the donor's ground and text: ${greyBrandStdout}`)

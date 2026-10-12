@@ -1431,7 +1431,8 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   const c = theme.style.colors
   const lines = [
     `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}", from "${from}")`,
-    ...describePlacement(result.placement),
+    ...(result.placement.brand.neutral ? ["  the template has no colored brand color: its accent1 is a grey, a black or a white"] : []),
+    ...describePlacement(result.placement, "the template's accent1"),
     `  colors: primary ${c.primary}, accent ${c.accent}, ${c.chartPalette.length} chart colors. bg ${c.bg}, text ${c.text}, surface ${c.surface} stay ${from}'s`,
     opts.brandFonts !== true
       ? `  fonts: ${from}'s own, heading "${resolveFontFace(theme.style.fonts.heading, "heading")}", body "${resolveFontFace(theme.style.fonts.body, "body")}" (--brand-fonts puts the template's Latin fonts first)`
@@ -1503,7 +1504,7 @@ export async function runThemeFork(name: string, opts: ThemeForkOptions): Promis
     await writeThemeFile(output, result.file, opts.force === true)
     return [
       `wrote ${output} (theme "${result.file.id}"). Set spec.theme to "${result.file.id}".`,
-      ...describePlacement(result.placement),
+      ...describePlacement(result.placement, "--brand"),
     ].join("\n")
   }
   const file = forkTheme(

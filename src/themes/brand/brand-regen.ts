@@ -126,6 +126,8 @@ export interface PlacedColor {
   passedOver?: { slot: BrandSlot } & Refusal
   /** Why it has no slot. */
   noSlot?: "neutral" | "one-color" | "headings" | "repainted"
+  /** The brand has no chroma (a grey, a black or a white), so the theme comes out grey: it was asked for no colored brand. */
+  neutral?: true
   /** The chart series drawn in it: the color as it is, since a chart fills its bars and areas with it. Null when the chart stays one color among inks and leaves it out. */
   chart: string | null
 }
@@ -490,6 +492,7 @@ export function regenerateFromBrand(
         ...(brandFit.fills ? { fills: true } : {}),
         ...(brandFit.lifted ? { lifted: brandFit.lifted } : {}),
         ...(passedOver ? { passedOver } : {}),
+        ...(isChromatic(B) ? {} : { neutral: true as const }),
         chart: chartBrand,
       },
       ...(second ? { second } : {}),
@@ -614,8 +617,12 @@ function dedupe(colors: readonly string[]): string[] {
   return [...new Set(colors.map(upper))]
 }
 
-/** The lines `theme fork --brand` and `brand extract` print about where the colors went. */
-export function describePlacement(placement: BrandPlacement): string[] {
+/**
+ * The lines `theme fork --brand` and `brand extract` print about where the
+ * colors went. `brandSource` names where the brand color came from, for the
+ * line that says a brand with no color in it repaints the theme in grey.
+ */
+export function describePlacement(placement: BrandPlacement, brandSource = "the brand color"): string[] {
   const { bg } = placement
   const describe = (label: string, p: PlacedColor): string[] => {
     const lines: string[] = []
@@ -659,7 +666,10 @@ export function describePlacement(placement: BrandPlacement): string[] {
     }
     return lines
   }
-  return [...describe("brand", placement.brand), ...(placement.second ? describe("second", placement.second) : [])]
+  const neutral = placement.brand.neutral
+    ? [`  ${brandSource} ${placement.brand.color} has no color in it (a grey, a black or a white), so the theme is repainted in grey`]
+    : []
+  return [...neutral, ...describe("brand", placement.brand), ...(placement.second ? describe("second", placement.second) : [])]
 }
 
 /**

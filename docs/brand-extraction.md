@@ -106,6 +106,8 @@ User Office files are never committed as fixtures. Tests build small OOXML packa
 
 `hlink` and `folHlink` may be parsed but are not mapped because pptwise has no hyperlink color token.
 
+A template whose brand color has no chroma (a grey, a black or a white, OKLCH chroma under 0.04) is not refused. The theme is repainted around that grey, and the command says so first: the template has no colored brand color, and the theme comes out grey. `placement.brand.neutral` is `true` in that case, and `theme fork --brand` with a grey says the same.
+
 The SDK's `extractBrandTheme(bytes, { id, label, from, brandFonts })` is the same route: the CLI reads the file and resolves `--from` by name, then calls it. `from` is a built-in theme id or a complete theme file passed by value, `"bulletin"` by default. It returns `{ file, placement, fontNotes }`: the repainted theme, where the brand and second color went, and the font warnings `--brand-fonts` prints. It renders the theme's sample deck to measure its face, so a platform must be installed first (`installPlatform`).
 
 ## Failure behavior

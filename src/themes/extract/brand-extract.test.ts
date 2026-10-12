@@ -50,6 +50,13 @@ describe("extractBrandTheme repaints a theme around the template's brand color",
     expect(own.id).toBe("house-style")
   })
 
+  it("says so when the template's brand color has no color in it", async () => {
+    const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
+    const { placement } = await extractBrandTheme(bytes, { id: "grey" })
+    expect(placement.brand.color).toBe(`#${PATHOLOGICAL_THMX_COLORS.accent1}`)
+    expect(placement.brand.neutral).toBe(true)
+  })
+
   it("leaves the second color out when the template's accent2 is a grey", async () => {
     const bytes = await buildThmxBytes({ colors: { ...BRAND_THMX_COLORS, accent2: "A5A5A5" } })
     const { placement } = await extractBrandTheme(bytes, { id: "acme" })
