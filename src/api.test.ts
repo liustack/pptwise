@@ -7,7 +7,7 @@ import { ENUM_ERROR_MESSAGE_MAX_LENGTH } from "./ir/schema-error-hints"
 import { CAPACITY } from "./audit/capacity"
 import { __describeQualityIssue } from "./validate-core"
 import { exportPastDrawnGate } from "./pptx/__fixtures__/export-past-drawn-gate"
-import { __resetRegisteredThemes, registerTheme } from "./themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, registerTheme, type ThemeDefinition } from "./themes/definitions"
 import { registerTestTheme } from "./themes/test-fixtures"
 import { decodeImageWithSharp } from "@/platform/node"
 import { installPlatform } from "@/platform/registry"
@@ -34,6 +34,12 @@ const raw = {
     { type: "cover", heading: "Hello" },
     { type: "content", kind: "points", heading: "Points", components: [{ type: "bullets", items: ["a", "b"] }] },
   ],
+}
+
+/** brief, passed by value, with a menu that offers `data` alone: a `quote` page has nowhere to land on it. */
+function dataOnlyBrief(): ThemeDefinition {
+  const brief = getThemeDefinition("brief")
+  return { ...brief, menu: { ...brief.menu, content: { data: brief.menu.content.data! } } }
 }
 
 describe("validateIr", () => {
@@ -222,11 +228,20 @@ describe("validateIr", () => {
       }).ok).toBe(true)
     })
 
-    it("hard-rejects a kind outside the bound theme menu and lists the offer", () => {
-      const v = validateIr({ ...raw, slides: [{ type: "content", kind: "quote", heading: "Quote", components: [] }] })
+    it("draws a kind outside the bound theme menu as its nearest offered kind", () => {
+      const v = validateIr({ ...raw, slides: [{ type: "content", kind: "quote", heading: "Quote", components: [{ type: "blockquote", text: "Words", attribution: "Someone" }] }] })
+      expect(v.errors).toEqual([])
+      expect(v.ok).toBe(true)
+    })
+
+    it("hard-rejects a kind with nowhere to land and lists the offer", () => {
+      const v = validateIr(
+        { ...raw, slides: [{ type: "content", kind: "quote", heading: "Quote", components: [] }] },
+        { theme: dataOnlyBrief() },
+      )
       expect(v.ok).toBe(false)
-      expect(v.errors[0]!.message).toMatch(/kind "quote" is not offered/i)
-      expect(v.errors[0]!.message).toMatch(/available content kinds/i)
+      expect(v.errors[0]!.message).toMatch(/kind "quote" is not offered by theme "brief", and neither is any kind it can stand in for \(statement, points, list\)/i)
+      expect(v.errors[0]!.message).toMatch(/available content kinds: data/i)
     })
   })
 })
@@ -260,13 +275,16 @@ describe("ValidateResult.warnings + formatWarnings (Task 2, borrow wave — dual
   it("`warnings` can be present alongside a failing (`ok:false`) result too — a rejected deck's warnings are not hidden", () => {
     // slide 2 mixes a real error (kind outside the bound menu) with slide 1's own
     // warn-only missing heading — both must be visible on their own arrays.
-    const v = validateIr({
-      ...raw,
-      slides: [
-        { type: "cover" }, // missing heading — warn
-        { type: "content", kind: "quote", heading: "x", components: [] }, // error
-      ],
-    })
+    const v = validateIr(
+      {
+        ...raw,
+        slides: [
+          { type: "cover" }, // missing heading — warn
+          { type: "content", kind: "quote", heading: "x", components: [] }, // error
+        ],
+      },
+      { theme: dataOnlyBrief() },
+    )
     expect(v.ok).toBe(false)
     expect(v.errors.length).toBeGreaterThan(0)
     // The theme-menu hard gate returns early (api.ts's validateIr
@@ -691,11 +709,12 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
   it.each([
     ["cover", { type: "cover", heading: "H", kicker: "Board review" }],
     ["content", { type: "content", kind: "points", heading: "H", kicker: "Board review", components: [{ type: "paragraph", text: "x" }] }],
-  ] as const)("hard-rejects a kicker on a %s face with no place for it, naming the face", (_type, slide) => {
+  ] as const)("leaves a kicker off a %s face with no place for it, and warns naming the face", (_type, slide) => {
     const v = validateIr({ ...raw, slides: [slide] })
-    expect(v.ok).toBe(false)
-    expect(v.errors[0]!.path).toBe("slides.0.kicker")
-    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a kicker/)
+    expect(v.errors).toEqual([])
+    expect(v.ok).toBe(true)
+    expect(v.warnings![0]!.path).toBe("slides.0.kicker")
+    expect(v.warnings![0]!.message).toMatch(/^face "[a-z-]+" of theme "brief" has no place for a kicker, so it is left off this page/)
   })
 
   it("accepts ledger's cover kicker, and its ending's kicker and footnote, whose faces print them", () => {
@@ -720,7 +739,6 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
 
   it.each([
     ["fields", "cover", { type: "cover", heading: "H", fields: [{ label: "To", value: "All staff" }] }, /has no place for header lines \(fields\)/],
-    ["stamp", "ending", { type: "ending", heading: "H", stamp: { text: "Approved", date: "2026 · 10" } }, /has no place for a stamp/],
     ["fields", "content", { type: "content", kind: "points", heading: "H", fields: [{ label: "Re", value: "x" }], components: [{ type: "paragraph", text: "x" }] }, /has no place for header lines/],
   ] as const)("hard-rejects %s on a %s face with no place for them, naming the face", (field, _type, slide, message) => {
     const v = validateIr({ ...raw, slides: [slide] })
@@ -759,30 +777,39 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(page([{ type: "blockquote", text: "Words.", attribution: "Someone" }]).errors[0]!.message).toMatch(/this page's blockquote fills it/)
   })
 
+  it("leaves a stamp off an ending face with no place for it, and warns naming the face", () => {
+    const v = validateIr({ ...raw, slides: [{ type: "ending", heading: "H", stamp: { text: "Approved", date: "2026 · 10" } }] })
+    expect(v.errors).toEqual([])
+    expect(v.warnings![0]!.path).toBe("slides.0.stamp")
+    expect(v.warnings![0]!.message).toMatch(/^face "[a-z-]+" of theme "brief" has no place for a stamp, so it is left off this page/)
+  })
+
   it("takes a kicker on a content face only where the face or the motif over it sets one", () => {
     // placard-sheet leaves the kicker to museum's hall sign. On a copy of
-    // brief nothing sets it, so the page is refused.
+    // brief nothing sets it, so the face leaves it off and says so.
     const themeId = registerTestTheme("api-kicker-motif", "brief", { content: { points: "placard-sheet" } })
     try {
       const page = (theme: string) =>
         validateIr({ ...raw, theme: { id: theme }, slides: [{ type: "content", kind: "points", heading: "H", kicker: "Hall one", components: [{ type: "paragraph", text: "x" }] }] })
       expect(page("museum").errors).toEqual([])
-      const refused = page(themeId)
-      expect(refused.errors[0]!.path).toBe("slides.0.kicker")
-      expect(refused.errors[0]!.message).toMatch(/^face "placard-sheet" has no place for a kicker/)
+      expect(page("museum").warnings).toBeUndefined()
+      const left = page(themeId)
+      expect(left.errors).toEqual([])
+      expect(left.warnings![0]!.path).toBe("slides.0.kicker")
+      expect(left.warnings![0]!.message).toMatch(/^face "placard-sheet" of theme "api-kicker-motif" has no place for a kicker/)
     } finally {
       __resetRegisteredThemes()
     }
   })
 
-  it("hard-rejects a page tag on a face with no place for it, naming the face", () => {
+  it("leaves a page tag off a face with no place for it, and warns naming the face", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "content", kind: "points", heading: "H", tag: { text: "RCT · NEJM 2025", evidence: "trial" }, components: [{ type: "paragraph", text: "x" }] }],
     })
-    expect(v.ok).toBe(false)
-    expect(v.errors[0]!.path).toBe("slides.0.tag")
-    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a page tag/)
+    expect(v.ok).toBe(true)
+    expect(v.warnings![0]!.path).toBe("slides.0.tag")
+    expect(v.warnings![0]!.message).toMatch(/^face "[a-z-]+" of theme "brief" has no place for a page tag, so it is left off this page/)
   })
 
   it("hard-rejects a ballot on a face with no place for it, and refuses one with a single choice", () => {
@@ -794,12 +821,12 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(validateIr({ ...raw, slides: [{ type: "ending", heading: "H", ballot: { choices: ["For"] } }] }).ok).toBe(false)
   })
 
-  it("hard-rejects a strip of years on a face with no place for it, and refuses a run it cannot hold", () => {
+  it("leaves a strip of years off a face with no place for it, and refuses a run it cannot hold", () => {
     const years = { from: 2026, to: 2034, marked: [2026, 2027] }
     const v = validateIr({ ...raw, slides: [{ type: "content", kind: "points", heading: "H", years, components: [{ type: "paragraph", text: "x" }] }] })
-    expect(v.ok).toBe(false)
-    expect(v.errors[0]!.path).toBe("slides.0.years")
-    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a strip of years/)
+    expect(v.ok).toBe(true)
+    expect(v.warnings![0]!.path).toBe("slides.0.years")
+    expect(v.warnings![0]!.message).toMatch(/^face "[a-z-]+" of theme "brief" has no place for a strip of years, so it is left off this page/)
     const page = (y: unknown) => validateIr({ ...raw, slides: [{ type: "content", kind: "points", heading: "H", years: y, components: [{ type: "paragraph", text: "x" }] }] })
     expect(page({ from: 2034, to: 2026, marked: [2030] }).errors[0]!.message).toMatch(/which is no run/)
     expect(page({ from: 2026, to: 2040, marked: [2030] }).errors[0]!.message).toMatch(/holds 13 at most/)
@@ -808,12 +835,12 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(page({ from: 2026, to: 2034, marked: [] }).ok).toBe(false)
   })
 
-  it("hard-rejects a course stage on a face with no place for it, and refuses a course it cannot read", () => {
+  it("leaves a course stage off a face with no place for it, and refuses a course it cannot read", () => {
     const course = { stages: [{ label: "目标" }, { label: "环节一" }, { label: "小测一", quiz: true }] }
     const v = validateIr({ ...raw, course, slides: [{ type: "content", kind: "points", heading: "H", stage: "环节一", components: [{ type: "paragraph", text: "x" }] }] })
-    expect(v.ok).toBe(false)
-    expect(v.errors[0]!.path).toBe("slides.0.stage")
-    expect(v.errors[0]!.message).toMatch(/^face "[a-z-]+" has no place for a course stage/)
+    expect(v.ok).toBe(true)
+    expect(v.warnings![0]!.path).toBe("slides.0.stage")
+    expect(v.warnings![0]!.message).toMatch(/^face "[a-z-]+" of theme "brief" has no place for a course stage, so it is left off this page/)
     const deck = (c: unknown) => validateIr({ ...raw, course: c, slides: [{ type: "content", kind: "points", heading: "H", components: [{ type: "paragraph", text: "x" }] }] })
     expect(deck(course).ok).toBe(true)
     expect(deck({ stages: [{ label: "环节一" }, { label: "环节一" }] }).errors[0]!.message).toMatch(/repeats "环节一"/)
@@ -919,13 +946,16 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
 
 describe("ValidationIssue.slideId + formatIssues (W5 whole-branch review finding 2)", () => {
   it("checkLayoutApplicability sets slideId, and formatIssues prints 'page N (id) — path: message'", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [
-        raw.slides[0],
-        { type: "content", kind: "quote", id: "p-kpi", heading: "x", components: [] },
-      ],
-    })
+    const v = validateIr(
+      {
+        ...raw,
+        slides: [
+          raw.slides[0],
+          { type: "content", kind: "quote", id: "p-kpi", heading: "x", components: [] },
+        ],
+      },
+      { theme: dataOnlyBrief() },
+    )
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.page).toBe(2)
     expect(v.errors[0]!.slideId).toBe("p-kpi")
@@ -935,15 +965,18 @@ describe("ValidationIssue.slideId + formatIssues (W5 whole-branch review finding
   })
 
   it("leaves the format unchanged (no parens) when the offending slide has no id", () => {
-    const v = validateIr({
-      ...raw,
-      slides: [raw.slides[0], { type: "content", kind: "quote", heading: "x", components: [] }],
-    })
+    const v = validateIr(
+      {
+        ...raw,
+        slides: [raw.slides[0], { type: "content", kind: "quote", heading: "x", components: [] }],
+      },
+      { theme: dataOnlyBrief() },
+    )
     expect(v.ok).toBe(false)
     expect(v.errors[0]!.page).toBe(2)
     expect(v.errors[0]!.slideId).toBeUndefined()
     expect(formatIssues(v.errors)).toBe(`page 2 — slides.1.kind: ${v.errors[0]!.message}`)
-    expect(formatIssues(v.errors)).not.toContain("(")
+    expect(formatIssues(v.errors)).not.toMatch(/^page 2 \(/)
   })
 
   it("the content-quality-gate translation reads slideId off the flagged slide itself, not any other slide in the deck", () => {

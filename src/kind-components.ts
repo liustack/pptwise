@@ -3,9 +3,10 @@
  *
  * There is no kind-to-component table of its own. A kind reaches a face
  * through the bound theme's menu, and the face's slots say what it draws
- * (`docs/menu-lookup.md`). This module walks that same route, so the list
- * it prints is the list validate's slot gate enforces: nothing more, nothing
- * less. A caller that resolved a deck or workspace theme file passes that
+ * (`docs/menu-lookup.md`). A page holding a type its own kind's face does
+ * not take is drawn by the nearest stand-in whose face does
+ * (`./render/kind-landing.ts`). This module walks that same route, so the
+ * list it prints is the list validate accepts: nothing more, nothing less. A caller that resolved a deck or workspace theme file passes that
  * definition by value, the way validate and render take theirs. A bare id
  * reads the built-in shelf and the SDK registry. Without a theme it unions
  * every installed theme's answer and shows each theme's own face beside it.
@@ -14,6 +15,7 @@ import { PptwiseError } from "./errors"
 import { COMPONENT_TYPES, KIND_VALUES, type PageKind } from "./ir"
 import { irJsonSchema, reachableDefs, type JsonSchemaDocument } from "./ir/json-schema"
 import { getLayout } from "./layouts/registry"
+import { landingCandidates } from "./render/kind-landing"
 import { faceAcceptedComponentTypes, offeredContentKinds } from "./render/layout-selection"
 import { getInstalledThemeIds, getThemeDefinition, type ThemeDefinition } from "./themes/definitions"
 
@@ -22,6 +24,16 @@ export interface KindThemeOffer {
   face: string
   /** Component types that face draws, in vocabulary order. */
   components: readonly string[]
+  /**
+   * The offered kinds a page of this kind may be drawn as, nearest first
+   * and its own kind first when the menu offers it
+   * (`./render/kind-landing.ts`). Present when a page of the kind can land
+   * elsewhere: the menu lacks the kind, or its face does not take something
+   * a stand-in's face does. `face` is then the first one's face, and `components`
+   * covers every one of them, since a page takes the first whose face takes
+   * what it carries.
+   */
+  drawnAs?: readonly PageKind[]
 }
 
 export interface KindComponents {
@@ -52,14 +64,31 @@ function assertKind(kind: string): asserts kind is PageKind {
   throw new PptwiseError(`unknown kind "${kind}". Valid kinds: ${KIND_VALUES.join(", ")}`)
 }
 
-function offerFor(theme: ThemeDefinition, kind: PageKind): KindThemeOffer | undefined {
-  const entry = theme.menu.content[kind]
-  if (entry === undefined) return undefined
-  const layout = getLayout(entry.face)
+function faceOffer(theme: ThemeDefinition, kind: PageKind): KindThemeOffer {
+  const face = theme.menu.content[kind]!.face
+  const layout = getLayout(face)
   if (layout === undefined) {
-    throw new PptwiseError(`theme "${theme.id}" references unknown face "${entry.face}" for kind "${kind}"`)
+    throw new PptwiseError(`theme "${theme.id}" references unknown face "${face}" for kind "${kind}"`)
   }
-  return { face: entry.face, components: faceAcceptedComponentTypes(layout) }
+  return { face, components: faceAcceptedComponentTypes(layout) }
+}
+
+/**
+ * What a page of `kind` may hold under one theme: what its own kind's face
+ * draws, and what the face of every kind it lands on draws
+ * (`./render/kind-landing.ts`), since a page holding a type its own face
+ * does not take is drawn by the nearest face that does. Undefined when the
+ * menu offers neither the kind nor any stand-in.
+ */
+function offerFor(theme: ThemeDefinition, kind: PageKind): KindThemeOffer | undefined {
+  const candidates = landingCandidates(kind, theme.menu)
+  if (candidates.length === 0) return undefined
+  const offers = candidates.map((candidate) => faceOffer(theme, candidate))
+  const union = new Set<string>()
+  for (const offer of offers) for (const type of offer.components) union.add(type)
+  // The kind's own face takes everything its stand-ins would: nothing lands.
+  if (candidates[0] === kind && offers[0]!.components.length === union.size) return offers[0]
+  return { face: offers[0]!.face, components: COMPONENT_TYPES.filter((type) => union.has(type)), drawnAs: candidates }
 }
 
 /** The components a kind may hold, per theme and as a union. */
@@ -72,7 +101,7 @@ export function componentsForKind(kind: string, options: KindComponentsOptions =
     if (offer === undefined) {
       const offered = offeredContentKinds(theme.menu)
       throw new PptwiseError(
-        `kind "${kind}" is not offered by theme "${theme.id}". Available content kinds: ${offered.join(", ")}`,
+        `kind "${kind}" is not offered by theme "${theme.id}", and neither is any kind it can stand in for. Available content kinds: ${offered.join(", ")}`,
       )
     }
     themes[theme.id] = offer

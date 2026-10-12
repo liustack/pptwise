@@ -285,10 +285,10 @@ describe("a folded theme id renders as the theme that absorbed it", () => {
 
   it("still warns on a deck that fails for another reason", () => {
     const deck = foldDeck("heritage")
-    deck.slides.push({ type: "content", kind: "evidence", heading: "luxe offers no evidence page" })
-    const v = validateIr(deck)
+    // luxe's ending draws no components.
+    const v = validateIr({ ...deck, slides: [...deck.slides, { type: "ending", heading: "And one more thing", components: [{ type: "bullets", items: ["One"] }] }] })
     expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => /not offered by theme "luxe"/.test(e.message))).toBe(true)
+    expect(v.errors.some((e) => /"ending" slides do not render components/.test(e.message))).toBe(true)
     expect(v.warnings?.[0]?.message).toMatch(folded("luxe"))
   })
 

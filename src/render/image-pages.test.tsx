@@ -7,7 +7,9 @@ import { isBold } from "./fonts"
 import { parseSvgRoot } from "./serialize"
 import type { PptxIR, Slide } from "@/ir"
 import type { CanonicalThemeId } from "../themes"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
+import { resolveEffectiveFace } from "./layout-selection"
+import { slideToRender } from "./render-slide"
 import { registerTestTheme } from "../themes/test-fixtures"
 
 // Gallery review r1 leftover item 11: image-split / image-top English
@@ -227,7 +229,7 @@ describe("image-top with nothing under the image", () => {
 
 describe("image takeover dropped-content propagation", () => {
   it.each(["image-split", "image-top"] as const)(
-    "%s marks the page as dropped when its required image is absent",
+    "%s marks the page as dropped when its required image is absent and the menu has nowhere else to draw it",
     (face) => {
       const slide: Slide = {
         type: "content",
@@ -239,8 +241,32 @@ describe("image takeover dropped-content propagation", () => {
         content: { photo: face },
       })
       const doc = makeIr(themeId, slide)
+      // A menu offering the photo page alone: no stand-in takes the page
+      // (`kind-landing.ts`), so the takeover draws it and declares the loss.
+      const def = getThemeDefinition(themeId)
+      const photoOnly = { ...def, menu: { ...def.menu, content: { photo: def.menu.content.photo! } } }
 
-      expect(boundSlideToRender(doc, slide, 0).dropped).toBeGreaterThan(0)
+      expect(slideToRender(doc, slide, 0, photoOnly).dropped).toBeGreaterThan(0)
+    },
+  )
+
+  it.each(["image-split", "image-top"] as const)(
+    "%s hands a page without its picture to the nearest kind whose face draws it whole",
+    (face) => {
+      const slide: Slide = {
+        type: "content",
+        kind: "photo",
+        heading: "Missing required image",
+        components: [{ type: "paragraph", text: "This content is drawn on brief's sheet." }],
+      }
+      const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
+        content: { photo: face },
+      })
+      const doc = makeIr(themeId, slide)
+
+      expect(resolveEffectiveFace(doc, slide, getThemeDefinition(themeId)).servedKind).toBe("evidence")
+      expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
+      expect(boundSlideToSvgMarkup(doc, slide, 0)).toContain("drawn on brief")
     },
   )
 

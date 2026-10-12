@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 import { validateIr, type ValidateResult } from "@/api"
-import { COMPONENT_TYPES, KIND_VALUES, PptxIRSchema, type Component, type PptxIR } from "@/ir"
+import { COMPONENT_TYPES, KIND_VALUES, PptxIRSchema, type Component, type PageKind, type PptxIR } from "@/ir"
 import { componentJsonSchema } from "@/ir/json-schema"
 import { PAGE_FILL_FIELDS } from "@/spec/assemble"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { getThemeDefinition } from "@/themes/definitions"
+import { getThemeDefinition, type ThemeDefinition } from "@/themes/definitions"
 import { COMPONENT_BUILDERS } from "../../evals/gallery/corpus/components"
 import { LEXICONS } from "../../evals/gallery/corpus/lexicon"
 import { CAPACITY } from "@/audit/capacity"
@@ -60,6 +60,12 @@ function probeDeck(theme: string, page: PageShape, components: Component[] = [],
 
 function sample(type: string): Component {
   return COMPONENT_BUILDERS[type]!(LEXICONS.en)
+}
+
+/** `id`, passed by value, with a menu that offers `kinds` alone. */
+function onlyKinds(id: string, kinds: readonly PageKind[]): ThemeDefinition {
+  const theme = getThemeDefinition(id)
+  return { ...theme, menu: { ...theme.menu, content: Object.fromEntries(kinds.map((kind) => [kind, theme.menu.content[kind]!])) } }
 }
 
 function contractOf(theme: string, page: PageShape, components: Component[] = [], extra: Record<string, unknown> = {}) {
@@ -135,7 +141,8 @@ describe("pageContract: components (T7, one route with validate)", () => {
   it("notes a spec focus the face cannot draw instead of recommending it", () => {
     const ir = probeDeck("brief", { type: "content", kind: "fact" })
     const contract = pageContract(ir, "probe", {
-      theme: getThemeDefinition("brief"),
+      // A menu offering the fact page alone, so nothing it lands on takes a chart.
+      theme: onlyKinds("brief", ["fact"]),
       pageSpec: { id: "probe", type: "content", kind: "fact", heading: "Probe", focus: "chart" },
     })
     expect(contract.components.recommended).toEqual([])
@@ -187,14 +194,15 @@ describe("pageContract: page facts and fields", () => {
 describe("pageContract: errors and warnings", () => {
   it("locates validate's own finding inside the page", () => {
     const theme = getThemeDefinition("brief")
-    const ir = probeDeck("brief", { type: "content", kind: "fact" }, [sample("chart")])
+    // No face a brief fact page lands on sets a gantt beside a paragraph.
+    const ir = probeDeck("brief", { type: "content", kind: "fact" }, [sample("gantt"), sample("paragraph")])
     const direct = validateIr(ir, { theme })
     const contract = pageContract(ir, "probe", { theme })
     expect(contract.errors).toEqual(
       direct.errors.map((e) => ({ scope: "page", path: e.path.replace(/^slides\.1\.?/, ""), message: e.message })),
     )
     expect(contract.errors[0]).toMatchObject({ scope: "page", path: "components" })
-    expect(contract.errors[0]!.message).toMatch(/does not render chart/)
+    expect(contract.errors[0]!.message).toMatch(/does not render gantt/)
   })
 
   it("keeps deck-level findings and leaves out another page's", () => {
@@ -373,7 +381,7 @@ describe("pageComponentContract", () => {
 
   it("refuses a component the page's face does not draw, naming what it does draw", () => {
     const fact = probeDeck("brief", { type: "content", kind: "fact" })
-    expect(() => pageComponentContract(fact, "probe", "chart", { theme })).toThrow(
+    expect(() => pageComponentContract(fact, "probe", "chart", { theme: onlyKinds("brief", ["fact"]) })).toThrow(
       /page "probe" does not draw chart\. It draws: paragraph, kpi_cards|page "probe" does not draw chart\. It draws: kpi_cards, paragraph/,
     )
     expect(() => pageComponentContract(ir, "probe", "quote", { theme })).toThrow(/unknown component type "quote"/)

@@ -93,10 +93,10 @@ describe("ember's menu", () => {
     expect(validateIr(ir).ok).toBe(true)
   })
 
-  it("refuses a kicker on a content page: the rail names the page's beat", () => {
+  it("leaves a kicker off a content page and says so: the rail names the page's beat", () => {
     const v = validateIr(deck([cover(), sheet({ kicker: "机会" })]))
-    expect(v.ok).toBe(false)
-    expect(v.errors.some((e) => /kicker/.test(e.message))).toBe(true)
+    expect(v.ok).toBe(true)
+    expect(v.warnings?.some((w) => w.path === "slides.1.kicker" && /is left off this page/.test(w.message))).toBe(true)
   })
 })
 

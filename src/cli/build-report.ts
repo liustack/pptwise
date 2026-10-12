@@ -61,6 +61,16 @@ export interface BuildPreview {
   pages: BuildPreviewPage[]
 }
 
+/** A content page drawn by a stand-in kind, because the bound menu lacks its own (`../render/kind-landing.ts`). */
+export interface BuildDrawnAs {
+  page: number
+  pageId?: string
+  /** The page's own kind. */
+  kind: string
+  /** The offered kind whose face drew it. */
+  drawnAs: string
+}
+
 export interface BuildReport {
   /** `ok` only when the deck passed every check and the .pptx was written. */
   status: "ok" | "needs_revision"
@@ -78,6 +88,8 @@ export interface BuildReport {
   preview: BuildPreview | null
   /** The deck's one .pptx, written only when `status` is `ok`. */
   pptx: string | null
+  /** Pages the bound theme draws as another kind. Facts, not problems: present only when there is one. */
+  drawnAs?: BuildDrawnAs[]
   notes: string[]
 }
 
@@ -210,6 +222,10 @@ export function formatBuildReport(report: BuildReport): string {
     for (const issue of report.errors) lines.push(`  ${issueLine(issue)}`)
   }
   for (const issue of report.warnings) lines.push(`warning: ${issueLine(issue)}`)
+  for (const landed of report.drawnAs ?? []) {
+    const page = landed.pageId !== undefined ? `page ${landed.page} (${landed.pageId})` : `page ${landed.page}`
+    lines.push(`note: ${page}: theme "${report.theme}" offers no "${landed.kind}" page, so it is drawn as "${landed.drawnAs}"`)
+  }
   if (report.preview !== null) lines.push(`preview: ${report.preview.html}`)
   if (report.pptx !== null) lines.push(`pptx: ${report.pptx}`)
   lines.push(...report.notes)

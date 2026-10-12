@@ -156,7 +156,7 @@ Freeze a workspace theme by copying it to `my-deck/theme.json` with the same id.
 
 A palette fork preserves the menu byte for byte. It may replace the project binding, followed by spec validation, assembly, IR validation, audit, and render.
 
-If the next theme menu differs, return to the theme step. Keep useful claims, facts, data, images, and copy, then revise the semantic page sequence and affected fills around the new menu. A theme change is not a repaint of an already assembled deck.
+Switching to a theme with another menu is the same name change: edit `spec.theme` and build. Page files keep their kinds. A kind the new menu lacks is drawn by its nearest offered kind, and furniture the new faces have no place for (`kicker`, `stamp`, `tag`, `years`, `stage`) is left off with a warning while staying in the page file. See [Menu lookup](./menu-lookup.md#theme-changes). What the new faces cannot take at all (`fields`, `ballot`, a cover's own fill, a component one face sets and another refuses) fails validation as on any build and names the page to revise. A deck that froze its theme in its own `theme.json` keeps that file until it is deleted or replaced: the build refuses another name with a different menu rather than leaving the frozen file unused.
 
 ## Live review
 

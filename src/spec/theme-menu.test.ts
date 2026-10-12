@@ -68,21 +68,46 @@ describe("deck spec theme menu", () => {
     expect(() => installThemeWithoutMenu(themeId)).toThrow(/menu/i)
   })
 
-  it("hard-rejects a content kind outside the bound theme menu and lists the offer", () => {
+  it("lands a content kind outside the bound theme menu on its nearest offered kind, and says so", () => {
     const themeId = "spec-menu-offer"
     installTheme(themeId)
 
     const result = validateSpec(spec(themeId, ["data", "list"]))
+
+    expect(result.errors).toEqual([])
+    expect(result.ok).toBe(true)
+    expect(result.landings).toEqual([
+      {
+        path: "pages.1.kind",
+        pageId: "content-1",
+        kind: "data",
+        lands: ["points", "list"],
+        message:
+          'theme "spec-menu-offer" offers no "data" page: this one is drawn as "points", or on "list" when its components need that face. Nothing to change in the spec',
+      },
+    ])
+  })
+
+  it("hard-rejects a content kind with nowhere to land and lists the offer", () => {
+    const themeId = "spec-menu-nowhere"
+    registerTheme({
+      version: 2,
+      id: themeId,
+      style: { ...CONSULTING_TOKENS, id: themeId, shape: { radius: 2, gapScale: 1, typeScale: 1 } },
+      menu: { ...MENU, content: { statement: { face: "statement" } } },
+    })
+
+    const result = validateSpec(spec(themeId, ["data"]))
 
     expect(result.ok).toBe(false)
     expect(result.errors).toEqual([
       expect.objectContaining({
         path: "pages.1.kind",
         pageId: "content-1",
-        message: expect.stringContaining('kind "data"'),
+        message: expect.stringContaining('kind "data" is not offered by theme "spec-menu-nowhere", and neither is any kind it can stand in for (evidence, points, list)'),
       }),
     ])
-    expect(result.errors[0]?.message).toContain("points, list")
+    expect(result.errors[0]?.message).toContain("Available content kinds: statement")
   })
 
   it("reports consecutive use of one kind as an advisory without blocking the spec", () => {

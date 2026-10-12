@@ -36,6 +36,8 @@ import { PACING_BUDGETS, resolveNarrative, type Pacing } from "../narrative"
 import { FULL_BODY_TYPES } from "../render/component-traits"
 import { contentPageDensity } from "../render/ir-quality"
 import { writesHeading } from "../layouts/boundary-content"
+import { getLayout } from "../layouts/registry"
+import { landingCandidates } from "../render/kind-landing"
 import { componentFace, faceAcceptedComponentTypes, resolveEffectiveFace } from "../render/layout-selection"
 import type { PageSpec } from "../spec"
 import { PAGE_FILL_FIELDS } from "../spec/assemble"
@@ -94,7 +96,12 @@ export interface PageIssue {
 }
 
 export interface PageComponents {
-  /** Every component type the bound face draws on this page, in vocabulary order. */
+  /**
+   * Every component type this page may hold, in vocabulary order: on a
+   * content page, what its kind's face draws and what the faces of the
+   * kinds it lands on draw (`../render/kind-landing.ts`), on a cover,
+   * chapter or ending, what the bound face draws.
+   */
   legal: string[]
   /** The legal types that must be the page's only component. */
   fullBody: string[]
@@ -117,6 +124,12 @@ export interface PageContract {
   theme: string
   /** The face the bound menu gives this page. Read-only: never written into a page file. */
   face: string | null
+  /**
+   * The offered kind whose face draws this content page, when it is not the
+   * page's own kind: the theme lacks the kind, or its face does not take
+   * what the page holds (`../render/kind-landing.ts`).
+   */
+  drawnAs?: string
   /** Each field the page file may fill, with its JSON Schema. */
   fields: Record<string, unknown>
   components: PageComponents
@@ -218,9 +231,25 @@ function pageFields(full: JsonSchemaDocument, slide: Slide): Record<string, unkn
   return Object.keys(defs).length > 0 ? { ...fields, $defs: defs } : fields
 }
 
+/**
+ * Every component type a content page of this kind may hold under `theme`:
+ * what its own kind's face draws and what each stand-in's face draws
+ * (`../render/kind-landing.ts`), since a page holding a type its own face
+ * does not take is drawn by the nearest face that does.
+ */
+function landingLegal(slide: Extract<Slide, { type: "content" }>, theme: ThemeDefinition): string[] {
+  const accepted = new Set<string>()
+  for (const kind of landingCandidates(slide.kind, theme.menu)) {
+    const layout = getLayout(theme.menu.content[kind]!.face)
+    if (layout !== undefined) for (const type of faceAcceptedComponentTypes(layout)) accepted.add(type)
+  }
+  return COMPONENT_TYPES.filter((type) => accepted.has(type))
+}
+
 function pageComponents(ir: PptxIR, slide: Slide, theme: ThemeDefinition, pageSpec: PageSpec | undefined): PageComponents {
   const face = componentFace(ir, slide, theme)
-  const legal = face === undefined ? [] : [...faceAcceptedComponentTypes(face)]
+  const legal =
+    slide.type === "content" ? landingLegal(slide, theme) : face === undefined ? [] : [...faceAcceptedComponentTypes(face)]
   const required =
     slide.type === "content" && face !== undefined
       ? face.slots.flatMap((slot) =>
@@ -277,7 +306,13 @@ function pageLimits(
     const sources = [`${pacing} pacing allows ${density.pacingBudget}`]
     if (density.layoutCapacity !== undefined) sources.push(`the face's body holds ${density.layoutCapacity}`)
     if (density.takeoverImage) sources.push("the page's picture is not counted")
-    limits.push({ level: "warning", measure: "components", per: "page", max: density.limit, source: sources.join(", ") })
+    // The count is the face this page is drawn on. A block that face does
+    // not take sends the page to another face (`../render/kind-landing.ts`),
+    // which counts on its own, so a narrow face names the blocks it counts.
+    const face = componentFace(ir, slide, theme)
+    const drawn = face === undefined ? [] : faceAcceptedComponentTypes(face)
+    const of = drawn.length > 0 && drawn.length < legal.length ? { of: [...drawn] } : {}
+    limits.push({ level: "warning", measure: "components", per: "page", ...of, max: density.limit, source: sources.join(", ") })
     const itemSlot = density.itemSlot
     if (itemSlot !== undefined) {
       limits.push({
@@ -403,10 +438,13 @@ export function pageContract(ir: PptxIR, pageId: string, opts: PageContractOptio
   const pacing = resolveNarrative(ir.narrative as Parameters<typeof resolveNarrative>[0]).pacing
   const components = pageComponents(ir, slide, theme, pageSpec)
   const schema = irJsonSchema()
+  const effective = resolveEffectiveFace(ir, slide, theme)
+  const drawnAs = slide.type === "content" && effective.servedKind !== undefined && effective.servedKind !== slide.kind ? effective.servedKind : undefined
   return {
     page: inspectedPage(ir, index, pageSpec),
     theme: theme.id,
-    face: resolveEffectiveFace(ir, slide, theme).layoutId,
+    face: effective.layoutId,
+    ...(drawnAs !== undefined ? { drawnAs } : {}),
     fields: pageFields(schema, slide),
     components,
     limits: pageLimits(schema, ir, slide, theme, pacing, components.legal),

@@ -62,6 +62,7 @@ import {
   placeholderIssues,
   validateIssue,
   type BuildIssue,
+  type BuildDrawnAs,
   type BuildReport,
 } from "./build-report"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
@@ -111,7 +112,8 @@ import { forkTheme } from "./theme-fork"
 import { describePlacement, parseBrandOption, regenerateFromBrand } from "../themes/brand/brand-regen"
 import { themeFileFromPreset } from "../themes/presets"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
-import { offeredContentKinds } from "../render/layout-selection"
+import { offeredContentKinds, resolveEffectiveFace } from "../render/layout-selection"
+import { resolveIrTheme } from "../themes/resolve-ir-theme"
 
 /** `findUserConfig()`'s own return shape, named here so it can be threaded as
  *  a parameter (`loadDeckTarget`/`applyDeckConfig` below) instead of each
@@ -916,6 +918,7 @@ export async function runSpecValidate(specPath: string): Promise<string> {
   for (const w of v.warnings ?? []) {
     lines.push(`warning: ${w.path ? `${w.path}: ` : ""}${w.message}`)
   }
+  for (const landing of v.landings ?? []) lines.push(`note: ${landing.path}: ${landing.message}`)
   const aliasNote = normalizedNote(v.normalized)
   if (aliasNote) lines.push(aliasNote)
   return lines.join("\n")
@@ -968,6 +971,7 @@ export async function runSpecValidateJson(specPath: string): Promise<{ output: s
     pageCount: pages.length,
     pages,
     warnings: (v.warnings ?? []).map(issue),
+    ...(v.landings && v.landings.length > 0 ? { landings: v.landings } : {}),
     ...(v.normalized && v.normalized.length > 0 ? { normalized: v.normalized } : {}),
   }
   return { ok: true, output: JSON.stringify(report, null, 2) }
@@ -2178,6 +2182,19 @@ async function specPageIds(deckDir: string): Promise<string[]> {
   }
 }
 
+/** Every content page the bound theme draws as another kind, read off the same route render takes. */
+function drawnAsReport(ir: PptxIR, theme: ThemeDefinition | undefined): BuildDrawnAs[] {
+  const definition = resolveIrTheme(ir, theme)
+  const out: BuildDrawnAs[] = []
+  ir.slides.forEach((slide, index) => {
+    if (slide.type !== "content") return
+    const served = resolveEffectiveFace(ir, slide, definition).servedKind
+    if (served === undefined || served === slide.kind) return
+    out.push({ page: index + 1, ...(slide.id !== undefined ? { pageId: slide.id } : {}), kind: slide.kind, drawnAs: served })
+  })
+  return out
+}
+
 async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit] = await readConfigs(cwd)
@@ -2226,6 +2243,8 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   const ir = v.ir!
   report.theme = ir.theme.id
   report.pageCount = ir.slides.length
+  const drawnAs = drawnAsReport(ir, theme)
+  if (drawnAs.length > 0) report.drawnAs = drawnAs
   try {
     await resolveLocalAssets(ir, loaded.baseDir, loaded.workspaceAssetsDir)
   } catch (e) {

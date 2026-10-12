@@ -4,6 +4,8 @@ import type { PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { installNodePlatform } from "../platform/node"
 import { parseSvgRoot } from "../render/serialize"
+import { resolveEffectiveFace } from "../render/layout-selection"
+import { getThemeDefinition } from "../themes/definitions"
 import { validateIr } from "../validate-core"
 import { sectionNumber } from "./marquee-shared"
 import { splitStatement } from "./content-marquee-statement"
@@ -118,11 +120,12 @@ describe("the marquee faces on rally", () => {
     expect(texts(root.querySelector("[data-marquee-folio]")!)).toEqual(["2", "/ 5"])
   })
 
-  it("statement: hands a page it cannot set to the sheet instead of leaving its body out", () => {
+  it("statement: a page holding a block the face does not take is drawn by rally's sheet, body and all", () => {
     const list = { type: "bullets", items: ["上海", "杭州"] }
-    const root = page(deck([cover(), statement({ components: [list] as Slide["components"] })]), 1)
-    expect(root.querySelector("[data-face-stepped-aside='marquee-statement']")).not.toBeNull()
-    expect(texts(root)).toContain("上海")
+    const ir = deck([cover(), statement({ components: [list] as Slide["components"] })])
+    const face = resolveEffectiveFace(ir, ir.slides[1]!, getThemeDefinition("rally"))
+    expect([face.layoutId, face.servedKind]).toEqual(["marquee-sheet", "points"])
+    expect(texts(page(ir, 1))).toContain("上海")
   })
 
   it("statement: hands touchpoints with a title or a tone to the sheet, which draws them", () => {

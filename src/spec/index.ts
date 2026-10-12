@@ -36,7 +36,8 @@ import {
 import { CAPACITY } from "../audit/capacity"
 import { stripEmphasis } from "../render/emphasis"
 import { type SlideType } from "../layouts/registry"
-import { offeredContentKinds, resolveLayoutId } from "../render/layout-selection"
+import { KIND_LANDING, landingCandidates } from "../render/kind-landing"
+import { offeredContentKinds } from "../render/layout-selection"
 import type { ThemeDefinition } from "../themes/definitions"
 import { resolveBoundThemeResult } from "../themes/resolve-ir-theme"
 import { RETIRED_THEME_IDS, foldedThemeTarget, foldedThemeWarning } from "../themes/retired-ids"
@@ -48,7 +49,8 @@ export type PageKind = (typeof KIND_VALUES)[number]
 
 /**
  * Every page locks its id, type, and heading. Content pages additionally lock
- * a semantic `kind`, which must be offered by the bound theme menu. `focus`
+ * a semantic `kind`. A kind the bound theme menu lacks lands on its nearest
+ * offered stand-in (`../render/kind-landing.ts`). `focus`
  * and `summary` remain optional authoring hints.
  */
 const CommonPageSpecFields = {
@@ -156,12 +158,34 @@ export interface SpecValidationIssue {
   pageId?: string
 }
 
+/** One content page drawn by a stand-in kind (`SpecValidateResult.landings`). */
+export interface SpecLanding {
+  path: string
+  pageId: string
+  /** The page's own kind, as the spec wrote it. */
+  kind: PageKind
+  /**
+   * The offered kinds that may draw it, nearest first. The first draws an
+   * empty page. A filled page takes the first whose face holds its
+   * components, so this is a list until the page is written.
+   */
+  lands: PageKind[]
+  message: string
+}
+
 export interface SpecValidateResult {
   ok: boolean
   spec?: DeckSpec
   errors: SpecValidationIssue[]
   /** Editorial advisories never change `ok`. */
   warnings?: SpecValidationIssue[]
+  /**
+   * Content pages whose kind the bound menu does not offer, one per page,
+   * saying which offered kind draws it (`../render/kind-landing.ts`). Facts
+   * about the binding, not problems: nothing in the spec needs to change,
+   * and they never change `ok`.
+   */
+  landings?: SpecLanding[]
   /**
    * Same shape and channel as `ValidateResult.normalized` (`../validate-core.ts`)
    * — human-readable `path: alias → canonical`-style rewrite entries for every
@@ -503,30 +527,55 @@ function checkFocusVocabulary(spec: DeckSpec): SpecValidationIssue[] {
 
 // ── theme-menu hard gate and kind-distribution advisory ─────────────────
 
-function checkThemeMenuKinds(spec: DeckSpec, theme: ThemeDefinition): SpecValidationIssue[] {
+/**
+ * Every content page's kind against the bound menu. A kind the menu lacks
+ * is not an error: the page lands on its nearest offered stand-in
+ * (`../render/kind-landing.ts`), and the result says which. Only a kind
+ * with nowhere to land, in a menu that offers none of its stand-ins, is
+ * refused.
+ */
+function checkThemeMenuKinds(
+  spec: DeckSpec,
+  theme: ThemeDefinition,
+): { errors: SpecValidationIssue[]; landings: SpecLanding[] } {
   const menu = theme.menu
   if (menu === undefined) {
-    return [
-      {
-        path: "theme",
-        message: `theme "${resolveSpecThemeId(spec)}" has no menu`,
-      },
-    ]
+    return {
+      errors: [{ path: "theme", message: `theme "${resolveSpecThemeId(spec)}" has no menu` }],
+      landings: [],
+    }
   }
 
+  const themeId = resolveSpecThemeId(spec)
   const offered = offeredContentKinds(menu)
-  return spec.pages.flatMap((page, index) => {
-    if (page.type !== "content" || resolveLayoutId("content", page.kind, menu) !== null) return []
-    return [
-      {
-        path: `pages.${index}.kind`,
+  const errors: SpecValidationIssue[] = []
+  const landings: SpecLanding[] = []
+  spec.pages.forEach((page, index) => {
+    if (page.type !== "content") return
+    const candidates = landingCandidates(page.kind, menu)
+    if (candidates[0] === page.kind) return
+    const path = `pages.${index}.kind`
+    if (candidates.length === 0) {
+      errors.push({
+        path,
         pageId: page.id,
-        message: `kind "${page.kind}" is not offered by theme "${resolveSpecThemeId(
-          spec,
-        )}". Available content kinds: ${offered.join(", ")}`,
-      },
-    ]
+        message: `kind "${page.kind}" is not offered by theme "${themeId}", and neither is any kind it can stand in for (${KIND_LANDING[
+          page.kind
+        ].join(", ")}). Available content kinds: ${offered.join(", ")}`,
+      })
+      return
+    }
+    const [first, ...rest] = candidates
+    const others = rest.length > 0 ? `, or on ${rest.map((kind) => `"${kind}"`).join(" or ")} when its components need that face` : ""
+    landings.push({
+      path,
+      pageId: page.id,
+      kind: page.kind,
+      lands: candidates,
+      message: `theme "${themeId}" offers no "${page.kind}" page: this one is drawn as "${first}"${others}. Nothing to change in the spec`,
+    })
   })
+  return { errors, landings }
 }
 
 /** Report each maximal run of three or more identical content-page kinds. */
@@ -689,8 +738,8 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
   const boundTheme = resolveSpecTheme(spec, opts?.theme)
   if (!boundTheme.ok) return withNormalized({ ok: false, errors: boundTheme.errors })
 
-  const menuErrors = checkThemeMenuKinds(spec, boundTheme.theme)
-  if (menuErrors.length > 0) return withNormalized({ ok: false, errors: menuErrors })
+  const menu = checkThemeMenuKinds(spec, boundTheme.theme)
+  if (menu.errors.length > 0) return withNormalized({ ok: false, errors: menu.errors })
 
   // Narrative resolution (spec §5's defaults chain), same open-schema/
   // closed-semantic split as validateIr's own (api.ts) — see that
@@ -721,5 +770,6 @@ export function validateSpec(input: unknown, opts?: { theme?: ThemeDefinition })
     spec,
     errors: [],
     ...(warnings.length > 0 ? { warnings } : {}),
+    ...(menu.landings.length > 0 ? { landings: menu.landings } : {}),
   })
 }

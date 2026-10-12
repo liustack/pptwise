@@ -41,6 +41,15 @@ const CHART = {
   series: [{ name: "Revenue", data: [{ x: "Expansion", y: 62 }, { x: "New", y: 38 }] }],
 }
 
+const GANTT = {
+  type: "gantt",
+  axis_labels: ["Q1", "Q2", "Q3"],
+  items: [
+    { label: "Build", start: 1, end: 2 },
+    { label: "Ship", start: 2, end: 3 },
+  ],
+}
+
 /** A deck project with `pages` written under `pages/`. */
 async function deck(pages: Record<string, unknown>): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "pptwise-inspect-"))
@@ -106,12 +115,15 @@ describe("runInspect --page", () => {
   })
 
   it("locates validate's own finding inside the page and exits non-zero", async () => {
-    const dir = await deck({ number: { components: [CHART] } })
-    await expect(runValidate(dir)).rejects.toThrow(/page 3 \(number\) — slides\.2\.components: layout "gauge-figure" does not render chart components/)
+    // A gantt beside a paragraph needs a face that sets a full-body block
+    // with companions, and none of brief's faces a fact page can land on
+    // does, so the page stays on its own face, which refuses the gantt.
+    const dir = await deck({ number: { components: [GANTT, { type: "paragraph", text: "Two phases" }] } })
+    await expect(runValidate(dir)).rejects.toThrow(/page 3 \(number\) — slides\.2\.components: layout "gauge-figure" does not render gantt components/)
     const { output, failed } = await runInspect(dir, { page: "number", json: true })
     expect(failed).toBe(true)
     expect(JSON.parse(output).errors).toEqual([
-      { scope: "page", path: "components", message: 'layout "gauge-figure" does not render chart components' },
+      { scope: "page", path: "components", message: 'layout "gauge-figure" does not render gantt components' },
     ])
   })
 
@@ -173,7 +185,8 @@ describe("runInspect --component", () => {
 
   it("refuses a component the page's face does not draw, and an unknown type", async () => {
     const dir = await deck({})
-    await expect(runInspect(dir, { page: "number", component: "chart" })).rejects.toThrow(/page "number" does not draw chart\. It draws: /)
+    // brief's ending sets its decisions as a list and nothing else.
+    await expect(runInspect(dir, { page: "close", component: "chart" })).rejects.toThrow(/page "close" does not draw chart\. It draws: bullets/)
     await expect(runInspect(dir, { page: "number", component: "quote" })).rejects.toThrow(/unknown component type "quote"/)
   })
 })

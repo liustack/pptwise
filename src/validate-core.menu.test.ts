@@ -117,9 +117,27 @@ describe("IR validation against the bound theme menu", () => {
     expect(result.errors[0]?.message).toContain("do not render components")
   })
 
-  it("hard-rejects a content kind outside the bound menu and lists its offer", () => {
+  it("draws a content kind outside the bound menu on its nearest offered kind", () => {
     const id = "ir-menu-kind"
     installTheme(id, BASE_MENU)
+
+    const result = validateIr(
+      deck(id, {
+        id: "content",
+        type: "content",
+        kind: "data",
+        heading: "Data",
+        components: [{ type: "paragraph", text: "Figures in words" }],
+      }),
+    )
+
+    expect(result.errors).toEqual([])
+    expect(result.ok).toBe(true)
+  })
+
+  it("hard-rejects a content kind with nowhere to land and lists the offer", () => {
+    const id = "ir-menu-nowhere"
+    installTheme(id, { ...BASE_MENU, content: { statement: { face: "statement" } } })
 
     const result = validateIr(
       deck(id, {
@@ -137,7 +155,8 @@ describe("IR validation against the bound theme menu", () => {
       page: 1,
       slideId: "content",
     })
-    expect(result.errors[0]?.message).toContain("points")
+    expect(result.errors[0]?.message).toContain("neither is any kind it can stand in for (evidence, points, list)")
+    expect(result.errors[0]?.message).toContain("Available content kinds: statement")
   })
 
   it.each(["image-top", "image-split"] as const)(

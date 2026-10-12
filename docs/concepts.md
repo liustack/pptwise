@@ -130,7 +130,7 @@ A theme menu is a pure table. It maps `cover`, `chapter`, each offered content k
 
 The selected face owns geometry, slots, physical capacity, self-adaptation, and the truth source for its configurable parameters. A menu entry supplies parameter values and may control motif or brand visibility. Authors never write face identifiers.
 
-If a spec asks for a kind outside the bound menu, validation fails and lists the offered kinds. Validation, capacity checks, and rendering consume the same lookup result. See [Menu lookup](./menu-lookup.md).
+If a spec asks for a kind outside the bound menu, the page is drawn by the nearest kind the menu offers whose face takes its components, and validation notes it. The page keeps its own kind, so a theme that offers it draws it there again. Validation, capacity checks, and rendering consume the same lookup result. See [Menu lookup](./menu-lookup.md).
 
 ## Capacity has two owners
 
@@ -147,7 +147,7 @@ Narrative pacing owns the editorial budget and body-text baseline. The face sele
 1. Face code declares configurable parameters and their bounds. Menu entries supply valid values.
 2. Menu lookup is one-to-one. It has no rotation or conditional branch.
 3. Pacing controls editorial capacity and the body baseline, never face choice.
-4. A kind outside the bound menu is a hard validation error.
+4. A kind outside the bound menu lands on its nearest offered stand-in from one fixed table. It is an error only when the menu offers none of them.
 5. Boundary-page component support comes from the bound face and is validated there.
 6. Deck branding keeps `full`, `cover-only`, and `minimal` for the logo. Footer marks are opt-in through `footer`. Page silence belongs to the face or menu entry.
 7. Page arrangement belongs to face self-adaptation, not IR.

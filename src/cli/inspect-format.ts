@@ -57,6 +57,9 @@ function issueBlock(label: string, issues: readonly PageIssue[]): string[] {
 export function formatPageContract(contract: PageContract, file: string): string {
   const { components } = contract
   const lines = [...pageHeader(contract.page, contract.theme, file), ""]
+  if (contract.drawnAs !== undefined) {
+    lines.push(`drawn as: "${contract.drawnAs}", the nearest kind theme "${contract.theme}" draws this page as`, "")
+  }
   lines.push(`fields: ${Object.keys(contract.fields).filter((key) => key !== "$defs").join(", ")}`)
   lines.push(`components (${components.legal.length}): ${components.legal.length > 0 ? components.legal.join(", ") : "none"}`)
   if (components.fullBody.length > 0) {

@@ -3,8 +3,10 @@
  *
  * The semantic lookup is intentionally smaller than the render route around
  * it. `resolveLayoutId` is a pure table read from page type plus content
- * kind. `resolveEffectiveFace` adds the asset-backed cover or chapter render
- * route while retaining the bound face declaration for validation.
+ * kind. `resolveEffectiveFace` lands a kind the menu lacks on its nearest
+ * offered stand-in (`./kind-landing.ts`) and adds the asset-backed cover or
+ * chapter render route while retaining the bound face declaration for
+ * validation.
  *
  * Validate, density checks, and render all call this module. No caller may
  * sample a pool or reconstruct takeover precedence independently.
@@ -13,6 +15,7 @@ import { COMPONENT_TYPES, KIND_VALUES, type PageKind, type PptxIR, type Slide } 
 import { getLayout, type LayoutDefinition } from "../layouts/registry"
 import type { ThemeDefinition } from "../themes/definitions"
 import type { Menu, MenuEntry } from "../themes/schema"
+import { KIND_LANDING, landKind } from "./kind-landing"
 
 /** Resolve one menu entry without consulting registry or render state. */
 export function resolveMenuEntry(
@@ -59,6 +62,13 @@ export type EffectiveFaceRoute = "layout" | "takeover" | "image-cover" | "unreso
 /** The single route record shared by validation, capacity, and rendering. */
 export interface EffectiveFace {
   route: EffectiveFaceRoute
+  /**
+   * The content kind whose menu entry draws the page. It differs from the
+   * page's own kind when the bound menu does not offer that kind and the
+   * page landed on a stand-in (`./kind-landing.ts`). Undefined on boundary
+   * pages and on a content page with nowhere to land.
+   */
+  servedKind?: PageKind
   entry: MenuEntry | undefined
   layoutId: string | null
   layout: LayoutDefinition | undefined
@@ -91,9 +101,12 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefin
     }
   }
 
-  const kind = pageKind(slide)
-  const layoutId = resolveLayoutId(slide.type, kind, theme.menu)
-  const entry = resolveMenuEntry(slide.type, kind, theme.menu)
+  const authored = pageKind(slide)
+  // A kind the menu lacks lands on its nearest offered stand-in, chosen by
+  // what the page's components need. See `./kind-landing.ts`.
+  const kind = authored === undefined ? undefined : landKind(authored, slide, theme.menu, getLayout)
+  const entry = slide.type === "content" && kind === undefined ? undefined : resolveMenuEntry(slide.type, kind, theme.menu)
+  const layoutId = entry?.face ?? null
   if (layoutId === null || entry === undefined) {
     const offered = offeredContentKinds(theme.menu)
     return {
@@ -103,17 +116,19 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefin
       layout: undefined,
       error:
         slide.type === "content"
-          ? `kind "${slide.kind}" is not offered by theme "${ir.theme.id}". Available content kinds: ${offered.join(
-              ", ",
-            )}`
+          ? `kind "${slide.kind}" is not offered by theme "${ir.theme.id}", and neither is any kind it can stand in for (${KIND_LANDING[
+              slide.kind
+            ].join(", ")}). Available content kinds: ${offered.join(", ")}`
           : `theme "${ir.theme.id}" has no menu entry for "${slide.type}" pages`,
     }
   }
 
+  const served = kind === undefined ? {} : { servedKind: kind }
   const layout = getLayout(layoutId)
   if (layout === undefined) {
     return {
       route: "unresolved",
+      ...served,
       entry,
       layoutId,
       layout: undefined,
@@ -125,11 +140,12 @@ export function resolveEffectiveFace(ir: PptxIR, slide: Slide, theme: ThemeDefin
   // unless its face draws its own page over the photograph.
   const background = slide.background ?? theme.style.defaultBackgrounds[slide.type]
   if (background.kind === "asset" && (slide.type === "cover" || slide.type === "chapter") && layout.drawsPhoto !== true) {
-    return { route: "image-cover", entry, layoutId, layout }
+    return { route: "image-cover", ...served, entry, layoutId, layout }
   }
 
   return {
     route: layout.kind === "takeover" ? "takeover" : "layout",
+    ...served,
     entry,
     layoutId,
     layout,

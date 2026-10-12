@@ -19,7 +19,7 @@ The four public nouns are:
 - **component**: one of 63 typed units that fill a page.
 - **kind**: one of 11 content-page moves. The vocabulary is `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, and `hierarchy`.
 
-Boundary pages are `cover`, `chapter`, and `ending`. Content pages require `kind`. The bound theme menu maps each boundary type and each offered content kind to exactly one internal face. Authors never write face ids. IR v5 has no `seed`, `layout`, `beat`, or `arrangement`.
+Boundary pages are `cover`, `chapter`, and `ending`. Content pages require `kind`. The bound theme menu maps each boundary type and each offered content kind to exactly one internal face. A kind the menu lacks lands on its nearest offered stand-in from the one table in `src/render/kind-landing.ts`, so a theme change is a name change. Authors never write face ids. IR v5 has no `seed`, `layout`, `beat`, or `arrangement`.
 
 See `docs/concepts.md`, `docs/menu-lookup.md`, `docs/themes.md`, `docs/ir.md`, and `docs/deck-projects.md`.
 

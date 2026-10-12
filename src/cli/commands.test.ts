@@ -660,9 +660,16 @@ describe("runSchema / runThemes", () => {
     const callout = JSON.parse(await runSchema({ component: "callout" })) as { component: string; $defs: Record<string, unknown> }
     expect(callout.component).toBe("callout")
     expect(Object.keys(callout.$defs)).toEqual(["Tag", "Tone", "IconName"])
-    const fact = JSON.parse(await runSchema({ kind: "fact", theme: "brief" })) as { kind: string; components: string[] }
+    const fact = JSON.parse(await runSchema({ kind: "fact", theme: "brief" })) as {
+      kind: string
+      components: string[]
+      themes: Record<string, { face: string; drawnAs?: string[] }>
+    }
     expect(fact.kind).toBe("fact")
-    expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
+    // brief's fact face takes a figure and its note, and a fact page holding
+    // anything else lands on the nearest kind whose face takes it.
+    expect(fact.themes.brief).toMatchObject({ face: "gauge-figure", drawnAs: ["fact", "data", "statement", "points", "list"] })
+    expect(fact.components).toContain("chart")
     const anyTheme = JSON.parse(await runSchema({ kind: "quote" })) as { themes: Record<string, unknown> }
     expect(Object.keys(anyTheme.themes)).toContain("thesis")
   })
@@ -719,7 +726,9 @@ describe("runSchema / runThemes", () => {
 
     it("falls back to the preset when the cwd is not a deck", async () => {
       const cwd = await mkdtemp(join(tmpdir(), "pptwise-schema-plain-"))
-      await expect(runSchema({ kind: "quote", theme: "brief", cwd })).rejects.toThrow(/not offered by theme "brief"/)
+      // The preset offers no quote page: the answer is its stand-ins'.
+      const doc = JSON.parse(await runSchema({ kind: "quote", theme: "brief", cwd })) as { themes: Record<string, { drawnAs?: string[] }> }
+      expect(doc.themes.brief!.drawnAs).toEqual(["statement", "points", "list"])
     })
 
     // `validate deck.json` reads a bare IR's theme from the IR file's own
@@ -1838,7 +1847,10 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
       themes: Record<string, { face: string; components: string[] }>
     }
     expect(doc.themes.brief).toEqual(JSON.parse(await runSchema({ kind: "quote", theme: "thesis" })).themes.thesis)
-    await expect(runSchema({ kind: "quote", theme: "brief" })).rejects.toThrow(/kind "quote" is not offered by theme "brief"/)
+    expect(doc.themes.brief!.face).toBe("pull-quote")
+    // The factory preset has no quote page, so its answer is its stand-ins'.
+    const preset = JSON.parse(await runSchema({ kind: "quote", theme: "brief" })) as { themes: Record<string, { face: string; drawnAs?: string[] }> }
+    expect(preset.themes.brief!.drawnAs).toEqual(["statement", "points", "list"])
     expect(getThemeDefinition("brief").menu.content.quote).toBeUndefined()
   })
 

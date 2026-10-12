@@ -264,20 +264,26 @@ export async function resolveThemeByName(requested: string, opts: ThemeLookupOpt
   throw new PptwiseError(`unknown theme "${name}". Searched ${places.join(", ")}.`)
 }
 
-const REBIND_SUFFIX =
-  "A same-menu color fork is allowed. A different menu is a new theme. Start over from the theme layer (keep intent, narrative, and harvested materials, rewrite the spec)."
-
 /**
- * The rebind guard: a deck whose own `theme.json` is `bound` may only be
- * drawn with a theme of the same menu. Reads nothing: `bound` is the file
- * as the theme-input record read it (`./theme-inputs.ts`, which also
+ * The rebind guard: a deck whose own `theme.json` is `bound` froze that
+ * theme, so a spec naming another theme is drawn with it only when the
+ * two share a menu (a color fork). Any other name would leave the frozen
+ * file silently unused, so the guard says how to switch instead.
+ *
+ * A different menu is no reason to rewrite the spec: page kinds the new
+ * menu lacks land on their nearest stand-in (`../render/kind-landing.ts`).
+ * The refusal is only about the frozen file. Reads nothing: `bound` is the
+ * file as the theme-input record read it (`./theme-inputs.ts`, which also
  * decides when there is nothing to compare against), so the guard's
  * verdict is a function of that record alone.
  */
 export function assertThemeRebind(bound: ThemeFile | undefined, resolved: ResolvedTheme): void {
   if (bound === undefined) return
   if (menusEqual(bound.menu, resolved.definition.menu)) return
-  throw new PptwiseError(`cannot rebind theme "${bound.id}" to "${resolved.id}": menus differ. ${REBIND_SUFFIX}`)
+  throw new PptwiseError(
+    `cannot rebind theme "${bound.id}" to "${resolved.id}": menus differ, and this deck froze "${bound.id}" in its own theme.json. ` +
+      `To switch, delete that theme.json, or replace it with "${resolved.id}"'s theme file. The spec and page files stay as they are. A same-menu color fork needs neither.`,
+  )
 }
 
 /** Resolve the requested theme through the ordinary lookup route. A missing

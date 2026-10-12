@@ -114,9 +114,11 @@ describe("yearbook sheet", () => {
     expect(page.querySelector("[data-yearbook-source] text")!.getAttribute("data-font-floor-exempt")).toBe("yearbook-spec")
   })
 
-  it("refuses a strip of years on a face of another theme", () => {
+  it("leaves a strip of years off a face of another theme, and says so", () => {
     const ir = deck([sheet("x")], { theme: { id: "clinic" } })
-    expect(validateIr(ir).errors.map((e) => e.path)).toContain("slides.0.years")
+    const v = validateIr(ir)
+    expect(v.errors.map((e) => e.path)).not.toContain("slides.0.years")
+    expect(v.warnings?.map((w) => w.path)).toContain("slides.0.years")
   })
 
   it("sets a page's tag at the body's top when no composition takes it", () => {

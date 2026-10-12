@@ -11,8 +11,9 @@
 //
 // So this sweep fills every page field the IR schema offers, each with words
 // found nowhere else, on every registered face, and holds
-// each field to one of three outcomes: its words are on the page, validate
-// refuses the field on this page, or the page carries a mark that the field
+// each field to one of four outcomes: its words are on the page, validate
+// refuses the field on this page, validate warns that the face leaves this
+// piece of theme furniture off, or the page carries a mark that the field
 // itself put there. Words that are simply gone fail.
 //
 // Every registered face, not every face on a built-in menu. A theme file may
@@ -190,6 +191,16 @@ function drops(markup: string): number {
 }
 
 /** A refusal validate gave this field on page 1. */
+/**
+ * Whether validate warned that this page leaves `field` off: a theme's
+ * furniture (a kicker, a stamp, a tag, a strip of years, a course stage)
+ * gives way on a face with no place for it, and the warning is how the
+ * engine says so (`checkKickerDrawn`).
+ */
+function gaveWay(warnings: readonly { path: string; message: string }[] | undefined, field: string): boolean {
+  return (warnings ?? []).some((w) => w.path === `slides.0.${field}` && /is left off this page/.test(w.message))
+}
+
 function refusesField(errors: readonly { path: string; message: string }[], field: string): boolean {
   const named = new RegExp(`\\b${field}\\b`, "u")
   return errors.some((e) => e.path === `slides.0.${field}` || e.path.startsWith(`slides.0.${field}.`) || (e.path === "slides.0" && named.test(e.message)))
@@ -358,7 +369,7 @@ function sweepPage(route: Route, base: PptxIR, page: Record<string, unknown>): S
 
   const silent: Silent[] = []
   for (const field of fields) {
-    if (refused.includes(field)) continue
+    if (refused.includes(field) || gaveWay(result.warnings, field)) continue
     const missing = all[field]!.probes.filter((probe) => !text.includes(squash(probe.words)))
     if (missing.length === 0) continue
     const without = { ...slide }

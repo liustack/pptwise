@@ -154,6 +154,15 @@ export interface ComponentCtx {
    * Unset everywhere else, where the sheet sets the kicker itself.
    */
   motifSetsKicker?: true
+  /**
+   * The page fields the page's own face has a place for
+   * (`LayoutDefinition.pageFields`). The step-aside sheet sets a kicker or
+   * a tag, and counts a field it cannot set as a loss, only when the face
+   * it stands in for had a place for it: a field the face had none for was
+   * left off with validate's warning, whichever draws the page. Set by
+   * `FullSlideSvg`. Unset everywhere else, where every field counts.
+   */
+  facePageFields?: readonly string[]
 }
 
 /**

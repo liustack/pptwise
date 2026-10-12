@@ -85,6 +85,16 @@ pnpm gen:skill-refs
 
 `scripts/gen-skill-refs.test.mts` renders the same sections in memory and compares every committed target byte for byte. Drift therefore fails `pnpm check`. Edit prose outside the generated markers and let the generator own the marked sections.
 
+## Theme switch matrix
+
+```bash
+pnpm theme-switch
+pnpm theme-switch --decks=memo/zh --themes=crayon,clinic
+pnpm theme-switch --bare-boundaries
+```
+
+Copies each showcase sample into a temporary folder, changes only `spec.theme` to each built-in theme, builds it, and prints pass or fail with every page that landed on a stand-in kind. `--bare-boundaries` empties cover, chapter, and ending page files so the run measures content pages alone. It is a maintainer's report, not part of `pnpm check`: a sample written for one theme's covers and fills is expected to need revision on some others. `src/render/kind-landing.test.ts` holds the kind guarantee in `check`: every built-in theme draws a typical page of every kind it lacks.
+
 ## Visual gallery
 
 ```bash

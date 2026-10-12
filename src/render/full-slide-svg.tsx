@@ -360,6 +360,7 @@ export function FullSlideSvg({
       themeDefaultBg,
     ),
     ...(motifSetsKicker ? { motifSetsKicker: true as const } : {}),
+    facePageFields: effectiveFace.layout?.pageFields ?? [],
   }
   let page = resolvePageRenderContext(ir, slide, effectiveFace, themeDef)
   let renderIr: PptxIR = page.metadataOn

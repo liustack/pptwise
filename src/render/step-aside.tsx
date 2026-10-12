@@ -125,8 +125,26 @@ export const SHEET_DRAWS_PAGE_FIELD: Readonly<Record<FacePageField, boolean>> = 
  */
 export function sheetDrawsPageFields(slide: Slide, ctx: ComponentCtx): boolean {
   const page = slide as unknown as Record<string, unknown>
-  for (const [field, drawn] of Object.entries(SHEET_DRAWS_PAGE_FIELD)) if (!drawn && page[field] !== undefined) return false
-  return slide.tag === undefined || tagWidth(slide.tag.text, ordinaryTagSpec(ctx)) <= CONTENT_W
+  for (const [field, drawn] of Object.entries(SHEET_DRAWS_PAGE_FIELD)) {
+    if (!drawn && page[field] !== undefined && faceDrawsField(ctx, field)) return false
+  }
+  return !sheetTag(slide, ctx) || tagWidth(slide.tag!.text, ordinaryTagSpec(ctx)) <= CONTENT_W
+}
+
+/**
+ * Whether the face that stood down had a place for `field`. A field it had
+ * no place for was a theme's furniture left off with validate's warning
+ * (`checkKickerDrawn`, `../validate-core.ts`), so the sheet neither draws it
+ * nor counts it as a loss. Without `ctx.facePageFields` (a caller drawing a
+ * face outside `FullSlideSvg`), every field the page carries counts.
+ */
+function faceDrawsField(ctx: ComponentCtx, field: string): boolean {
+  return ctx.facePageFields === undefined || ctx.facePageFields.includes(field)
+}
+
+/** The page tag the sheet sets: the page's own, when the face it stands in for had a place for one. */
+function sheetTag(slide: Slide, ctx: ComponentCtx): boolean {
+  return slide.tag !== undefined && faceDrawsField(ctx, "tag")
 }
 
 /** A `data-dropped` count that is actually a loss. Zero is never emitted. */
@@ -207,8 +225,8 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
   // The kicker and the tag share one row over the heading, the tag's height,
   // the kicker's words on the tag's centre line. The tag is printed whole
   // (`sheetDrawsPageFields`), and the kicker takes what the row has left.
-  const tagW = slide.tag ? tagWidth(slide.tag.text, ordinaryTagSpec(ctx)) : 0
-  const kickerWords = ctx.motifSetsKicker ? "" : stripEmphasis(slide.kicker ?? "").trim()
+  const tagW = sheetTag(slide, ctx) ? tagWidth(slide.tag!.text, ordinaryTagSpec(ctx)) : 0
+  const kickerWords = ctx.motifSetsKicker || !faceDrawsField(ctx, "kicker") ? "" : stripEmphasis(slide.kicker ?? "").trim()
   const kicker = kickerWords
     ? fitSvgLine(kickerWords, {
         maxWidth: CONTENT_W - (tagW > 0 ? tagW + EYEBROW_GAP : 0),
@@ -219,7 +237,7 @@ export function stepAsideGeometry(slide: Slide, ctx: ComponentCtx): StepAsideGeo
       })
     : null
   const kickerW = kicker ? Math.ceil(measureTextUnits(kicker.text, { bold: false, fontFamily: fonts.body }) * kicker.fontSize) : 0
-  const tag = slide.tag ? { x: MARGIN_X + (kicker ? kickerW + EYEBROW_GAP : 0), width: tagW } : null
+  const tag = sheetTag(slide, ctx) ? { x: MARGIN_X + (kicker ? kickerW + EYEBROW_GAP : 0), width: tagW } : null
   const eyebrowTop = HEAD_TOP
   const title = fitEmphasisHeading(slide.heading, {
     maxWidth: CONTENT_W,

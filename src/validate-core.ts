@@ -453,13 +453,13 @@ function checkBoundaryPageContent(ir: PptxIR, theme: ThemeDefinition): Validatio
 
 /** The page fields a face draws only when it declares a place for them, and what an author does with one that has none. */
 const FACE_PAGE_FIELDS = [
-  { field: "kicker", name: "a kicker", fix: "move the label into the heading or summary, or remove it" },
-  { field: "fields", name: "header lines (fields)", fix: "move them into the subheading or a component, or remove them" },
-  { field: "stamp", name: "a stamp", fix: "say it in the heading or a component, or remove it" },
-  { field: "tag", name: "a page tag", fix: "say it in the subheading or the source line, or remove it" },
-  { field: "ballot", name: "a ballot", fix: "list the choices in a component, or remove it" },
-  { field: "years", name: "a strip of years", fix: "name the years in the heading, or remove it" },
-  { field: "stage", name: "a course stage", fix: "name the stage in the kicker or the heading, or remove it" },
+  { field: "kicker", name: "a kicker", fix: "move the label into the heading or summary, or remove it", givesWay: true },
+  { field: "fields", name: "header lines (fields)", fix: "move them into the subheading or a component, or remove them", givesWay: false },
+  { field: "stamp", name: "a stamp", fix: "say it in the heading or a component, or remove it", givesWay: true },
+  { field: "tag", name: "a page tag", fix: "say it in the subheading or the source line, or remove it", givesWay: true },
+  { field: "ballot", name: "a ballot", fix: "list the choices in a component, or remove it", givesWay: false },
+  { field: "years", name: "a strip of years", fix: "name the years in the heading, or remove it", givesWay: true },
+  { field: "stage", name: "a course stage", fix: "name the stage in the kicker or the heading, or remove it", givesWay: true },
 ] as const
 
 /** Whether the slide asks for `field` at all: an empty kicker asks for nothing. */
@@ -487,28 +487,46 @@ function motifSetsKicker(ir: PptxIR, slide: PptxIR["slides"][number], theme: The
 /**
  * A `kicker`, `fields`, a `stamp`, a page `tag`, a `ballot`, `years` or a `stage` is drawn only by a face that declares a
  * place for it (`LayoutDefinition.pageFields`), on any page type, or, for a
- * kicker, by a motif that sets it over the face. Every other page would
- * leave it off with nothing to say so, so the page is refused, naming the
- * face. An empty kicker asks for nothing.
+ * kicker, by a motif that sets it over the face. An empty kicker asks for
+ * nothing.
+ *
+ * Two answers for a face with no place. `fields` and a `ballot` carry
+ * words found nowhere else on the page (who wrote it, the choices put to
+ * the room), so the page is refused, naming the face. The others are a
+ * theme's furniture, labels a theme sets around the page: a kicker, a
+ * stamp, a tag, a strip of years, a course stage. A theme with no place
+ * for one gives way: it leaves the label off and says so in a warning
+ * naming the page, the field and the face, so a deck can change theme by
+ * changing the name its spec binds. The label stays in the source and is
+ * drawn again under any theme with a place for it.
  */
-function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): { errors: ValidationIssue[]; givenWay: ValidationIssue[] } {
   const errors: ValidationIssue[] = []
+  const givenWay: ValidationIssue[] = []
   ir.slides.forEach((slide, i) => {
     if (slide.placeholder) return
-    for (const { field, name, fix } of FACE_PAGE_FIELDS) {
+    for (const { field, name, fix, givesWay } of FACE_PAGE_FIELDS) {
       if (!asksFor(slide, field)) continue
       const layout = componentFace(ir, slide, theme)
       if (layout?.pageFields?.includes(field)) continue
       if (field === "kicker" && motifSetsKicker(ir, slide, theme)) continue
-      errors.push({
+      const face = layout ? `face "${layout.id}"` : "this page's face"
+      const issue = {
         path: `slides.${i}.${field}`,
         page: i + 1,
         ...(slide.id !== undefined ? { slideId: slide.id } : {}),
-        message: `${layout ? `face "${layout.id}"` : "this page's face"} has no place for ${name} — ${fix}`,
-      })
+      }
+      if (givesWay) {
+        givenWay.push({
+          ...issue,
+          message: `${face} of theme "${ir.theme.id}" has no place for ${name}, so it is left off this page. It stays in the source and is drawn under a theme with a place for it. If the deck keeps this theme, ${fix}`,
+        })
+      } else {
+        errors.push({ ...issue, message: `${face} has no place for ${name} — ${fix}` })
+      }
     }
   })
-  return errors
+  return { errors, givenWay }
 }
 
 /**
@@ -1370,10 +1388,15 @@ export function validateIr(
   // The fold warning rides every return path below, a rejected deck's
   // included: the author learns which theme the deck now binds whatever
   // else is wrong with it.
+  // Theme furniture a face has no place for, left off with a warning
+  // (`checkKickerDrawn`). Found partway down the gates, then carried by
+  // every later return, a rejected deck's included.
+  let givenWay: ValidationIssue[] = []
   const withNormalized = (result: ValidateResult): ValidateResult => {
     const noted = normalized.length > 0 ? { ...result, normalized } : result
-    if (themeFold.warning === undefined) return noted
-    return { ...noted, warnings: [themeFold.warning, ...(noted.warnings ?? [])] }
+    const extra = [...(themeFold.warning !== undefined ? [themeFold.warning] : []), ...givenWay]
+    if (extra.length === 0) return noted
+    return { ...noted, warnings: [...extra, ...(noted.warnings ?? [])] }
   }
 
   const r = PptxIRSchema.safeParse(normalizedInput)
@@ -1429,7 +1452,9 @@ export function validateIr(
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
   const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
-  const kickerErrors = [...checkKickerDrawn(r.data, theme), ...checkSubheadingDrawn(r.data, theme)]
+  const pageFields = checkKickerDrawn(r.data, theme)
+  givenWay = pageFields.givenWay
+  const kickerErrors = [...pageFields.errors, ...checkSubheadingDrawn(r.data, theme)]
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
   // The body face these two measure in is the one the deck renders in,
   // whose cut follows the deck's language (`resolveFontStack`).

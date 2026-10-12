@@ -80,7 +80,7 @@ async function projectDir(): Promise<string> {
 }
 
 const REBIND_MESSAGE =
-  /cannot rebind theme "acme" to "swiss": menus differ\. A same-menu color fork is allowed\. A different menu is a new theme\. Start over from the theme layer \(keep intent, narrative, and harvested materials, rewrite the spec\)\./
+  /cannot rebind theme "acme" to "swiss": menus differ, and this deck froze "acme" in its own theme\.json\. To switch, delete that theme\.json, or replace it with "swiss"'s theme file\. The spec and page files stay as they are\./
 
 describe("theme selection chain", () => {
   it("1. deck theme.json id=acme + spec.theme=acme -> acme", async () => {

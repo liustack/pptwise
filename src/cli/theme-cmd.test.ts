@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { __resetRegisteredThemes } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition } from "../themes/definitions"
 import { buildThmxBytes } from "../themes/extract/__fixtures__/thmx"
 import { runBrandExtract, runThemeFork, runThemeNew, runThemeTry } from "./commands"
 
@@ -13,6 +13,17 @@ installNodePlatform()
 afterEach(() => {
   __resetRegisteredThemes()
 })
+
+const GANTT = {
+  type: "gantt",
+  axis_labels: ["Q1", "Q2", "Q3"],
+  items: [
+    { label: "Build", start: 1, end: 2 },
+    { label: "Ship", start: 2, end: 3 },
+  ],
+}
+
+const KPI = { type: "kpi_cards", items: [{ value: "38%", label: "year over year" }] }
 
 function tmp(prefix: string): Promise<string> {
   return mkdtemp(join(tmpdir(), prefix))
@@ -403,26 +414,36 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     await expect(runThemeTry("brief", { cwd, title: "Q3", lang: "fr" })).rejects.toThrow(/unknown --lang "fr".*zh, en/)
   })
 
-  it("draws the caller's content page, and leaves it out of a theme whose menu does not offer its kind", async () => {
+  it("draws the caller's content page, and leaves it out of a theme that cannot draw it", async () => {
     const cwd = await tmp("pptwise-theme-wall-page-")
     const page = join(cwd, "page.json")
-    await writeFile(
-      page,
-      JSON.stringify({ kind: "fact", heading: "Revenue grew", components: [{ type: "kpi_cards", items: [{ value: "38%", label: "year over year" }] }] }),
-    )
+    // crayon's sheet sets a gantt with its figures beside it. No face a
+    // brief process page can land on does.
+    await writeFile(page, JSON.stringify({ kind: "process", heading: "Two phases", components: [GANTT, KPI] }))
     const out = join(cwd, "wall")
     const manifest = JSON.parse(await runThemeTry("brief,crayon", { output: out, cwd, title: "Q3 review", page, json: true })) as WallManifest
     const [brief, crayon] = manifest.themes
-    expect(brief!.pages).toEqual([
-      { type: "cover", file: "brief-cover.svg" },
-      { type: "content", kind: "fact", file: "brief-content.svg" },
+    expect(crayon!.pages).toEqual([
+      { type: "cover", file: "crayon-cover.svg" },
+      { type: "content", kind: "process", file: "crayon-content.svg" },
     ])
-    expect((await readFile(join(out, "brief-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("38%")
-    expect(crayon!.pages).toEqual([{ type: "cover", file: "crayon-cover.svg" }])
-    expect(crayon!.skipped).toEqual([{ type: "content", kind: "fact", reason: expect.stringMatching(/fact/) }])
-    expect((manifest as WallManifest & { notes?: string[] }).notes).toEqual([expect.stringMatching(/^note: crayon left out its content \(fact\) page: /)])
-    expect(await readdir(out)).not.toContain("crayon-content.svg")
+    expect((await readFile(join(out, "crayon-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("38%")
+    expect(brief!.pages).toEqual([{ type: "cover", file: "brief-cover.svg" }])
+    expect(brief!.skipped).toEqual([{ type: "content", kind: "process", reason: expect.stringMatching(/gantt/) }])
+    expect((manifest as WallManifest & { notes?: string[] }).notes).toEqual([expect.stringMatching(/^note: brief left out its content \(process\) page: /)])
+    expect(await readdir(out)).not.toContain("brief-content.svg")
     expect(await readFile(join(out, "contact-sheet.html"), "utf8")).toContain("tw-missing")
+  })
+
+  it("draws a content page of a kind a theme lacks with the nearest kind it offers", async () => {
+    const cwd = await tmp("pptwise-theme-wall-landing-")
+    const page = join(cwd, "page.json")
+    await writeFile(page, JSON.stringify({ kind: "fact", heading: "Revenue grew", components: [KPI] }))
+    const out = join(cwd, "wall")
+    const manifest = JSON.parse(await runThemeTry("crayon", { output: out, cwd, title: "Q3 review", page, json: true })) as WallManifest
+    expect(getThemeDefinition("crayon").menu.content.fact).toBeUndefined()
+    expect(manifest.themes[0]!.pages.map((p) => p.type)).toEqual(["cover", "content"])
+    expect((await readFile(join(out, "crayon-content.svg"), "utf8")).replace(/<[^>]+>/g, "")).toContain("38%")
   })
 
   it("leaves out a cover whose face would cut the title, saying how much of it fits", async () => {
@@ -440,7 +461,8 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     await runThemeTry("crayon", { output: out, cwd, title: "Q3 review" })
     expect(await readdir(out)).toContain("crayon-content.svg")
     const page = join(cwd, "page.json")
-    await writeFile(page, JSON.stringify({ kind: "fact", heading: "Revenue", components: [] }))
+    // A gantt beside a paragraph: crayon's sheet sets a gantt beside figures or touchpoints only.
+    await writeFile(page, JSON.stringify({ kind: "process", heading: "Revenue", components: [GANTT, { type: "paragraph", text: "Two phases" }] }))
     await runThemeTry("crayon", { output: out, cwd, title: "Q3 review", page })
     expect(await readdir(out)).not.toContain("crayon-content.svg")
   })

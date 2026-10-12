@@ -127,9 +127,16 @@ describe("memo sheet", () => {
     expect([0, 1, 2].map((i) => exhibitNumberAt(ir, i))).toEqual([1, 2, 4])
   })
 
-  it("refuses header lines and a stamp on a content page, which has no place for them", () => {
+  it("leaves a stamp off a content page, which has no place for one, and says so", () => {
     const result = validateIr(deck([cover, sheet("理由", { stamp: { text: "已决定" } } as Partial<Slide>)]))
+    expect(result.ok).toBe(true)
+    expect(result.warnings?.map((w) => w.path)).toContain("slides.1.stamp")
+  })
+
+  it("refuses header lines on a content page, which has no place for them", () => {
+    const result = validateIr(deck([cover, sheet("理由", { fields: [{ label: "致", value: "全体" }] } as Partial<Slide>)]))
     expect(result.ok).toBe(false)
+    expect(result.errors.map((e) => e.path)).toContain("slides.1.fields")
   })
 })
 

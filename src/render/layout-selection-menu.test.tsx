@@ -175,9 +175,10 @@ describe("theme-menu layout lookup", () => {
     })
   })
 
-  it("fails fast when a content kind has no menu entry", () => {
+  it("fails fast when a content kind has nowhere to land", () => {
+    // data stands in as evidence, points or list, and this menu offers none of them.
     const id = "menu-unoffered-kind"
-    installTheme(id, MENU)
+    installTheme(id, { ...MENU, content: { comparison: MENU.content.comparison!, photo: MENU.content.photo! } })
     const slide: Slide = {
       type: "content",
       kind: "data",
@@ -187,7 +188,7 @@ describe("theme-menu layout lookup", () => {
     const ir = deck(id, [slide])
 
     expect(() => render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)).toThrow(
-      /kind "data" is not offered.*points, comparison, photo/i,
+      /kind "data" is not offered.*Available content kinds: comparison, photo/i,
     )
   })
 

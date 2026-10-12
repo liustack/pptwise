@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
-import { COMPONENT_TYPES, KIND_VALUES } from "@/ir"
+import { COMPONENT_TYPES, KIND_VALUES, type PageKind } from "@/ir"
 import { CANONICAL_THEME_IDS } from "@/themes"
-import { getThemeDefinition } from "@/themes/definitions"
+import { getThemeDefinition, type ThemeDefinition } from "@/themes/definitions"
 import { COMPONENT_BUILDERS } from "../evals/gallery/corpus/components"
 import { LEXICONS } from "../evals/gallery/corpus/lexicon"
 import { componentsForKind, kindJsonSchema } from "./kind-components"
@@ -37,6 +37,17 @@ function probeDeck(theme: string, kind: string, type: string): unknown {
   }
 }
 
+/** `id`, passed by value, with a menu that offers `kinds` alone. */
+function onlyKinds(id: string, kinds: readonly PageKind[]): ThemeDefinition {
+  const theme = getThemeDefinition(id)
+  return { ...theme, menu: { ...theme.menu, content: Object.fromEntries(kinds.map((kind) => [kind, theme.menu.content[kind]!])) } }
+}
+
+/** `id`, passed by value, with a menu that offers `data` alone: nothing else has anywhere to land. */
+function dataOnly(id: string): ThemeDefinition {
+  return onlyKinds(id, ["data"])
+}
+
 /** Whether the face bound to this page draws the component at all: the slot gate validate applies. */
 function faceDrawsComponent(theme: string, kind: string, type: string): boolean {
   const result = validateIr(probeDeck(theme, kind, type))
@@ -61,11 +72,16 @@ describe("componentsForKind", () => {
   })
 
   it("names the face and the accepted components for the bound theme", () => {
+    // A kind whose face is the only one that can draw it lists that face alone.
+    const points = componentsForKind("points", { theme: "brief" })
+    expect(points.themes).toEqual({ brief: { face: "gauge-sheet", components: points.components } })
+    // brief's fact face takes a figure and its note. A page with anything
+    // else lands on the nearest kind whose face takes it, so those count too.
     const fact = componentsForKind("fact", { theme: "brief" })
     expect(fact.kind).toBe("fact")
-    expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
-    expect(fact.themes).toEqual({ brief: { face: "gauge-figure", components: fact.components } })
-    for (const type of fact.components) {
+    expect(fact.themes.brief).toEqual({ face: "gauge-figure", components: fact.components, drawnAs: ["fact", "data", "statement", "points", "list"] })
+    expect(fact.components).toEqual([...COMPONENT_TYPES])
+    for (const type of ["kpi_cards", "paragraph", "chart", "bullets"]) {
       expect(validateIr(probeDeck("brief", "fact", type)).ok, type).toBe(true)
     }
   })
@@ -75,7 +91,7 @@ describe("componentsForKind", () => {
     const byValue = componentsForKind("quote", { theme: { ...thesis, id: "brief" } })
     expect(Object.keys(byValue.themes)).toEqual(["brief"])
     expect(byValue.themes.brief).toEqual(componentsForKind("quote", { theme: "thesis" }).themes.thesis)
-    expect(() => componentsForKind("quote", { theme: "brief" })).toThrow(/not offered/)
+    expect(() => componentsForKind("quote", { theme: dataOnly("brief") })).toThrow(/not offered/)
   })
 
   it("expands a face that takes any component to the whole vocabulary", () => {
@@ -83,24 +99,17 @@ describe("componentsForKind", () => {
   })
 
   it("unions every installed theme when no theme is named", () => {
+    // Every built-in theme draws a quote page, on its own quote face or on
+    // the nearest kind it lands on.
     const quote = componentsForKind("quote")
-    expect(Object.keys(quote.themes).sort()).toEqual(
-      CANONICAL_THEME_IDS.filter((id) => {
-        try {
-          componentsForKind("quote", { theme: id })
-          return true
-        } catch {
-          return false
-        }
-      }).sort(),
-    )
-    // The union is every theme's own list put together. A pull quote takes the
-    // quote alone, while memo's sheet sets a quote with what it means and the
-    // figures it is read against, so its list is every component.
+    expect(Object.keys(quote.themes).sort()).toEqual([...CANONICAL_THEME_IDS].sort())
     const union = new Set(Object.values(quote.themes).flatMap((offer) => offer.components))
     expect([...quote.components].sort()).toEqual([...union].sort())
-    expect(Object.values(quote.themes).some((offer) => [...offer.components].sort().join() === "blockquote,paragraph")).toBe(true)
-    expect(quote.themes.memo!.components.length).toBe(COMPONENT_TYPES.length)
+    // memo's quote face is its sheet, which takes everything on its own.
+    expect(quote.themes.memo).toEqual({ face: "memo-sheet", components: [...COMPONENT_TYPES] })
+    // brief offers no quote page: a quote lands on its statement first.
+    expect(quote.themes.brief!.drawnAs).toEqual(["statement", "points", "list"])
+    expect(quote.themes.brief!.face).toBe(componentsForKind("statement", { theme: "brief" }).themes.brief!.face)
     expect(componentsForKind("data").components.length).toBe(COMPONENT_TYPES.length)
   })
 
@@ -108,19 +117,23 @@ describe("componentsForKind", () => {
     expect(() => componentsForKind("bullets")).toThrow(/unknown kind "bullets"/)
     expect(() => componentsForKind("bullets")).toThrow(new RegExp(KIND_VALUES.join(", ")))
     expect(() => componentsForKind("quote", { theme: "no-such-theme" })).toThrow(/no-such-theme/)
-    expect(() => componentsForKind("quote", { theme: "brief" })).toThrow(/kind "quote" is not offered by theme "brief"/)
-    expect(() => componentsForKind("quote", { theme: "brief" })).toThrow(/Available content kinds: /)
+    expect(() => componentsForKind("quote", { theme: dataOnly("brief") })).toThrow(/kind "quote" is not offered by theme "brief", and neither is any kind it can stand in for/)
+    expect(() => componentsForKind("quote", { theme: dataOnly("brief") })).toThrow(/Available content kinds: data/)
   })
 })
 
 describe("kindJsonSchema", () => {
   it("prints the kind's component list, one schema per component, and the $defs they need", () => {
-    const doc = kindJsonSchema("fact", { theme: "brief" })
+    // thesis's quote page lands on its statement and its sheet, which take
+    // everything. A menu offering the quote alone lists the pull quote's two.
+    const doc = kindJsonSchema("quote", { theme: "thesis" })
     expect(doc.$schema).toBe("https://json-schema.org/draft/2020-12/schema")
-    expect(doc.kind).toBe("fact")
-    expect(doc.components).toEqual(componentsForKind("fact", { theme: "brief" }).components)
+    expect(doc.kind).toBe("quote")
+    expect(doc.components).toEqual(componentsForKind("quote", { theme: "thesis" }).components)
     expect(doc.oneOf).toEqual((doc.components as string[]).map((type) => ({ $ref: `#/$defs/${type}` })))
-    expect(Object.keys(doc.$defs as object).sort()).toEqual(["IconName", "Tag", "Tone", "kpi_cards", "paragraph"])
+    const narrow = kindJsonSchema("quote", { theme: onlyKinds("thesis", ["quote"]) })
+    expect(narrow.components).toEqual(["paragraph", "blockquote"])
+    expect(Object.keys(narrow.$defs as object).sort()).toEqual(["blockquote", "paragraph"])
   })
 
   it("keeps the icon enum out of the printed schema", () => {
