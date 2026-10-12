@@ -3,7 +3,7 @@ import type { ComponentCtx } from "../../components/types"
 import { attachEmphasis, emphasisRunInk, fitEmphasisHeading, stripEmphasis, type EmphasisHeadingLayout } from "../../render/emphasis"
 import { accessibleInk, blendOver, metaInk, readableOn, resolveSemanticColor } from "../../render/ink"
 import { inkToward } from "../../components/tag"
-import { allowsLineBreakBetween, measureTextUnits } from "../../lib/svg-text-layout"
+import { allowsLineBreakBetween, endsInCjkOrphan, measureTextUnits } from "../../lib/svg-text-layout"
 import { fitMono, monoWidth } from "./console"
 import { chineseNumeral } from "./numerals"
 import { fitFixed, paintLines } from "./type"
@@ -354,6 +354,12 @@ export function trackedWidth(text: string, size: number, face: MemoFace, trackin
 }
 
 const WIDE_CHAR = /[\u2E80-\u9FFF\uF900-\uFAFF\uFE30-\uFE4F\uFF00-\uFFEF\u3000-\u303F]/u
+const IDEOGRAPH = /[\u2E80-\u9FFF\uF900-\uFAFF]/u
+/** A last line that stands alone: one ideograph (its punctuation aside), or one Latin word ending a title with no Chinese in it. */
+function lonely(line: string, title: string): boolean {
+  if (endsInCjkOrphan(["", line])) return true
+  return !IDEOGRAPH.test(title) && !/\s/.test(line.trim())
+}
 /** Where a line may end on a clause: after Chinese clause punctuation, or after a Latin one before a space. */
 const CJK_CLAUSE_END = /[，、：；。！？）」』]$/u
 const LATIN_CLAUSE_END = /[.,:;!?)"”]$/u
@@ -363,7 +369,8 @@ const LATIN_CLAUSE_END = /[.,:;!?)"”]$/u
  * measure, and when it does not, on two lines whose first is as full as it
  * can be, ending on the last clause punctuation that lets both lines fit
  * (「试行每周四天、32 小时，薪酬不变，」+「触发停止条件即叫停」), or where the
- * line runs out when no clause seam fits. It is never broken early to even
+ * line runs out when no clause seam fits, a word or a character earlier when
+ * running out would leave one alone on the second line. It is never broken early to even
  * the lines. Too long for two lines at `minPt`, it falls back to the shared
  * heading fit, which cuts it and says so.
  */
@@ -395,6 +402,7 @@ export function fitMemoTitle(
     const room = opts.maxWidth / size
     if (units(plain) <= room) return done([plain], size)
     let latestSeam = 0
+    let latestWhole = 0
     let latest = 0
     for (let i = 1; i < chars.length; i += 1) {
       const before = chars[i - 1]!
@@ -407,8 +415,15 @@ export function fitMemoTitle(
       if (!first || !second || units(first) > room || units(second) > room) continue
       latest = i
       if (CJK_CLAUSE_END.test(first) || (space && LATIN_CLAUSE_END.test(first))) latestSeam = i
+      // Where no clause seam fits, a run-out break that leaves one word or
+      // one ideograph alone on the second line reads as a broken title, the
+      // widow the shared wrap already refuses (`avoidCjkOrphan`,
+      // `avoidLatinOrphan`), so an earlier break that fits is taken. A seam
+      // stands even before one word: the clause is a pause the reader hears
+      // ("Behind the lists," + "people").
+      if (!lonely(second, plain)) latestWhole = i
     }
-    const at = latestSeam || latest
+    const at = latestSeam || latestWhole || latest
     if (at > 0) return done([chars.slice(0, at).join("").trimEnd(), chars.slice(at).join("").trimStart()], size)
   }
   return fitEmphasisHeading(text, {

@@ -73,6 +73,15 @@ describe("a memo title, typed on the full measure", () => {
     expect(cut.truncated).toBe(true)
   })
 
+  it("never leaves one word or one character alone on the second line when an earlier break fits", () => {
+    // profile's English cover claim at 34px in its 500px column ran out as
+    // "Making member loyalty part of the" + "product".
+    const en = fitMemoTitle("Making member loyalty part of the product", { maxWidth: 500, fontSize: 34, minPt: 34, lineHeight: 48, fontFamily: SONG, bold: false })
+    expect(en.lines).toEqual(["Making member loyalty part of", "the product"])
+    // Sixteen characters on a fifteen-character measure: running out leaves 「行」 alone.
+    expect(fit("这一行没有逗号只能在放不下处折行", 600).lines).toEqual(["这一行没有逗号只能在放不下处", "折行"])
+  })
+
   it("keeps the author's emphasis on the words it marked", () => {
     const fitted = fit("先定**停止条件**，再开始试行")
     expect(fitted.lines).toEqual(["先定停止条件，再开始试行"])
