@@ -1698,8 +1698,8 @@ const MODELLED_TRANSFORM_RE = /translate\(\s*-?[\d.]+[\s,]+-?[\d.]+\s*\)|scale\(
  * Whether `el` carries a `transform` this walk does not model.
  * `parseTransform` reduces the whole attribute to `(dx, dy, uniform scale)`
  * and silently ignores everything it doesn't match. The content layer turns
- * only a few lines of text (a stamp, a lesson note, an exhibit label,
- * proposal's binder tabs), which the overflow walk in `svg-audit.ts` reads
+ * only a few lines of text (a stamp, a lesson note, an exhibit label),
+ * which the overflow walk in `svg-audit.ts` reads
  * through its own affine map. Decoration really does rotate shapes:
  * `motif-clinic-motif.tsx`'s `capsule()` emits a filled `<rect>` under
  * `rotate(angle cx cy)` and `motif-almanac-motif.tsx`'s `leafVein()` wraps its

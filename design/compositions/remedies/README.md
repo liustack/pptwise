@@ -12,7 +12,9 @@ Settled on the risks page (p15). The round's decisions are in [rounds/2026-10-06
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** Three columns under their headers in small grey and a 2px rule of petrol. A row a risk: its icon in petrol and its name bold, what the public record says, and the answer bold after the column's shield in the success ink. The risk the page leads with (a row marked `highlight`) sits on the brick red's tint with a brick-red edge at its left. Hairlines between the rows.
+The board in the table is the first round's. The print round set this page by the redrawn board's rules, and the engine render shows the page as it is set now.
+
+**What it looks like.** Three columns under their headers in small grey and a 2px rule of the ink. A row a risk: its icon in petrol and its name bold, what the public record says, and the answer bold after the column's shield in the success ink. The risk the page leads with (a row marked `highlight`) has its icon and name in the brick red, on the paper like the rest. Hairlines between the rows, a 2px ink rule under the last.
 
 **Why.** Every risk a client can name already has a public source. Pairing each one with that source and with the supplier's answer turns an objection into a line the contract can carry.
 

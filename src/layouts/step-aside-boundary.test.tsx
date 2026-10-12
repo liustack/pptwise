@@ -192,8 +192,8 @@ const CASES: FaceCase[] = [
   // rally's marquee sheet: the same, in its band x64 to x1216 and y188
   // (under the ticket stub and the claim) to y640.
   { face: "marquee-sheet", Face: MarqueeSheetContent, themeId: "rally", regions: ["face", "declined"] },
-  // proposal's binder sheet: the same, in its band x64 to x1196 and y172
-  // (under the claim, left of the binder's tabs) to y640.
+  // proposal's binder sheet: the same, in its band x64 to x1216 and y176
+  // (under the running head and the claim) to y640.
   { face: "binder-sheet", Face: BinderSheetContent, themeId: "proposal", regions: ["face", "declined"] },
   // thesis's manuscript sheet: the same, in its band x64 to x1216 and y168
   // (under the claim) down to 16px over the notes' rule, or y648 without notes.

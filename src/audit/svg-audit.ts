@@ -17,7 +17,7 @@ interface Rect extends Box { h: number }
 // The translate and uniform scale of an element's `transform`, the two forms
 // the content layer composes boxes with (bento-card content scale-to-fit,
 // icon scale), reduced to one offset and one scalar. A turn (`rotate`, which
-// stamps, notes and proposal's binder tabs do draw) is not in this
+// stamps and notes do draw) is not in this
 // reduction: `auditSvgMarkup` below walks the whole transform list as an
 // affine map instead, and `deck-audit.ts` sets a shape under any other form
 // apart (`hasUnmodelledTransform`).
@@ -194,7 +194,7 @@ export function auditSvgMarkup(markup: string): OverflowIssue[] {
     // The element's own transform list composed under its parent's, in the
     // SVG order: a component scaled to fit (bento cards) gets correctly
     // scaled text metrics, and a line turned about a point (a stamp, a
-    // binder's tab) is read where it is drawn rather than where it would
+    // name set up an edge) is read where it is drawn rather than where it would
     // stand unturned.
     const m = compose(parent, parseAffine(el))
 

@@ -25,7 +25,7 @@ The first board's system, as it was drawn. The print round below replaced items 
 | board page | part | folder |
 | :-- | :-- | :-- |
 | every content page | motif `proposal-motif` (new) | [motifs/proposal-motif](../../motifs/proposal-motif/) |
-| every content page | face `binder-sheet` (new), compositions in the `binder` setting (new), the page's `stage` as its lit tab | [faces/binder-sheet](../../faces/binder-sheet/) |
+| every content page | face `binder-sheet` (new), compositions in the `binder` setting (new), the page's `stage` as its lit tab (since the print round, named at the right of the running head) | [faces/binder-sheet](../../faces/binder-sheet/) |
 | p01 cover | face `binder-cover` (new) | [faces/binder-cover](../../faces/binder-cover/) |
 | p02 what you get | composition `gains` (new) | [compositions/gains](../../compositions/gains/) |
 | p03, p10 sections | face `binder-chapter` (new) | [faces/binder-chapter](../../faces/binder-chapter/) |
@@ -88,3 +88,4 @@ Where the engine departs from the redrawn board, on purpose:
 19. The cover's figures share one size, the largest of 28, 26 and 24px at which every value fits its column, so 「6.1 至 7.7 年」 keeps to one line beside its neighbours.
 20. A section page still accepts the page's `stage`. When its `kicker` carries no 「 · 」 the stage names the part under the number. The showcase writes both, and the kicker's part wins.
 21. The showcase changed with the drawing: the cover's payback is marked whole, the precedents' kind of source moved from each row's tag to a fourth column headed 「口径」, the solar sum's inputs table names its how column (「怎么取」) and its source column 「来源」, the section pages carry their photograph's caption as a `footnote`, and the close's paragraph carries the blanks to fill in.
+22. Components a page writes itself and no composition takes (`kpi_cards`, `numbered_cards`, `row_cards` and the like) go to the shared component renderer, which draws cards from the theme's tokens. proposal's `surface` is the paper's white, its `cardStroke` the hairline colour and its `radius` 0, so such a card is one white layer framed by a hairline with square corners. Tints and filled marks that the shared renderer mixes from the accent or the petrol (a table's highlighted row, a matrix's cells, numbered discs) are not yet set as print.

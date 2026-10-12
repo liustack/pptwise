@@ -148,10 +148,10 @@ describe("auditSvgMarkup", () => {
     expect(issues[0].kind).toBe("h-overflow")
   })
 
-  // A name set up a binder's tab at the right edge (proposal's Latin tabs)
-  // turns a quarter about its own middle: the line runs down the page, not
-  // across it. Read unturned, "Delivery" ran x=[1227,1288] off a page its
-  // glyphs never leave, on every content page of the English deck.
+  // A name set up the right edge turns a quarter about its own middle: the
+  // line runs down the page, not across it. Read unturned, "Delivery" ran
+  // x=[1227,1288] off a page its glyphs never leave (proposal's English deck
+  // drew such names on its old index tabs).
   it("reads a line turned about a point where it is drawn, down the page", () => {
     const turned = (angle: number) =>
       auditSvgMarkup(wrap(`<g transform="rotate(${angle} 1258 200)"><text x="1258" y="200" font-size="13" text-anchor="middle">Delivery</text></g>`))

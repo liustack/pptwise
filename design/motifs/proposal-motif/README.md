@@ -12,7 +12,7 @@ Every content page of the board carries it. The round's decisions are in [rounds
 | :-: | :-: |
 | ![board](proposal.board.png) | ![engine](proposal.engine.png) |
 
-**What it looks like.** On content pages of a deck with a footer: at the top left on y34 the footer's label at 12/18 bold, its characters 1px apart, the part before the first " · " in petrol and the rest in the grey (「屋顶光伏与储能方案 · 呈 贵司管理层」). At the bottom right on y678 the page number at 13px bold in the grey, right-aligned at x1196 so the tabs keep the edge, after any draft or confidentiality mark. The office and the footer's notice at the bottom left.
+**What it looks like.** On content pages of a deck with a footer: the left of the running head on y36, the footer's label at 13px regular in the grey (「屋顶光伏与储能方案 · 呈 贵司管理层」), kept 24px short of the section the face sets at its right. At the bottom right on y686 the page number at 13px bold in the ink, right-aligned at x1216, after any draft or confidentiality mark. The office and the footer's notice at 11px in the grey at the bottom left.
 
 **Why.** The label says whose proposal a page is from wherever it is photocopied. The number keeps a page findable in a meeting.
 
