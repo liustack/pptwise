@@ -6,7 +6,11 @@ import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import type { BuildReport } from "./build-report"
 import { assembleIssues, validateIssue } from "./build-report"
-import { runBuild, runRender } from "./commands"
+import { BUILTIN_THEME_IDS, type PptxIR } from "../ir"
+import { getThemeDefinition } from "../themes/definitions"
+import { themeShortlist } from "../themes/select"
+import { ALTERNATIVES_DIRNAME, ALTERNATIVES_MAX, alternativeCandidates } from "./build-alternatives"
+import { runBuild, runRender, runThemeNew } from "./commands"
 
 installNodePlatform()
 
@@ -102,7 +106,7 @@ describe("pptwise build", () => {
 
   it("prints a short report without --json, and the .pptx path on its own line", async () => {
     const { cwd } = await workspace()
-    const { output, ok } = await runBuild("weekly", { cwd, gitIgnore: false })
+    const { output, ok } = await runBuild("weekly", { cwd, gitIgnore: false, alternatives: false })
     expect(ok).toBe(true)
     expect(output.split("\n")).toEqual([
       'OK: 6 pages, theme "brief", audit clean',
@@ -242,3 +246,124 @@ describe("validateIssue", () => {
   })
 })
 
+
+describe("pptwise build: the deck in other themes", () => {
+  async function buildWith(cwd: string, alternatives?: boolean): Promise<BuildReport> {
+    const { output } = await runBuild("weekly", { json: true, cwd, gitIgnore: false, alternatives })
+    return JSON.parse(output) as BuildReport
+  }
+
+  it("draws the deck's own cover and content pages in up to three other themes on its first build", async () => {
+    const { cwd } = await workspace()
+    const report = await buildWith(cwd)
+    const dir = join(cwd, ".pptwise", "weekly", ALTERNATIVES_DIRNAME)
+    expect(report.themeSource).toBe("builtin")
+    const alternatives = report.alternatives!
+    expect(alternatives.dir).toBe(dir)
+    expect(alternatives.themes.length).toBeGreaterThanOrEqual(2)
+    expect(alternatives.themes.length).toBeLessThanOrEqual(ALTERNATIVES_MAX)
+    expect(alternatives.ms).toBeGreaterThanOrEqual(0)
+    const ids = alternatives.themes.map((theme) => theme.theme)
+    expect(ids).not.toContain("brief")
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const theme of alternatives.themes) {
+      expect(theme.name).toBe(getThemeDefinition(theme.theme).label)
+      const contents = theme.pages.filter((page) => page.type === "content")
+      expect(contents.length).toBeGreaterThanOrEqual(1)
+      expect(contents.length).toBeLessThanOrEqual(2)
+      for (const page of theme.pages) {
+        expect(page.file.startsWith(dir)).toBe(true)
+        expect(await readFile(page.file, "utf8")).toMatch(/^<svg/)
+      }
+    }
+    // The cover is the deck's own, in each theme that can draw it.
+    expect(alternatives.themes.some((theme) => theme.pages[0]!.type === "cover" && theme.pages[0]!.page === 1)).toBe(true)
+    const manifest = JSON.parse(await readFile(join(dir, "manifest.json"), "utf8")) as { bound: string; themes: { id: string }[] }
+    expect(manifest.bound).toBe("brief")
+    expect(manifest.themes.map((theme) => theme.id)).toEqual(ids)
+  })
+
+  it("offers them once: a later build leaves them alone, --alternatives draws them again", async () => {
+    const { cwd } = await workspace()
+    const first = await buildWith(cwd)
+    expect(first.alternatives).toBeDefined()
+    const again = await buildWith(cwd)
+    expect(again.alternatives).toBeUndefined()
+    expect(await exists(join(first.alternatives!.dir, "manifest.json"))).toBe(true)
+    const asked = await buildWith(cwd, true)
+    expect(asked.alternatives!.themes.map((theme) => theme.theme)).toEqual(first.alternatives!.themes.map((theme) => theme.theme))
+  })
+
+  it("draws none with --no-alternatives", async () => {
+    const { cwd } = await workspace()
+    const report = await buildWith(cwd, false)
+    expect(report.alternatives).toBeUndefined()
+    expect(await exists(join(cwd, ".pptwise", "weekly", ALTERNATIVES_DIRNAME))).toBe(false)
+  })
+
+  it("leaves a deck on a theme file alone unless asked, and says where its theme came from", async () => {
+    const { cwd, deck } = await workspace((spec) => {
+      spec.theme = "acme"
+    })
+    await runThemeNew({ from: "brief", output: join(deck, "acme.theme.json"), cwd })
+    const report = await buildWith(cwd)
+    expect(report.themeSource).toBe("file")
+    expect(report.alternatives).toBeUndefined()
+    const asked = await buildWith(cwd, true)
+    expect(asked.alternatives!.themes.length).toBeGreaterThan(0)
+  })
+
+  it("draws them for a deck that still needs revision, since its pages are drawn", async () => {
+    const { cwd } = await workspace((_spec, pages) => {
+      delete pages.how
+    })
+    const report = await buildWith(cwd)
+    expect(report.status).toBe("needs_revision")
+    const drawn = report.alternatives!.themes.flatMap((theme) => theme.pages.map((page) => page.id))
+    expect(drawn.length).toBeGreaterThan(0)
+    // A page not written yet is never one of them.
+    expect(drawn).not.toContain("how")
+  })
+
+  it("says in the text report how to switch", async () => {
+    const { cwd } = await workspace()
+    const { output } = await runBuild("weekly", { cwd, gitIgnore: false })
+    expect(output).toMatch(/^alternatives: the deck's own pages in 1 \w+, 2 \w+/m)
+    expect(output).toContain('To switch, change "theme" in deck.spec.json and build again.')
+  })
+})
+
+describe("alternativeCandidates", () => {
+  it("starts from the shortlist for the bound theme's occasions and the deck's strategy, never the bound theme", () => {
+    const ir = { theme: { id: "crayon" }, narrative: { strategy: "instructional" } } as unknown as PptxIR
+    const bound = getThemeDefinition("crayon")
+    const candidates = alternativeCandidates(ir, bound)
+    const shortlist = themeShortlist({ occasions: bound.occasions, strategy: "instructional" }).filter((id) => id !== "crayon")
+    expect(candidates.slice(0, shortlist.length)).toEqual(shortlist)
+    expect(candidates).not.toContain("crayon")
+    expect(new Set(candidates).size).toBe(BUILTIN_THEME_IDS.length - 1)
+  })
+})
+
+describe("pptwise build: a theme change is a name change", () => {
+  it("builds a deck moved to a theme without some of its kinds, and says which pages are drawn as which", async () => {
+    const { cwd } = await workspace((spec, pages) => {
+      spec.pages[2] = { id: "numbers", type: "content", kind: "fact", heading: "Where the hour goes" }
+      pages.numbers = { components: [{ type: "kpi_cards", items: [{ value: "30", label: "minutes from Monday" }] }] }
+    })
+    const before = await runBuild("weekly", { json: true, cwd, gitIgnore: false, alternatives: false })
+    expect((JSON.parse(before.output) as BuildReport).drawnAs).toBeUndefined()
+    const specPath = join(cwd, "weekly", "deck.spec.json")
+    const spec = JSON.parse(await readFile(specPath, "utf8")) as { theme: string }
+    expect(getThemeDefinition("crayon").menu.content.fact).toBeUndefined()
+    await writeFile(specPath, JSON.stringify({ ...spec, theme: "crayon" }))
+    const { output, ok } = await runBuild("weekly", { json: true, cwd, gitIgnore: false, alternatives: false })
+    const report = JSON.parse(output) as BuildReport
+    expect(report.errors).toEqual([])
+    expect(ok).toBe(true)
+    expect(report.theme).toBe("crayon")
+    expect(report.drawnAs).toEqual([{ page: 3, pageId: "numbers", kind: "fact", drawnAs: expect.any(String) }])
+    const text = await runBuild("weekly", { cwd, gitIgnore: false, alternatives: false })
+    expect(text.output).toMatch(/^note: page 3 \(numbers\): theme "crayon" draws this "fact" page as "\w+", the nearest kind whose face takes it$/m)
+  })
+})

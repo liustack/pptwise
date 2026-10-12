@@ -63,8 +63,10 @@ import {
   validateIssue,
   type BuildIssue,
   type BuildDrawnAs,
+  type BuildThemeSource,
   type BuildReport,
 } from "./build-report"
+import { ALTERNATIVES_DIRNAME, writeBuildAlternatives } from "./build-alternatives"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
 import {
@@ -2135,6 +2137,12 @@ export interface BuildOptions {
   gitIgnore?: boolean
   /** Injectable git runner for tests. Production leaves this unset. */
   runGit?: GitRunner
+  /**
+   * `--alternatives` (true) or `--no-alternatives` (false): draw the deck's
+   * own pages in other themes, or not. Unset draws them on a deck's first
+   * build bound to a built-in theme (`./build-alternatives.ts`).
+   */
+  alternatives?: boolean
 }
 
 export interface BuildCliResult {
@@ -2195,6 +2203,24 @@ function drawnAsReport(ir: PptxIR, theme: ThemeDefinition | undefined): BuildDra
   return out
 }
 
+/** Where the bound theme came from: a built-in preset, a theme file, or an installed content pack. */
+function themeSourceOf(resolved: ResolvedTheme): BuildThemeSource {
+  if (resolved.kind === "builtin") return "builtin"
+  return resolved.pack !== undefined ? "pack" : "file"
+}
+
+/**
+ * Whether this build draws the deck in other themes (`./build-alternatives.ts`):
+ * always with `--alternatives`, never with `--no-alternatives`, and otherwise
+ * once, on the first build of a deck bound to a built-in theme. A theme file
+ * or a pack is a choice someone already made on purpose.
+ */
+async function wantsAlternatives(flag: boolean | undefined, resolved: ResolvedTheme | undefined, workspaceDir: string): Promise<boolean> {
+  if (flag !== undefined) return flag
+  if (resolved?.kind !== "builtin") return false
+  return !(await pathExists(join(workspaceDir, ALTERNATIVES_DIRNAME, "manifest.json")))
+}
+
 async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit] = await readConfigs(cwd)
@@ -2230,9 +2256,11 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
   let loaded: LoadedDeckTarget
   let theme: ThemeDefinition | undefined
+  let resolvedTheme: ResolvedTheme | undefined
   try {
     loaded = await readDeckTarget(location, themeInputs, cwd, projectHit)
-    theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
+    resolvedTheme = await applyDeckConfig(loaded.raw, themeInputs)
+    theme = resolvedTheme?.definition
   } catch (e) {
     if (!(e instanceof PptwiseError)) throw e
     return needsRevision(assembleIssues(e.message, isDir ? await specPageIds(resolvedTarget) : []))
@@ -2242,6 +2270,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   if (!v.ok) return needsRevision(v.errors.map((issue) => validateIssue(issue, isDir)))
   const ir = v.ir!
   report.theme = ir.theme.id
+  if (resolvedTheme !== undefined) report.themeSource = themeSourceOf(resolvedTheme)
   report.pageCount = ir.slides.length
   const drawnAs = drawnAsReport(ir, theme)
   if (drawnAs.length > 0) report.drawnAs = drawnAs
@@ -2268,6 +2297,9 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
       type: slide.type ?? "content",
       file: join(workspace.dir, svgNames[i]!),
     })),
+  }
+  if (await wantsAlternatives(opts.alternatives, resolvedTheme, workspace.dir)) {
+    report.alternatives = await writeBuildAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir)
   }
   const errors = [...placeholderIssues(ir, isDir), ...review.findings.map((finding) => auditIssue(finding, isDir))]
   if (errors.length > 0) return needsRevision(errors)

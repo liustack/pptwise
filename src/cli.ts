@@ -91,10 +91,20 @@ program
   .argument("<target>", "deck project directory or IR JSON file")
   .option("--json", "print the full report: status, every problem with its page, file and field, the preview, and the .pptx path")
   .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
+  .option(
+    "--alternatives",
+    "also draw the deck's cover and one or two content pages in up to 3 other themes, under .pptwise/<deck>/alternatives/ (done once by default, on the first build of a deck on a built-in theme)",
+  )
+  .option("--no-alternatives", "do not draw the deck in other themes, even on its first build")
   .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
-  .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean }) => {
+  .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean; alternatives?: boolean }) => {
     try {
-      const { output, ok } = await runBuild(target, { json: opts.json, gitIgnore: opts.gitIgnore, cwd: process.cwd() })
+      const { output, ok } = await runBuild(target, {
+        json: opts.json,
+        gitIgnore: opts.gitIgnore,
+        alternatives: opts.alternatives,
+        cwd: process.cwd(),
+      })
       console.log(output)
       // exitCode rather than exit(): a long --json report piped to another
       // process is flushed in full before the process ends.

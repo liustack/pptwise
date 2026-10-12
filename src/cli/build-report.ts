@@ -16,6 +16,7 @@
 import type { ValidationIssue } from "../api"
 import type { AuditFinding } from "../audit/deck-audit"
 import type { PptxIR } from "../ir"
+import type { BuildAlternatives } from "./build-alternatives"
 import { PAGE_FILL_FIELDS } from "../spec/assemble"
 import { PAGES_DIRNAME, SPEC_FILENAME } from "./deck-dir"
 
@@ -61,6 +62,9 @@ export interface BuildPreview {
   pages: BuildPreviewPage[]
 }
 
+/** `builtin` for a factory preset, `file` for a theme file the lookup found, `pack` for an installed content pack's theme. */
+export type BuildThemeSource = "builtin" | "file" | "pack"
+
 /** A content page drawn by a stand-in kind, because the bound menu lacks its own (`../render/kind-landing.ts`). */
 export interface BuildDrawnAs {
   page: number
@@ -88,8 +92,12 @@ export interface BuildReport {
   preview: BuildPreview | null
   /** The deck's one .pptx, written only when `status` is `ok`. */
   pptx: string | null
+  /** Where the bound theme came from. Absent when the deck binds none. */
+  themeSource?: BuildThemeSource
   /** Pages the bound theme draws as another kind. Facts, not problems: present only when there is one. */
   drawnAs?: BuildDrawnAs[]
+  /** The deck's own pages drawn in other themes, when this build drew them (`./build-alternatives.ts`). */
+  alternatives?: BuildAlternatives
   notes: string[]
 }
 
@@ -224,7 +232,11 @@ export function formatBuildReport(report: BuildReport): string {
   for (const issue of report.warnings) lines.push(`warning: ${issueLine(issue)}`)
   for (const landed of report.drawnAs ?? []) {
     const page = landed.pageId !== undefined ? `page ${landed.page} (${landed.pageId})` : `page ${landed.page}`
-    lines.push(`note: ${page}: theme "${report.theme}" offers no "${landed.kind}" page, so it is drawn as "${landed.drawnAs}"`)
+    lines.push(`note: ${page}: theme "${report.theme}" draws this "${landed.kind}" page as "${landed.drawnAs}", the nearest kind whose face takes it`)
+  }
+  if (report.alternatives !== undefined && report.alternatives.themes.length > 0) {
+    const named = report.alternatives.themes.map((theme, i) => `${i + 1} ${theme.theme}`).join(", ")
+    lines.push(`alternatives: the deck's own pages in ${named} (${report.alternatives.dir}). To switch, change "theme" in ${SPEC_FILENAME} and build again.`)
   }
   if (report.preview !== null) lines.push(`preview: ${report.preview.html}`)
   if (report.pptx !== null) lines.push(`pptx: ${report.pptx}`)

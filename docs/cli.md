@@ -75,7 +75,7 @@ Fill no more than four pages between validation passes, and read each page's con
 ## Build
 
 ```bash
-pptwise build <target> [--json] [--no-git-ignore]
+pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alternatives]
 ```
 
 `build` assembles a deck project (or reads an IR file), validates it, draws every page, audits the drawing, and renders the `.pptx`, in one process from one read of the sources. It exits 0 when the deck passed every check and 1 when it needs revision.
@@ -115,6 +115,10 @@ Output goes where `render` and `preview` put it by default: the pages, `preview.
 ```
 
 A passing build has `"status": "ok"`, an empty `errors`, and `pptx` set to the absolute path of the deck's `.pptx`. A target that does not exist, or a configuration file that cannot be read, fails the command instead of producing a report.
+
+`themeSource` says where the bound theme came from: `builtin`, `file` (a theme file the lookup found), or `pack`. `drawnAs` lists the content pages the bound theme draws as another kind, with the kind that draws each (see [Menu lookup](./menu-lookup.md#content-pages)).
+
+The first build of a deck bound to a built-in theme that draws its pages also draws the deck's own cover and one or two of its content pages in up to three other themes, picked from the same shortlist `theme try` uses for the bound theme's occasions and the deck's narrative strategy. A page a theme cannot take is passed over. They go to `.pptwise/<place>/alternatives/` with a `manifest.json`, and `alternatives` in the report lists each theme's id, display name, and page files, with the time it took (`ms`, about a tenth of a second for a 16-page deck). A later build leaves them alone. `--alternatives` draws them again, for a deck on a theme file too, and `--no-alternatives` skips them. Switching is still changing `theme` in `deck.spec.json` and building again.
 
 ## Render
 
