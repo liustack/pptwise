@@ -141,7 +141,7 @@ pptwise validate <target>
 pptwise audit <target> [--json] [--pixels]
 ```
 
-Validation 覆盖严格 IR v5 结构、已安装主题、主题菜单 kind、有效边界脸、组件规则、重复 id、资产、叙事、物理容量与编辑警告。错误会阻止 `OK`，警告不会。
+Validation 覆盖严格 IR v5 结构、已安装主题、主题菜单 kind（菜单没有的 kind 落到最近的替身 kind，见 [Menu lookup](./menu-lookup.md)）、有效边界脸、组件规则、重复 id、资产、叙事、物理容量与编辑警告。错误会阻止 `OK`，警告不会。
 
 校验还会按 `render` 的画法把每一页画一遍。内容页也画（包括改由朴素版式接手的情况），会漏掉任何内容、或截掉标题、来源行、组件文字的页直接拒绝，报错写明会丢什么，再画一遍能找到时还写明删什么。`render`、`preview` 和 `inspect` 都按同样的方式校验。`render --allow-dropped-content` 会跳过对内容页的这一遍，连同导出自己的内容丢弃门禁。
 
@@ -247,7 +247,7 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。不写主题名时，`theme try` 画一份四到六个的短名单：场合与 `--occasion` 相符的主题（场合词如 `business`、`tech`，或叙事预设如 `weekly-brief`，逗号分隔），不足四个时从一组从克制到张扬的通用主题里补齐。不传 `--occasion` 时就画这组通用主题：brief、swiss、journal、terminal。语言只决定样例正文页，不影响画哪些主题。
 
-每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、菜单里没有的 kind，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。`--json` 另给 `notes`，同一个原因只写一行，并列出它涉及的主题，所以一页在所有主题里都失败时只读到一行。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
+每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、这个 kind 能落到的脸都接不住的组件，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。`--json` 另给 `notes`，同一个原因只写一行，并列出它涉及的主题，所以一页在所有主题里都失败时只读到一行。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
 
 ```json
 {
@@ -274,7 +274,7 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 
 `themes --json` 为每一行标出 `source`：出厂预设是 `builtin`，已装内容包提供的主题是 `pack`，并带上 `pack` id。读不出来的包列为一条带 `error` 字段的条目，不影响其余条目。
 
-每个主题行还带 `menu`：`cover`、`chapter`、`ending` 各自落到的版式，以及 `content` 下这个主题提供的每种内容 kind 落到的版式，按 kind 词表的顺序排列。主题不提供的 kind 不出现在 `content` 里，spec 里写了这种 kind 的页会被 `spec validate` 拒绝。这份列表读自 validate 和 render 解析页面所用的同一份编译后菜单。crayon 那一行的一部分：
+每个主题行还带 `menu`：`cover`、`chapter`、`ending` 各自落到的版式，以及 `content` 下这个主题提供的每种内容 kind 落到的版式，按 kind 词表的顺序排列。主题不提供的 kind 不出现在 `content` 里，spec 里写了这种 kind 的页由最近的替身 kind 来画，`spec validate` 只给一条提示（见 [Menu lookup](./menu-lookup.md#content-pages)）。这份列表读自 validate 和 render 解析页面所用的同一份编译后菜单。crayon 那一行的一部分：
 
 ```json
 "menu": {

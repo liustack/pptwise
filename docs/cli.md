@@ -274,7 +274,7 @@ Each page is validated alone against each theme. A page a theme refuses, such as
 
 `themes --json` marks each row's `source`: `builtin` for a factory preset, `pack` for a theme an installed content pack ships (with its `pack` id). A pack that cannot be read is listed as one entry with an `error` field, and the rest of the list is unaffected.
 
-Each theme row also carries its `menu`: the face `cover`, `chapter`, and `ending` resolve to, and under `content` the face of every content kind the theme offers, in the kind vocabulary's order. A kind the theme does not offer is absent from `content`, and a spec page of that kind fails `spec validate`. The list is read off the same compiled menu validate and render resolve pages through. Part of crayon's row:
+Each theme row also carries its `menu`: the face `cover`, `chapter`, and `ending` resolve to, and under `content` the face of every content kind the theme offers, in the kind vocabulary's order. A kind the theme does not offer is absent from `content`, and a spec page of that kind is drawn by its nearest offered stand-in, with a note from `spec validate` (see [Menu lookup](./menu-lookup.md#content-pages)). The list is read off the same compiled menu validate and render resolve pages through. Part of crayon's row:
 
 ```json
 "menu": {

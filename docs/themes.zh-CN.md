@@ -169,7 +169,7 @@ pptwise theme fork acme-report \
 
 分叉会逐字节保留源菜单，推导 muted 等依赖 token，并运行对比度门。源主题保持不变。
 
-菜单相同的分叉可以在流程中替换 deck 绑定。菜单不同则要回到主题选择，修订 spec 与受影响的页面填充。论点、数据、图片和文案仍可复用，但不能假设旧的语义页面序列继续成立。
+菜单相同的分叉可以在流程中替换 deck 绑定。菜单不同的主题也一样，改名字就行：它不提供的 kind 落到最近的替身 kind 上（见 [Menu lookup](./menu-lookup.md#theme-changes)），新的脸接不住的页面由 validate 点名。
 
 ## 抽取公司品牌
 
