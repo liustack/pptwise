@@ -1,0 +1,47 @@
+{
+  "stage": "Who",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "counter",
+      "crop": [
+        0,
+        0.2286,
+        1,
+        0.4922
+      ]
+    },
+    {
+      "type": "timeline",
+      "layout": "horizontal",
+      "milestones": [
+        {
+          "date": "Jul 2017",
+          "title": "Support agent",
+          "desc": "Sorted points complaints into 5 types"
+        },
+        {
+          "date": "Mar 2019",
+          "title": "Support team lead",
+          "desc": "Points complaints 1,240 to 380 a month"
+        },
+        {
+          "date": "Apr 2021",
+          "title": "Membership specialist",
+          "desc": "Birthday redemption 12% to 27%"
+        },
+        {
+          "date": "Jun 2023",
+          "title": "Membership lead",
+          "desc": "Team of 6: top-ups and win-back",
+          "highlight": true,
+          "tag": {
+            "text": "Now"
+          }
+        }
+      ]
+    }
+  ],
+  "footnote": "AI-generated illustration",
+  "notes": "Four roles in nine years. I joined the support center in 2017 and sorted points complaints into five types for the knowledge base. As team lead in 2019 I pushed for a change to how points are credited, and points complaints fell from 1,240 to 380 a month. That taught me one fixed rule beats ten more agents. In 2021 I moved to membership operations and redesigned birthday coupons. Since 2023 I've led a team of six, and we rebuilt top-up cards and lapsed-member win-back."
+}

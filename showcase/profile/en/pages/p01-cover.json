@@ -1,0 +1,29 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "portrait"
+  },
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "9 yrs",
+          "label": "with members",
+          "note": "Support to membership ops"
+        },
+        {
+          "value": "3",
+          "label": "rule redesigns led",
+          "note": "Birthdays, top-ups, win-back"
+        },
+        {
+          "value": "134k",
+          "label": "members won back",
+          "note": "Full rollout, 2025"
+        }
+      ]
+    }
+  ],
+  "notes": "Good morning. I'm Chen Lixing, I lead membership operations, and I'm applying for Membership Product Manager. In eight minutes I'll cover four things: who I am, what I've delivered, where I still fall short of this role, and exactly what I'll do in my first 90 days."
+}

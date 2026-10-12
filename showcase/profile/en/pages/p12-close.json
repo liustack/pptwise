@@ -1,0 +1,18 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "member-phone"
+  },
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "Questions welcome"
+    },
+    {
+      "type": "image",
+      "asset_id": "portrait"
+    }
+  ],
+  "notes": "Here's my commitment: in 90 days I'll report back to you with the win-back rate and my first roadmap. Thank you. I'm happy to take your questions.",
+  "footnote": "AI-generated illustration"
+}

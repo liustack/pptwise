@@ -1,0 +1,38 @@
+{
+  "stage": "Gaps",
+  "components": [
+    {
+      "type": "comparison",
+      "label_column": "Gap",
+      "columns": [
+        "How I close it",
+        "When, and what I hand in"
+      ],
+      "rows": [
+        {
+          "label": "Roadmapping: never owned six months",
+          "cells": [
+            "The product director mentors me and reviews my priorities every two weeks",
+            "Day 90: draft roadmap for next half"
+          ],
+          "emphasis": true
+        },
+        {
+          "label": "Specs with dev: no full sprint yet",
+          "cells": [
+            "Before I start, I shadow IT's product team from review to release",
+            "Day 60: my first complete spec"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "clipboard-check",
+      "title": "How you check: rescore me on day 90",
+      "text": "Use today's skills table. Both gaps must reach the role's bar. The rescore goes into my probation review."
+    }
+  ],
+  "notes": "I'm not waiting until I start to work on these. For roadmapping, the product director has agreed to mentor me and review my priorities every two weeks, and on day 90 I'll hand in a draft roadmap for the next half-year. For specs, before I start I'll shadow IT's product team through one full sprint, from review to release, and by day 60 I'll deliver my first complete spec. How will you know it worked? On day 90, score me again on today's table, and put the result in my probation review."
+}

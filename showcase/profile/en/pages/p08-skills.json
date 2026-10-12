@@ -1,0 +1,54 @@
+{
+  "stage": "Gaps",
+  "components": [
+    {
+      "type": "harvey_balls",
+      "criteria": [
+        "Membership",
+        "Data",
+        "Cross-team",
+        "Specs",
+        "Roadmap"
+      ],
+      "options": [
+        {
+          "label": "Role needs",
+          "scores": [
+            75,
+            75,
+            75,
+            75,
+            75
+          ]
+        },
+        {
+          "label": "Me today",
+          "scores": [
+            100,
+            75,
+            75,
+            50,
+            25
+          ],
+          "highlight": true
+        },
+        {
+          "label": "Me in a year",
+          "scores": [
+            100,
+            75,
+            100,
+            75,
+            75
+          ]
+        }
+      ],
+      "legend": true
+    },
+    {
+      "type": "paragraph",
+      "text": "I meet the bar on 3 today. In a year: all 5, and cross-team work a notch higher."
+    }
+  ],
+  "notes": "This is how I score myself against the role. Membership is my strongest skill, a notch above what the role needs. Data and cross-team work are right at the bar. Specs and engineering work are one notch short, and roadmapping is two notches short, my widest gap. My one-year goal is to meet the bar on all five, and push cross-team work a notch higher."
+}

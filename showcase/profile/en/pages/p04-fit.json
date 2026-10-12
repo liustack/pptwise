@@ -1,0 +1,19 @@
+{
+  "stage": "Who",
+  "components": [
+    {
+      "type": "comparison",
+      "label_column": "Skill",
+      "columns": ["What the role asks", "What I have done"],
+      "tag_column": "Status",
+      "rows": [
+        { "label": "Membership", "icon": "heart-handshake", "cells": ["Tiers, perks and rule design", "Led the birthday and top-up redesigns"], "tag": { "text": "Have", "tone": "success" } },
+        { "label": "Data and tests", "icon": "flask-conical", "cells": ["Set metrics, run experiments", "A/B tested win-back before rollout"], "tag": { "text": "Have", "tone": "success" } },
+        { "label": "Cross-team work", "icon": "users", "cells": ["Align stores, IT, finance, marketing", "Led 4 teams on the top-up redesign"], "tag": { "text": "Have", "tone": "success" } },
+        { "label": "Specs with dev", "icon": "file-text", "cells": ["Write specs, see a sprint through", "Wrote 3 specs, never ran a full sprint"], "tag": { "text": "Build", "tone": "warning" } },
+        { "label": "Roadmapping", "icon": "map", "cells": ["Own a six-month roadmap", "**Never owned a roadmap past six months**"], "tag": { "text": "Build", "tone": "warning" }, "emphasis": true }
+      ]
+    }
+  ],
+  "notes": "I went through the job description line by line. The role asks for five things: membership know-how, data and experiments, cross-team delivery, writing specs and shipping with engineering, and roadmapping. For the first three I have results you can check. For the last two I'll be straight with you. I've written three specs but never followed a full development sprint. And roadmapping is my biggest gap: I've never owned a roadmap longer than six months. I'll show you how I plan to close both."
+}

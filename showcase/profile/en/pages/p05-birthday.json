@@ -1,0 +1,50 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "cake",
+      "title": "Problem",
+      "text": "Valid only on the day, when most members were nowhere near a store"
+    },
+    {
+      "type": "from_to",
+      "label_column": "What changed",
+      "from": {
+        "title": "Before"
+      },
+      "to": {
+        "title": "Result"
+      },
+      "rows": [
+        {
+          "label": "Sent",
+          "from": "On the day",
+          "to": "7 days early"
+        },
+        {
+          "label": "Valid for",
+          "from": "1 day",
+          "to": "14 days"
+        },
+        {
+          "label": "Redemption",
+          "from": "12%",
+          "to": "27%",
+          "change": "up 15 points",
+          "emphasis": true
+        },
+        {
+          "label": "Redeemed a year",
+          "note": "2.4 million sent a year",
+          "from": "288k",
+          "to": "648k",
+          "change": "360k more tables"
+        }
+      ]
+    }
+  ],
+  "footnote": "At RMB 186 per birthday table, 360,000 extra tables is about RMB 67 million in sales",
+  "notes": "My first proof point is birthday coupons. The problem was simple: the coupon only worked on the birthday itself, and on that day most people are at work or travelling, nowhere near a store. I changed two things. We now send it seven days early and it stays valid for fourteen days. Redemption went from 12% to 27%. We send about 2.4 million a year, so that's 360,000 more birthday tables a year, roughly RMB 67 million in sales at RMB 186 a table."
+}

@@ -1,0 +1,123 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "profile",
+  "filename": "member-pm-candidacy-zh",
+  "meta": {
+    "date": "2026 年 10 月",
+    "authors": [
+      {
+        "name": "陈立行",
+        "role": "会员运营主管"
+      }
+    ]
+  },
+  "footer": {
+    "page_number": true,
+    "label": "示例人物，姓名和数据均为虚构"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "我是谁"
+      },
+      {
+        "label": "做成过"
+      },
+      {
+        "label": "差距"
+      },
+      {
+        "label": "上任后"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "把留住会员的办法，做进产品里",
+      "summary": "竞聘会员产品经理",
+      "kicker": "会员产品经理岗位竞聘"
+    },
+    {
+      "id": "p02-who",
+      "type": "content",
+      "kind": "list",
+      "heading": "九年都在会员身边，从接投诉做到改规则",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p03-path",
+      "type": "content",
+      "kind": "process",
+      "heading": "四个岗位，每一段都留下一个查得到的结果",
+      "focus": "timeline"
+    },
+    {
+      "id": "p04-fit",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "岗位要的五样，我做成过三样，两样还要补",
+      "focus": "comparison"
+    },
+    {
+      "id": "p05-birthday",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "生日券提前一周发，核销率从 12% 涨到 27%",
+      "focus": "from_to"
+    },
+    {
+      "id": "p06-stored",
+      "type": "content",
+      "kind": "points",
+      "heading": "储值卡七档并成三档，储值会员复购率从 31% 到 38%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-winback",
+      "type": "content",
+      "kind": "data",
+      "heading": "按上次点的菜发券，沉睡会员唤回率是通用券的两倍多",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-skills",
+      "type": "content",
+      "kind": "data",
+      "heading": "五项能力里，会员业务最强，产品规划差得最远",
+      "focus": "harvey_balls"
+    },
+    {
+      "id": "p09-gaps",
+      "type": "content",
+      "kind": "list",
+      "heading": "两样短板，上任前就开始补，90 天内交出证据",
+      "focus": "comparison"
+    },
+    {
+      "id": "p10-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "上任 90 天：先听，再定，第 90 天交第一个上线版本",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p11-why",
+      "type": "content",
+      "kind": "fact",
+      "heading": "我知道会员为什么不再来，也知道怎么把他们请回来"
+    },
+    {
+      "id": "p12-close",
+      "type": "ending",
+      "heading": "谢谢各位，90 天后我用唤回率和路线图交账",
+      "summary": "会员运营主管，竞聘会员产品经理"
+    }
+  ]
+}

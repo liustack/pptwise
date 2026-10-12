@@ -1,0 +1,66 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "roadmap",
+      "duration_unit": "days",
+      "items": [
+        {
+          "title": "Listen",
+          "period": "Days 1 to 30",
+          "duration": 30,
+          "points": [
+            "Visit 20 stores, interview 50 members",
+            "One dashboard with agreed definitions"
+          ],
+          "rows": [
+            {
+              "label": "Delivers",
+              "value": "Top 10 member problems"
+            }
+          ]
+        },
+        {
+          "title": "Decide",
+          "period": "Days 31 to 60",
+          "duration": 30,
+          "points": [
+            "Turn two problems into specs",
+            "Auto win-back, balance reminders"
+          ],
+          "rows": [
+            {
+              "label": "Delivers",
+              "value": "Two specs approved"
+            }
+          ]
+        },
+        {
+          "title": "Ship",
+          "period": "Days 61 to 90",
+          "duration": 30,
+          "points": [
+            "Auto win-back live, rate 9% or more",
+            "Manual sends 3 to 0.5 days a week",
+            "Draft roadmap for next half"
+          ],
+          "emphasis": true,
+          "rows": [
+            {
+              "label": "Delivers",
+              "value": "Live, roadmap in"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "icon": "calendar-check",
+      "title": "A written check-in every 30 days",
+      "text": "What I did, where the numbers are, and what changes next"
+    }
+  ],
+  "notes": "My first 90 days come in three parts. Days 1 to 30, I listen: I visit 20 stores, interview 50 members, and get every team onto one member dashboard with the same definitions. The output is a top-ten list of member problems. Days 31 to 60, I decide: I pick two problems and turn them into specs. Right now I'd pick automatic win-back coupons and balance reminders. Both specs have to pass review. Days 61 to 90, I ship: automatic win-back goes live, with the win-back rate holding at 9% or better and manual sends cut from three person-days a week to half a day, and I hand in a draft roadmap for the next half. At the end of each 30 days, my manager gets a written check-in."
+}

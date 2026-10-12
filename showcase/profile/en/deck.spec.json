@@ -1,0 +1,123 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "storytelling",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "profile",
+  "filename": "member-pm-candidacy-en",
+  "meta": {
+    "date": "October 2026",
+    "authors": [
+      {
+        "name": "Chen Lixing",
+        "role": "Membership Ops Lead"
+      }
+    ]
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Fictional example: the person and figures are invented"
+  },
+  "course": {
+    "stages": [
+      {
+        "label": "Who"
+      },
+      {
+        "label": "Proof"
+      },
+      {
+        "label": "Gaps"
+      },
+      {
+        "label": "Plan"
+      }
+    ]
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "Making member loyalty part of the product",
+      "summary": "Membership Product Manager",
+      "kicker": "Internal application"
+    },
+    {
+      "id": "p02-who",
+      "type": "content",
+      "kind": "list",
+      "heading": "Nine years with members, from calls to rules",
+      "focus": "icon_cards"
+    },
+    {
+      "id": "p03-path",
+      "type": "content",
+      "kind": "process",
+      "heading": "Four roles, each with a result you can check",
+      "focus": "timeline"
+    },
+    {
+      "id": "p04-fit",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Five asks: I've shown three, two still to build",
+      "focus": "comparison"
+    },
+    {
+      "id": "p05-birthday",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Earlier birthday coupons: redemption 12% to 27%",
+      "focus": "from_to"
+    },
+    {
+      "id": "p06-stored",
+      "type": "content",
+      "kind": "points",
+      "heading": "Three top-up tiers lifted repeat visits to 38%",
+      "focus": "kpi_cards"
+    },
+    {
+      "id": "p07-winback",
+      "type": "content",
+      "kind": "data",
+      "heading": "Dish coupons won back over twice as many members",
+      "focus": "chart"
+    },
+    {
+      "id": "p08-skills",
+      "type": "content",
+      "kind": "data",
+      "heading": "Strongest in membership, weakest in roadmapping",
+      "focus": "harvey_balls"
+    },
+    {
+      "id": "p09-gaps",
+      "type": "content",
+      "kind": "list",
+      "heading": "Both gaps start now, with proof by day 90",
+      "focus": "comparison"
+    },
+    {
+      "id": "p10-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "First 90 days: listen, decide, ship a release",
+      "focus": "roadmap"
+    },
+    {
+      "id": "p11-why",
+      "type": "content",
+      "kind": "fact",
+      "heading": "I know why members leave and what wins them back"
+    },
+    {
+      "id": "p12-close",
+      "type": "ending",
+      "heading": "Thank you. On day 90, I'll report the numbers",
+      "summary": "Membership Ops Lead, for Membership Product Manager"
+    }
+  ]
+}

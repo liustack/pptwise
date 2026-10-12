@@ -1,0 +1,33 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "team-table"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "7 → 3",
+          "unit": "tiers",
+          "label": "Top-up tiers",
+          "note": "Led 4 teams, live in six weeks"
+        },
+        {
+          "value": "**38%**",
+          "label": "90-day repeat visits",
+          "note": "Card members, up from 31%"
+        },
+        {
+          "value": "186",
+          "label": "New top-ups in 2024",
+          "note": "RMB 152m in 2023, up 22%",
+          "unit": "RMB million"
+        }
+      ]
+    }
+  ],
+  "footnote": "AI-generated illustration",
+  "notes": "Second, top-up cards. We had seven top-up tiers. Staff couldn't explain them and members couldn't do the maths, so more people held cards but they didn't come back more often. I cut seven tiers to three and added a balance reminder. That touched store scripts, finance, the till system and marketing material, so I asked each of the four teams for one person, we met weekly, and it went live in six weeks. Among our 480,000 card members, 90-day repeat visits rose from 31% to 38%, and new top-ups reached RMB 186 million in 2024, up 22% on the year before."
+}

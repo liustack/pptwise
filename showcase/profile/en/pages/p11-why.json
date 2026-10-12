@@ -1,0 +1,25 @@
+{
+  "stage": "Plan",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "portrait"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "134k",
+          "label": "lapsed members won back last year",
+          "note": "I know what each of them last ordered"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "Nine years taught me why members stop coming. Now I want to **build that into the product**."
+    }
+  ],
+  "notes": "Why me? A membership product manager has to answer two questions: why do members stop coming, and what brings them back. I've been answering both on the front line for nine years, and last year a single dish coupon brought back 134,000 people. Now I want to build those answers into the product, so stores stop sending coupons by hand and every member gets their own reason to come back.",
+  "footnote": "AI-generated illustration"
+}

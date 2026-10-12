@@ -1,0 +1,37 @@
+{
+  "stage": "Who",
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "front-of-house",
+      "crop": [
+        0.2733,
+        0,
+        0.2807,
+        1
+      ]
+    },
+    {
+      "type": "icon_cards",
+      "items": [
+        {
+          "icon": "headset",
+          "title": "Started in support",
+          "text": "Thousands of calls taught me which rule sits behind a complaint"
+        },
+        {
+          "icon": "chart-line",
+          "title": "Led by data",
+          "text": "I read the member dashboard weekly and A/B test rule changes"
+        },
+        {
+          "icon": "users",
+          "title": "Gets things done",
+          "text": "Led stores, finance, IT and marketing on the top-up redesign"
+        }
+      ]
+    }
+  ],
+  "footnote": "AI-generated illustration",
+  "notes": "In one line: I've spent nine years beside our members, from taking their complaints to rewriting the rules that caused them. Three things describe me. I started in customer support, and thousands of calls taught me that members rarely complain about a server. They complain about a rule nobody explained. I lead with data: I read the member dashboard every week and test a change on a small group first. And I get things done across teams. The top-up card redesign needed four departments, and I led it."
+}

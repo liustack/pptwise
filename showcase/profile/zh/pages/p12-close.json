@@ -1,0 +1,18 @@
+{
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "请各位评委提问指教"
+    },
+    {
+      "type": "image",
+      "asset_id": "portrait"
+    }
+  ],
+  "notes": "我的承诺是：90 天后，我用唤回率和第一版路线图向各位交账。谢谢各位，请提问。",
+  "background": {
+    "kind": "asset",
+    "asset_id": "member-phone"
+  },
+  "footnote": "图为 AI 生成的示意图"
+}

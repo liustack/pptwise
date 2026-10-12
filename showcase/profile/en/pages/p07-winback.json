@@ -1,0 +1,63 @@
+{
+  "stage": "Proof",
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "title": "Win-back rate by dish group",
+      "axes": {
+        "y_unit": "%"
+      },
+      "reference": {
+        "value": 4.1,
+        "label": "Generic coupon 4.1%"
+      },
+      "series": [
+        {
+          "name": "Dish coupon win-back rate",
+          "data": [
+            {
+              "x": "Signature",
+              "y": 11.2,
+              "emphasis": true
+            },
+            {
+              "x": "Set meals",
+              "y": 10.4
+            },
+            {
+              "x": "Breakfast",
+              "y": 9.1
+            },
+            {
+              "x": "Snacks",
+              "y": 8.9
+            },
+            {
+              "x": "Mostly delivery",
+              "y": 8.3
+            }
+          ]
+        }
+      ],
+      "direction": "horizontal"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**9.8%**",
+          "label": "Win-back rate, full rollout",
+          "note": "1.36m lapsed members, generic 4.1%"
+        },
+        {
+          "value": "134k",
+          "label": "Members back in 2025",
+          "note": "No visit in 180 days, 5 dish groups"
+        }
+      ]
+    }
+  ],
+  "footnote": "A/B tested on 20,000 members, 10,000 per arm, before rolling out to all 1.36 million",
+  "notes": "Third, lapsed members. We had 1.36 million members who hadn't visited in 180 days. We used to send them all the same generic coupon, and 4.1% came back. My bet was that people don't return because nothing gives them a specific reason. So I grouped them by the dish they last ordered and sent a coupon for that dish. We tested it on 20,000 members first, then rolled it out. Across everyone, 9.8% came back, more than twice the generic rate, which is 134,000 members in 2025. Today that still takes three person-days a week of manual sends, and that's exactly why I want to turn it into a product."
+}
