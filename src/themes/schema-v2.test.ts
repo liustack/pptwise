@@ -17,16 +17,16 @@ function theme(extra: Record<string, unknown> = {}) {
     label: "Acme",
     style: style("acme"),
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
       content: {
-        points: { face: "two-column" },
+        points: { face: "gauge-sheet" },
         quote: {
           face: "pull-quote",
           decor: { kind: "silent" },
         },
       },
-      ending: { face: "poster-ending" },
+      ending: { face: "signoff-ending" },
     },
     ...extra,
   }
@@ -46,7 +46,7 @@ describe("theme schema v2", () => {
     for (const retired of [
       { version: 1 },
       { base: "brief" },
-      { faces: { cover: ["poster-center"] } },
+      { faces: { cover: ["institutional-block"] } },
       { tendencies: { content: ["two-column"] } },
       { sparse: ["statement"] },
     ]) {
@@ -77,30 +77,30 @@ describe("theme schema v2", () => {
       "fact",
       "evidence",
       "hierarchy",
-    ].map((kind) => [kind, { face: "two-column" }]))
+    ].map((kind) => [kind, { face: "gauge-sheet" }]))
 
     expect(MenuSchema.safeParse({
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
       content: entries,
-      ending: { face: "poster-ending" },
+      ending: { face: "signoff-ending" },
     }).success).toBe(true)
 
     expect(MenuSchema.safeParse({
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
-      content: { agenda: { face: "two-column" } },
-      ending: { face: "poster-ending" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
+      content: { agenda: { face: "gauge-sheet" } },
+      ending: { face: "signoff-ending" },
     }).success).toBe(false)
   })
 
   it("keeps menu parameters as flat primitive values and decor as an explicit motif-or-silent declaration", () => {
     expect(MenuEntrySchema.safeParse({
-      face: "two-column",
+      face: "gauge-sheet",
       params: { gutter: 32, compact: true, emphasis: "primary" },
       decor: { kind: "motif", id: "poster-motif", params: { intensity: "subtle" } },
     }).success).toBe(true)
-    expect(MenuEntrySchema.safeParse({ face: "two-column", decor: { kind: "silent" } }).success).toBe(true)
-    expect(MenuEntrySchema.safeParse({ face: "two-column", params: { nested: { value: 1 } } }).success).toBe(false)
+    expect(MenuEntrySchema.safeParse({ face: "gauge-sheet", decor: { kind: "silent" } }).success).toBe(true)
+    expect(MenuEntrySchema.safeParse({ face: "gauge-sheet", params: { nested: { value: 1 } } }).success).toBe(false)
   })
 })

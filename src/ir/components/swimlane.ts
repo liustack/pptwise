@@ -99,13 +99,9 @@ export const aliases = {
   items: swimlaneItemAliases,
 } satisfies ComponentAliasSpec
 
-// The lanes and every step box are painted here, so a bento outline shell
-// underneath would be a second frame around an already-framed diagram.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

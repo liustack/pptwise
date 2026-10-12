@@ -1,36 +1,12 @@
 /**
- * One question, asked of a label's own characters: may this text be set as a
- * top-to-bottom column of single characters?
+ * Questions asked of a label's own characters: does it carry square-script
+ * glyphs (CJK layout), and does it count as Chinese (built-in titles).
  *
- * Axis titles never call this. They sit as a horizontal pair
- * (`axis-titles.tsx`: "名  →" / "名  ↑"). The remaining caller is ink
- * heading treatments (`heading-treatments/render.tsx`), where a CJK
- * heading may still stack one `<text>` node per character. That is
- * ordinary typography for Chinese, Japanese and Korean, whose glyphs are
- * square and carry meaning one at a time. It is not typography at all
- * for a Latin word: "Tempo" comes out as T/e/m/p/o down the page, and a
- * reader has to reassemble the word letter by letter (2026-08-20 review,
- * `component--heatmap--mixed` and `component--matrix--en`). When this
- * returns false, the heading stays as one horizontal line. The svg2pptx
- * rotate path stays for other scenes.
- *
- * The rule is content-driven and total: same string in, same answer out, no
- * locale, config or seed involved, so a deck's stacked headings look the
- * same on every machine and across every revision.
- *
- * **Mixed-script labels do not stack.** The test is an allowlist over every
- * character, not a majority vote over the string: one Latin run inside an
- * otherwise-Chinese label ("K8s 托管") is exactly the defect — a majority rule
- * would still shatter "K8s" into K/8/s while calling the label Chinese. The
- * asymmetry is deliberate: a Chinese label set horizontally is merely less
- * traditional, a Latin word set vertically is unreadable, so every uncertain
- * case resolves toward horizontal.
- *
- * Deliberately a third character table rather than a reuse of the two that
+ * Deliberately its own character table rather than a reuse of the two that
  * already exist: `svg-text-layout.ts`'s `WIDE_CHAR_RE` classifies characters
  * for *width measurement*, and `people-initials.ts`'s `CJK_IDEOGRAPH_RE`
- * picks a *badge letter*. Neither answers this question, and widening either
- * one to cover all three jobs would tie three unrelated behaviors together.
+ * picks a *badge letter*. Neither answers these questions, and widening
+ * either one to cover every job would tie unrelated behaviors together.
  */
 
 /**
@@ -46,39 +22,8 @@
  */
 const SQUARE_SCRIPT = "\\u3040-\\u30ff\\u3400-\\u4dbf\\u4e00-\\u9fff\\uac00-\\ud7a3\\uf900-\\ufaff"
 
-/**
- * What may ride along with a square script inside one stackable label:
- *
- *   2014-2015  em dash and horizontal bar — the CJK dash, which
- *              `heading-fit.ts` already weighs as an ideograph rather than
- *              as narrow Latin punctuation
- *   2018-201F  curly quotes, the pairs CJK prose actually quotes with
- *   2E80-303F  CJK radicals, Kangxi radicals, CJK symbols and punctuation
- *   FF00-FFEF  halfwidth and fullwidth forms
- *
- * plus ASCII digits and whitespace, which stack without losing anything.
- */
-const STACKABLE_COMPANION = "\\s0-9\\u2014\\u2015\\u2018-\\u201f\\u2e80-\\u303f\\uff00-\\uffef"
-
-const STACKABLE_ONLY_RE = new RegExp(`^[${SQUARE_SCRIPT}${STACKABLE_COMPANION}]*$`)
-
-/**
- * At least one real square glyph. Punctuation and digits alone do not earn a
- * vertical column ("2026" or "…" as a stacked stub reads as debris, not as a
- * title), so a label has to actually be written in a square script before it
- * may stack.
- */
+/** At least one real square glyph. Punctuation and digits alone do not count. */
 const HAS_SQUARE_GLYPH_RE = new RegExp(`[${SQUARE_SCRIPT}]`)
-
-/**
- * True when `text` may be set as a column of one character per line — see
- * this file's own header for the rule and the review finding behind it.
- * False for every Latin, Cyrillic, Greek, Arabic and mixed-script label, and
- * for the empty string.
- */
-export function stacksVertically(text: string): boolean {
-  return HAS_SQUARE_GLYPH_RE.test(text) && STACKABLE_ONLY_RE.test(text)
-}
 
 /**
  * True when `text` carries at least one square-script glyph. Callout lead

@@ -55,9 +55,7 @@ export const aliases = {} satisfies ComponentAliasSpec
 
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: true,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

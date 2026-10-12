@@ -200,7 +200,6 @@ export function buildCtx(
     defaultBg: defaultBg ?? tokens.colors.bg,
     bodyFontPx: bodyFontPx ?? PACING_BUDGETS.balanced.bodyBaselinePx,
     chartPaletteOffset,
-    themeId: tokens.id,
     emphasis,
     ...(figures ? { figures } : {}),
     ...(themeGround ? { themeGround } : {}),

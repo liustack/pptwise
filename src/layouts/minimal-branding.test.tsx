@@ -31,13 +31,13 @@ function installTheme(id: string, extra?: Partial<{ brand: "none" }>): void {
       shape: { radius: 2, gapScale: 1, typeScale: 1 },
     },
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
       content: {
-        points: { face: "two-column", ...(extra ?? {}) },
+        points: { face: "grid-sheet", ...(extra ?? {}) },
         statement: { face: "statement" },
       },
-      ending: { face: "poster-ending" },
+      ending: { face: "signoff-ending" },
     },
   })
 }
@@ -105,10 +105,10 @@ describe("menu-owned page branding posture", () => {
         shape: { radius: 2, gapScale: 1, typeScale: 1 },
       },
       menu: {
-        cover: { face: "split-diagonal", brand: "none" },
-        chapter: { face: "masthead-chapter" },
-        content: { points: { face: "two-column" } },
-        ending: { face: "poster-ending" },
+        cover: { face: "institutional-block", brand: "none" },
+        chapter: { face: "ghost-section-chapter" },
+        content: { points: { face: "gauge-sheet" } },
+        ending: { face: "signoff-ending" },
       },
     })
     const cover: Slide = { type: "cover", heading: "Silent cover", components: [] }
@@ -141,10 +141,10 @@ describe("menu-owned page branding posture", () => {
         shape: { radius: 2, gapScale: 1, typeScale: 1 },
       },
       menu: {
-        cover: { face: "poster-center", brand: "none" },
-        chapter: { face: "masthead-chapter" },
-        content: { points: { face: "two-column" } },
-        ending: { face: "poster-ending" },
+        cover: { face: "institutional-block", brand: "none" },
+        chapter: { face: "ghost-section-chapter" },
+        content: { points: { face: "gauge-sheet" } },
+        ending: { face: "signoff-ending" },
       },
     })
     const cover: Slide = { type: "cover", heading: "Direct metadata cover", components: [] }
@@ -178,10 +178,10 @@ describe("menu-owned page branding posture", () => {
         shape: { radius: 2, gapScale: 1, typeScale: 1 },
       },
       menu: {
-        cover: { face: "split-diagonal", brand: "none" },
-        chapter: { face: "masthead-chapter" },
-        content: { points: { face: "two-column" } },
-        ending: { face: "poster-ending" },
+        cover: { face: "institutional-block", brand: "none" },
+        chapter: { face: "ghost-section-chapter" },
+        content: { points: { face: "gauge-sheet" } },
+        ending: { face: "signoff-ending" },
       },
     })
     const cover: Slide = {

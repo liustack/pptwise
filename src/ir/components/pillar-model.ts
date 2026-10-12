@@ -39,9 +39,7 @@ export const aliases = {
 // Beam, columns and slab are all painted panels of the drawing itself.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

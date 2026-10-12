@@ -49,8 +49,8 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * `.issues/design-boards/wave8/b2/Classroom.dc.html`）：chapter 底色从
  * primary 雾蓝改为雾蓝讲义纸 `#ECF0F2`。环节盒由 `lesson-box-chapter` 自己
  * 承 primary 白字，浅底不再假设 rail-chapter 的满版深色。封面改锁
- * `chalk-band-cover`，不再走 `band-title`。`shape.cover` 里 bandWave 等旧
- * knobs 留下，别的路径可能还读。角色色与 fonts 不动。
+ * `chalk-band-cover`，不再走 `band-title`。角色色与 fonts 不动。（这些旧
+ * 版式和 `shape.cover` 封面 knobs 已于 2026-10-12 随孤儿版式一起删除。）
  *
  * 装饰见 `../../motifs/motif-homeroom-motif.tsx`（横线簿格线：装订孔排与
  * 铅笔虚线退役）。
@@ -95,7 +95,6 @@ export const CLASSROOM_TOKENS: StyleTokens = {
   shape: {
     radius: 12,
     gapScale: 1.1, // 全主题最圆润档（课堂亲和）+呼吸感
-    cover: { textAnchor: "start", bandY: 260, bandH: 200, bandWave: true },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#ECF0F2" },

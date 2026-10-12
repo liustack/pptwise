@@ -51,13 +51,9 @@ export const aliases = {
   items: [{ itemsKey: "items", aliases: { label: "title", name: "title", description: "text", desc: "text" } }],
 } satisfies ComponentAliasSpec
 
-// Each chevron is its own painted arrow, so a bento outline shell behind the
-// band would be a second frame around an already-framed drawing.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

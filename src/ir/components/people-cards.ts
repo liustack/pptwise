@@ -88,16 +88,12 @@ export const aliases = {} satisfies ComponentAliasSpec
 // siblings `row_cards`/`icon_cards` (`component-traits.ts`'s own doc
 // comment): a people_cards grid with fewer people than the slot has room
 // for grows its cards to fill the leftover height instead of leaving it
-// dead, capped the same way. Not selfVisual/scalable/passthroughShell —
-// same reasoning as row_cards/icon_cards: each card is an ordinary
-// bento-grid cell, not an already-carded diagram or a scale-to-fill
-// graphic. Not evidence — no probe evidence names a people roster as an
+// dead, capped the same way. Not scalable, same as row_cards/icon_cards:
+// each card is reflowable text, not a scale-to-fill graphic. Not evidence — no probe evidence names a people roster as an
 // evidence-carrying visual the way chart/data_table/device_mockup are.
 export const traits = {
   stretchable: true,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

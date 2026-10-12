@@ -32,13 +32,13 @@ import { ENDING_LAYOUTS } from "./index-ending"
  * Faces whose sample is more than the face will take, so it hands the page
  * to a rendering that can draw it.
  *
- * Only the generic sample provokes this, and only here: `quote-stage` wants
- * a quote, `marquee-statement` one row of touchpoints or one paragraph under
- * its claim, and the generic content page carries bullets and prose. Stepping
+ * Only the generic sample provokes this, and only here: `marquee-statement`
+ * wants one row of touchpoints or one paragraph under its claim, and the
+ * generic content page carries bullets and prose. Stepping
  * aside is the correct answer to that page, so it is asserted rather than
  * tolerated — every other face must hold its own composition.
  */
-const STEPS_ASIDE = new Set(["quote-stage", "marquee-statement"])
+const STEPS_ASIDE = new Set(["marquee-statement"])
 
 const ASIDE_MARKER = "data-face-stepped-aside"
 const DROP_MARKER = "data-dropped"
@@ -125,13 +125,13 @@ describe.sequential("the registry scan and what it covers", () => {
     // sizes at the time of this refactor — a face may be added, and a retired
     // face is removed here deliberately, with the count updated in the same
     // commit as `registry.count-guard.test.ts`.
-    it("scans every registered face, at least the 130 that were registered when the copies were deleted", () => {
-      expect(Object.keys(COVER_LAYOUTS).length).toBeGreaterThanOrEqual(37)
-      expect(Object.keys(CHAPTER_LAYOUTS).length).toBeGreaterThanOrEqual(36)
-      expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(23)
-      expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(34)
-      expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(130)
-      expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBeGreaterThanOrEqual(130)
+    it("scans every registered face, at least the 105 registered since the unused faces were deleted", () => {
+      expect(Object.keys(COVER_LAYOUTS).length).toBeGreaterThanOrEqual(22)
+      expect(Object.keys(CHAPTER_LAYOUTS).length).toBeGreaterThanOrEqual(22)
+      expect(Object.keys(CONTENT_LAYOUTS).length).toBeGreaterThanOrEqual(39)
+      expect(Object.keys(ENDING_LAYOUTS).length).toBeGreaterThanOrEqual(22)
+      expect(SCANNED_FACES.length).toBeGreaterThanOrEqual(105)
+      expect(new Set(SCANNED_FACES.map((f) => `${f.slideType}/${f.id}`)).size).toBeGreaterThanOrEqual(105)
       expect(new Set(SCANNED_FACES.map((f) => f.label)).size).toBe(SCANNED_FACES.length)
     })
 
@@ -142,10 +142,9 @@ describe.sequential("the registry scan and what it covers", () => {
       // rendered, so match the registration list both ways.
       expect(new Set(legacy.map((f) => f.id))).toEqual(new Set(LEGACY_FACE_SAMPLES.map((s) => s.id)))
       // The 74 faces, less the nine that left with arena, playbill and
-      // heritage in 2026-10, plus the second input the three faces whose
-      // subset sweep and determinism check rendered different pages were each
-      // written with.
-      expect(new Set(legacy.map((f) => f.id)).size).toBe(65)
+      // heritage in 2026-10 and the 49 that left with the faces no built-in
+      // theme menu used.
+      expect(new Set(legacy.map((f) => f.id)).size).toBe(16)
       for (const face of legacy) {
         expect(face.sample.slides[face.sample.index]?.type, face.label).toBe(face.slideType)
       }
@@ -157,48 +156,17 @@ describe.sequential("the registry scan and what it covers", () => {
     // the combinations that scan finished asserting on rather than the ones the
     // registration table promises.
     // The copies held 1,776 (74 faces on 24 themes). Nine of those faces and
-    // three themes were deleted with the 2026-10 fold, so the floor is what
-    // the copies would hold today: 65 faces on 22 themes.
-    it("covers at least the 1,430 face x theme combinations the deleted copies would hold today", () => {
+    // three themes were deleted with the 2026-10 fold and 49 more with the
+    // unused faces, so the floor is what the copies would hold today: 16
+    // faces on 22 themes.
+    it("covers at least the 352 face x theme combinations the deleted copies would hold today", () => {
       expect(CANONICAL_THEME_IDS.length).toBe(22)
-      expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(1430)
-      expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(3120)
+      expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(352)
+      expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(2310)
     })
   })
 })
 
-/**
- * The samples above are only worth registering if a theme can change what a
- * face draws with them, which is exactly what the two-theme subset sample
- * used to assume it could not. These six are the counter-examples: brief
- * sets `emphasis: "pad"` and lecture sets `emphasis: "underline"`, and both
- * turn an emphasis run into a `path`; brief's cover knobs switch on
- * `verdict-index`'s foot rule, which is a `line`. Neither primitive appears
- * on these faces under bulletin or rally, so a scan that stopped at those
- * two themes never rendered them.
- */
-
 beforeAll(() => {
   installNodePlatform()
-})
-
-describe("a theme can change the primitives a face emits", () => {
-  const NAILS = [
-    { id: "look-range-chapter", tag: "path", themes: ["brief", "lecture"] },
-    { id: "chalk-band-cover", tag: "path", themes: ["brief", "lecture"] },
-    { id: "pledge-open-cover", tag: "path", themes: ["brief", "lecture"] },
-    { id: "ask-ending", tag: "path", themes: ["brief", "lecture"] },
-    { id: "scorecard-ending", tag: "path", themes: ["brief", "lecture"] },
-    { id: "verdict-index", tag: "line", themes: ["brief"] },
-  ] as const
-
-  it.each(NAILS.map((n) => [n.id, n] as const))("%s emits its theme-only primitive", (_id, nail) => {
-    const face = SCANNED_FACES.find((f) => f.id === nail.id)
-    expect(face, `${nail.id} left the registry`).toBeDefined()
-    expect(face!.origin, `${nail.id} lost its registered sample`).toBe("legacy")
-    for (const themeId of nail.themes) {
-      const { root } = renderFaceSampleRoot(face!, themeId)
-      expect(root.querySelectorAll(nail.tag).length, `${nail.id} @ ${themeId} drew no <${nail.tag}>`).toBeGreaterThan(0)
-    }
-  })
 })

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest"
 import { boundThemeCtx } from "../../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { StatementContent } from "../content-statement"
-import { OneEvidenceContent } from "../content-one-evidence"
 import { PullQuoteContent } from "../content-pull-quote"
 import { StatHeroContent } from "../content-stat-hero"
 import { auditSvgMarkup } from "../../audit/svg-audit"
@@ -37,7 +36,7 @@ describe("sparseFace dispatch", () => {
     expect(sparseFace("statement", "stage")).toBeTypeOf("function")
     expect(sparseFace("statement", "lecture")).toBeTypeOf("function")
     expect(sparseFace("statement", "brief")).toBeTypeOf("function")
-    expect(sparseFace("one-evidence", "stage")).toBeUndefined()
+    expect(sparseFace("pull-quote", "lecture")).toBeUndefined()
     expect(sparseFace("mono-bleed", "luxe")).toBeUndefined()
     expect(sparseFace("statement", undefined)).toBeUndefined()
   })
@@ -88,25 +87,6 @@ describe("sparseFace dispatch", () => {
     expect(consultingHeading.getAttribute("font-style")).not.toBe("italic")
   })
 
-  it("an unregistered pair (stage, one-evidence) keeps the generic face", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "迁徙路线在十年里缩短了四成",
-      components: [],
-    } as Slide
-    const ctx = boundThemeCtx("stage", {})
-    const root = render(
-      <OneEvidenceContent ir={ir("stage", [slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    const heading = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("迁徙路线"),
-    )!
-    expect(heading.getAttribute("x")).toBe("80")
-    expect(heading.getAttribute("font-weight")).toBe("600")
-    expect(root.querySelector("rect[stroke-dasharray]")).toBeNull()
-  })
 })
 
 // A statement page's footnote used to be joined onto the line under the

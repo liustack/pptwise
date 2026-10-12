@@ -1,12 +1,10 @@
 import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { sectionNameFor } from "../../lib/derive"
-import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { fitSvgLine } from "../../lib/svg-text-layout"
 import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
-import { renderFittedEvidence } from "../fitted-evidence"
-import { evidenceSource, firstEmphasisRun, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot } from "./shared"
+import { firstEmphasisRun, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** lecture 稀排脸：左轴板书、粉笔巨数、虚线证据框。不画整页粉笔槽细框。 */
@@ -118,94 +116,6 @@ export function statHero({ ir, slide, index, ctx }: SvgTemplateProps) {
         </text>
       )}
       <SourceLines block={source} x={120} y={626} fontFamily={fonts.body} fill={colors.muted} />
-    </>
-  )
-}
-
-export function oneEvidence({ slide, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const evidence = pickEvidence(slide.components)
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 800,
-    fontSize: 40,
-    maxLines: 2,
-    minPt: 22,
-    lineHeightRatio: 1.28,
-    fontFamily: fonts.heading,
-    bold: false,
-  })
-  const note = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 800, fontSize: 24, minFontSize: 16, fontFamily: fonts.body })
-    : null
-  const sourceRaw = evidenceSource(slide)
-  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: 800, fontSize: 18, minFontSize: 18, fontFamily: fonts.body }) : null
-  // The frame sets every line whole or hands the page over: a line it would
-  // cut, or a subheading beside an exhibit, which this frame has no room
-  // for, goes to the shared face, which sets it at its own measure and marks
-  // what it still cannot hold.
-  if (heading.truncated || note?.truncated || source?.truncated || (evidence && note)) return null
-  return (
-    <>
-      <rect
-        x={200}
-        y={200}
-        width={880}
-        height={300}
-        fill="none"
-        stroke={colors.muted}
-        strokeWidth={2}
-        strokeDasharray="10 8"
-      />
-      {evidence &&
-        heading.lines.map((line, i) => (
-          <text
-            key={`claim-${i}`}
-            x={120}
-            y={140 + i * heading.lineHeight}
-            fontFamily={fonts.heading}
-            fontSize={Math.min(heading.fontSize, 28)}
-            fontWeight="400"
-            fill={colors.text}
-            dominantBaseline="alphabetic"
-          >
-            {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-              accent: emphasisRunInk(colors),
-              baseFill: colors.text,
-              fontWeight: "400",
-            })}
-          </text>
-        ))}
-      {evidence
-        ? renderFittedEvidence(evidence, { x: 220, y: 220, w: 840, h: 260 }, ctx)
-        : heading.lines.map((line, i) => (
-            <text
-              key={i}
-              x={640}
-              y={316 + i * heading.lineHeight}
-              textAnchor="middle"
-              fontFamily={fonts.heading}
-              fontSize={heading.fontSize}
-              fontWeight="400"
-              fill={colors.text}
-              dominantBaseline="alphabetic"
-            >
-              {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-                accent: emphasisRunInk(colors),
-                baseFill: colors.text,
-                fontWeight: "400",
-              })}
-            </text>
-          ))}
-      {!evidence && note && (
-        <text x={640} y={380} textAnchor="middle" fontFamily={fonts.body} fontSize={note.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {note.text}
-        </text>
-      )}
-      {source && (
-        <text x={640} y={560} textAnchor="middle" fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {source.text}
-        </text>
-      )}
     </>
   )
 }

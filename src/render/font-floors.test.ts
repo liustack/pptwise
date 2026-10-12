@@ -17,42 +17,6 @@ const SRC = join(dirname(fileURLToPath(import.meta.url)), "..")
 const SKIP = /\.test\.(ts|tsx)$/
 const MIN_LITERAL = /(?:minFontSize|minPt):\s*(\d+(?:\.\d+)?)|(?:MIN_FONT(?:_SIZE)?|[A-Z0-9_]+MIN_FONT(?:_SIZE)?)\s*=\s*(\d+(?:\.\d+)?)/g
 
-// Runway show follows an explicitly approved editorial scale whose labels,
-// captions, and metadata intentionally sit below the general 16px floor.
-// Rendered nodes carry `data-font-floor-exempt="show-spec"`, while the L1
-// gallery and show layout tests verify that the exemption is scoped to those
-// exact nodes. Keep this as an exact multiset so a new low floor cannot hide
-// behind a file-wide exception.
-const SHOW_SPEC_UNDER_FLOOR = [
-  "layouts/chapter-show-plate.tsx: minFontSize: 14",
-  "layouts/content-show-figures.tsx: minFontSize: 15",
-  "layouts/content-show-figures.tsx: minFontSize: 14",
-  "layouts/content-show-figures.tsx: minFontSize: 15",
-  "layouts/content-show-gallery.tsx: minFontSize: 15",
-  "layouts/content-show-gallery.tsx: minFontSize: 14",
-  // The frame caption, now wrapped onto two lines (`layoutSvgText` names its
-  // floor `minPt`) at the same 12px it was fitted at on one.
-  "layouts/content-show-gallery.tsx: minPt: 12",
-  // A row's label on the panel, named once for the fit that decides whether
-  // the rows hold the spotlight column and the fit that paints them.
-  "layouts/content-show-spotlight.tsx: minFontSize: 12",
-  "layouts/content-show-spotlight.tsx: minFontSize: 14",
-  // The picture's own caption, on the show scale's caption size — it used to
-  // share the kicker line with `insight_panel.title` and lose to it.
-  "layouts/content-show-spotlight.tsx: minFontSize: 14",
-  // The panel's own footnote, same small tier as the kicker it closes — it
-  // used to share the conclusion slot with `slide.subheading` and lose to it.
-  "layouts/content-show-spotlight.tsx: minFontSize: 14",
-  "layouts/content-show-statement.tsx: minFontSize: 15",
-  "layouts/cover-show-headline.tsx: minFontSize: 14",
-  "layouts/cover-show-headline.tsx: minFontSize: 12",
-  "layouts/cover-show-headline.tsx: minFontSize: 13",
-  "layouts/cover-show-headline.tsx: minFontSize: 13",
-  "layouts/ending-show-finale.tsx: minFontSize: 14",
-  "layouts/ending-show-finale.tsx: minFontSize: 14",
-] as const
-const SHOW_SPEC_UNDER_FLOOR_SET = new Set<string>(SHOW_SPEC_UNDER_FLOOR)
-
 function walk(dir: string, files: string[]): void {
   for (const name of readdirSync(dir)) {
     if (name === "__fixtures__" || name === "node_modules") continue
@@ -91,7 +55,6 @@ describe("type floors on the 1280×720 canvas", () => {
     const files: string[] = []
     walk(SRC, files)
     const hits: string[] = []
-    const adjudicatedShowHits: string[] = []
     for (const file of files) {
       const text = readFileSync(file, "utf8")
       for (const match of text.matchAll(MIN_LITERAL)) {
@@ -100,13 +63,10 @@ describe("type floors on the 1280×720 canvas", () => {
         const value = Number(raw)
         if (value < META_FONT_FLOOR_PX) {
           // Named the same way on every platform: relative to src/, with `/`.
-          const hit = `${relative(SRC, file).split(sep).join("/")}: ${match[0]}`
-          if (SHOW_SPEC_UNDER_FLOOR_SET.has(hit)) adjudicatedShowHits.push(hit)
-          else hits.push(hit)
+          hits.push(`${relative(SRC, file).split(sep).join("/")}: ${match[0]}`)
         }
       }
     }
-    expect(adjudicatedShowHits).toEqual(SHOW_SPEC_UNDER_FLOOR)
     expect(hits).toEqual([])
   })
 })

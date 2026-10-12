@@ -361,10 +361,9 @@ export type ThemeFile = z.infer<typeof ThemeFileSchema>
 
 /**
  * Internal declaration accepted from `builtin/`. It is intentionally a
- * superset of the public complete-theme contract: built-in board constructor
- * knobs stay in the engine-only `style.shape.cover` field (the public style
- * schema rejects it), and the theme-wide `motif` anchor stays here because
- * the public contract expresses decoration per menu entry only.
+ * superset of the public complete-theme contract: the theme-wide `motif`
+ * anchor stays here because the public contract expresses decoration per
+ * menu entry only.
  */
 export interface BuiltinThemeDeclaration {
   version: 2

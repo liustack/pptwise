@@ -14,7 +14,7 @@ const page = (decorKeepOut: PageRenderContext["decorKeepOut"]): PageRenderContex
   footerRow: null,
   footerOmitsOrganization: false,
   decorKeepOut,
-  geometry: { imageBottomCaptionBottomY: 0 },
+  geometry: {},
 })
 
 describe("clearsFaceFurniture", () => {

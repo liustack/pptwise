@@ -44,15 +44,15 @@ function imageComponent(assetId: string, extra: Partial<Component> = {}): Compon
 
 /**
  * The controller's own probe deck (task brief §"验收" 1 / plan §"验收"):
- * two-column + brief, a real visual slot. `image.tsx`'s
- * own `measure` (613 * 0.5 rounds to 307, under the 340 cap) is what this
- * pins against — but this test never imports that constant, it only asserts
+ * gauge-sheet + brief, a real visual slot. `image.tsx`'s own `measure`
+ * (its 340 cap across the full body width) is what this pins against, but
+ * this test never imports that constant, it only asserts
  * on `buildAssetBrief`'s output, which is exactly the point (裁定 1: the
  * frame must come from a real render, not a copied formula).
  */
 function probeDeck(assetId = "pic", sourceTheme: CanonicalThemeId = "brief"): PptxIR {
   const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, sourceTheme, {
-    content: { photo: "two-column" },
+    content: { photo: "gauge-sheet" },
   })
   return deck(themeId, [
     {
@@ -69,18 +69,18 @@ function probeDeck(assetId = "pic", sourceTheme: CanonicalThemeId = "brief"): Pp
 }
 
 describe("buildAssetBrief — probe fixture (real render, not a copied constant)", () => {
-  it("reports the actual rendered frame 528x264 / 2:1, not a copied slot constant", () => {
+  it("reports the actual rendered frame 1088x340 / 16:5, not a copied slot constant", () => {
     const brief = buildAssetBrief(probeDeck())
     expect(brief.items).toHaveLength(1)
     const item = brief.items[0]!
     expect(item.asset_id).toBe("pic")
     expect(item.rendered).toBe(true)
     expect(item.missing).toBe(true) // no assets.images entry was supplied
-    // x/y measured off the real two-column render, not copied from a
-    // layout geometry comment. The height is the image's own 2:1 cap
-    // inside the left column, not the column's full height.
-    expect(item.frame).toEqual({ x: 96, y: 244, w: 528, h: 264, aspect: "2:1" })
-    expect(item.suggested_pixels).toEqual({ w: 1056, h: 528 })
+    // x/y measured off the real gauge-sheet render, not copied from a
+    // layout geometry comment. The height is the image's own 340 cap, not
+    // the body's full height.
+    expect(item.frame).toEqual({ x: 96, y: 216, w: 1088, h: 340, aspect: "16:5" })
+    expect(item.suggested_pixels).toEqual({ w: 2176, h: 680 })
   })
 
   it("reports missing: false once the asset is actually resolved, frame stays identical", () => {
@@ -90,7 +90,7 @@ describe("buildAssetBrief — probe fixture (real render, not a copied constant)
     const item = brief.items[0]!
     expect(item.missing).toBe(false)
     expect(item.rendered).toBe(true)
-    expect(item.frame).toEqual({ x: 96, y: 244, w: 528, h: 264, aspect: "2:1" })
+    expect(item.frame).toEqual({ x: 96, y: 216, w: 1088, h: 340, aspect: "16:5" })
   })
 
   it("never mutates the input ir (dummy injection is a render-only in-memory copy)", () => {
@@ -162,9 +162,8 @@ describe("buildAssetBrief — component never rendered under the selected layout
 })
 
 describe("buildAssetBrief — shared asset_id across multiple components on one page", () => {
-  // Reviewer repro: `two-column` renders `components[0]` (an
-  // image/chart) in the left column and stacks every other component,
-  // including a later `image`, into the right column. Two *different* `image`
+  // Reviewer repro: a face draws two `image` components on one page
+  // (memo-sheet stacks both, one above the other). Two *different* `image`
   // components legally share one `asset_id` (bare string, no uniqueness
   // constraint — `src/ir/index.ts`) — since both resolve to the exact same
   // dummy href, the rendered SVG offers no way to tell which `<image>`
@@ -172,13 +171,12 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
   // principle, not just unimplemented). The fix this test pins: never guess
   // (the previous `Array.prototype.shift()`-off-a-FIFO-queue logic silently
   // paired frames to occurrences in DOM/extraction order, which is *not*
-  // `slide.components` order here — body renders before the visual column in
-  // the layout's own JSX, so the queue was backwards and every frame was
-  // swapped) — instead emit one honest, explicitly `shared` item per real
+  // `slide.components` order on the face this was found on, so the queue was
+  // backwards and every frame was swapped) — instead emit one honest, explicitly `shared` item per real
   // rendered frame, both present, neither claiming a specific component.
   it("emits one shared item per rendered frame, both real frames present and correctly valued, no swapped attribution claim", () => {
     const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, "brief", {
-      content: { photo: "two-column" },
+      content: { photo: "memo-sheet" },
     })
     const ir = deck(themeId, [
       {
@@ -200,11 +198,11 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
     expect(sharedItems.every((i) => i.occurrenceCount === 2)).toBe(true)
     expect(sharedItems.every((i) => i.rendered === true)).toBe(true)
     const frames = sharedItems.map((i) => i.frame)
-    // Left column and right column frames must both survive, as a set.
-    // Order is DOM/extraction order, not a claim about which component
-    // produced which frame.
-    expect(frames).toContainEqual(expect.objectContaining({ x: 96, w: 528, h: 264 }))
-    expect(frames).toContainEqual(expect.objectContaining({ x: 656, w: 528, h: 264 }))
+    // Upper and lower frames must both survive, as a set. Order is
+    // DOM/extraction order, not a claim about which component produced
+    // which frame.
+    expect(frames).toContainEqual(expect.objectContaining({ x: 240, y: 186, w: 976, h: 200 }))
+    expect(frames).toContainEqual(expect.objectContaining({ x: 240, y: 440, w: 976, h: 200 }))
   })
 
   it("single-occurrence pages are unaffected: no `shared`/`occurrenceCount` fields, same output shape as before", () => {

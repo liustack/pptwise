@@ -5,7 +5,6 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import type { PptxIR, Slide } from "@/ir"
 
@@ -117,34 +116,4 @@ describe("lecture sparse faces", () => {
     expect(stroke?.getAttribute("stroke-width")).toBe("5")
   })
 
-  it("one-evidence uses a dashed muted frame and centers the claim when there is no visual", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 **6.5 天** 生成",
-      subheading: "试点客户 90 天 · 全部 217 张工单",
-      footnote: "来源：2026 Q2 运行数据",
-      components: [],
-    } as Slide
-    const { root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const frame = root.querySelector("rect")
-    expect(frame?.getAttribute("x")).toBe("200")
-    expect(frame?.getAttribute("y")).toBe("200")
-    expect(frame?.getAttribute("width")).toBe("880")
-    expect(frame?.getAttribute("height")).toBe("300")
-    expect(frame?.getAttribute("stroke-dasharray")).toBe("10 8")
-    expect(frame?.getAttribute("stroke")).toBe(ctx.colors.muted)
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("维护工单"),
-    )!
-    expect(claim.getAttribute("x")).toBe("640")
-    expect(claim.getAttribute("text-anchor")).toBe("middle")
-    expect(Number(claim.getAttribute("font-size"))).toBe(40)
-    const em = Array.from(root.querySelectorAll("tspan")).find((t) => (t.textContent ?? "").includes("6.5"))
-    expect(em?.getAttribute("fill")).toBe(ctx.colors.accent)
-  })
 })

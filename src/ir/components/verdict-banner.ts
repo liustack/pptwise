@@ -18,9 +18,7 @@ export const aliases = {
 
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   columnSpanning: true,
   evidence: false,

@@ -106,7 +106,6 @@ export const JOURNAL_TOKENS: StyleTokens = {
   shape: {
     radius: 6,
     gapScale: 1.1, // 期刊温和+杂志留白
-    cover: { showKicker: true },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#EFEBE1" },

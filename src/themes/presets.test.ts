@@ -49,10 +49,10 @@ describe("the factory preset shelf", () => {
   it("shares no mutable state with the preset it copied", () => {
     const copy = copyThemePreset("thesis", "fork-a")
     copy.style.colors.bg = "#000000"
-    copy.menu.content.points!.face = "quiet-frame"
+    copy.menu.content.points!.face = "grid-sheet"
     const second = copyThemePreset("thesis", "fork-b")
     expect(second.style.colors.bg).not.toBe("#000000")
-    expect(second.menu.content.points!.face).not.toBe("quiet-frame")
+    expect(second.menu.content.points!.face).not.toBe("grid-sheet")
   })
 
   it("pushes the theme-wide motif down into every entry whose face can take one", () => {

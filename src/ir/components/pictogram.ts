@@ -72,9 +72,7 @@ export const aliases = {
 // handed — the drawing owns the page the way `heatmap` does.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits

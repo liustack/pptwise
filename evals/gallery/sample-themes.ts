@@ -63,10 +63,10 @@ export const GALLERY_TIDE_THEME: ThemeFile = {
     chartPalette: ["#124E57", "#D56F45", "#3D7691", "#7B8C67"],
   }),
   menu: {
-    cover: { face: "poster-center" },
-    chapter: { face: "masthead-chapter" },
-    content: { points: { face: "two-column" }, data: { face: "gauge-stats" } },
-    ending: { face: "poster-ending" },
+    cover: { face: "institutional-block" },
+    chapter: { face: "ghost-section-chapter" },
+    content: { points: { face: "gauge-sheet" }, data: { face: "grid-sheet" } },
+    ending: { face: "signoff-ending" },
   },
 }
 
@@ -90,13 +90,13 @@ export const GALLERY_STUDIO_THEME: ThemeFile = {
     chartPalette: ["#27364A", "#BC503B", "#C48B33", "#71816B"],
   }),
   menu: {
-    cover: { face: "poster-center", decor: { kind: "motif", id: "poster-motif" } },
-    chapter: { face: "one-word-chapter", decor: { kind: "motif", id: "poster-motif" } },
+    cover: { face: "ikb-field-cover", decor: { kind: "motif", id: "poster-motif" } },
+    chapter: { face: "field-band-chapter", decor: { kind: "motif", id: "poster-motif" } },
     content: {
-      points: { face: "two-column" },
+      points: { face: "grid-sheet" },
       statement: { face: "statement", decor: { kind: "silent" } },
     },
-    ending: { face: "poster-ending", decor: { kind: "motif", id: "poster-motif" } },
+    ending: { face: "close-word-ending", decor: { kind: "motif", id: "poster-motif" } },
   },
 }
 

@@ -63,16 +63,12 @@ import { COMPONENT_TYPES, type PageKind, type PptxIR, type Slide } from "@/ir"
 import { renderSlideSvg } from "../api"
 import { auditDeck, type AuditFinding } from "./deck-audit"
 import { installNodePlatform } from "../platform/node"
-import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
+import { CANONICAL_THEME_IDS } from "../themes"
 import { __resetRegisteredThemes, THEME_DEFINITIONS } from "../themes/definitions"
-import { registerTestTheme } from "../themes/test-fixtures"
 import { resolveBackgroundHex } from "../render/full-slide-svg"
 import {
   accessibleInk,
-  blendOver,
   contrastRatio,
-  metaInk,
-  readableOn,
   requiredContrastRatio,
   resolveSemanticColor,
 } from "../render/ink"
@@ -96,56 +92,14 @@ const DECOR_META = { organization: "云帆科技", date: "2026-08-15" } as const
 const HEADING = "示例标题：验证对比度矩阵"
 const SUBHEADING = "示例副标题：用于穷举扫描的**所见即所得**文案"
 
-const FIXTURE_FACES = new WeakMap<Slide, string>()
-
-function markFace(slide: Slide, face: string): void {
-  FIXTURE_FACES.set(slide, face)
-}
-
 function deckFor(themeId: string, slide: Slide, images: PptxIR["assets"]["images"] = {}): PptxIR {
-  const face = FIXTURE_FACES.get(slide)
-  const boundThemeId = face === undefined
-    ? themeId
-    : registeredThemeForFace(themeId as CanonicalThemeId, face, slide)
   return {
     version: "5",
     filename: "full-matrix-contrast-fixture",
-    theme: { id: boundThemeId },
+    theme: { id: themeId },
     meta: {},
     assets: { images },
     slides: [slide],
-  }
-}
-
-const REGISTERED_FACE_THEMES = new Map<string, string>()
-
-function registeredThemeForFace(
-  themeId: CanonicalThemeId,
-  face: string,
-  slide: Slide,
-): string {
-  const kind = slide.type === "content" ? slide.kind : undefined
-  const key = `${themeId}|${slide.type}|${kind ?? "boundary"}|${face}`
-  let registeredId = REGISTERED_FACE_THEMES.get(key)
-  if (registeredId === undefined) {
-    registeredId = `matrix-${themeId}-${slide.type}-${kind ?? "boundary"}-${face}`
-    registerTestTheme(registeredId, themeId, {
-      ...(slide.type === "cover" ? { cover: face } : {}),
-      ...(slide.type === "chapter" ? { chapter: face } : {}),
-      ...(slide.type === "content" ? { content: { [slide.kind]: face } } : {}),
-      ...(slide.type === "ending" ? { ending: face } : {}),
-    })
-    REGISTERED_FACE_THEMES.set(key, registeredId)
-  }
-  return registeredId
-}
-
-function bindFace(themeId: CanonicalThemeId, face: string, ir: PptxIR): PptxIR {
-  const slide = ir.slides[0]
-  if (slide === undefined) throw new Error("face fixture requires one slide")
-  return {
-    ...ir,
-    theme: { ...ir.theme, id: registeredThemeForFace(themeId, face, slide) },
   }
 }
 
@@ -202,125 +156,16 @@ interface AllowlistEntry {
  * pre-existing low-contrast sources" philosophy: pin *why*, don't silently
  * swallow.
  */
-const ALLOWLIST: readonly AllowlistEntry[] = [
-  // The `terminal`/`fashion-masthead` entry that used to live here (the org/date
-  // meta line, ~4.16:1 against terminal's primary block — under the old blanket
-  // 4.5:1 body floor this entry pre-dates the tier split for) is gone
-  // (fashion-masthead metaInk migration, task-1-report.md): the line now
-  // renders through `metaInk` and carries `data-contrast-tier="meta"`
-  // (`cover-fashion-masthead.tsx`), so `deck-audit` grades it against the
-  // real B-tier 3:1 floor directly — no allowlist needed. The migration also
-  // exposed a genuine pre-existing gap this entry's own theme scope (`terminal`
-  // only) never covered: `ledger`'s same composite measured 2.886:1, a real
-  // sub-3:1 miss `metaInk` now corrects to 3.094:1. See the dedicated
-  // "fashion-masthead meta line contrast" describe block below (16-theme
-  // sweep, real render) for the regression net this entry's removal now
-  // relies on instead.
-  {
-    theme: "*",
-    face: "fashion-chapter",
-    // Tier annotation (contrast-policy wave, task T3, 裁定 4): **C tier**
-    // (pure decoration — this file's own header two lines below calls the
-    // chapter-number watermark "decorative by design", and
-    // `chapter-fashion-chapter.tsx`'s own header agrees). C tier is exempt
-    // from any ratio floor by policy, on the sole condition that every
-    // instance lives in this ratio-banded allowlist (recorded, not a silent
-    // drift) — which this entry already is, unchanged.
-    // Band derivation (backlog item 6,
-    // `.issues/notes/engineering-history.md` #6): the text-shape
-    // guard alone (`TEXT_SHAPE_GUARD["fashion-chapter"]`, "1-2 digits")
-    // would silently wave through *any* future 1-2-digit finding under this
-    // layout regardless of how far its ratio has drifted — this band closes
-    // that gap. Originally measured (2026-07-19, `pnpm exec tsx` against a
-    // real render of every theme whose curated chapter set then included
-    // fashion-chapter — 10 of 13; homeroom/heritage excluded it via
-    // `CHAPTER_WITHOUT_FASHION`) and **re-measured all 13/13** the same day
-    // after the post-v0.3 W8 fix round (backlog item 2) revoked that
-    // exclusion (`readableOn` moved from a fixed 0.4 luminance threshold to
-    // a real two-ink contrast comparison, which flips the layout's own
-    // `fg = readableOn(ctx.colors.accent)` for thesis/heritage — same
-    // fix also cleared the *heading* text that used to fail on
-    // homeroom/heritage, the actual reason those two were
-    // curation-excluded — see `themes/definitions.ts`'s own history there).
-    // The watermark blend itself (`mixHex(accent, fg, 0.22)`) depends on
-    // `fg`, so every theme whose `fg` flipped got a new ratio too; every
-    // theme's ratio still lands inside the existing band. Current 13-theme
-    // spread: runway 1.242 (lowest), ink 1.424, luxe 1.448, journal 1.459,
-    // thesis 1.498, heritage 1.498, homeroom 1.537,
-    // ledger 1.539, terminal 1.583, rally 1.600, brief 1.601,
-    // bulletin 1.752 (highest). `ratioMin`/`ratioMax` round the original
-    // 10-theme extremes outward by a small margin (~0.04-0.05, absorbing
-    // harmless token-value drift) without moving the ceiling anywhere close
-    // to the 3:1 floor this whole entry is about staying under — both the
-    // original and the re-measured 13-theme spread fit inside it unchanged,
-    // so the numeric bounds themselves needed no adjustment. A finding
-    // whose ratio lands outside [1.2, 1.8] no longer matches the
-    // historically adjudicated band and fails the net as a real
-    // regression, even with matching theme/layout/text-shape.
-    ratioMin: 1.2,
-    ratioMax: 1.8,
-    rationale:
-      "the chapter-number watermark digit (mixHex(accent, fg, 0.22) — chapter-fashion-chapter.tsx's own header calls it decorative by design) measures under 3:1 against every theme's accent (runway's ~1.24:1 is the current lowest, bulletin's ~1.75:1 the current highest — see the ratioMin/ratioMax comment above for the full 13-theme spread) — a deliberately faint blend, not body text, blanket-allowlisted by content (a bare 1-2 digit chapter number) rather than enumerated per theme since the blend's whole point is to be faint everywhere it's used. Unlike when this entry was first written, no theme curation-excludes fashion-chapter any more (post-v0.3 W8 fix round revoked the last three exclusions once their *heading* text — the actual failure — cleared 3:1 under the fixed `readableOn`) — this entry now covers all 13 themes' watermark uniformly. It never matches non-numeric text, so a real heading failure under this layout still fails the net. The added ratio band is a second, independent guard on top of that shape match, not a replacement for it.",
-  },
-  {
-    theme: "*",
-    face: "tone-adaptive-header",
-    // fix/decor-contrast-attribution. Scoped by `TEXT_SHAPE_GUARD` below to
-    // this layout's org/date meta band — never its heading or subheading,
-    // so a real heading failure here still fails the net.
-    // Band derivation: measured across the decor-collision sweep's own three
-    // fixtures (default deck hash + seeds 0 and 1, the motif rolls those
-    // reach) — ink 1.073 (its motif's vermilion seal under the date), terminal
-    // 1.700 and bulletin 1.756 (each theme's own corner-ornament square
-    // under the date, and under the org line where the roll puts one at the
-    // top-left too). Rounded outward to [1.0, 1.8] the same way the
-    // fashion-chapter entry above rounds its own spread. Consulting's
-    // 3.26:1 belongs to the same family and is measured in
-    // `deck-audit.test.ts`'s own real-render block, but clears the 3:1
-    // floor its 24px date line is graded against, so it never becomes a
-    // finding and is deliberately outside this band: a `tone-adaptive-header`
-    // meta finding above 1.8 is not one of the three adjudicated here and
-    // should fail until someone looks at it.
-    ratioMin: 1.0,
-    ratioMax: 1.8,
-    rationale:
-      "true finding, collision pending theme redesign, see .issues/2026-08-17-spatial-contract. This layout's org/date meta band shares its bottom-right (and, on some motif rolls, top-left) corner with whatever the theme's motif draws there, and the motif has no way to know the layout claimed it — that design doc's §4 traces it to the layout's slot, not to any one motif, and its §6.2 puts the fix in the layout/motif contract rather than in the audit. The audit's own job here is finished the moment it stops reporting these as clean: before fix/decor-contrast-attribution it measured the ink cover's date at 5.44:1 against a page background the seal completely covers, where the real pairing is 1.07:1. Registered rather than silenced, and deliberately not fixed by nudging coordinates — that would hide the collision instead of the theme redesign resolving it.",
-  },
-  // The rail-numbered entry that used to live here (audit-tool false
-  // positive: the badge rect's 2,048px^2 area sitting below
-  // MIN_BG_REGION_AREA made findContrastIssues fall back to the *page*
-  // background instead of the badge's own primary fill) is gone — reclaimed
-  // by the bench-driven fix round (defect A): `findContrastIssues` no longer
-  // gates text-background *attribution* by that area floor at all (see its
-  // own doc comment in deck-audit.ts), so the badge's self-painted rect is
-  // now correctly found regardless of size, and the false positive this
-  // entry existed to suppress no longer fires. See the dedicated
-  // "rail-numbered badge attribution" describe block below (replaces this
-  // entry's own former structural-precondition regression test) for the
-  // real-render proof, swept across all 13 themes.
-]
+// Empty. The last two entries, fashion-chapter's chapter-number watermark and
+// tone-adaptive-header's org/date meta band, left with their faces when the
+// faces no menu used were deleted. No live face needs an exception.
+const ALLOWLIST: readonly AllowlistEntry[] = []
 
 /** Per-layout text-shape guards, keyed by layout id — a finding under that
  * layout only counts as allowlisted when its text also looks like the
  * specific decorative/frame element the entry names, not any other text
  * that layout might someday draw badly. */
-const TEXT_SHAPE_GUARD: Readonly<Record<string, RegExp>> = {
-  // fashion-chapter's giant watermark digit ("01", "12", ...) — never its
-  // heading or "CHAPTER NN" label.
-  "fashion-chapter": /^\d{1,2}$/,
-  // rail-numbered's "{chapter}.{content}" badge ("1.1", "2.3", ...) — never
-  // its heading/subheading/footnote. No longer paired with an ALLOWLIST
-  // entry (the bench-driven fix round reclaimed it, see ALLOWLIST's own
-  // comment above) — kept as a shape matcher, reused by the dedicated
-  // "rail-numbered badge attribution" describe block below to locate the
-  // badge finding/text without hardcoding its position.
-  "rail-numbered": /^\d+\.\d+$/,
-  // tone-adaptive-header's org/date meta band — the two strings
-  // `DECOR_META` below actually renders — never its heading/subheading.
-  // Built from those constants rather than repeating them, so a fixture
-  // edit can't silently widen what the ALLOWLIST entry waves through.
-  "tone-adaptive-header": new RegExp(`^(${DECOR_META.organization}|${DECOR_META.date})$`),
-}
+const TEXT_SHAPE_GUARD: Readonly<Record<string, RegExp>> = {}
 
 function isAllowlisted(theme: string, face: string, finding: AuditFinding): boolean {
   const fill = (finding.detail as { fill?: string } | undefined)?.fill
@@ -345,47 +190,6 @@ function isAllowlisted(theme: string, face: string, finding: AuditFinding): bool
 function findingSummary(f: AuditFinding): string {
   return `${f.code}: ${f.message}`
 }
-
-// rail-numbered badge attribution (bench-driven fix round, defect A —
-// reclaims the allowlist entry the task-1-routed-follow-up precondition
-// guard this block replaces used to protect). That precondition guard
-// pinned a *structural proxy* ("the badge rect's rendered area stays below
-// MIN_BG_REGION_AREA") for why the allowlist entry was a tool artifact, not
-// a real defect — true at the time, but the proxy's whole reason for
-// existing was that `findContrastIssues` gated text-background attribution
-// by that same area floor, so a badge below it fell through to the *wrong*
-// background. That gate is gone (see MIN_BG_REGION_AREA's and
-// `PaintedShape`'s own doc comments in deck-audit.ts): attribution now finds
-// the badge's own self-painted rect regardless of its area, and the false
-// positive the allowlist entry existed to suppress no longer fires — so
-// there is nothing left to allowlist, and the entry itself was removed
-// above. This block asserts the thing that actually matters now: a real
-// render, swept across every canonical theme, produces zero low-contrast
-// findings on the badge text.
-describe("rail-numbered badge attribution (bench-driven fix round, defect A)", () => {
-  for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: the "{chapter}.{content}" badge text clears contrast against its own self-painted background`, () => {
-      const slide: Slide = {
-        type: "content",
-        kind: "process",
-        heading: HEADING,
-        subheading: SUBHEADING,
-        components: CONTENT_BODY,
-      }
-      const findings = auditFindings(deckFor(themeId, slide))
-      // Scoped to the badge's own text shape (not the whole finding set) —
-      // this block's job is exactly the one thing that used to need an
-      // allowlist entry; any other low-contrast finding under this layout
-      // is still caught by the swept describe block below, unfiltered.
-      const badgeFindings = findings.filter(
-        (f) =>
-          f.code === "low-contrast" &&
-          TEXT_SHAPE_GUARD["rail-numbered"].test((f.detail as { text?: string } | undefined)?.text ?? ""),
-      )
-      expect(badgeFindings).toEqual([])
-    })
-  }
-})
 
 describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
   for (const themeId of CANONICAL_THEME_IDS) {
@@ -434,282 +238,6 @@ describe("full-matrix contrast/overflow regression net (W4 fix round)", () => {
         )
         expect(findings.map((finding) => `${menu.ending.face}: ${findingSummary(finding)}`)).toEqual([])
       })
-    })
-  }
-})
-
-// fashion-masthead meta line contrast (contrast-policy wave's recorded
-// leftover, closed here): the sweep above never exercises this — its own
-// fixtures deliberately set no `ir.meta.organization`/`date` (file header),
-// so `FashionMastheadCover`'s meta line never renders under that sweep and
-// the now-removed `terminal`/`fashion-masthead` ALLOWLIST entry never actually
-// matched a finding there. This dedicated block fills that real gap with a
-// real render, org/date populated, across all 16 canonical themes — the
-// same `CANONICAL_THEME_IDS` loop shape `colors.muted contrast` above uses.
-describe("fashion-masthead meta line contrast (contrast-policy wave, metaInk migration)", () => {
-  function mastheadDeck(themeId: string): PptxIR {
-    return {
-      version: "5",
-      filename: "fashion-masthead-meta-fixture",
-      theme: { id: themeId },
-      meta: { organization: "pptwise", date: "2026-08" },
-      assets: { images: {} },
-      slides: [{ type: "cover", heading: HEADING, components: [] }],
-    }
-  }
-
-  for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: the org/date meta line clears the B-tier 3:1 floor against its own painted primary block`, () => {
-      const ir = bindFace(themeId, "fashion-masthead", mastheadDeck(themeId))
-      const findings = auditDeck(ir).findings.filter((f) => f.code === "low-contrast")
-      expect(findings).toEqual([])
-    })
-
-    it(`${themeId}: the meta line renders through metaInk (data-contrast-tier="meta", fill measured >= 3:1)`, () => {
-      const ir = bindFace(themeId, "fashion-masthead", mastheadDeck(themeId))
-      const svg = renderSlideSvg(ir, 0)
-      const root = parseSvgRoot(svg)
-      // Skip anything inside the theme motif's own `<g data-decor>` subtree
-      // (`full-slide-svg.tsx`'s wrapper): this block is about *this layout's*
-      // meta line, and since the theme-redesign wave a motif may carry
-      // `data-contrast-tier="meta"` text of its own — ink v3's colophon rail
-      // does, and it renders before the layout, so a bare document-order
-      // `.find` picked up the motif's glyph instead and measured it against
-      // a background it never sits on. (It sits on the page background,
-      // which this same file's own `colors.muted contrast` suite already
-      // covers; on this layout it is painted over entirely by the full-bleed
-      // primary block, since a motif renders under the layout.)
-      const inDecor = (el: Element): boolean => {
-        for (let n: Element | null = el; n; n = n.parentElement) {
-          if (n.getAttribute?.("data-decor") !== null && n.getAttribute?.("data-decor") !== undefined) return true
-        }
-        return false
-      }
-      const metaText = Array.from(root.querySelectorAll("text")).find(
-        (t) => t.getAttribute("data-contrast-tier") === "meta" && !inDecor(t),
-      )
-      expect(metaText, "expected a data-contrast-tier=\"meta\" text element").toBeTruthy()
-      const fill = metaText!.getAttribute("fill")!
-      const primary = THEME_DEFINITIONS[themeId as CanonicalThemeId].style.colors.primary
-      expect(contrastRatio(fill, primary)).toBeGreaterThanOrEqual(3)
-    })
-  }
-
-  // History: ledger used to be the one theme whose pre-migration composite
-  // (`fg` at 60% opacity over `colors.primary`) measured under 3:1 —
-  // 2.886:1, with `metaInk` correcting it to 3.094:1. That was a property of
-  // ledger's old mid-tone red primary `#E63946`: a 92%-white ink over a
-  // mid-tone ground lands close to that ground.
-  //
-  // 2026-08-19 深底组皮肤重设计 moved ledger's `primary` to the near-black
-  // `#16202B` (the design board defines primary as a quiet banner/block
-  // ground so `accent` can lead — see `themes/ledger.ts`). A near-black
-  // ground puts ledger in the same family as brief/ink/journal, and the
-  // composite jumps to 6.72:1. This test keeps its original job — catch a
-  // silent regression in ledger's `primary` by name rather than only
-  // through the generic >=3 loop above — and now pins the post-redesign
-  // numbers instead of the pre-redesign ones.
-  it("ledger: the composite clears 3:1 with room (6.72:1) now that primary is near-black — pinned by name so a future primary change is caught here", () => {
-    const ir = bindFace("ledger", "fashion-masthead", mastheadDeck("ledger"))
-    const svg = renderSlideSvg(ir, 0)
-    const root = parseSvgRoot(svg)
-    const metaText = Array.from(root.querySelectorAll("text")).find(
-      (t) => t.getAttribute("data-contrast-tier") === "meta",
-    )!
-    const fill = metaText.getAttribute("fill")
-    const primary = THEME_DEFINITIONS.ledger.style.colors.primary
-    expect(primary).toBe("#16202B")
-    expect(contrastRatio(fill!, primary)).toBeGreaterThanOrEqual(3)
-    expect(contrastRatio(fill!, primary)).toBeCloseTo(6.72, 1)
-  })
-})
-
-// split-diagonal org kicker (2026-08-19, the theme-allocation branch's
-// tag-along fix). Same gap this file's own header admits and the
-// fashion-masthead block above fills: the main sweep's fixtures carry no
-// `organization`, so the kicker painted on split-diagonal's primary block
-// never rendered under it and its contrast was never measured by any gate.
-//
-// Rendered with org meta across all 17 themes, exactly one theme failed:
-// ledger's `#E63946` composites the adaptive dark ink at 92% to 4.409:1,
-// which clears WCAG's large-text 3:1 but misses the 4.5:1 body floor
-// deck-audit applied to a 22px run. The org name is B-tier
-// meta-information (`docs/contrast-system.md`'s three-tier policy puts
-// organization names alongside copyright lines and dates), so 3:1 is its
-// real floor and the old verdict was a tier misclassification, not a color
-// defect — fixed by routing the fill through `metaInk` and tagging the
-// element `data-contrast-tier="meta"`, the paired idiom the block above
-// established.
-describe("split-diagonal org kicker contrast (B-tier reclassification)", () => {
-  function splitDiagonalDeck(themeId: CanonicalThemeId): PptxIR {
-    return {
-      version: "5",
-      filename: "split-diagonal-kicker-fixture",
-      theme: { id: themeId },
-      meta: { organization: "pptwise", date: "2026-08" },
-      assets: { images: {} },
-      slides: [{ type: "cover", heading: HEADING, components: [] }],
-    }
-  }
-
-  /** The kicker element itself — anchored at the layout's own x=96, y=128, which no other text on this page shares (title/rule/subheading/meta all sit at x=596). */
-  function kicker(themeId: CanonicalThemeId): Element {
-    const root = parseSvgRoot(renderSlideSvg(bindFace(themeId, "split-diagonal", splitDiagonalDeck(themeId)), 0))
-    const el = Array.from(root.querySelectorAll("text")).find(
-      (t) => t.getAttribute("x") === "96" && t.getAttribute("y") === "128",
-    )
-    expect(el, `${themeId}: expected the org kicker at x=96,y=128`).toBeTruthy()
-    return el!
-  }
-
-  for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: the org kicker renders as B-tier meta and clears 3:1 against the block it is painted on`, () => {
-      const el = kicker(themeId)
-      expect(el.getAttribute("data-contrast-tier")).toBe("meta")
-      const primary = THEME_DEFINITIONS[themeId as CanonicalThemeId].style.colors.primary
-      expect(contrastRatio(el.getAttribute("fill")!, primary)).toBeGreaterThanOrEqual(3)
-    })
-
-    it(`${themeId}: the deck audits clean with the kicker actually rendered`, () => {
-      expect(
-        auditDeck(bindFace(themeId, "split-diagonal", splitDiagonalDeck(themeId))).findings.filter(
-          (finding) => finding.code === "low-contrast",
-        ),
-      ).toEqual([])
-    })
-
-    // The pixel-identity half. `fillOpacity` moved into the fill hex rather
-    // than being dropped, so the composited color on screen is the one this
-    // layout always drew — the fix changes which floor the auditor applies,
-    // not what a reader sees. Asserted per theme against the arithmetic the
-    // old `fill=readableOn(primary)` + `fill-opacity=0.92` pair produced.
-    it(`${themeId}: the composited kicker color is unchanged from the pre-fix fill+fill-opacity pair`, () => {
-      const el = kicker(themeId)
-      const primary = THEME_DEFINITIONS[themeId as CanonicalThemeId].style.colors.primary
-      expect(el.getAttribute("fill")).toBe(blendOver(readableOn(primary), primary, 0.92))
-      expect(el.getAttribute("fill-opacity")).toBeNull()
-    })
-  }
-
-  // ledger is the whole reason this block exists — pinned exactly so a
-  // future recalibration of ledger's `primary` that silently moves this
-  // number is caught here by name, not just by the generic >=3 loop.
-  //
-  // Until 2026-08-19 ledger's old red primary `#E63946` put this composite
-  // at 4.409:1 — inside the [3, 4.5) band, which is what made the B-tier
-  // reclassification necessary in the first place. 深底组皮肤重设计 moved
-  // `primary` to the near-black `#16202B`, and the composite went to
-  // 14.044:1. The reclassification is still the right call (it is what the
-  // kicker's *tier* is, not what one theme's numbers happen to be), but
-  // ledger is no longer the theme that demonstrates the band.
-  it("ledger: the composite now sits at 14.044:1 — the near-black primary took it clear of the [3, 4.5) band it used to demonstrate", () => {
-    const primary = THEME_DEFINITIONS.ledger.style.colors.primary
-    expect(primary).toBe("#16202B")
-    const fill = kicker("ledger").getAttribute("fill")!
-    expect(fill).toBe("#ecedee")
-    expect(contrastRatio(fill, primary)).toBeCloseTo(14.044, 2)
-  })
-
-  // Scope pin, kept as a named diff. crayon used to be the one theme whose
-  // 92% composite sat below the old body floor. The crayon-box palette round
-  // raised its primary from #0A78B4 to #0B87C7 — brighter, because the date
-  // and contact lines it inks are 24px bold and answer to the 3:1 large-text
-  // floor, not 4.5 — and that took the composite clear too. The list is now
-  // empty on purpose: a future token change that drops a theme back below the
-  // old floor shows up right here.
-  it("no theme's primary composite sits below the old 4.5:1 body floor", () => {
-    const below = CANONICAL_THEME_IDS.filter((themeId) => {
-      const primary = THEME_DEFINITIONS[themeId].style.colors.primary
-      return contrastRatio(blendOver(readableOn(primary), primary, 0.92), primary) < 4.5
-    })
-    expect(below).toEqual([])
-  })
-
-  // Why `metaInk` is in the call at all, given it returns its input for all
-  // 17 themes: it is the guard, not the repair. Sampling the whole RGB cube
-  // at 15 steps per channel (3375 synthetic primaries) finds zero where the
-  // 92%-alpha composite of `readableOn`'s own ink drops under 3:1 — so the
-  // pass-through is a property of this alpha, and `metaInk` is what would
-  // catch a future alpha change or a brand-extracted primary that breaks it.
-  it("metaInk is an identity pass-through at this alpha for every reachable primary — the guard has nothing to repair today", () => {
-    const breached: string[] = []
-    for (let r = 0; r < 256; r += 17)
-      for (let g = 0; g < 256; g += 17)
-        for (let b = 0; b < 256; b += 17) {
-          const primary = `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`
-          const composite = blendOver(readableOn(primary), primary, 0.92)
-          if (contrastRatio(composite, primary) < 3) breached.push(primary)
-          else if (metaInk(composite, primary) !== composite) breached.push(`${primary} (nudged)`)
-        }
-    expect(breached).toEqual([])
-  })
-})
-
-// Targeted addition (W8 fix round): kpi_cards flowing through bento-panel
-// specifically — deliberately *not* folded into `CONTENT_BODY` above.
-// `CONTENT_BODY` is shared by every content layout across all 13 themes;
-// the file header already documents that kpi_cards was tried there once and
-// reverted because it used to drag kpi.tsx's own row-layout delta-arrow
-// defect into every layout that renders it via the shared row-layout
-// component — historically a *different, already-pinned* defect from this
-// block's own (both are now fixed, see the "defect B real contrast fixes"
-// describe block below; this block's own targeted fixture below predates
-// that fix and stays as its own dedicated regression regardless). This
-// defect was narrower: it lived only in `content-bento-panel.tsx`'s own
-// `renderKpiCardBody` (bento's per-item card renderer — a different code
-// path from kpi.tsx's row layout), reachable only when a kpi_cards
-// component explodes into bento-panel's own cards. A fixture scoped to
-// exactly that combination is sufficient and avoids reintroducing the noise
-// the shared fixture already proved unrelated.
-describe("bento-panel kpi_cards contrast (W8 fix round, targeted — see comment above)", () => {
-  // Values match the live repro that surfaced this defect (`pptwise audit`
-  // on a hand-built deck, W8 walkthrough): two kpi_cards items so the grid
-  // path (not the single-card degrade) renders both through renderKpiCard.
-  const KPI_SLIDE: Slide = {
-    type: "content",
-    kind: "points",
-    heading: HEADING,
-    components: [
-      {
-        type: "kpi_cards",
-        items: [
-          { value: "13", label: "一号指标" },
-          { value: "24", label: "二号指标" },
-        ],
-      },
-    ],
-  } as Slide
-  markFace(KPI_SLIDE, "bento-panel")
-
-  // Sweep all 13 canonical themes rather than hand-picking the ones known to
-  // fail — this both proves the defect on the affected themes (red before
-  // the fix: homeroom/brief/heritage measure <3:1 between
-  // colors.accent and colors.surface at the kpi value's real render size,
-  // independently confirmed against each theme's own token file) and proves
-  // accessibleInk is a no-op everywhere else (the other 9 already clear the
-  // ratio), in one net.
-  for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: kpi value text clears the required contrast ratio against its own card surface`, () => {
-      const findings = auditFindings(deckFor(themeId, KPI_SLIDE))
-      // Structural findings (overflow/out-of-bounds) would be a real bug on
-      // this trivial 2-item slide — asserted with zero exceptions.
-      expect(findings.filter((f) => f.code !== "low-contrast")).toEqual([])
-      // low-contrast: scoped to the kpi *value* text only (its detail.text
-      // is exactly the item's numeric value string, "13"/"24"). A
-      // same-slide low-contrast finding on the *label* text instead
-      // ("一号指标"/"二号指标", colors.muted) used to be the file header's
-      // own documented, pre-existing colors.muted theme-calibration gap —
-      // **fixed** post-v0.3 W8 fix round (backlog item 5a, see the dedicated
-      // `colors.muted contrast` describe block below for the full 13-theme
-      // lock), so this now asserts zero exceptions too instead of leaving
-      // the gap undocumented-away.
-      const valueFindings = findings.filter(
-        (f) =>
-          f.code === "low-contrast" &&
-          ["13", "24"].includes((f.detail as { text?: string } | undefined)?.text ?? ""),
-      )
-      expect(valueFindings).toEqual([])
-      expect(findings.filter((f) => f.code === "low-contrast")).toEqual([])
     })
   }
 })
@@ -860,36 +388,6 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
     heading: HEADING,
     components: [{ type: "kpi_cards", items: [{ value: "1", label: "x", delta: "down" }] }],
   } as Slide
-  const BENTO_KPI_UP_SLIDE: Slide = {
-    type: "content",
-    kind: "points",
-    heading: HEADING,
-    components: [
-      {
-        type: "kpi_cards",
-        items: [
-          { value: "13", label: "one", delta: "up" },
-          { value: "24", label: "two" },
-        ],
-      },
-    ],
-  } as Slide
-  markFace(BENTO_KPI_UP_SLIDE, "bento-panel")
-  const BENTO_KPI_DOWN_SLIDE: Slide = {
-    type: "content",
-    kind: "points",
-    heading: HEADING,
-    components: [
-      {
-        type: "kpi_cards",
-        items: [
-          { value: "13", label: "one", delta: "down" },
-          { value: "24", label: "two" },
-        ],
-      },
-    ],
-  } as Slide
-  markFace(BENTO_KPI_DOWN_SLIDE, "bento-panel")
   const NUMBERED_CARDS_SLIDE: Slide = {
     type: "content",
     kind: "points",
@@ -919,16 +417,6 @@ describe("defect B real contrast fixes (bench-driven fix round, Task 3)", () => 
 
     it(`${themeId}: kpi.tsx's down-delta arrow clears contrast against its own card surface`, () => {
       const findings = auditFindings(deckFor(themeId, KPI_DOWN_SLIDE))
-      expect(findings.filter((f) => f.code === "low-contrast" && f.detail?.text === "↓")).toEqual([])
-    })
-
-    it(`${themeId}: content-bento-panel.tsx's up-delta arrow clears contrast against its own cell surface`, () => {
-      const findings = auditFindings(deckFor(themeId, BENTO_KPI_UP_SLIDE))
-      expect(findings.filter((f) => f.code === "low-contrast" && f.detail?.text === "↑")).toEqual([])
-    })
-
-    it(`${themeId}: content-bento-panel.tsx's down-delta arrow clears contrast against its own cell surface`, () => {
-      const findings = auditFindings(deckFor(themeId, BENTO_KPI_DOWN_SLIDE))
       expect(findings.filter((f) => f.code === "low-contrast" && f.detail?.text === "↓")).toEqual([])
     })
 
@@ -1061,11 +549,6 @@ describe("defect B ink guards hold on the asset-scrim ctx.defaultBg branch (Task
 //     chapter.tsx` — confirmed by reading every chapter layout file),
 //     which self-heals independently of this token's own calibration — so
 //     there is no real raw-fill surface to lock there.
-//   - the bento-panel kpi card's own real rendered surface, via an actual
-//     render (not a hand-coded hex) since that surface is
-//     `content-bento-panel.tsx`'s own internal implementation detail
-//     (its card fill), not a theme token this test should assume the shape
-//     of.
 describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () => {
   for (const themeId of CANONICAL_THEME_IDS) {
     const style = THEME_DEFINITIONS[themeId].style
@@ -1078,28 +561,6 @@ describe("colors.muted contrast (post-v0.3 W8 fix round, backlog item 5a)", () =
       }
     })
 
-    it(`${themeId}: colors.muted clears the required ratio against the bento-panel kpi card's own rendered surface (value+unit and label)`, () => {
-      const slide: Slide = {
-        type: "content",
-        kind: "points",
-        heading: HEADING,
-        components: [
-          {
-            type: "kpi_cards",
-            items: [
-              { value: "13", unit: "次/秒", label: "一号指标" },
-              { value: "24", unit: "次/秒", label: "二号指标" },
-            ],
-          },
-        ],
-      } as Slide
-      markFace(slide, "bento-panel")
-      const findings = auditFindings(deckFor(themeId, slide))
-      const mutedFindings = findings.filter(
-        (f) => f.code === "low-contrast" && (f.detail as { fill?: string } | undefined)?.fill === muted,
-      )
-      expect(mutedFindings).toEqual([])
-    })
   }
 })
 
@@ -2117,10 +1578,9 @@ describe("heatmap contrast (structure-components wave 2 task 2)", () => {
       },
     ],
   } as Slide
-  markFace(HEATMAP_SCHEMA_MAX_SLIDE, "narrow-column")
 
   for (const themeId of CANONICAL_THEME_IDS) {
-    it(`${themeId}: schema-max heatmap (12x10 grid, show_values on) renders with zero auditDeck findings on the narrowest curated content layout`, () => {
+    it(`${themeId}: schema-max heatmap (12x10 grid, show_values on) renders with zero auditDeck findings`, () => {
       expect(auditFindings(deckFor(themeId, HEATMAP_SCHEMA_MAX_SLIDE))).toEqual([])
     })
   }

@@ -5,7 +5,6 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 
@@ -123,25 +122,4 @@ describe("swiss sparse faces", () => {
     expect(right).toBeLessThanOrEqual(88 + 1100)
   })
 
-  it("one-evidence sits the claim on a surface card with a red index", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 6.5 天生成",
-      subheading: "217 张工单全量统计，无一例外",
-      footnote: "来源：2026 Q2 运行数据",
-      components: [],
-    } as Slide
-    const { root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const card = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "960")
-    expect(card?.getAttribute("fill")).toBe(ctx.colors.surface)
-    expect(card?.getAttribute("stroke")).toBe(ctx.colors.border)
-    const index = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === "01")!
-    expect(index.getAttribute("fill")).toBe(ctx.colors.accent)
-    expect(index.getAttribute("font-weight")).toBe("700")
-  })
 })

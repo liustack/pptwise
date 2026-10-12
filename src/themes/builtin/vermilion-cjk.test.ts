@@ -64,26 +64,6 @@ describe("vermilion CJK-first typography (plan 裁定 4)", () => {
     expect(geometryFindings(ir)).toEqual([])
   })
 
-  // The red identity lives on the full-bleed vermilion chapter and on the
-  // red-forward cover layouts (banner-title's accent bar, left-anchor's
-  // 40% primary block, split-diagonal's diagonal primary cut) — each pinned
-  // here so the CJK heading is forced through the exact readableOn-on-red path
-  // that makes the 红底白字 register work, and audited for zero overflow.
-  const RED_FORWARD: { slideType: "cover" | "chapter"; layout: string }[] = [
-    { slideType: "cover", layout: "banner-title" },
-    { slideType: "cover", layout: "left-anchor" },
-    { slideType: "cover", layout: "split-diagonal" },
-    { slideType: "chapter", layout: "banner-chapter" },
-  ]
-  for (const { slideType, layout } of RED_FORWARD) {
-    it(`red-forward ${slideType}/${layout} with a pathological CJK heading audits clean`, () => {
-      const ir = vermilionDeck([
-        { type: slideType, heading: CJK_LONG, subheading: MIXED_LONG, layout, components: [] },
-      ] as unknown as Slide[])
-      expect(geometryFindings(ir)).toEqual([])
-    })
-  }
-
   it("renders non-empty SVG markup for every slide type (the deck actually draws, not just audits)", () => {
     const ir = vermilionDeck([
       { type: "cover", heading: CJK_LONG, subheading: MIXED_LONG, components: [] },

@@ -48,7 +48,7 @@ function pageFor(ir: PptxIR, over: Partial<PageRenderContext> = {}): PageRenderC
     footer: resolveDeckFooter(ir),
     footerRow: "motif",
     footerOmitsOrganization: false,
-    geometry: { imageBottomCaptionBottomY: 680 },
+    geometry: {},
     ...over,
   }
 }
@@ -216,7 +216,6 @@ describe("FolioMotif on a full page", () => {
     }
     const style = structuredClone(source.style)
     style.id = id
-    if (style.shape?.cover !== undefined) delete style.shape.cover
     __registerStructuralTheme({
       version: 2,
       id,

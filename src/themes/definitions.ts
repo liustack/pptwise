@@ -55,9 +55,8 @@ export interface ThemeDefinition {
 
 /**
  * Built-ins compile from the same v2 menu the public contract uses. Their
- * declaration type additionally permits internal constructor metadata
- * (`style.shape.cover` knobs, the theme-wide motif anchor) that public
- * files cannot express.
+ * declaration type additionally permits internal constructor metadata (the
+ * theme-wide motif anchor) that public files cannot express.
  */
 export function compileBuiltinTheme(file: BuiltinThemeDeclaration): ThemeDefinition {
   assertMenuContract(file.id, file.menu)

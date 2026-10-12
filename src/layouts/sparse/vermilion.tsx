@@ -1,12 +1,10 @@
 import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
-import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
 import { fitSvgLine } from "../../lib/svg-text-layout"
-import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
+import { fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** vermilion 稀排脸：金双线批示、金菱巨数、案卷卡。不画顶缘金双线、金芒、底菱。 */
@@ -152,70 +150,6 @@ export function statHero({ slide, ctx }: SvgTemplateProps) {
         </text>
       )}
       <SourceLines block={source} x={640} y={sourceY} textAnchor="middle" fontFamily={fonts.body} fill={colors.muted} />
-    </>
-  )
-}
-
-export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const evidence = pickEvidence(slide.components)
-  const evidenceRect = { x: 600, y: 230, w: 480, h: 250 }
-  const textX = 234
-  const textW = evidence ? textColumnMaxWidth(textX, evidenceRect.x) : 860
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: textW,
-    fontSize: 42,
-    maxLines: 2,
-    minPt: 24,
-    lineHeightRatio: 1.2,
-    fontFamily: fonts.heading,
-    bold: false,
-  })
-  const note = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 20, minFontSize: 16, fontFamily: fonts.body })
-    : null
-  const sourceRaw = evidenceSource(slide)
-  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
-  // The card sets every line whole or hands the page over: a line it would
-  // cut goes to the shared face, which sets it at its own measure and marks
-  // what it still cannot hold.
-  if (heading.truncated || note?.truncated || source?.truncated) return null
-  return (
-    <>
-      <rect x={160} y={190} width={960} height={320} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
-      <rect x={160} y={190} width={10} height={320} fill={colors.primary} />
-      <text x={234} y={288} fontFamily={fonts.body} fontSize={22} fill={colors.primary} dominantBaseline="alphabetic">
-        {`${deckWord(ir, "案卷", "File")} · ${pad2(index + 1)}`}
-      </text>
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          x={234}
-          y={366 + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="400"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: colors.text,
-            baseFill: colors.text,
-            fontWeight: "400",
-          })}
-        </text>
-      ))}
-      {note && (
-        <text x={234} y={428} fontFamily={fonts.body} fontSize={note.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {note.text}
-        </text>
-      )}
-      {source && (
-        <text x={234} y={478} fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {source.text}
-        </text>
-      )}
-      {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
     </>
   )
 }

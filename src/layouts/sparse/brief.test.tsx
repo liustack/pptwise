@@ -5,7 +5,6 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { boxesIntersect, textInkBox } from "../../render/depth-contract/geometry"
 import { underlineYFromBaseline } from "../underline"
@@ -161,37 +160,4 @@ describe("brief sparse faces", () => {
     expect(ink.y).toBeGreaterThan(barBox.y + barBox.h)
   })
 
-  it("one-evidence sits the claim on a white card with a primary top bar and 依据 index", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 6.5 天生成",
-      subheading: "217 张工单全量统计 · 无一例外",
-      components: [],
-    } as Slide
-    const { markup, root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const card = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "960")
-    expect(card?.getAttribute("x")).toBe("160")
-    expect(card?.getAttribute("y")).toBe("190")
-    expect(card?.getAttribute("height")).toBe("320")
-    expect(card?.getAttribute("fill")).toBe(ctx.colors.surface)
-    expect(card?.getAttribute("stroke")).toBe(ctx.colors.border)
-    const topBar = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("height") === "8")
-    expect(topBar?.getAttribute("fill")).toBe(ctx.colors.primary)
-    const index = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("依据"))!
-    expect(index.textContent).toBe("依据 01")
-    expect(index.getAttribute("x")).toBe("224")
-    expect(index.getAttribute("fill")).toBe(ctx.colors.primary)
-    expect(index.getAttribute("letter-spacing")).toBeNull()
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("维护工单"),
-    )!
-    expect(claim.getAttribute("x")).toBe("224")
-    expect(claim.getAttribute("fill")).toBe(ctx.colors.primary)
-    expect(markup).not.toContain(LUXE_GOLD)
-  })
 })

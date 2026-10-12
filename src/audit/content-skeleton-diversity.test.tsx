@@ -146,8 +146,8 @@ function skeletonKey(skeleton: readonly RegionTuple[]): string {
 const ALL_CONTENT_IDS = Object.keys(CONTENT_LAYOUTS) as ContentLayoutId[]
 
 describe("content layout skeleton diversity (content-layout expansion wave, T3 acceptance metric)", () => {
-  it("covers all 57 registered content layouts", () => {
-    expect(ALL_CONTENT_IDS).toHaveLength(57)
+  it("covers all 39 registered content layouts", () => {
+    expect(ALL_CONTENT_IDS).toHaveLength(39)
   })
 
   it("the full-region skeleton set resolves to >= 6 distinct classes across the pool (was ~4 under the rejected first-box-only reading)", () => {
@@ -155,16 +155,9 @@ describe("content layout skeleton diversity (content-layout expansion wave, T3 a
     const classes = new Set(Array.from(skeletons.values()).map(skeletonKey))
 
     // Non-vacuity: prove some layouts really do still legitimately share
-    // a class (e.g. `rail-numbered`/`quiet-frame` are both a lone
-    // (x=96, w=1088) single-stack column under this fixture, quantized to
-    // (100, 1090)) — so this isn't merely counting trivially-all-different
+    // a class — so this isn't merely counting trivially-all-different
     // single-member buckets.
     expect(classes.size).toBeLessThan(ALL_CONTENT_IDS.length)
     expect(classes.size).toBeGreaterThanOrEqual(6)
-  })
-
-  it("regression: two-column resolves to 2 regions, not 1 — the first-box-only metric would hide a split", () => {
-    const skeleton = skeletonFor("two-column")
-    expect(skeleton.length).toBeGreaterThan(1)
   })
 })

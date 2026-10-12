@@ -67,9 +67,7 @@ export const aliases = {
 // `heatmap`.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits

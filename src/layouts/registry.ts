@@ -1,6 +1,6 @@
 /**
  * Layout registry (W2 task 1, spec §3/§6/§8): an explicit, statically-checked
- * description of what the render chain's 202 standard layouts and 4
+ * description of what the render chain's 105 standard layouts and 2
  * page-level image takeovers already draw. This is a metadata layer only.
  * It formalizes today's implicit page structure (layout JSX + the
  * FullSlideSvg takeover dispatch) into named `slots`, it does not change any
@@ -40,7 +40,7 @@
  *  - `"any"`: the slot renders whatever `Component`s it's handed, unfiltered
  *    (`SvgContent`'s body, bento's grid, stacked-poster's hero/strip).
  *  - a literal component-type list: the slot requires that specific component
- *    type (`image`, `bullets`) — used only by the 4 takeover layouts, which
+ *    type (`image`, `bullets`) — used only by the takeover layouts, which
  *    `Array.find` a specific component type out of `slide.components`.
  */
 
@@ -63,45 +63,20 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
 import type { ComponentCtx } from "../components/types"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 154 layout files
-// (one `layoutDef` each) plus image-pages.tsx's 4 uniquely named takeover
-// exports, 158 bindings total. The original migration covered 33 layout
+// layoutDef imports (src domain reorg wave 1, task T1d): 105 layout files
+// (one `layoutDef` each) plus image-pages.tsx's 2 uniquely named takeover
+// exports, 107 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
-// grew the registry, mostly through pin-only cover, chapter, and ending faces.
+// grew the registry, and the faces no built-in theme menu used were deleted.
 // Grouped by family, each group in the exact
 // order its former literal Record held (order feeds `layoutsForSlideType`'s
 // `Object.values` walk below). `weightedPickBySeed` layout lottery is
 // historical. Aliased to a
-// family-prefixed camelCase name (mirrors each file's own name) since 133
+// family-prefixed camelCase name (mirrors each file's own name) since 105
 // files all export the same bare `layoutDef`.
-import { layoutDef as coverBannerTitle } from "./cover-banner-title"
-import { layoutDef as coverPosterCenter } from "./cover-poster-center"
-import { layoutDef as coverLeftAnchor } from "./cover-left-anchor"
-import { layoutDef as coverConstellation } from "./cover-constellation"
-import { layoutDef as coverEditorialMasthead } from "./cover-editorial-masthead"
-import { layoutDef as coverToneAdaptiveHeader } from "./cover-tone-adaptive-header"
-import { layoutDef as coverFashionMasthead } from "./cover-fashion-masthead"
-import { layoutDef as coverSplitDiagonal } from "./cover-split-diagonal"
-import { layoutDef as coverColophon } from "./cover-colophon"
 import { layoutDef as coverInstitutionalBlock } from "./cover-institutional-block"
-import { layoutDef as coverMemoHead } from "./cover-memo-head"
-import { layoutDef as coverBoardHead } from "./cover-board-head"
-import { layoutDef as coverVerdictIndex } from "./cover-verdict-index"
-import { layoutDef as coverBandTitle } from "./cover-band-title"
-import { layoutDef as coverHeaderBand } from "./cover-header-band"
-import { layoutDef as coverPaperMasthead } from "./cover-paper-masthead"
-import { layoutDef as coverHorizonWedge } from "./cover-horizon-wedge"
-import { layoutDef as coverCornerWedge } from "./cover-corner-wedge"
 import { layoutDef as coverIkbFieldCover } from "./cover-ikb-field-cover"
 import { layoutDef as coverStatCover } from "./cover-stat-cover"
-import { layoutDef as coverTypeRuleCover } from "./cover-type-rule-cover"
-import { layoutDef as coverThesisPlateCover } from "./cover-thesis-plate-cover"
-import { layoutDef as coverChalkBandCover } from "./cover-chalk-band-cover"
-import { layoutDef as coverCapsuleOpenCover } from "./cover-capsule-open-cover"
-import { layoutDef as coverIssueHeadCover } from "./cover-issue-head-cover"
-import { layoutDef as coverVerticalTitleCover } from "./cover-vertical-title-cover"
-import { layoutDef as coverInvitationPlateCover } from "./cover-invitation-plate-cover"
-import { layoutDef as coverLookbookOpenCover } from "./cover-lookbook-open-cover"
 import { layoutDef as coverRedHeadCover } from "./cover-red-head-cover"
 import { layoutDef as coverConsoleCover } from "./cover-console-cover"
 import { layoutDef as coverMemoCover } from "./cover-memo-cover"
@@ -120,34 +95,11 @@ import { layoutDef as coverLineupCover } from "./cover-lineup-cover"
 import { layoutDef as coverPlacardCover } from "./cover-placard-cover"
 import { layoutDef as coverKeynoteCover } from "./cover-keynote-cover"
 import { layoutDef as coverChalkboardCover } from "./cover-chalkboard-cover"
-import { layoutDef as coverPledgeOpenCover } from "./cover-pledge-open-cover"
-import { layoutDef as coverReportOpenCover } from "./cover-report-open-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
-import { layoutDef as coverCrayonboxOpen } from "./cover-crayonbox-open"
-import { layoutDef as coverShowHeadline } from "./cover-show-headline"
 
-import { layoutDef as chapterMastheadChapter } from "./chapter-masthead-chapter"
-import { layoutDef as chapterConstellationChapter } from "./chapter-constellation-chapter"
-import { layoutDef as chapterRailChapter } from "./chapter-rail-chapter"
-import { layoutDef as chapterBannerChapter } from "./chapter-banner-chapter"
-import { layoutDef as chapterPosterChapter } from "./chapter-poster-chapter"
-import { layoutDef as chapterRomanChapter } from "./chapter-roman-chapter"
-import { layoutDef as chapterToneAdaptiveChapter } from "./chapter-tone-adaptive-chapter"
-import { layoutDef as chapterFashionChapter } from "./chapter-fashion-chapter"
-import { layoutDef as chapterVerseChapter } from "./chapter-verse-chapter"
-import { layoutDef as chapterGhostRuleChapter } from "./chapter-ghost-rule-chapter"
 import { layoutDef as chapterBlockNumeralChapter } from "./chapter-block-numeral-chapter"
 import { layoutDef as chapterGhostSectionChapter } from "./chapter-ghost-section-chapter"
-import { layoutDef as chapterEmberIndexChapter } from "./chapter-ember-index-chapter"
-import { layoutDef as chapterStrokeIndexChapter } from "./chapter-stroke-index-chapter"
-import { layoutDef as chapterActChapter } from "./chapter-act-chapter"
-import { layoutDef as chapterFolioGhostChapter } from "./chapter-folio-ghost-chapter"
-import { layoutDef as chapterLessonBoxChapter } from "./chapter-lesson-box-chapter"
-import { layoutDef as chapterStickerNumeralChapter } from "./chapter-sticker-numeral-chapter"
 import { layoutDef as chapterFascicleGhostChapter } from "./chapter-fascicle-ghost-chapter"
-import { layoutDef as chapterVolumeSlipChapter } from "./chapter-volume-slip-chapter"
-import { layoutDef as chapterGiltOrdinalChapter } from "./chapter-gilt-ordinal-chapter"
-import { layoutDef as chapterLookRangeChapter } from "./chapter-look-range-chapter"
 import { layoutDef as chapterSealNumeralChapter } from "./chapter-seal-numeral-chapter"
 import { layoutDef as chapterConsoleChapter } from "./chapter-console-chapter"
 import { layoutDef as chapterLessonChapter } from "./chapter-lesson-chapter"
@@ -164,35 +116,12 @@ import { layoutDef as chapterKeynoteChapter } from "./chapter-keynote-chapter"
 import { layoutDef as chapterChalkboardChapter } from "./chapter-chalkboard-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
-import { layoutDef as chapterOneWordChapter } from "./chapter-one-word-chapter"
-import { layoutDef as chapterChalkRuleChapter } from "./chapter-chalk-rule-chapter"
 import { layoutDef as chapterDecimalIndexChapter } from "./chapter-decimal-index-chapter"
 import { layoutDef as chapterIssueLineChapter } from "./chapter-issue-line-chapter"
-import { layoutDef as chapterHallLabelChapter } from "./chapter-hall-label-chapter"
 import { layoutDef as chapterGaugeSection } from "./chapter-gauge-section"
-import { layoutDef as chapterCrayonboxSticker } from "./chapter-crayonbox-sticker"
-import { layoutDef as chapterShowPlate } from "./chapter-show-plate"
 
-import { layoutDef as endingMastheadEnding } from "./ending-masthead-ending"
-import { layoutDef as endingConstellationEnding } from "./ending-constellation-ending"
-import { layoutDef as endingRailEnding } from "./ending-rail-ending"
-import { layoutDef as endingBannerEnding } from "./ending-banner-ending"
-import { layoutDef as endingPosterEnding } from "./ending-poster-ending"
-import { layoutDef as endingToneAdaptiveEnding } from "./ending-tone-adaptive-ending"
-import { layoutDef as endingFashionEnding } from "./ending-fashion-ending"
-import { layoutDef as endingActionPadEnding } from "./ending-action-pad-ending"
 import { layoutDef as endingSignoffEnding } from "./ending-signoff-ending"
 import { layoutDef as endingCloseWordEnding } from "./ending-close-word-ending"
-import { layoutDef as endingAskEnding } from "./ending-ask-ending"
-import { layoutDef as endingRuleCloseEnding } from "./ending-rule-close-ending"
-import { layoutDef as endingPillCtaEnding } from "./ending-pill-cta-ending"
-import { layoutDef as endingDefenseCloseEnding } from "./ending-defense-close-ending"
-import { layoutDef as endingHomeworkCloseEnding } from "./ending-homework-close-ending"
-import { layoutDef as endingReminderListEnding } from "./ending-reminder-list-ending"
-import { layoutDef as endingAfterwordEnding } from "./ending-afterword-ending"
-import { layoutDef as endingSealCloseEnding } from "./ending-seal-close-ending"
-import { layoutDef as endingGiltWordEnding } from "./ending-gilt-word-ending"
-import { layoutDef as endingWindowCloseEnding } from "./ending-window-close-ending"
 import { layoutDef as endingDeliberationEnding } from "./ending-deliberation-ending"
 import { layoutDef as endingConsoleEnding } from "./ending-console-ending"
 import { layoutDef as endingMemoEnding } from "./ending-memo-ending"
@@ -211,39 +140,13 @@ import { layoutDef as endingLineupEnding } from "./ending-lineup-ending"
 import { layoutDef as endingPlacardEnding } from "./ending-placard-ending"
 import { layoutDef as endingKeynoteEnding } from "./ending-keynote-ending"
 import { layoutDef as endingChalkboardEnding } from "./ending-chalkboard-ending"
-import { layoutDef as endingScorecardEnding } from "./ending-scorecard-ending"
-import { layoutDef as endingCarePlanEnding } from "./ending-care-plan-ending"
-import { layoutDef as endingReleaseCloseEnding } from "./ending-release-close-ending"
-import { layoutDef as endingNextLectureEnding } from "./ending-next-lecture-ending"
 import { layoutDef as endingResolutionEnding } from "./ending-resolution-ending"
-import { layoutDef as endingDecisionCloseEnding } from "./ending-decision-close-ending"
-import { layoutDef as endingExitWordEnding } from "./ending-exit-word-ending"
 import { layoutDef as endingGaugeNext } from "./ending-gauge-next"
-import { layoutDef as endingCrayonboxTodo } from "./ending-crayonbox-todo"
-import { layoutDef as endingShowFinale } from "./ending-show-finale"
 
-import { layoutDef as contentNarrowColumn } from "./content-narrow-column"
-import { layoutDef as contentTwoColumn } from "./content-two-column"
-import { layoutDef as contentRailNumbered } from "./content-rail-numbered"
-import { layoutDef as contentStackedPoster } from "./content-stacked-poster"
-import { layoutDef as contentBentoPanel } from "./content-bento-panel"
-import { layoutDef as contentToneAdaptiveContent } from "./content-tone-adaptive-content"
-import { layoutDef as contentAsymmetricTriptych } from "./content-asymmetric-triptych"
-import { layoutDef as contentQuietFrame } from "./content-quiet-frame"
-import { layoutDef as contentSplitBand } from "./content-split-band"
-import { layoutDef as contentQuoteStage } from "./content-quote-stage"
 import { layoutDef as contentStatement } from "./content-statement"
 import { layoutDef as contentPullQuote } from "./content-pull-quote"
 import { layoutDef as contentStatHero } from "./content-stat-hero"
-import { layoutDef as contentOneEvidence } from "./content-one-evidence"
-import { layoutDef as contentGaugeStats } from "./content-gauge-stats"
 import { layoutDef as contentGaugePoint } from "./content-gauge-point"
-import { layoutDef as contentCrayonboxCards } from "./content-crayonbox-cards"
-import { layoutDef as contentCrayonboxPoint } from "./content-crayonbox-point"
-import { layoutDef as contentShowGallery } from "./content-show-gallery"
-import { layoutDef as contentShowSpotlight } from "./content-show-spotlight"
-import { layoutDef as contentShowStatement } from "./content-show-statement"
-import { layoutDef as contentShowFigures } from "./content-show-figures"
 import { layoutDef as contentGaugeSheet } from "./content-gauge-sheet"
 import { layoutDef as contentGaugeExhibit } from "./content-gauge-exhibit"
 import { layoutDef as contentGaugeFigure } from "./content-gauge-figure"
@@ -283,8 +186,6 @@ import { layoutDef as contentSealFigure } from "./content-seal-figure"
 import {
   imageSplitLayoutDef,
   imageTopLayoutDef,
-  imageBottomLayoutDef,
-  imageAnnotateLayoutDef,
 } from "../render/image-pages"
 
 export type Strategy = (typeof STRATEGY_VALUES)[number]
@@ -671,54 +572,25 @@ export interface LayoutDefinition {
 // `body accepts: ["bullets"]` and draws up to three numbered arguments.
 // ─────────────────────────────────────────────────────────────────────────
 const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
-  [coverBannerTitle.id]: coverBannerTitle,
-  [coverPosterCenter.id]: coverPosterCenter,
-  [coverLeftAnchor.id]: coverLeftAnchor,
-  [coverConstellation.id]: coverConstellation,
-  [coverEditorialMasthead.id]: coverEditorialMasthead,
-  [coverToneAdaptiveHeader.id]: coverToneAdaptiveHeader,
-  [coverFashionMasthead.id]: coverFashionMasthead,
-  [coverSplitDiagonal.id]: coverSplitDiagonal,
   // Theme-redesign wave (2026-08-18, cover pool 8 -> 9): appended at the end
   // of the cover group, same position discipline every earlier pool growth
   // used (image-lead-split / split-band / quote-stage each landed last in
   // their own family). Key insertion order used to feed a `weightedPickBySeed`
   // lottery. That lottery is historical. New members still go on the end.
-  [coverColophon.id]: coverColophon,
   // Board-cover-fidelity wave (2026-08-22, cover pool 9 -> 13): appended at
   // the end of the cover group. Key insertion order used to feed a
   // `weightedPickBySeed` lottery. That lottery is historical. New members
   // still go on the end.
   [coverInstitutionalBlock.id]: coverInstitutionalBlock,
-  [coverMemoHead.id]: coverMemoHead,
-  [coverBoardHead.id]: coverBoardHead,
   // Board-cover-restore wave 1 (2026-08-22, cover pool 13 -> 19): appended
   // at the end of the cover group. Key insertion order used to feed a
   // `weightedPickBySeed` lottery. That lottery is historical. New members
   // still go on the end.
-  [coverVerdictIndex.id]: coverVerdictIndex,
-  [coverBandTitle.id]: coverBandTitle,
-  [coverHeaderBand.id]: coverHeaderBand,
-  [coverPaperMasthead.id]: coverPaperMasthead,
-  [coverHorizonWedge.id]: coverHorizonWedge,
-  [coverCornerWedge.id]: coverCornerWedge,
   [coverIkbFieldCover.id]: coverIkbFieldCover,
   [coverStatCover.id]: coverStatCover,
-  [coverTypeRuleCover.id]: coverTypeRuleCover,
-  [coverThesisPlateCover.id]: coverThesisPlateCover,
-  [coverChalkBandCover.id]: coverChalkBandCover,
-  [coverCapsuleOpenCover.id]: coverCapsuleOpenCover,
-  [coverIssueHeadCover.id]: coverIssueHeadCover,
-  [coverVerticalTitleCover.id]: coverVerticalTitleCover,
   // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
-  [coverInvitationPlateCover.id]: coverInvitationPlateCover,
-  [coverLookbookOpenCover.id]: coverLookbookOpenCover,
   [coverRedHeadCover.id]: coverRedHeadCover,
-  [coverPledgeOpenCover.id]: coverPledgeOpenCover,
-  [coverReportOpenCover.id]: coverReportOpenCover,
   [coverGaugeVerdict.id]: coverGaugeVerdict,
-  [coverCrayonboxOpen.id]: coverCrayonboxOpen,
-  [coverShowHeadline.id]: coverShowHeadline,
   // terminal sample redesign (2026-10-05).
   [coverConsoleCover.id]: coverConsoleCover,
   // memo sample redesign (2026-10-05).
@@ -762,39 +634,15 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 // Chapter layouts do not read components, so none has a body slot.
 // ─────────────────────────────────────────────────────────────────────────
 const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
-  [chapterMastheadChapter.id]: chapterMastheadChapter,
-  [chapterConstellationChapter.id]: chapterConstellationChapter,
-  [chapterRailChapter.id]: chapterRailChapter,
-  [chapterBannerChapter.id]: chapterBannerChapter,
-  [chapterPosterChapter.id]: chapterPosterChapter,
-  [chapterRomanChapter.id]: chapterRomanChapter,
-  [chapterToneAdaptiveChapter.id]: chapterToneAdaptiveChapter,
-  [chapterFashionChapter.id]: chapterFashionChapter,
-  [chapterVerseChapter.id]: chapterVerseChapter,
-  [chapterGhostRuleChapter.id]: chapterGhostRuleChapter,
   [chapterBlockNumeralChapter.id]: chapterBlockNumeralChapter,
   [chapterGhostSectionChapter.id]: chapterGhostSectionChapter,
-  [chapterEmberIndexChapter.id]: chapterEmberIndexChapter,
-  [chapterStrokeIndexChapter.id]: chapterStrokeIndexChapter,
-  [chapterActChapter.id]: chapterActChapter,
-  [chapterFolioGhostChapter.id]: chapterFolioGhostChapter,
-  [chapterLessonBoxChapter.id]: chapterLessonBoxChapter,
-  [chapterStickerNumeralChapter.id]: chapterStickerNumeralChapter,
   [chapterFascicleGhostChapter.id]: chapterFascicleGhostChapter,
-  [chapterVolumeSlipChapter.id]: chapterVolumeSlipChapter,
-  [chapterGiltOrdinalChapter.id]: chapterGiltOrdinalChapter,
-  [chapterLookRangeChapter.id]: chapterLookRangeChapter,
   [chapterSealNumeralChapter.id]: chapterSealNumeralChapter,
   [chapterFieldBandChapter.id]: chapterFieldBandChapter,
   [chapterSubjectRuleChapter.id]: chapterSubjectRuleChapter,
-  [chapterOneWordChapter.id]: chapterOneWordChapter,
-  [chapterChalkRuleChapter.id]: chapterChalkRuleChapter,
   [chapterDecimalIndexChapter.id]: chapterDecimalIndexChapter,
   [chapterIssueLineChapter.id]: chapterIssueLineChapter,
-  [chapterHallLabelChapter.id]: chapterHallLabelChapter,
   [chapterGaugeSection.id]: chapterGaugeSection,
-  [chapterCrayonboxSticker.id]: chapterCrayonboxSticker,
-  [chapterShowPlate.id]: chapterShowPlate,
   // terminal sample redesign (2026-10-05).
   [chapterConsoleChapter.id]: chapterConsoleChapter,
   // homeroom sample redesign (2026-10-06).
@@ -829,37 +677,11 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 // content. The other 19 have no body slot.
 // ─────────────────────────────────────────────────────────────────────────
 const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
-  [endingMastheadEnding.id]: endingMastheadEnding,
-  [endingConstellationEnding.id]: endingConstellationEnding,
-  [endingRailEnding.id]: endingRailEnding,
-  [endingBannerEnding.id]: endingBannerEnding,
-  [endingPosterEnding.id]: endingPosterEnding,
-  [endingToneAdaptiveEnding.id]: endingToneAdaptiveEnding,
-  [endingFashionEnding.id]: endingFashionEnding,
-  [endingActionPadEnding.id]: endingActionPadEnding,
   [endingSignoffEnding.id]: endingSignoffEnding,
   [endingCloseWordEnding.id]: endingCloseWordEnding,
-  [endingAskEnding.id]: endingAskEnding,
-  [endingRuleCloseEnding.id]: endingRuleCloseEnding,
-  [endingPillCtaEnding.id]: endingPillCtaEnding,
-  [endingDefenseCloseEnding.id]: endingDefenseCloseEnding,
-  [endingHomeworkCloseEnding.id]: endingHomeworkCloseEnding,
-  [endingReminderListEnding.id]: endingReminderListEnding,
-  [endingAfterwordEnding.id]: endingAfterwordEnding,
-  [endingSealCloseEnding.id]: endingSealCloseEnding,
-  [endingGiltWordEnding.id]: endingGiltWordEnding,
-  [endingWindowCloseEnding.id]: endingWindowCloseEnding,
   [endingDeliberationEnding.id]: endingDeliberationEnding,
-  [endingScorecardEnding.id]: endingScorecardEnding,
-  [endingCarePlanEnding.id]: endingCarePlanEnding,
-  [endingReleaseCloseEnding.id]: endingReleaseCloseEnding,
-  [endingNextLectureEnding.id]: endingNextLectureEnding,
   [endingResolutionEnding.id]: endingResolutionEnding,
-  [endingDecisionCloseEnding.id]: endingDecisionCloseEnding,
-  [endingExitWordEnding.id]: endingExitWordEnding,
   [endingGaugeNext.id]: endingGaugeNext,
-  [endingCrayonboxTodo.id]: endingCrayonboxTodo,
-  [endingShowFinale.id]: endingShowFinale,
   // terminal sample redesign (2026-10-05).
   [endingConsoleEnding.id]: endingConsoleEnding,
   // memo sample redesign (2026-10-05).
@@ -897,133 +719,32 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Content standard layouts (26 total: 9 auto-selectable and 17 pin-only).
-// The quote-stage wave grew the group from 12 to 13 with quote-stage,
-// pptwise's first `pinOnly` member (see {@link LayoutDefinition.pinOnly}):
-// reachable only through an explicit `slide.layout` pin, never auto-picked,
-// so it doesn't grow any theme's curated pool — "12 auto-selectable + 1
-// pin-only", not a flat +1 (see that file's own composition-sketch header);
-// content-layout expansion wave task T2 grew the auto-selectable count
-// 11 -> 12 just before it — split-band, the pool's first *horizontal* split
-// (a full-bleed header band over an ordinary body band) — see that file's
-// own composition-sketch header for the capacity measurement that chose its
-// ratio; task T1 grew this same family 10 -> 11 just before it —
-// image-lead-split, the first layout whose column split is genuinely
-// unequal — see that file's own composition-sketch header; P1 variety wave
-// task 4 grew this same family 7 -> 10 before it, content having been the
-// pool's thinnest page type, the C-investigation's own finding, dr/
-// c-diversity.md) — the only family that reads `slide.components`, so
-// every entry carries a `body` slot plus its own heading band, and declares
-// `arrangements` (inventory decision #2: layouts that don't obey the
-// author's arrangement still truthfully declare which arrangement(s) they
-// honor, behavior unchanged).
+// Content standard layouts (39 total). The only family that reads
+// `slide.components`, so every entry carries a `body` slot plus its own
+// heading band, and declares `arrangements` (inventory decision #2: layouts
+// that don't obey the author's arrangement still truthfully declare which
+// arrangement(s) they honor, behavior unchanged).
 //
-// `body` slot `capacity` (W2 task 5 — filling the placeholder task 1 left
-// here): declarative authoring-time metadata only, same convention as the
-// `hero`/`strip`/`grid`/`annotation` slots below — consumed since W3 by the
-// validate-layer `min(pacing editorial budget, layout capacity)` quality
-// gate (ir-quality.ts via layout-selection.ts). Numbers are the
-// geometry-honest per-layout component count, sourced from the pre-W3
-// CAPACITY table's derivations (not invented fresh):
-//   - single-stack layouts — narrow-column/rail-numbered/
-//     tone-adaptive-content, plus stacked-poster's degrade path
-//     (content-stacked-poster.tsx's own comment on its layoutDef already
-//     establishes it behaves like the
-//     other four "all" layouts once it falls back to SvgContent): 4,
-//     mirroring the former `CAPACITY.maxBlocksPerSlide` (deleted in W3 — the editorial side now lives in PACING_BUDGETS) — audit/capacity.ts's flat,
-//     theme-independent default (`floor(minRectH / perBlock)`, the shared
-//     derivation for every linear-stack theme).
-//   - two-column: 4 too — the arrangement splits components into 2 narrower
-//     columns (`(rect.w - COLUMN_GAP) / 2`, layout.ts) but shares the same
-//     content-height budget as the single-stack layouts, not a taller one,
-//     so two columns doesn't earn a higher total than one.
-//   - bento-panel: 6, matching this same layout's own `grid` slot
-//     capacity below — not the flat default. `layoutBento`'s hard 6-cell
-//     ceiling (bento-layout.ts: "the bento grid only ever has 6 cells") and
-//     the former theme-keyed `CAPACITY.maxBlocksPerSlideOverrides.terminal = 6`
-//     (deleted in W3 — this layout-keyed entry is its home now) both land on the
-//     same number for the same non-linear grid geometry independently.
-//     `body` is bento-panel's *degraded* single-stack rendering of the exact
-//     same component sequence the grid would otherwise hold (see that
-//     entry's own comment), so it shares the grid's number rather than a
-//     lesser invented one.
-//     Final semantics (W4, recorded once the full-set rollout made
-//     bento-panel reachable from every theme, not just terminal): this capacity-6
-//     ceiling never actually binds the `min(pacing editorial budget, layout
-//     capacity)` density gate. `PACING_BUDGETS`'s loosest pacing
-//     (`dense`) tops out at 5 components/slide — still under 6 — so every
-//     pacing's own editorial budget wins the `min()` for this layout
-//     (5/4/3 for dense/balanced/spacious, never 6). The number above is
-//     bento-panel's true geometric ceiling and stays for documentation and
-//     for any future pacing tier looser than 5, but no deck can reach it
-//     through today's gate.
-//   - asymmetric-triptych/quiet-frame (task 4's remaining layouts after
-//     side-highlight retired): 4, the same flat single-stack default every
-//     layout but bento-panel already carries — neither body's region exceeds
-//     the pool's existing narrowest single-stack width (880px,
-//     `narrow-column`'s `COLUMN_W`), so no new per-layout number is
-//     warranted (each file's own composition-sketch header derives this
-//     explicitly, not just asserts it).
-//   - image-lead-split (task T1): body 4 too, and visual 1 — its 435px text
-//     column is narrower than every other layout's own single-stack
-//     column, but still wider than the pool's already-audited narrowest
-//     single-stack region (asymmetric-triptych's 424px `top`/`bottom`
-//     panels), so this doesn't warrant a new number either, nor tightening
-//     any `audit/capacity.ts` floor — the file's own header derives this.
-//   - split-band (task T2): body 4 too — its 400px (380px with a footnote)
-//     body height is *shorter* than every other layout's own body
-//     region (the pool's previous floor was width, not height; this is the
-//     first layout whose heading band eats vertical rather than
-//     horizontal budget), which is exactly why this task's own capacity
-//     measurement (see the file's own composition-sketch header) tested
-//     candidate ratios against realistic per-tier content *before* fixing
-//     the geometry, instead of assuming the pool's flat 4 would still be
-//     safe at a new, shorter height. It held at zero `data-dropped` for
-//     ordinary content at every pacing tier, so 4 stays the declared
-//     number — no `audit/capacity.ts` floor needs tightening either, by
-//     the same "re-verified, not assumed" standard image-lead-split's own
-//     entry above already established for a *width* floor.
-//   - quote-stage (quote-stage wave, task T2): body 1 — not a flat-default
-//     single-stack number like every entry above. This is the pool's first
-//     `pinOnly` member (see {@link LayoutDefinition.pinOnly}): the body
-//     slot is a small attribution/footnote *annotation* position below an
-//     oversized heading, not a "承重" content region — 1 is a deliberate,
-//     narrow authoring contract (at most one short attribution component),
-//     not a geometric ceiling derived from column width like the other
-//     entries' 4/6. Enforced by `ir-quality.ts`'s `density` warn
-//     (min(pacing budget, this capacity) — the same generic gate every entry
-//     here already feeds).
+// `body` slot `capacity` is declarative authoring-time metadata, consumed by
+// the validate-layer `min(pacing editorial budget, layout capacity)` quality
+// gate (ir-quality.ts via layout-selection.ts). The ordinary single-stack
+// number is 4, the former `CAPACITY.maxBlocksPerSlide` (deleted in W3, the
+// editorial side now lives in PACING_BUDGETS): audit/capacity.ts's flat,
+// theme-independent default (`floor(minRectH / perBlock)`). A layout whose
+// body region differs from the audited single-stack one measures its own
+// number and says so in its own header, so any other capacity is a measured
+// contract, never a guess. A single-figure face whose body is one figure
+// declares 1.
 //
-// This essay is what every content layout's own body-slot capacity
-// comment means by "see registry.ts's CONTENT_LAYOUT_DEFS header for the
-// derivation" (src domain reorg wave 1, task T1d — reworded from the
-// pre-migration "see file header derivation" once each entry moved into its
-// own layout file). It stays here, comparative across all 26, rather
-// than traveling with any one entry.
+// This note is what every content layout's own body-slot capacity comment
+// means by "see registry.ts's CONTENT_LAYOUT_DEFS header for the
+// derivation" (src domain reorg wave 1, task T1d).
 // ─────────────────────────────────────────────────────────────────────────
 const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
-  [contentNarrowColumn.id]: contentNarrowColumn,
-  [contentTwoColumn.id]: contentTwoColumn,
-  [contentRailNumbered.id]: contentRailNumbered,
-  [contentStackedPoster.id]: contentStackedPoster,
-  [contentBentoPanel.id]: contentBentoPanel,
-  [contentToneAdaptiveContent.id]: contentToneAdaptiveContent,
-  [contentAsymmetricTriptych.id]: contentAsymmetricTriptych,
-  [contentQuietFrame.id]: contentQuietFrame,
-  [contentSplitBand.id]: contentSplitBand,
-  [contentQuoteStage.id]: contentQuoteStage,
   [contentStatement.id]: contentStatement,
   [contentPullQuote.id]: contentPullQuote,
   [contentStatHero.id]: contentStatHero,
-  [contentOneEvidence.id]: contentOneEvidence,
-  [contentGaugeStats.id]: contentGaugeStats,
   [contentGaugePoint.id]: contentGaugePoint,
-  [contentCrayonboxCards.id]: contentCrayonboxCards,
-  [contentCrayonboxPoint.id]: contentCrayonboxPoint,
-  [contentShowGallery.id]: contentShowGallery,
-  [contentShowSpotlight.id]: contentShowSpotlight,
-  [contentShowStatement.id]: contentShowStatement,
-  [contentShowFigures.id]: contentShowFigures,
   // brief sample redesign (2026-10-02): the board's ordinary content page,
   // evidence page and single-figure page, all theme-locked.
   [contentGaugeSheet.id]: contentGaugeSheet,
@@ -1130,11 +851,9 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
 const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageSplitLayoutDef.id]: imageSplitLayoutDef,
   [imageTopLayoutDef.id]: imageTopLayoutDef,
-  [imageBottomLayoutDef.id]: imageBottomLayoutDef,
-  [imageAnnotateLayoutDef.id]: imageAnnotateLayoutDef,
 }
 
-/** All 202 standard layouts and 4 takeover layouts, 206 entries keyed by id.
+/** All 105 standard layouts and 2 takeover layouts, 107 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

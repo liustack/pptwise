@@ -104,7 +104,6 @@ export const TECH_TOKENS: StyleTokens = {
   shape: {
     radius: 0,
     gapScale: 1, // 控制台面板方角（2026-10 定稿）
-    cover: { titleBottomAnchor: false, ruleStyle: "star-chain" },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#0A0F1E" },

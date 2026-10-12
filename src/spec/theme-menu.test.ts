@@ -5,13 +5,13 @@ import type { Menu } from "../themes/schema"
 import { validateSpec } from "./index"
 
 const MENU: Menu = {
-  cover: { face: "poster-center" },
-  chapter: { face: "masthead-chapter" },
+  cover: { face: "institutional-block" },
+  chapter: { face: "ghost-section-chapter" },
   content: {
-    points: { face: "two-column" },
-    list: { face: "narrow-column" },
+    points: { face: "gauge-sheet" },
+    list: { face: "gauge-sheet" },
   },
-  ending: { face: "poster-ending" },
+  ending: { face: "signoff-ending" },
 }
 
 function installTheme(id: string): void {

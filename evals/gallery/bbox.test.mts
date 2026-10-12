@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url"
 import vm from "node:vm"
 import { describe, expect, it } from "vitest"
 import { classify, harnessHtml, layoutOf, parseIssue, slackFor } from "./bbox"
-import { bleedExemption, DESIGNED_BLEED } from "./bbox-exemptions"
+import { bleedExemption, type BleedExemption } from "./bbox-exemptions"
 
 describe("parseIssue", () => {
   it("reads how far a line's ink ran past its box, and on which axis", () => {
@@ -80,8 +80,19 @@ describe("slackFor", () => {
   })
 })
 
+// A stand-in for a face whose chapter ordinal is a watermark drawn to bleed
+// off the page. No live face needs one, so the list is a fixture here.
+const DESIGNED_BLEED: readonly BleedExemption[] = [
+  {
+    layout: "watermark-chapter",
+    kind: "page-overflow",
+    text: /^\d{1,3}$/,
+    why: "the oversized chapter ordinal is a 6%-opacity watermark, drawn to bleed past the bottom edge",
+  },
+]
+
 describe("classify", () => {
-  const layouts = new Map([["p1", "rail-chapter"], ["p2", "some-layout"]])
+  const layouts = new Map([["p1", "watermark-chapter"], ["p2", "some-layout"]])
 
   it("files a designed bleed under its exemption rather than as a defect", () => {
     const out = classify([{ id: "p1", issues: ["page-overflow 01: [947,1224] y=[374,738] outside 1280x720"] }], layouts, 2, DESIGNED_BLEED)
@@ -121,7 +132,7 @@ describe("classify", () => {
 
 describe("layoutOf", () => {
   it("reads the layout id back out of the rendered markup", () => {
-    expect(layoutOf(`<svg><g data-face="rail-chapter"><text/></g></svg>`)).toBe("rail-chapter")
+    expect(layoutOf(`<svg><g data-face="ghost-section-chapter"><text/></g></svg>`)).toBe("ghost-section-chapter")
   })
 
   it("is empty for an image-takeover page, which draws no layout wrapper", () => {

@@ -77,18 +77,11 @@ export const schema = z
 
 export const aliases = {} satisfies ComponentAliasSpec
 
-// selfVisual: false / passthroughShell: true — same posture as this
-// component's two closest siblings, `flowchart` and `architecture`: each
-// node paints its own shape+text, so bento's outline shell painted
-// underneath would be a redundant second shell around an already-carded
-// diagram (component-traits.ts's own PASSTHROUGH_SHELL_TYPES doc comment).
 // Not evidence-eligible — no probe evidence names a cycle diagram as an
 // evidence-carrying visual the way chart/data_table/device_mockup are.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

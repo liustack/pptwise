@@ -5,12 +5,10 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人听它说话。"
 const LUXE_GOLD = "#C6A15B"
-const BOARD_CLAIM = "#3D3A30"
 
 function ir(slides: Slide[]): PptxIR {
   return {
@@ -84,32 +82,4 @@ describe("almanac sparse faces", () => {
     expect(bar?.getAttribute("fill")).toBe(ctx.colors.primary)
   })
 
-  it("one-evidence is a sample card with an ochre dot and 样点 index", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 6.5 天生成",
-      subheading: "217 张工单全量统计 · 2026 Q2",
-      components: [],
-    } as Slide
-    const { markup, root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const dot = root.querySelector("circle")
-    expect(dot?.getAttribute("cx")).toBe("238")
-    expect(dot?.getAttribute("cy")).toBe("282")
-    expect(dot?.getAttribute("r")).toBe("7")
-    expect(dot?.getAttribute("fill")).toBe(ctx.colors.accent)
-    const index = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("样点"))!
-    expect(index.textContent).toBe("样点 01")
-    expect(index.getAttribute("fill")).toBe(ctx.colors.primary)
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("维护工单"),
-    )!
-    expect(claim.getAttribute("fill")).toBe(ctx.colors.text)
-    expect(markup).not.toContain(BOARD_CLAIM)
-    expect(markup).not.toContain(LUXE_GOLD)
-  })
 })

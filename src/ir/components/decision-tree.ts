@@ -87,13 +87,9 @@ export const aliases = {
   items: [{ itemsKey: "branches", aliases: { label: "title", name: "title", condition: "edge", desc: "detail" } }],
 } satisfies ComponentAliasSpec
 
-// Every node paints its own box and every edge its own line, so a bento
-// outline shell underneath would be a second frame around a framed diagram.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

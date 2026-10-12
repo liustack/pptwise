@@ -76,16 +76,13 @@ export const aliases = {
 
 /**
  * 除通栏外全 false，与 `image_grid`/`device_mockup` 一样：图片的宽高比是固定的，
- * 卡片纵向拉伸只会拉出一条空腔（stretchable）；卡片坐在 bento 壳里正常
- * （selfVisual/passthroughShell）；图文混排不是一张可整体缩放的图
+ * 卡片纵向拉伸只会拉出一条空腔（stretchable）；图文混排不是一张可整体缩放的图
  * （scalable）；不是整页画布（fullBody）；商品卡是要约不是可复核的证据
  * （evidence）。
  */
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   // 通栏：一排卡片挤进两栏版式的一栏，图片宽度就掉到看不清东西的地步。
   columnSpanning: true,

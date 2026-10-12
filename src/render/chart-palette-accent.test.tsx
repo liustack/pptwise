@@ -8,7 +8,7 @@ import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "./full-slide-svg"
 import { renderSvgMarkup } from "./serialize"
 import { renderComponent } from "../components"
-import { GaugeStatsContent } from "../layouts/content-gauge-stats"
+import { GaugeSheetContent } from "../layouts/content-gauge-sheet"
 import type { PptxIR, Slide } from "@/ir"
 
 describe("paletteWithoutAccent", () => {
@@ -35,7 +35,7 @@ describe("paletteWithoutAccent", () => {
   })
 })
 
-describe("gauge-stats' fallback chart", () => {
+describe("gauge-sheet's chart", () => {
   // brief's accent is chart-palette slot 1. Mapping it onto `primary`
   // made slot 1 the same colour as slot 0, so a two-series bar chart painted
   // both series `#1E2A4A` — in the bars and in the legend — and read as one
@@ -70,7 +70,7 @@ describe("gauge-stats' fallback chart", () => {
     } as unknown as PptxIR
     const markup = renderSvgMarkup(
       <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-        <GaugeStatsContent ir={ir} slide={slide} index={0} ctx={ctx} />
+        <GaugeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} />
       </svg>,
     )
     const fills = new Set([...markup.matchAll(/data-plot-mark="1"[^>]*fill="(#[0-9A-Fa-f]{6})"/g)].map((m) => m[1]))

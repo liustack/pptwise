@@ -58,13 +58,9 @@ export const schema = z
 
 export const aliases = {} satisfies ComponentAliasSpec
 
-// A drawing with its own axes and labels: a bento shell around it would frame
-// an already-composed figure, the way it would a venn.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

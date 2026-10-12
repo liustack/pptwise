@@ -14,7 +14,7 @@
  * Shared by banner-chapter, memo-head, and brief stat-hero so an
  * underline sits below glyph ink at a size-proportional offset (C9).
  */
-export const LATIN_DESCENT_RATIO = 0.22
+const LATIN_DESCENT_RATIO = 0.22
 /** CJK em-box bottom sits near the alphabetic baseline (~0.12em). A little
  * slack so a Songti glyph that hangs lower still clears the rule. */
 export const CJK_EM_DESCENT_RATIO = 0.16

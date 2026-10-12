@@ -11,14 +11,14 @@ import { checkIrQuality } from "./ir-quality"
 import { resolveEffectiveFace, resolveEffectiveLayoutBodyCapacity, resolveLayoutId } from "./layout-selection"
 
 const MENU: Menu = {
-  cover: { face: "poster-center" },
-  chapter: { face: "masthead-chapter" },
+  cover: { face: "institutional-block" },
+  chapter: { face: "ghost-section-chapter" },
   content: {
-    points: { face: "two-column" },
-    comparison: { face: "asymmetric-triptych" },
+    points: { face: "grid-sheet" },
+    comparison: { face: "panel-sheet" },
     photo: { face: "image-split" },
   },
-  ending: { face: "poster-ending" },
+  ending: { face: "signoff-ending" },
 }
 
 afterEach(() => {
@@ -58,19 +58,19 @@ function deck(themeId: string, slides: Slide[]): PptxIR {
 
 describe("theme-menu layout lookup", () => {
   it("maps boundary page type and content kind directly to one face", () => {
-    expect(resolveLayoutId("cover", undefined, MENU)).toBe("poster-center")
-    expect(resolveLayoutId("chapter", undefined, MENU)).toBe("masthead-chapter")
-    expect(resolveLayoutId("content", "points", MENU)).toBe("two-column")
-    expect(resolveLayoutId("content", "comparison", MENU)).toBe("asymmetric-triptych")
+    expect(resolveLayoutId("cover", undefined, MENU)).toBe("institutional-block")
+    expect(resolveLayoutId("chapter", undefined, MENU)).toBe("ghost-section-chapter")
+    expect(resolveLayoutId("content", "points", MENU)).toBe("grid-sheet")
+    expect(resolveLayoutId("content", "comparison", MENU)).toBe("panel-sheet")
     expect(resolveLayoutId("content", "photo", MENU)).toBe("image-split")
-    expect(resolveLayoutId("ending", undefined, MENU)).toBe("poster-ending")
+    expect(resolveLayoutId("ending", undefined, MENU)).toBe("signoff-ending")
   })
 
   it("uses one resolved standard face for effective id, capacity, and SVG", () => {
     const id = "menu-parity-standard"
     installTheme(id, {
       ...MENU,
-      content: { points: { face: "bento-panel" } },
+      content: { points: { face: "grid-sheet" } },
     })
     const slide: Slide = {
       type: "content",
@@ -82,22 +82,22 @@ describe("theme-menu layout lookup", () => {
 
     expect(resolveEffectiveFace(ir, slide, getThemeDefinition(ir.theme.id))).toMatchObject({
       route: "layout",
-      layoutId: "bento-panel",
+      layoutId: "grid-sheet",
     })
     expect(resolveEffectiveLayoutBodyCapacity(ir, slide, getThemeDefinition(ir.theme.id))).toEqual({
-      layoutId: "bento-panel",
-      capacity: 6,
+      layoutId: "grid-sheet",
+      capacity: 4,
     })
 
     const { container } = render(<BoundSlideSvg ir={ir} slide={slide} index={0} />)
-    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe("bento-panel")
+    expect(container.querySelector("[data-face]")?.getAttribute("data-face")).toBe("grid-sheet")
   })
 
   it("combines pacing with the capacity declared by the menu-selected face", () => {
     const id = "menu-capacity"
     installTheme(id, {
       ...MENU,
-      content: { points: { face: "two-column" } },
+      content: { points: { face: "grid-sheet" } },
     })
     const slide: Slide = {
       type: "content",
@@ -121,7 +121,7 @@ describe("theme-menu layout lookup", () => {
       limit: 4,
       pacing: "dense",
       pacingBudget: 5,
-      layoutId: "two-column",
+      layoutId: "grid-sheet",
       layoutCapacity: 4,
     })
   })
@@ -158,7 +158,7 @@ describe("theme-menu layout lookup", () => {
     const id = "menu-parity-image-cover"
     installTheme(id, {
       ...MENU,
-      cover: { face: "verdict-index" },
+      cover: { face: "gauge-verdict" },
     })
     const slide: Slide = {
       type: "cover",
@@ -170,8 +170,8 @@ describe("theme-menu layout lookup", () => {
     const imageDeck = deck(id, [slide])
     expect(resolveEffectiveFace(imageDeck, slide, getThemeDefinition(imageDeck.theme.id))).toMatchObject({
       route: "image-cover",
-      layoutId: "verdict-index",
-      layout: { id: "verdict-index" },
+      layoutId: "gauge-verdict",
+      layout: { id: "gauge-verdict" },
     })
   })
 
@@ -197,7 +197,7 @@ describe("theme-menu layout lookup", () => {
       ...MENU,
       content: {
         points: {
-          face: "bento-panel",
+          face: "grid-sheet",
           decor: {
             kind: "motif",
             id: "gauge-motif",
@@ -228,12 +228,12 @@ describe("theme-menu layout lookup", () => {
     const silentId = "menu-decor-silent"
     installTheme(ordinaryId, {
       ...MENU,
-      content: { points: { face: "bento-panel" } },
+      content: { points: { face: "grid-sheet" } },
     })
     installTheme(silentId, {
       ...MENU,
       content: {
-        points: { face: "bento-panel", decor: { kind: "silent" }, brand: "none" },
+        points: { face: "grid-sheet", decor: { kind: "silent" }, brand: "none" },
       },
     })
     const slide: Slide = {

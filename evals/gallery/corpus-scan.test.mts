@@ -352,7 +352,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
@@ -776,7 +776,7 @@ describe("every face renders the content it was given, or says what it dropped",
   })
 
   // A scope that has silently collapsed would pass the sweep without ever
-  // looking at a page. 284 of the corpus' 1820 pages are drawn by a
+  // looking at a page. 181 of the corpus' 2438 pages are drawn by a
   // field-picking face today, and the rest are now read for the widened
   // fields; both floors are well under the real counts so an ordinary corpus
   // edit does not trip them, and well over zero so a broken scope does. The
@@ -789,7 +789,7 @@ describe("every face renders the content it was given, or says what it dropped",
       if (scanned(faceOf(job.ir, slide, getThemeDefinition(job.ir.theme.id)))) scannedPages += 1
       else widenedPages += 1
     }
-    expect(scannedPages).toBeGreaterThan(200)
+    expect(scannedPages).toBeGreaterThan(120)
     expect(widenedPages).toBeGreaterThan(1000)
   })
 })
@@ -847,7 +847,7 @@ describe("a heading is not evidence that a component reached the page", () => {
 
   it("reports the paragraph when the only text on the page is the heading", () => {
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Same conclusion</text>` +
       `</g></svg>`
     expect(checkPageFidelity(svg, slide).missing.map((m) => m.path)).toEqual([
@@ -857,7 +857,7 @@ describe("a heading is not evidence that a component reached the page", () => {
 
   it("accepts the paragraph once the face paints it in its own right", () => {
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Same conclusion</text>` +
       `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
       `<text x="96" y="260" font-size="18">Same conclusion</text>` +
@@ -874,7 +874,7 @@ describe("a heading is not evidence that a component reached the page", () => {
       components: [{ type: "paragraph", text: "Shared line" }],
     } as unknown as Slide
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<text x="96" y="180" font-size="20">Shared line</text>` +
       `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
@@ -898,7 +898,7 @@ describe("a drop declaration speaks only for the component that made it", () => 
   /** `SvgContent`'s own shape: one `data-audit-box` per placed component. */
   function page(marker: string, pageLevelMarker = ""): string {
     return (
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<g data-audit-rect="96,228,1088,412">` +
       `<g data-audit-box="96,244,1088"><text x="96" y="260" font-size="18">kept one</text>` +
@@ -986,7 +986,7 @@ describe("a component that painted nothing is answered for by its own empty box"
 
   /** Two boxes: one with painted bullets, one holding only a declaration. */
   const page = (secondBox: string) =>
-    `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+    `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
     `<text x="96" y="150" font-size="46">Head</text>` +
     `<g data-audit-rect="96,228,1088,412">` +
     `<g data-audit-box="96,244,1088"><text x="96" y="260" font-size="18">kept one</text>` +
@@ -1054,7 +1054,7 @@ describe("two texts from different places on the page do not add up to one field
 
   it("reports the paragraph when only unrelated fragments spell it out", () => {
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<text x="96" y="640" font-size="14">A</text>` +
       `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
@@ -1066,7 +1066,7 @@ describe("two texts from different places on the page do not add up to one field
 
   it("still finds a field its own block wrapped over two lines", () => {
     const svg =
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
       `<text x="96" y="260" font-size="18">A</text>` +
@@ -1089,7 +1089,7 @@ describe("a truncation mark speaks only for the field it cut", () => {
   /** Two placed components, so each cut has an owner. */
   function page(second: string): string {
     return (
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<g data-audit-rect="96,228,1088,412">` +
       `<g data-audit-box="96,244,1088">` +
@@ -1123,7 +1123,7 @@ describe("CJK punctuation carries meaning the scan may not fold away", () => {
 
   function page(painted: string): string {
     return (
-      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+      `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
       `<text x="96" y="150" font-size="46">Head</text>` +
       `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
       `<text x="96" y="260" font-size="18">${painted}</text></g></g></g></svg>`
@@ -1184,7 +1184,7 @@ describe("a multi-series legend stays under the scan on every face", () => {
 
   /** Bars and categories drawn, both legend names deleted. */
   const legendless =
-    `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="two-column">` +
+    `<svg xmlns="http://www.w3.org/2000/svg"><g data-face="gauge-sheet">` +
     `<text x="96" y="150" font-size="46">Quarterly trend</text>` +
     `<g data-audit-rect="96,228,1088,412"><g data-audit-box="96,244,1088">` +
     `<text x="96" y="600" font-size="14">Q1</text><text x="300" y="600" font-size="14">Q2</text>` +

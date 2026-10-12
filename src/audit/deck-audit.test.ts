@@ -221,7 +221,10 @@ describe("auditDeck — understood pre-existing low-contrast sources (not audit 
 // `ending-constellation-ending.test.tsx`'s 16-theme coherence-property test
 // for the fill-value-level assertion this block's low-contrast-findings
 // check doesn't cover.
-describe("constellation-ending accent period contrast (contrast-policy wave, task T2)", () => {
+// The face is gone (deleted with the faces no menu used). The sweep stays, on
+// each theme's own ending face, because a period-ending heading is still the
+// shape no other fixture renders.
+describe("ending trailing period contrast (contrast-policy wave, task T2)", () => {
   for (const themeId of CANONICAL_THEME_IDS) {
     it(`${themeId}: the accent-colored trailing period clears the required contrast ratio against ctx.defaultBg`, () => {
       const ir = deck(themeId, [
@@ -588,13 +591,11 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
   // floor can't fit the text) used to have zero render-time visibility, so
   // `content-truncated` never fired for it the way it does for every other
   // `fitSvgLine`-based text role. A registered test theme offers
-  // `fashion-masthead` as its cover face. That face declares the
-  // highest `minPt` (72) of any layout (`ir-quality.ts`'s own survey),
-  // so the least amount of shrink headroom before a pathological heading
-  // hits the truncate branch.
+  // `institutional-block` as its cover face, and a heading five times the
+  // long fixture outgrows its two lines even at its `minPt` floor.
   it("surfaces a heading that outgrows even its layout's minPt floor as 'content-truncated'", () => {
-    const themeId = registerTestTheme("audit-fashion-masthead-positive", "rally", {
-      cover: "fashion-masthead",
+    const themeId = registerTestTheme("audit-heading-cut-positive", "rally", {
+      cover: "institutional-block",
     })
     const ir = deck(themeId, [
       {
@@ -613,18 +614,18 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     expect((truncated[0].detail as { text?: string }).text).not.toMatch(/…$/)
   })
 
-  // Review fix round — Critical 1's exact repro, at the render+audit level:
-  // a plain 30-char CJK heading on the same `fashion-masthead` layout
-  // takes `fitHeadingLines`'s minPt-floor branch (shrinks to 72px) but
-  // — unlike the case above — never actually loses a character. Before the
+  // Review fix round — Critical 1's repro, at the render+audit level: a
+  // plain 30-char CJK heading on the same `institutional-block` layout
+  // shrinks (88px to 74px) but — unlike the case above — never actually
+  // loses a character. Before the
   // fix this rendered `data-truncated="1"` and a false `content-truncated`
   // finding anyway (`truncated` was set on taking the branch, not on
   // whether `truncateToUnits` changed anything). Locks the negative case
   // permanently, next to the positive one above.
-  it("does not mark or report a heading that only shrinks to its layout's minPt floor", () => {
+  it("does not mark or report a heading that only shrinks", () => {
     const plain = "微服务架构下的分布式事务一致性保障机制与补偿策略设计规范以及"
-    const themeId = registerTestTheme("audit-fashion-masthead-negative", "rally", {
-      cover: "fashion-masthead",
+    const themeId = registerTestTheme("audit-heading-cut-negative", "rally", {
+      cover: "institutional-block",
     })
     const ir = deck(themeId, [
       {
@@ -639,8 +640,8 @@ describe("auditDeck — content-truncated / content-dropped (bench-driven fix ro
     // `<text>` elements), so assert on the substrings that survive the
     // wrap rather than the joined original — same "no character dropped"
     // check as the unit-level fixture, split at the wrap point.
-    expect(markup).toContain("微服务架构下的分布式事务一致性保")
-    expect(markup).toContain("障机制与补偿策略设计规范以及")
+    expect(markup).toContain("微服务架构下的分布式事务一致性")
+    expect(markup).toContain("保障机制与补偿策略设计规范以及")
     expect(markup).not.toContain("…")
     expect(markup).not.toContain('data-truncated="1"')
     const report = auditDeck(ir)
@@ -2019,35 +2020,25 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
   // accept as real backgrounds — inside the `<g data-decor>` wrapper
   // `full-slide-svg.tsx` renders around every theme motif's output.
   //
-  // A registered test theme offers `split-diagonal` as its cover face.
-  // That face is chosen specifically because it exercises
-  // `pathBoundingBox`'s one remaining *exact* (non-decor) solid-path case
-  // side-by-side with the decor exclusion in the same render, tying both
-  // halves of this fix together. That gives an exact, hand-verified
-  // legitimate region count of 2 (read from source, not guessed): the
-  // rally theme's solid `#3D2E78` full-page background
-  // (`background.tsx`'s `spec.kind === "color"` branch paints exactly one
-  // `<rect>`) and `cover-split-diagonal.tsx`'s own `#F0559E` (`ctx.colors.
-  // primary`) diagonal color panel (its accent bar is 72x5=360px², under
-  // `MIN_BG_REGION_AREA`; its decorative circle isn't a rect/image/path at
-  // all — neither contributes a region). `Branding` renders nothing for
-  // a cover slide with no `ir.brand` configured. If the decor exclusion
-  // regressed, this count would jump well past 2.
-  it("sees exactly the two legitimate background regions on a real rally-theme cover, none from the motif", () => {
-    const themeId = registerTestTheme("audit-rally-split", "rally", {
-      cover: "split-diagonal",
+  // A registered test theme offers `institutional-block` as its cover face,
+  // which paints no panel of its own, so the one legitimate region is the
+  // rally theme's solid full-page background (`background.tsx`'s
+  // `spec.kind === "color"` branch paints exactly one `<rect>`). `Branding`
+  // renders nothing for a cover slide with no `ir.brand` configured. If the
+  // decor exclusion regressed, this count would jump past 1.
+  it("sees exactly the one legitimate background region on a real rally-theme cover, none from the motif", () => {
+    const themeId = registerTestTheme("audit-rally-cover", "rally", {
+      cover: "institutional-block",
     })
     const ir = deck(themeId, [
       { type: "cover", heading: "Launch Day",  components: [] },
     ])
     const markup = renderSlideSvg(ir, 0)
     const regions = __collectBgRegions(markup)
-    expect(regions).toHaveLength(2)
+    expect(regions).toHaveLength(1)
     // 柔和组皮肤重设计（2026-08-20）换掉了 rally 的色板：底色幕布深紫
-    // `#2A1E3F`，斜切色块走 `ctx.colors.primary` 的舞台暗紫 `#23173A`
-    // （旧值是 `#3D2E78` 与品红 `#F0559E`）。这里钉的是「两块、且都不来自
-    // motif」这件事，色值随主题走。
-    expect(regions.map((r) => r.fill).sort()).toEqual(["#23173A", "#2A1E3F"])
+    // `#2A1E3F`。这里钉的是「一块、且不来自 motif」这件事，色值随主题走。
+    expect(regions.map((r) => r.fill)).toEqual(["#2A1E3F"])
   })
 })
 
@@ -2066,7 +2057,7 @@ describe("findContrastIssues — decor/motif subtrees excluded from background-r
 // quarterly-review-zh.json` (which carries `meta.organization`
 // and `meta.date` — the matrix sweep in `full-matrix-contrast.test.ts`
 // deliberately sets no meta, which is exactly why that sweep never saw any of
-// this). A registered test theme carries `tone-adaptive-header` in its cover menu.
+// this). A registered test theme carries `institutional-block` in its cover menu.
 describe("findContrastIssues — text painted on a decor shape resolves against that shape (fix/decor-contrast-attribution)", () => {
   // Through the real schema, same as the `examples/basic.json` baseline at
   // the top of this file — `assets` is optional in the authored JSON and
@@ -2082,7 +2073,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     let registeredId = QUARTERLY_THEMES.get(themeId)
     if (registeredId === undefined) {
       registeredId = registerTestTheme(`audit-quarterly-${themeId}`, themeId, {
-        cover: "tone-adaptive-header",
+        cover: "institutional-block",
       })
       QUARTERLY_THEMES.set(themeId, registeredId)
     }
@@ -2202,7 +2193,7 @@ describe("findContrastIssues — text painted on a decor shape resolves against 
     // pixel-audit" — which is where that proof always belonged, since it
     // does not depend on any one theme's decoration staying put.
     const mutedId = registerTestTheme("audit-quarterly-brief-muted", "brief", {
-      cover: "tone-adaptive-header",
+      cover: "institutional-block",
     })
     getThemeDefinition(mutedId).style.colors.muted = "#3A4E60"
     const ir: PptxIR = { ...QUARTERLY, theme: { id: mutedId } }

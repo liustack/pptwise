@@ -65,13 +65,9 @@ export const aliases = {
   ],
 } satisfies ComponentAliasSpec
 
-// Four banded rows with their own rules, pills and cards — a bento outline
-// shell behind them would be a second frame around an already-ruled table.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

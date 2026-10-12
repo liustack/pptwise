@@ -28,7 +28,7 @@ describe("runThemeNew", () => {
     const written = JSON.parse(await readFile(out, "utf8")) as {
       version: number
       id: string
-      style: { id: string; shape?: { cover?: unknown } }
+      style: { id: string }
       menu: unknown
       base?: unknown
     }
@@ -37,7 +37,6 @@ describe("runThemeNew", () => {
     expect(written.style.id).toBe("acme")
     expect(written.menu).toBeTypeOf("object")
     expect(written).not.toHaveProperty("base")
-    expect(written.style.shape?.cover).toBeUndefined()
   })
 
   it("materializes lecture-motif onto copied menu entries", async () => {

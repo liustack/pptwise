@@ -79,13 +79,6 @@ export const EMBER_TOKENS: StyleTokens = {
   shape: {
     radius: 10,
     gapScale: 1, // 友好圆润（创业路演的亲和感，介于 clinic 的 8 与更方正的既有主题之间）
-    cover: {
-      textAnchor: "start",
-      wedgePeakY: 260,
-      wedgeStartX: 900,
-      wedgeInnerStartX: 860,
-      wedgeInnerPeakY: 212,
-    },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#241B14" },

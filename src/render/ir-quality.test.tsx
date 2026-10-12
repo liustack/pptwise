@@ -54,10 +54,10 @@ function installMenuTheme(id: string, content: Menu["content"]): void {
       shape: { radius: 2, gapScale: 1, typeScale: 1 },
     },
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
       content,
-      ending: { face: "poster-ending" },
+      ending: { face: "signoff-ending" },
     },
   })
 }
@@ -101,7 +101,7 @@ describe("checkIrQuality", () => {
   describe("density gate uses the menu face plus the unchanged pacing budget", () => {
     it("lets a capacity-4 face bind below dense pacing's budget of 5", () => {
       installMenuTheme("quality-capacity-four", {
-        points: { face: "two-column" },
+        points: { face: "gauge-sheet" },
       })
       const ir = makeIR(
         [
@@ -120,14 +120,14 @@ describe("checkIrQuality", () => {
         limit: 4,
         pacing: "dense",
         pacingBudget: 5,
-        layoutId: "two-column",
+        layoutId: "gauge-sheet",
         layoutCapacity: 4,
       })
     })
 
-    it("lets pacing bind below a capacity-6 face", () => {
-      installMenuTheme("quality-capacity-six", {
-        points: { face: "bento-panel" },
+    it("lets pacing bind below a capacity-5 face", () => {
+      installMenuTheme("quality-capacity-five", {
+        points: { face: "lesson-sheet" },
       })
       const ir = makeIR(
         [
@@ -135,19 +135,19 @@ describe("checkIrQuality", () => {
             type: "content",
             kind: "points",
             heading: "Capacity",
-            components: paragraphs(6),
+            components: paragraphs(5),
           },
         ],
-        "quality-capacity-six",
+        "quality-capacity-five",
       )
-      const issue = quality(ir, pacingAxes("dense")).find((candidate) => candidate.code === "density")
+      const issue = quality(ir, pacingAxes("balanced")).find((candidate) => candidate.code === "density")
 
       expect(issue?.density).toEqual({
-        limit: 5,
-        pacing: "dense",
-        pacingBudget: 5,
-        layoutId: "bento-panel",
-        layoutCapacity: 6,
+        limit: 4,
+        pacing: "balanced",
+        pacingBudget: 4,
+        layoutId: "lesson-sheet",
+        layoutCapacity: 5,
       })
     })
 
@@ -200,7 +200,7 @@ describe("checkIrQuality", () => {
     })
 
     it("does not apply the content density gate to boundary pages", () => {
-      installMenuTheme("quality-boundary", { points: { face: "two-column" } })
+      installMenuTheme("quality-boundary", { points: { face: "gauge-sheet" } })
       const ir = makeIR([{ type: "cover", heading: "Cover", components: paragraphs(8) }], "quality-boundary")
 
       expect(codes(quality(ir, pacingAxes("spacious")))).not.toContain("density")

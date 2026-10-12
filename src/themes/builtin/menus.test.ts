@@ -51,7 +51,7 @@ describe("built-in menus", () => {
   })
 
   it("refuses a fixed face named by two kinds, and lets a dispatching face serve several", () => {
-    expect(repeatedFixedFaces({ points: { face: "narrow-column" }, list: { face: "narrow-column" } })).toEqual(["narrow-column"])
+    expect(repeatedFixedFaces({ points: { face: "statement" }, list: { face: "statement" } })).toEqual(["statement"])
     expect(
       repeatedFixedFaces({ points: { face: "gauge-sheet" }, list: { face: "gauge-sheet" }, data: { face: "gauge-sheet" } }),
     ).toEqual([])

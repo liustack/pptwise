@@ -74,13 +74,9 @@ export const aliases = {
   items: [{ itemsKey: "rows", aliases: { title: "label", name: "label", before: "from", after: "to", delta: "change" } }],
 } satisfies ComponentAliasSpec
 
-// Two painted panels with their own rules and header bands — a bento outline
-// shell behind them would be a second frame around a framed drawing.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

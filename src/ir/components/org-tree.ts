@@ -67,14 +67,9 @@ export const aliases = {
   ],
 } satisfies ComponentAliasSpec
 
-// The tree paints its own node boxes and its own connector lines, so a bento
-// outline shell underneath would be a second frame around an already-drawn
-// diagram — same posture as `hub_spoke` and `flowchart`.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

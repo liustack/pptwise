@@ -54,10 +54,8 @@ import { traits as sketchTraits } from "@/ir/components/sketch"
 import {
   EVIDENCE_TYPES,
   FULL_BODY_TYPES,
-  PASSTHROUGH_SHELL_TYPES,
   pickEvidence,
   SCALABLE_TYPES,
-  SELF_VISUAL_TYPES,
   STRETCHABLE_TYPES,
 } from "./component-traits"
 import * as componentTraitRegistry from "./component-traits"
@@ -168,118 +166,18 @@ describe("COLUMN_SPANNING_TYPES", () => {
   })
 })
 
-describe("SELF_VISUAL_TYPES equivalence (was bento-layout.ts:210-216, plus R1's data_table addition)", () => {
-  it("matches the pre-refactor members plus data_table, device_mockup, and quote_wall", () => {
-    // bento-layout.ts:210-216 (pre-refactor):
-    // new Set(["callout", "code", "comparison", "blockquote", "verdict_banner"])
-    const preRefactor = ["callout", "code", "comparison", "blockquote", "verdict_banner"]
-    // R1 evidence wave, Task T3 (plan's explicit traits contract): data_table
-    // declares selfVisual: true too — it draws its own rule-line table shell
-    // (header rule + row separators + emphasis-row tint), so painting bento's
-    // own outline shell behind it would be a redundant "卡中卡", the same
-    // reasoning every pre-refactor member above already documents. A real,
-    // intentional addition to this set's membership, not drift — the
-    // pre-refactor array above stays as the historical baseline this lock
-    // originally pinned.
-    //
-    // device_mockup wave (`.issues/2026-08-05-component-waves/
-    // plan-device-mockup.md`): device_mockup also declares selfVisual: true
-    // — the device frame (browser window bar, phone bezel/notch) *is* its
-    // own frame, same "already carded" reasoning as every member above.
-    // component build wave A: quote_wall declares selfVisual: true for the
-    // same reason blockquote above it does — every remark already stands in
-    // its own card under its own quote mark, so a bento shell behind it is a
-    // card inside a card.
-    // relation wave: concept_equation paints a panel per term and pros_cons
-    // two columns and a verdict band, so a bento shell behind either is a
-    // second frame around a framed row.
-    const current = [...preRefactor, "data_table", "device_mockup", "quote_wall", "concept_equation", "pros_cons"]
-    expect(new Set(SELF_VISUAL_TYPES)).toEqual(new Set(current))
-    expect(SELF_VISUAL_TYPES.size).toBe(current.length)
-  })
-})
 
-describe("SCALABLE_TYPES duplication verdict (content-bento-panel.tsx:105 vs content-stacked-poster.tsx:121)", () => {
-  // Exact pre-refactor transcriptions, read independently from each file
-  // before either was touched.
-  const bentoPanelPreRefactor = ["chart", "image"] // content-bento-panel.tsx:105
-  const stackedPosterPreRefactor = ["chart", "image"] // content-stacked-poster.tsx:121
-
-  it("the two pre-refactor definitions are member-equal (proving the duplication is safe to collapse)", () => {
-    expect(new Set(bentoPanelPreRefactor)).toEqual(new Set(stackedPosterPreRefactor))
-  })
-
-  it("the unified export matches both pre-refactor definitions plus flowchart", () => {
+describe("SCALABLE_TYPES membership", () => {
+  it("holds chart, image and flowchart", () => {
     // Gallery r2 leftover (ember p05): a lone flowchart is a rendered
     // graphic, safe to skip capTopAir so it can sit in leftover body
     // height instead of welding under the heading. Same membership
     // pattern as people_cards on STRETCHABLE_TYPES.
-    const current = [...bentoPanelPreRefactor, "flowchart"]
-    expect(new Set(SCALABLE_TYPES)).toEqual(new Set(current))
-    expect(new Set(SCALABLE_TYPES)).toEqual(new Set([...stackedPosterPreRefactor, "flowchart"]))
-    expect(SCALABLE_TYPES.size).toBe(current.length)
+    expect(new Set(SCALABLE_TYPES)).toEqual(new Set(["chart", "image", "flowchart"]))
   })
 })
 
-describe("PASSTHROUGH_SHELL_TYPES equivalence (was content-bento-panel.tsx:134-143, plus R1's data_table addition)", () => {
-  it("matches the pre-refactor members plus data_table, cycle, hub_spoke, staircase, chevron_process, swimlane, journey_map, decision_tree, and from_to", () => {
-    // content-bento-panel.tsx:134-143 (pre-refactor):
-    // new Set(["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"])
-    const preRefactor = ["steps", "flowchart", "architecture", "timeline", "paragraph", "blockquote"]
-    // R1 evidence wave, Task T3 (plan's explicit traits contract): data_table
-    // declares passthroughShell: true too — same reasoning as
-    // flowchart/architecture/timeline above (draws its own internal frame,
-    // no enclosing card), so the bento shell paint should be skipped for it
-    // as well. A real, intentional addition, not drift — the pre-refactor
-    // array above stays as the historical baseline this lock originally
-    // pinned.
-    // cycle wave (`.issues/2026-08-05-component-waves/plan-cycle.md`):
-    // cycle.tsx is the same "diagram made of self-framed nodes" family as
-    // flowchart/architecture — a bento outline shell underneath its ring
-    // would be a redundant second shell, so it declares passthroughShell:
-    // true too.
-    // hub_spoke (component-form collapse): a hub circle plus one capsule per
-    // element, same self-framed-node family — third and last addition.
-    // staircase (flow-components wave): a flight of self-framed treads, same
-    // family again.
-    const current = [
-      ...preRefactor,
-      "data_table",
-      "cycle",
-      "hub_spoke",
-      "staircase",
-      "chevron_process",
-      "swimlane",
-      "journey_map",
-      "decision_tree",
-      "from_to",
-      // hierarchy-components wave: a tree, a pyramid beside its legend, a
-      // berg, a beam on its columns and a chain of chevrons all paint their
-      // own panels, so the bento shell would frame an already-framed drawing.
-      "org_tree",
-      "issue_tree",
-      "pyramid",
-      "iceberg",
-      "pillar_model",
-      "value_chain",
-      // relation wave: venn's discs and chip, fishbone's spine and ribs,
-      // positioning_map's axes and the wheel's hub are each one composed
-      // figure, and the equation and the debate paint their own panels.
-      "venn",
-      "fishbone",
-      "positioning_map",
-      "segmented_wheel",
-      "concept_equation",
-      "pros_cons",
-      // A sketch draws its own frame, cutoff and labels: one composed figure.
-      "sketch",
-    ]
-    expect(new Set(PASSTHROUGH_SHELL_TYPES)).toEqual(new Set(current))
-    expect(PASSTHROUGH_SHELL_TYPES.size).toBe(current.length)
-  })
-})
-
-describe("pickEvidence (assertion_evidence + one-evidence share this)", () => {
+describe("pickEvidence (the assertion_evidence arrangement)", () => {
   it("returns undefined on an empty list and on types that are not evidence", () => {
     expect(pickEvidence([])).toBeUndefined()
     expect(pickEvidence([{ type: "paragraph", text: "x" }])).toBeUndefined()
@@ -407,7 +305,7 @@ describe("FULL_BODY_TYPES (structure-components wave 1 task 1 decision 1, extend
 // collections' ir-side successors (one `ComponentTraits` declaration per
 // `src/ir/components/*.ts` domain file) are assembled by a codegen/
 // aggregation step that reads them as plain data rather than as
-// compile-time-checked literals the way today's 6 `Set`s are. The describe
+// compile-time-checked literals the way today's `Set`s are. The describe
 // blocks above already pin every collection's exact membership against a
 // hardcoded pre-refactor twin, but neither that nor the type system cross-
 // checks against the *live* `COMPONENT_TYPES` export (`@/ir`, derived from
@@ -415,12 +313,10 @@ describe("FULL_BODY_TYPES (structure-components wave 1 task 1 decision 1, extend
 // explicitly, rather than leaving it an implicit side effect of the type
 // annotations above.
 describe("every classified member is a live COMPONENT_TYPES entry (traits reverse-generation feasibility, W2a task 4)", () => {
-  it("STRETCHABLE_TYPES ∪ SELF_VISUAL_TYPES ∪ SCALABLE_TYPES ∪ PASSTHROUGH_SHELL_TYPES ∪ FULL_BODY_TYPES ∪ EVIDENCE_TYPES ⊆ COMPONENT_TYPES", () => {
+  it("STRETCHABLE_TYPES ∪ SCALABLE_TYPES ∪ FULL_BODY_TYPES ∪ EVIDENCE_TYPES ⊆ COMPONENT_TYPES", () => {
     const allClassified = new Set<string>([
       ...STRETCHABLE_TYPES,
-      ...SELF_VISUAL_TYPES,
       ...SCALABLE_TYPES,
-      ...PASSTHROUGH_SHELL_TYPES,
       ...FULL_BODY_TYPES,
       ...EVIDENCE_TYPES,
     ])

@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
-  asciiDigitsToHan,
   casualHan,
-  CJK_DIGITS,
   formatChapterLabel,
-  formatJournalRightSlot,
   hanFormal,
   headingIsCjk,
   padded,
@@ -41,15 +38,6 @@ describe("casualHan", () => {
   })
 })
 
-describe("asciiDigitsToHan", () => {
-  it("maps each ASCII digit onto CJK_DIGITS, so 2026 is 二〇二六", () => {
-    expect(CJK_DIGITS).toEqual(["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"])
-    expect(asciiDigitsToHan("2026")).toBe("二〇二六")
-    expect(asciiDigitsToHan("2026")).not.toBe("二千零二十六")
-    expect(asciiDigitsToHan("Report 2026")).toBe("Report 二〇二六")
-  })
-})
-
 describe("formatChapterLabel", () => {
   it("act: CJK 第N幕 / Latin ACT N", () => {
     expect(formatChapterLabel("act", 1, true)).toBe("第一幕")
@@ -72,12 +60,6 @@ describe("formatChapterLabel", () => {
   it("lecture: CJK 第N讲 / Latin LECTURE N", () => {
     expect(formatChapterLabel("lecture", 3, true)).toBe("第三讲")
     expect(formatChapterLabel("lecture", 3, false)).toBe("LECTURE 3")
-  })
-})
-
-describe("formatJournalRightSlot", () => {
-  it("formats № pad · sectionName", () => {
-    expect(formatJournalRightSlot(1, "增长战略")).toBe("№ 01 · 增长战略")
   })
 })
 

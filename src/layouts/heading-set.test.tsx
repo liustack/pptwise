@@ -182,19 +182,12 @@ describe("a boundary face's heading answer holds to its drawing", () => {
     expect(checked).toBeGreaterThan(0)
   })
 
-  it("leaves undeclared only the faces that shrink a heading rather than cut it", () => {
+  it("leaves no boundary face undeclared", () => {
+    // The two that shrank a heading to the meta floor rather than cut it
+    // (banner-title and tone-adaptive-header) were deleted with the faces no
+    // built-in theme menu used, so every boundary face answers now.
     const undeclared = BOUNDARY_FACES.filter((face) => !DECLARED.includes(face)).map((face) => face.id)
-    // Both set the heading with `layoutSvgText`, which shrinks it to the meta
-    // floor and has no cut: there is no length at which they lose text.
-    expect(undeclared.sort()).toEqual(["banner-title", "tone-adaptive-header"])
-    for (const id of undeclared) {
-      const face = LAYOUT_REGISTRY[id]!
-      const theme = homeTheme(face, "cover")
-      for (const family of ["zh", "en"] as const) {
-        const ir = deck(theme, [{ type: "cover", heading: heading(family, HEADINGS[family].length), components: [] } as Slide])
-        expect(drawn(ir, 0, theme), `${id} ${family}`).toBe("whole")
-      }
-    }
+    expect(undeclared).toEqual([])
   })
 })
 

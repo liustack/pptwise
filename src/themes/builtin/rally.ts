@@ -82,7 +82,6 @@ export const CAMPAIGN_TOKENS: StyleTokens = {
   shape: {
     radius: 10,
     gapScale: 1.0, // 活力圆润（terminal 同档）
-    cover: { showKicker: true, barFill: "accent", metaPlacement: "bottom-left", textAnchor: "start" },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#2A1E3F" },

@@ -81,7 +81,7 @@ describe("auditL1 planted defects", () => {
       codes(wrap(`<text x="40" y="40" font-size="14" data-font-floor-exempt="gauge-spec">approved meta</text>`)),
     ).not.toContain("font-size")
     expect(
-      codes(wrap(`<text x="40" y="40" font-size="12" data-font-floor-exempt="show-spec">approved show label</text>`)),
+      codes(wrap(`<text x="40" y="40" font-size="12" data-font-floor-exempt="lineup-spec">approved lineup label</text>`)),
     ).not.toContain("font-size")
     expect(codes(wrap(`<text x="40" y="40" font-size="10" data-decor="1">star</text>`))).not.toContain("font-size")
     expect(codes(wrap(`<g data-decor="1"><text x="40" y="40" font-size="10">star</text></g>`))).not.toContain("font-size")
@@ -612,7 +612,7 @@ describe("planted L1 regression", () => {
 describe("auditL1 live sample", () => {
   it("completes on a real rendered page without treating corpus findings as failure", async () => {
     const assets = await corpusAssets(LEXICONS.zh)
-    const svg = renderSlideSvg(layoutPage("two-column", LEXICONS.zh, assets), 0)
+    const svg = renderSlideSvg(layoutPage("gauge-sheet", LEXICONS.zh, assets), 0)
     const result = auditL1(svg)
     expect(Array.isArray(result.findings)).toBe(true)
     expect(classifyL1(result)).toEqual(classifyL1(auditL1(svg)))

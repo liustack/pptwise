@@ -37,13 +37,9 @@ export const aliases = {
   items: [{ itemsKey: "sets", aliases: { title: "label", name: "label" } }],
 } satisfies ComponentAliasSpec
 
-// A drawing of circles and two label sizes: nothing here is a card, so a
-// bento shell around it would frame an already-composed figure.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

@@ -96,10 +96,10 @@ export function auditEmphasisUnassignedPages(): Record<string, UnassignedPageAud
   for (const sourceThemeId of UNASSIGNED) {
     const themeId = registerTestTheme(`emphasis-${sourceThemeId}`, sourceThemeId, {
       content: {
-        comparison: "two-column",
-        data: "split-band",
-        list: "bento-panel",
-        statement: "quiet-frame",
+        comparison: "gauge-sheet",
+        data: "grid-sheet",
+        list: "notice-sheet",
+        statement: "panel-sheet",
       },
     })
     const ir = deck(themeId)

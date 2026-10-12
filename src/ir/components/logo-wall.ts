@@ -70,16 +70,13 @@ export const aliases = {
 
 /**
  * 除通栏外全 false：等大方格是这个组件的全部意思，拉伸
- * 会让某一行的标识比另一行大（stretchable）；它坐在 bento 壳里没有自己的
- * 卡片（selfVisual/passthroughShell）；它是可回流的字标与图片混排，不是一
+ * 会让某一行的标识比另一行大（stretchable）；它是可回流的字标与图片混排，不是一
  * 张可整体缩放的图（scalable）；不是整页画布（fullBody）；一排名字也不是
  * chart/data_table 那种可复核的证据（evidence）。
  */
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   // 唯一为 true 的一条：一面墙要通栏。塞进两栏版式的一栏里，每格只剩一百
   // 出头的宽度，名字就只能被砍短——那正是版式忠实性规矩要根除的无痕丢失。

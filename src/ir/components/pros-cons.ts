@@ -45,13 +45,9 @@ export const aliases = {
   items: [],
 } satisfies ComponentAliasSpec
 
-// Two outlined columns and a filled verdict band: the component paints its
-// own frames, so the bento shell paints nothing underneath it.
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

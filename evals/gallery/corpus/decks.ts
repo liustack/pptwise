@@ -83,17 +83,7 @@ function statCoverHeading(lex: Lexicon): string {
   return `${m.value}${m.unit ?? ""}`
 }
 
-/**
- * lookbook-open-cover locks a single display line (48pt floor). The
- * corpus deck title still truncates at that floor in English and mixed,
- * which hard-blocks validate. A chapter title is the length that face
- * actually carries.
- */
-function oneLineCoverHeading(lex: Lexicon): string {
-  return lex.chapters[0]!
-}
-
-/** show-headline reserves 132px for one sharp cover claim. */
+/** runway's cover takes one sharp claim, not the deck title. */
 function showHeadlineCoverHeading(lex: Lexicon): string {
   return lex.kickers[0]!
 }
@@ -302,13 +292,11 @@ const WIDE_COMPONENT_TYPES = new Set<Component["type"]>(["architecture", "positi
  * (`LayoutDefinition.subheading`): validate refuses a subheading there, and
  * the face never drew one, so the page shows the same without it.
  */
-function subheadingFor(layoutId: string, text: string | undefined, lex: Lexicon): { subheading?: string } {
+function subheadingFor(layoutId: string, text: string | undefined): { subheading?: string } {
   // A face with no place for a subheading at all gets none. One that only
   // has none beside bullets gets one, since its gallery page carries none.
-  // A face whose subheading measure is narrower than the track's line gets
-  // the line its lexicon writes for it (`faceSubtitles`).
   const place = LAYOUT_REGISTRY[layoutId]?.subheading
-  return typeof place === "object" && place.beside === undefined ? {} : { subheading: lex.faceSubtitles?.[layoutId] ?? text }
+  return typeof place === "object" && place.beside === undefined ? {} : { subheading: text }
 }
 
 /**
@@ -353,22 +341,22 @@ export function themeDeck(themeId: string, lex: Lexicon, assets: CorpusAssets): 
             : emphasis
               ? emphasizePhrase(lex.deckTitle, emphasis.cover)
               : lex.deckTitle,
-      ...subheadingFor(menu.cover.face, lex.deckSubtitle, lex),
+      ...subheadingFor(menu.cover.face, lex.deckSubtitle),
       components:
         themeId === "brief"
           ? [{ type: "bullets", items: [lex.bullets[0]!, lex.bullets[1]!, lex.bullets[2]!] }]
           : [],
     },
-    { type: "chapter", heading: lex.chapters[0]!, ...subheadingFor(menu.chapter.face, lex.kickers[0], lex), components: [] },
+    { type: "chapter", heading: lex.chapters[0]!, ...subheadingFor(menu.chapter.face, lex.kickers[0]), components: [] },
     ...content,
     themeId === "thesis" || themeId === "brief" || themeId === "crayon" || themeId === "clinic" || themeId === "almanac"
       ? {
           type: "ending" as const,
           heading: lex.chapters[5]!,
-          ...subheadingFor(menu.ending.face, lex.verdicts.positive, lex),
+          ...subheadingFor(menu.ending.face, lex.verdicts.positive),
           components: [{ type: "bullets" as const, items: lex.bullets.slice(0, 3) }],
         }
-      : { type: "ending" as const, heading: lex.chapters[5]!, ...subheadingFor(menu.ending.face, lex.verdicts.positive, lex), components: [] },
+      : { type: "ending" as const, heading: lex.chapters[5]!, ...subheadingFor(menu.ending.face, lex.verdicts.positive), components: [] },
   ]
   return deckShell(lex, assets, themeId, `theme-${themeId}-${lex.id}`, slides)
 }
@@ -439,9 +427,6 @@ function shortNote(lex: Lexicon): Component {
   return { type: "paragraph", text: lex.sentences[10]! }
 }
 
-/** The frames `show-gallery` lays across its page (`FRAME_X` in `content-show-gallery.tsx`). */
-const SHOW_GALLERY_FRAMES = 6
-
 /**
  * Body components for a content page under a given layout, filled up to the
  * layout's declared capacity and no further. Overfilling would make the
@@ -473,50 +458,6 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     const kpi = b.kpi_cards!(lex)
     if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 1).map(({ value, unit, label, source }) => ({ value, unit, label, source }))
     return [kpi]
-  }
-  if (def.id === "gauge-stats") {
-    const kpi = b.kpi_cards!(lex)
-    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 4)
-    return [kpi]
-  }
-  if (def.id === "crayonbox-cards") {
-    const cards = b.numbered_cards!(lex)
-    if (cards.type === "numbered_cards") {
-      cards.items = cards.items.slice(0, 3).map((item, index) => ({
-        ...item,
-        title: lex.labels[index]!,
-        text: lex.labels[index + 3]!,
-        sub: lex.periods[index]!,
-      }))
-    }
-    return [cards]
-  }
-  if (def.id === "show-gallery") {
-    // Six frames over four photos, and a caption of its own under each. The
-    // captions used to cycle the four-line pool, so frames five and six
-    // printed the captions of frames one and two.
-    const pool = lex.faceCaptions?.["show-gallery"] ?? lex.captions
-    const captions = pool.slice(0, SHOW_GALLERY_FRAMES)
-    if (captions.length < SHOW_GALLERY_FRAMES) {
-      throw new Error(`show-gallery draws ${SHOW_GALLERY_FRAMES} frames, and lexicon "${lex.id}" has ${pool.length} captions`)
-    }
-    return [{
-      type: "image_grid",
-      items: captions.map((caption, index) => ({
-        asset_id: PHOTO_ASSETS[index % PHOTO_ASSETS.length]!,
-        caption,
-      })),
-    }]
-  }
-  if (def.id === "show-spotlight") {
-    const panel = b.insight_panel!(lex)
-    if (panel.type === "insight_panel") panel.rows = panel.rows.slice(0, 3)
-    return [b.image!(lex), panel]
-  }
-  if (def.id === "show-statement") {
-    const cards = b.numbered_cards!(lex)
-    if (cards.type === "numbered_cards") cards.items = cards.items.slice(0, 3)
-    return [cards]
   }
   // ledger's panel sheet: the board's data page, a chart in its panel with
   // the author's figures in panels beside it.
@@ -662,11 +603,6 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
       },
     ]
   }
-  if (def.id === "show-figures") {
-    const kpi = b.kpi_cards!(lex)
-    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3)
-    return [kpi]
-  }
 
   // Sparse and a few ordinary layouts have a body slot whose declared
   // capacity is the wrong signal: a one-sentence note is the capacity-1
@@ -675,8 +611,6 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   // the layout's own comments rather than broadening the default.
   if (def.id === "pull-quote") return [b.blockquote!(lex)]
   if (def.id === "gauge-point") return [b.blockquote!(lex)]
-  if (def.id === "crayonbox-point") return [b.blockquote!(lex)]
-  if (def.id === "one-evidence") return [b.chart!(lex)]
   if (def.id === "gauge-exhibit") return [b.chart!(lex)]
   // The board's ruled rows with a closing block: a short list and one
   // remark the page lands on, which is the shape the face composes by hand.
@@ -716,62 +650,19 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
     }
     return [kpi]
   }
-  if (def.id === "bento-panel") {
-    const kpi = b.kpi_cards!(lex)
-    const icons = b.icon_cards!(lex)
-    const source = lex.faceSources?.["bento-panel"]
-    if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 3).map((item, i) => (i === 0 && source !== undefined && item.source !== undefined ? { ...item, source } : item))
-    const titles = lex.faceCardTitles?.["bento-panel"]
-    const texts = lex.faceCardTexts?.["bento-panel"]
-    if (icons.type === "icon_cards") icons.items = icons.items.slice(0, 3).map((item, i) => ({ ...item, title: titles?.[i] ?? item.title, text: texts?.[i] ?? item.text }))
-    return [kpi, icons]
-  }
-  if (def.id === "stacked-poster") {
-    // The 108px caption strip under the poster hero cannot hold
-    // shortParagraph. One sentence fits the strip, so the page stays on the
-    // two-block poster path instead of dropping the body.
-    return [b.image!(lex), shortNote(lex)]
-  }
-  if (def.id === "quote-stage") return [shortNote(lex)]
   if (def.id === "statement") return [shortNote(lex)]
 
   if (capacity <= 1) return [shortNote(lex)]
 
   const shortParagraph: Component = { type: "paragraph", text: lex.shortParagraph }
 
-  // Per-layout bodies. Same capacity intent as before (two compact blocks
-  // for the two-column-ish family, image plus a short companion for
-  // takeovers) but different types, so paging the table is not eight
-  // copies of bullets+kpi.
+  // Per-layout bodies: image plus a short companion for the takeovers, each
+  // with a different second type, so paging the table is not copies of
+  // bullets+kpi.
   const bodies: Record<string, Component[]> = {
-    "two-column": (() => {
-      // Four KPI cards in a half-width column fall under MIN_READABLE_CARD_W
-      // and get dropped from the page. Two cards still read as a kpi pair.
-      const kpi = b.kpi_cards!(lex)
-      if (kpi.type === "kpi_cards") kpi.items = kpi.items.slice(0, 2)
-      return [b.bullets!(lex), kpi]
-    })(),
-    // Four bullets, not a numbered_cards stack: narrow-column is the `points`
-    // face, and a numbered card stack is ~400px tall on its own
-    // (`TALL_COMPONENT_TYPES`), so under the callout it overran this face's
-    // body rect and the density gate dropped the whole block. A bulleted list
-    // is what a points page actually carries. Four rows rather than the
-    // corpus' usual five because memo and clinic spend 100px more on the
-    // header, leaving a 325px rect where the fifth row does not fit.
-    "narrow-column": [b.callout!(lex), sliceBullets(b.bullets!(lex), 4)],
-    "rail-numbered": [b.steps!(lex), shortNote(lex)],
     "banner-heading": [b.icon_cards!(lex), b.bullets!(lex)],
-    "tone-adaptive-content": [b.blockquote!(lex), b.kpi_cards!(lex)],
-    "quiet-frame": [b.bullets!(lex), b.callout!(lex)],
-    "split-band": [b.icon_cards!(lex), shortNote(lex)],
-    "asymmetric-triptych": [b.image!(lex), b.blockquote!(lex)],
     "image-split": [b.image!(lex), b.bullets!(lex), shortParagraph],
     "image-top": [b.image!(lex), b.callout!(lex), shortParagraph],
-    "image-bottom": [b.image!(lex), b.blockquote!(lex), shortParagraph],
-    // Four notes, not the corpus' usual five: image-annotate's annotation
-    // rail beside the picture holds exactly four rows, and the fifth was
-    // being dropped on every theme that offers this face.
-    "image-annotate": [b.image!(lex), sliceBullets(b.bullets!(lex), 4)],
   }
 
   const mapped = bodies[def.id]
@@ -784,10 +675,6 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
 }
 
 const CONTENT_FACE_KINDS: Record<string, PageKind> = {
-  "asymmetric-triptych": "hierarchy",
-  "bento-panel": "list",
-  "crayonbox-cards": "list",
-  "crayonbox-point": "statement",
   "gauge-point": "statement",
   "gauge-exhibit": "evidence",
   "gauge-figure": "fact",
@@ -801,29 +688,13 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
   "grid-figure": "fact",
   "seal-sheet": "points",
   "seal-figure": "fact",
-  "gauge-stats": "data",
-  "image-annotate": "photo",
-  "image-bottom": "photo",
   "image-split": "photo",
   "image-top": "photo",
-  "narrow-column": "points",
-  "one-evidence": "evidence",
   "pull-quote": "quote",
   "periodical-quote": "quote",
   "scroll-quote": "quote",
-  "quiet-frame": "points",
-  "quote-stage": "quote",
-  "rail-numbered": "process",
-  "show-figures": "data",
-  "show-gallery": "photo",
-  "show-spotlight": "photo",
-  "show-statement": "statement",
-  "split-band": "data",
-  "stacked-poster": "data",
   "stat-hero": "fact",
   statement: "statement",
-  "tone-adaptive-content": "data",
-  "two-column": "comparison",
 }
 
 /**
@@ -885,12 +756,8 @@ export function layoutPage(
           heading:
             def.id === "stat-cover"
               ? statCoverHeading(lex)
-              : def.id === "show-headline"
-                ? showHeadlineCoverHeading(lex)
-                : def.id === "lookbook-open-cover"
-                  ? oneLineCoverHeading(lex)
-                  : lex.faceTitles?.[def.id] ?? lex.deckTitle,
-          ...subheadingFor(layoutId, lex.deckSubtitle, lex),
+              : lex.deckTitle,
+          ...subheadingFor(layoutId, lex.deckSubtitle),
           components:
             def.id === "gauge-verdict" || def.id === "pitch-cover"
               ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
@@ -902,8 +769,8 @@ export function layoutPage(
       : slideType === "chapter"
         ? {
             type: "chapter",
-            heading: lex.faceTitles?.[def.id] ?? lex.chapters[1]!,
-            ...subheadingFor(layoutId, lex.kickers[1], lex),
+            heading: lex.chapters[1]!,
+            ...subheadingFor(layoutId, lex.kickers[1]),
             // homeroom's part of a lesson says what the part covers on three cards.
             components:
               def.id === "lesson-chapter"
@@ -917,9 +784,9 @@ export function layoutPage(
           ? {
               type: "ending",
               heading: lex.chapters[5]!,
-              ...subheadingFor(layoutId, lex.verdicts.positive, lex),
+              ...subheadingFor(layoutId, lex.verdicts.positive),
               components:
-                def.id === "gauge-next" || def.id === "crayonbox-todo" || def.id === "dossier-ending" || def.id === "yearbook-ending"
+                def.id === "gauge-next" || def.id === "dossier-ending" || def.id === "yearbook-ending"
                   ? [{ type: "bullets", items: lex.bullets.slice(0, 3) }]
                   : def.id === "lesson-ending"
                     ? [
@@ -946,7 +813,7 @@ export function layoutPage(
               // stat-hero sets no heading over its figure: one written
               // there has nowhere on the hero to go, and the face steps
               // aside for it.
-              heading: def.id === "stat-hero" ? undefined : lex.faceHeadings?.[def.id] ?? lex.headings[7]!,
+              heading: def.id === "stat-hero" ? undefined : lex.headings[7]!,
               components: bodyFor(def, lex),
               footnote: lex.sources[1]!.label,
               ...(def.kind === "takeover" ? { image_side: "right" as const } : {}),
@@ -1071,15 +938,17 @@ export function componentPage(
   // first row, so a lead-in taken from the near end said the same thing
   // twice on every one of their pages.
   const leadIn: Component = { type: "paragraph", text: lex.sentences[9]! }
-  const menuFace = getThemeDefinition(themeId).menu.content[kind]?.face
+  // A theme that serves no page of the component's kind still takes the
+  // component on its points page, which every built-in theme serves, the
+  // way an author would set it there. A quote borrows pull-quote instead.
+  const served = getThemeDefinition(themeId).menu.content
+  const pageKind: PageKind = served[kind] !== undefined || kind === "quote" ? kind : "points"
   const renderingThemeId =
-    menuFace !== undefined
-      ? themeId
-      : ensureGalleryFaceTheme(themeId, kind === "quote" ? "pull-quote" : "narrow-column", "content", kind)
+    served[pageKind] !== undefined ? themeId : ensureGalleryFaceTheme(themeId, "pull-quote", "content", pageKind)
 
   const slide = {
     type: "content",
-    kind,
+    kind: pageKind,
     heading:
       cartesian && component.chart_type === "scatter"
         ? lex.scatterHeading

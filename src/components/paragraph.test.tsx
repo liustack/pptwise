@@ -57,7 +57,6 @@ describe("paragraph component emphasis", () => {
     const consultingCtx: ComponentCtx = {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
-      themeId: "brief",
       emphasis: "pad",
     }
     const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
@@ -153,7 +152,6 @@ describe("paragraph component emphasis", () => {
     const consultingCtx: ComponentCtx = {
       ...ctx,
       colors: CONSULTING_TOKENS.colors,
-      themeId: "brief",
       emphasis: "pad",
     }
     const long = {

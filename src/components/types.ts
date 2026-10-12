@@ -87,8 +87,7 @@ export interface ComponentCtx {
   bodyFontPx: number
   /**
    * Component → its 0-based index in the slide's own `components` array. `renderComponent`
-   * (and terminal's exploded kpi/icon-card units, which bypass `renderComponent`
-   * — see `bento-layout.ts`'s `BentoUnit.component`) consult this to tag their SVG
+   * consults this to tag its SVG
    * output with `data-blk="{index}"`, the anchor `svg2pptx/dispatch.ts` walks
    * to stamp each op's `blockIndex` for the wave-C S3 per-component
    * entrance-animation exporter (`pptx/pptx-animations.ts`'s
@@ -132,18 +131,6 @@ export interface ComponentCtx {
    * on its own words as before.
    */
   figures?: FigureStyle
-  /**
-   * Theme id, used by the heading-treatment assignment table
-   * (`../render/heading-treatments/assignments.ts`). Production `buildCtx`
-   * always sets it from `tokens.id` (`StyleTokens.id` is already the theme
-   * id). A hand-built test ctx that skips it gets the default heading
-   * treatment.
-   *
-   * No component renderer reads this. A component draws one way on every
-   * theme, and what differs between themes reaches it through `colors`,
-   * `fonts`, and `shape`.
-   */
-  themeId?: string
   /**
    * The bound theme's declared emphasis stroke for a `**marked**` run
    * (`ThemeDefinition.emphasis`), threaded here rather than looked up by id

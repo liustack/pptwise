@@ -7,7 +7,6 @@ import { __pathBoundingBox } from "../../audit/deck-audit"
 import { measureTextUnits } from "../../lib/svg-text-layout"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人**听它说话**。"
@@ -126,36 +125,4 @@ describe("terminal sparse faces", () => {
     expect(heading.querySelector("tspan")).toBeNull()
   })
 
-  it("one-evidence is a panel with a node lamp and NODE index", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 6.5 天生成",
-      subheading: "217 张工单全量统计 · 2026 Q2",
-      components: [],
-    } as Slide
-    const { root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const card = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "960")
-    expect(card?.getAttribute("fill")).toBe(ctx.colors.surface)
-    const lamp = root.querySelector("circle")
-    expect(lamp?.getAttribute("cx")).toBe("224")
-    expect(lamp?.getAttribute("cy")).toBe("268")
-    expect(lamp?.getAttribute("r")).toBe("6")
-    expect(lamp?.getAttribute("fill")).toBe(ctx.colors.accent)
-    const stub = root.querySelector("line")
-    expect(stub?.getAttribute("x1")).toBe("230")
-    expect(stub?.getAttribute("x2")).toBe("300")
-    const index = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").startsWith("NODE"))!
-    expect(index.textContent).toBe("NODE 01")
-    expect(index.getAttribute("fill")).toBe(ctx.colors.accent)
-    expect(index.getAttribute("letter-spacing")).toBeNull()
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("维护工单"),
-    )!
-    expect(claim.getAttribute("fill")).toBe(ctx.colors.text)
-  })
 })

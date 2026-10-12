@@ -254,13 +254,11 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
         // unreachable by any sweep in this repo — a real 1.57:1 contrast
         // defect on ember (and 6 other themes) went un-audited not because
         // no test looked, but because no fixture's content shape could ever
-        // trigger the code path being measured. `layout` is pinned (like
-        // `quote_stage`'s own pinned entries below) so this fixture always
-        // exercises `constellation-ending` regardless of which layout a
-        // given theme happens to curate into its `ending` pool — the point
-        // is coverage of the layout itself, not of theme curation.
-        // Locked by `deck-audit.test.ts`'s dedicated "constellation-ending
-        // accent period contrast" 16-theme sweep.
+        // trigger the code path being measured. That face has since been
+        // deleted with the other faces no menu used. The entry stays so every
+        // theme's own ending face still meets a period-ending heading.
+        // Locked by `deck-audit.test.ts`'s "ending trailing period contrast"
+        // sweep.
         type: "ending",
         heading: "Thank you.",
         subheading: MIXED_LONG,
@@ -1329,23 +1327,12 @@ export const STRESS_DECKS: Record<string, PptxIR> = {
     },
   ]),
 
-  // quote_stage (quote-stage wave, task T2, 裁定 4): pptwise's first
-  // `pinOnly` layout (registry.ts's `LayoutDefinition.pinOnly`) — the
-  // "content layouts" auto-pick fixtures throughout the rest of this
-  // file never reach it (it's excluded from every theme's curated pool by
-  // construction), so it needs its own explicitly-pinned deck to get any
-  // pathological-content coverage from this baseline at all. Two pages:
-  // an extreme CJK quote at capacity 0 (a pure quote, no attribution — the
-  // layout's own most minimal legal shape) and an extreme mixed
-  // CJK/Latin/digit quote at capacity 1 (heading + subheading + one
-  // attribution component all extreme simultaneously) — both must still
-  // report zero overflow findings: `fitHeadingLines`'s shrink-then-truncate
-  // fallback keeps every element inside its own declared box even when the
-  // *content* gets cut, which is exactly what this baseline's "zero
-  // findings" bar checks: a truncated-but-in-bounds render is not what this
-  // gate flags. Length itself is validate's business, and these fixtures
-  // render directly, bypassing validateIr on purpose (this file's own
-  // header).
+  // quote_stage (quote-stage wave, task T2, 裁定 4): written for the
+  // pin-only quote-stage face, which is gone (deleted with the faces no menu
+  // used). The two pages stay as heading stress on each theme's points face:
+  // an extreme CJK heading with no body, and an extreme mixed heading,
+  // subheading and paragraph together. Both must report zero overflow
+  // findings, since `fitHeadingLines` shrinks then truncates inside the box.
   quote_stage: deck([
     {
       type: "content",

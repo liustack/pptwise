@@ -1,19 +1,7 @@
 import type { ContentLayout, ContentLayoutId } from "./types"
-import { NarrowColumnContent } from "./content-narrow-column"
-import { TwoColumnContent } from "./content-two-column"
-import { RailNumberedContent } from "./content-rail-numbered"
-import { StackedPosterContent } from "./content-stacked-poster"
-import { ToneAdaptiveContent } from "./content-tone-adaptive-content"
-import { BentoPanelContent } from "./content-bento-panel"
-import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
-import { QuietFrameContent } from "./content-quiet-frame"
-import { SplitBandContent } from "./content-split-band"
-import { QuoteStageContent } from "./content-quote-stage"
 import { StatementContent } from "./content-statement"
 import { PullQuoteContent } from "./content-pull-quote"
 import { StatHeroContent } from "./content-stat-hero"
-import { OneEvidenceContent } from "./content-one-evidence"
-import { GaugeStatsContent } from "./content-gauge-stats"
 import { GaugePointContent } from "./content-gauge-point"
 import { GaugeSheetContent } from "./content-gauge-sheet"
 import { GaugeExhibitContent } from "./content-gauge-exhibit"
@@ -50,12 +38,6 @@ import { NoticeStatementContent } from "./content-notice-statement"
 import { NoticeFigureContent } from "./content-notice-figure"
 import { NoticeExhibitContent } from "./content-notice-exhibit"
 import { SealFigureContent } from "./content-seal-figure"
-import { CrayonboxCardsContent } from "./content-crayonbox-cards"
-import { CrayonboxPointContent } from "./content-crayonbox-point"
-import { ShowGalleryContent } from "./content-show-gallery"
-import { ShowSpotlightContent } from "./content-show-spotlight"
-import { ShowStatementContent } from "./content-show-statement"
-import { ShowFiguresContent } from "./content-show-figures"
 
 export type { ContentLayout, ContentLayoutId } from "./types"
 
@@ -98,28 +80,10 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // chalkboard-sheet: 54 in all. The bulletin kinds round adds
 // notice-statement, notice-figure and notice-exhibit: 57 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
-  "narrow-column": NarrowColumnContent,
-  "two-column": TwoColumnContent,
-  "rail-numbered": RailNumberedContent,
-  "stacked-poster": StackedPosterContent,
-  "bento-panel": BentoPanelContent,
-  "tone-adaptive-content": ToneAdaptiveContent,
-  "asymmetric-triptych": AsymmetricTriptychContent,
-  "quiet-frame": QuietFrameContent,
-  "split-band": SplitBandContent,
-  "quote-stage": QuoteStageContent,
   statement: StatementContent,
   "pull-quote": PullQuoteContent,
   "stat-hero": StatHeroContent,
-  "one-evidence": OneEvidenceContent,
-  "gauge-stats": GaugeStatsContent,
   "gauge-point": GaugePointContent,
-  "crayonbox-cards": CrayonboxCardsContent,
-  "crayonbox-point": CrayonboxPointContent,
-  "show-gallery": ShowGalleryContent,
-  "show-spotlight": ShowSpotlightContent,
-  "show-statement": ShowStatementContent,
-  "show-figures": ShowFiguresContent,
   "gauge-sheet": GaugeSheetContent,
   "gauge-exhibit": GaugeExhibitContent,
   "gauge-figure": GaugeFigureContent,

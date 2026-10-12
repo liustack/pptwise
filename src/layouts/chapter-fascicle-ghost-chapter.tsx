@@ -5,10 +5,30 @@ import { fitHeadingLines, scaleTypePx } from "../render/heading-fit"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { casualHan, headingIsCjk } from "../render/heading-treatments/labels"
-import { toRoman } from "./chapter-roman-chapter"
 import { textInkBox } from "../render/depth-contract/geometry"
 import { CANVAS_H_PX, CANVAS_W_PX } from "../constants"
 import { stripEmphasis } from "../render/emphasis"
+
+/** 标准减法记数罗马数字转换（1-3999），非查表——章节数不设上限假设。
+ * 越界（≤0 或 ≥4000，实际 deck 不可能出现）回落阿拉伯数字。 */
+const ROMAN_PAIRS: [number, string][] = [
+  [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+  [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+  [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+]
+
+function toRoman(n: number): string {
+  if (!Number.isInteger(n) || n <= 0 || n >= 4000) return String(n)
+  let rest = n
+  let out = ""
+  for (const [value, glyph] of ROMAN_PAIRS) {
+    while (rest >= value) {
+      out += glyph
+      rest -= value
+    }
+  }
+  return out
+}
 
 /**
  * fascicle-ghost-chapter（第八波 pinOnly）：浅底辑号章首。accent 辑号

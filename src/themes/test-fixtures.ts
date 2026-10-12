@@ -45,7 +45,6 @@ function replaceFace(
 function publicStyle(themeId: CanonicalThemeId, id: string): ThemeFile["style"] {
   const style = structuredClone(THEME_DEFINITIONS[themeId].style)
   style.id = id
-  if (style.shape?.cover !== undefined) delete style.shape.cover
   return style
 }
 

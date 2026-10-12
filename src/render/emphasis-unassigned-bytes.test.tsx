@@ -141,6 +141,13 @@ function consultingPadDeck(): PptxIR {
 // homeroom, runway, journal, almanac, vermilion and memo. Only those six
 // `*|5` keys move, and only the run's fill on each. The other 94 paths stay
 // byte-identical.
+//
+// Recaptured (orphan faces removed, 2026-10-12). The four content pages
+// borrowed two-column, split-band, bento-panel and quiet-frame, which no
+// built-in theme used and which left the registry. They now borrow
+// gauge-sheet, grid-sheet, notice-sheet and panel-sheet. All 80 content keys
+// (`*|2` to `*|5`) move. The twenty cover keys stay byte-identical, and every
+// content page still paints its runs as tspans with no literal marker.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

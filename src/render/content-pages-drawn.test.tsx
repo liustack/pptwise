@@ -65,15 +65,15 @@ describe("validate refuses a content page its drawing would lose part of", () =>
     ])
   })
 
-  it("a fifth annotation beside a lone picture, naming how many of the items the page draws", () => {
-    const base = layoutPage("image-annotate", LEXICONS.zh, assets.zh, "brief", "photo")
+  it("a fifth bullet under a picture, naming how many of the items the page draws", () => {
+    const base = layoutPage("image-top", LEXICONS.zh, assets.zh, "brief", "photo")
     const page = base.slides[0]!
     const bullets = { type: "bullets", items: ["一", "二", "三", "四", "五"] }
     const ir = { ...base, slides: [{ ...page, components: [...page.components.filter((c) => c.type !== "bullets"), bullets] } as unknown as Slide] }
     expect(lost(validateIr(ir, { allowDroppedContent: true }).ir!).dropped).toBe(1)
     const v = validateIr(ir)
     expect(v.errors).toEqual([
-      expect.objectContaining({ message: expect.stringMatching(/^face "image-annotate" draws 4 of the 5 items in this page's bullets with the rest of the page as written, so it would leave 1 item of this page's .*bullets.* off the page\. Keep 4, or split the bullets across two pages\.$/) }),
+      expect.objectContaining({ message: expect.stringMatching(/^face "image-top" draws 4 of the 5 items in this page's bullets with the rest of the page as written, so it would leave 1 item of this page's .*bullets.* off the page\. Keep 4, or split the bullets across two pages\.$/) }),
     ])
   })
 
@@ -83,15 +83,6 @@ describe("validate refuses a content page its drawing would lose part of", () =>
     const v = validateIr(ir)
     expect(v.ok).toBe(false)
     expect(v.errors.map((e) => e.message).join("\n")).toMatch(/it would cut .*the label of item 3 of this page's kpi_cards/)
-  })
-
-  it("a heading a face sets on one line beside its picture, naming the heading to shorten", () => {
-    const base = layoutPage("show-spotlight", LEXICONS.en, assets.en, "brief", "photo")
-    const ir = { ...base, slides: [{ ...base.slides[0]!, heading: "Competitors are pricing below cost in the mid-market" }] }
-    const v = validateIr(ir)
-    expect(v.errors).toEqual([
-      expect.objectContaining({ path: "slides.0.heading", message: "face \"show-spotlight\" cannot set this page's heading whole beside the rest of this page, so it would cut it. Shorten it, or split the page." }),
-    ])
   })
 
   it("passes the same blocks at a size the page draws whole, and that page is drawn whole", () => {

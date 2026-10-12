@@ -8,9 +8,7 @@
 // over the whole page and lays the mark on it, so on a page painted
 // #777777 the mark came out black on the stage at 1.14:1. homeroom's cover
 // named its primary for the spot, but its board is the primary shaded
-// darker, and on a painted page the mark read 2.92:1 there. Five more cover
-// faces off every built-in menu paint their primary under the corner a
-// classification always takes, and set it in the page's dark ink on it.
+// darker, and on a painted page the mark read 2.92:1 there.
 import { beforeAll, describe, expect, it } from "vitest"
 import { validateIr } from "@/api"
 import { auditDeck } from "@/audit/deck-audit"
@@ -60,11 +58,6 @@ describe("the cover mark reads on the ground it stands on", () => {
     ["runway", "lineup-cover", "classification", undefined],
     ["homeroom", "lesson-cover", "confidentiality", "#777777"],
     ["homeroom", "lesson-cover", "confidentiality", "#2E8B57"],
-    ["brief", "fashion-masthead", "classification", undefined],
-    ["brief", "header-band", "classification", undefined],
-    ["brief", "left-anchor", "classification", undefined],
-    ["brief", "show-headline", "classification", undefined],
-    ["brief", "split-diagonal", "classification", "#777777"],
   ] as const)("%s %s, %s on %s", (theme, face, mark, ground) => {
     expect(markFindings(cover(theme, face, mark, ground))).toEqual([])
   })

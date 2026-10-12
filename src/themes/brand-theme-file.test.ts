@@ -38,7 +38,7 @@ describe("parseBrandThemeFile", () => {
 
   it("rejects retired v1 fields through the ordinary v2 schema, naming the current format", async () => {
     const current = await extractFixtureTheme()
-    for (const retired of [{ version: 1 }, { base: "brief" }, { faces: { cover: ["poster-center"] } }]) {
+    for (const retired of [{ version: 1 }, { base: "brief" }, { faces: { cover: ["institutional-block"] } }]) {
       expect(() => parseBrandThemeFile({ ...current, ...retired }, "legacy.theme.json")).toThrow(
         /current theme format is version 2.*self-contained/is,
       )
@@ -58,10 +58,8 @@ describe("registerBrandThemeFile", () => {
 
     const def = getThemeDefinition("acme")
     expect(def.style.colors.text).toBe(theme.style.colors.text)
-    // Its own id everywhere: no donor theme lends its structural tables, and
-    // the engine-only board knobs never reach a public file.
+    // Its own id everywhere: no donor theme lends its structural tables.
     expect(def.style.id).toBe("acme")
-    expect(def.style.shape?.cover).toBeUndefined()
     expect(def.menu).toEqual(theme.menu)
     expect(def.motif).toBeUndefined()
     const brief = getThemeDefinition("brief")
@@ -79,7 +77,7 @@ describe("registerBrandThemeFile", () => {
           cover: { face: "gauge-verdict" },
           chapter: { face: "gauge-section" },
           content: {
-            data: { face: "gauge-stats", decor: { kind: "silent" } },
+            data: { face: "gauge-sheet", decor: { kind: "silent" } },
             photo: { face: "image-split" },
           },
           ending: { face: "gauge-next" },
@@ -93,7 +91,7 @@ describe("registerBrandThemeFile", () => {
     expect(def.menu).toEqual(file.menu)
     expect(def.menu.cover.face).toBe("gauge-verdict")
     expect(def.menu.chapter.face).toBe("gauge-section")
-    expect(def.menu.content.data?.face).toBe("gauge-stats")
+    expect(def.menu.content.data?.face).toBe("gauge-sheet")
     expect(def.menu.content.photo?.face).toBe("image-split")
     expect(def.menu.ending.face).toBe("gauge-next")
     expect(def.menu.content.data?.decor).toEqual({ kind: "silent" })
@@ -109,7 +107,7 @@ describe("registerBrandThemeFile", () => {
         menu: {
           cover: { face: "not-a-layout" },
           chapter: { face: "gauge-section" },
-          content: { data: { face: "gauge-stats" } },
+          content: { data: { face: "gauge-sheet" } },
           ending: { face: "gauge-next" },
         },
       },
@@ -129,9 +127,9 @@ describe("registerBrandThemeFile", () => {
         id: "acme-wrong-face",
         style: extracted.style,
         menu: {
-          cover: { face: "two-column" },
+          cover: { face: "gauge-sheet" },
           chapter: { face: "gauge-section" },
-          content: { data: { face: "gauge-stats" } },
+          content: { data: { face: "gauge-sheet" } },
           ending: { face: "gauge-next" },
         },
       },
@@ -139,7 +137,7 @@ describe("registerBrandThemeFile", () => {
     )
 
     expect(() => registerBrandThemeFile(file)).toThrow(
-      /menu\.cover\.face layout "two-column" is not valid for "cover" slides/,
+      /menu\.cover\.face layout "gauge-sheet" is not valid for "cover" slides/,
     )
   })
 
@@ -184,7 +182,7 @@ describe("registerBrandThemeFile", () => {
       menu: {
         cover: { face: "gauge-verdict" },
         chapter: { face: "gauge-section" },
-        content: { data: { face: "gauge-stats" } },
+        content: { data: { face: "gauge-sheet" } },
         ending: { face: "gauge-next" },
       },
     }

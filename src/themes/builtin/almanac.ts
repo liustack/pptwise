@@ -101,7 +101,6 @@ export const TERRA_TOKENS: StyleTokens = {
   shape: {
     radius: 4,
     gapScale: 1, // 朴实无华（ESG 年报/可持续报告的克制感）
-    cover: { titleSize: 64, hideRightMeta: true },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#EFE9DC" },

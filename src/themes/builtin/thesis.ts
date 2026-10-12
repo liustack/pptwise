@@ -91,7 +91,6 @@ export const ACADEMIC_TOKENS: StyleTokens = {
   shape: {
     radius: 2,
     gapScale: 1.05, // 学术严谨微圆+论文留白
-    cover: { showCornerTriangle: false, titleBlockAlign: "upper", showInBlockKicker: true },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F5F3EC" },

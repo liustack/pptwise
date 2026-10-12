@@ -137,7 +137,6 @@ export const ENTERPRISE_TOKENS: StyleTokens = {
   },
   shape: {
     radius: 8, // 企业圆润（spec 提案）
-    cover: { textAnchor: "start", bandY: 256, bandH: 220, bandMark: true },
   },
   defaultBackgrounds: {
     // 四档保持浅底。封面 / ending 的 IKB 满版由 ikb-field-cover /

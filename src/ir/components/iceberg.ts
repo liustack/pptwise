@@ -33,15 +33,9 @@ export const aliases = {
   block: { visible: "above", hidden: "below", surface: "above", deep: "below" },
 } satisfies ComponentAliasSpec
 
-// One silhouette and one tinted band, painted edge to edge: a card outline
-// around it would cut the water off before the berg ends. Not `selfVisual`,
-// though — that names a component that paints its own *card*, and this one
-// paints a picture, not a frame.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

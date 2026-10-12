@@ -417,7 +417,7 @@ export function renderEmphasisText(
 }
 
 /** Ink and stroke a heading paints its emphasis runs with. */
-export interface EmphasisHeadingPaint {
+interface EmphasisHeadingPaint {
   /** Fill for an emphasized run under the `tint` stroke. */
   accent: string
   /** Fill of the pad/underline stroke. Defaults to `accent`. */

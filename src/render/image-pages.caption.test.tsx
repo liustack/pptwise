@@ -1,14 +1,10 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, it, expect } from "vitest"
+import { afterEach, describe, it, expect } from "vitest"
 import { boundSlideToSvgMarkup } from "./__fixtures__/bound-slide"
 import type { PptxIR, Slide } from "@/ir"
 import { __resetRegisteredThemes } from "../themes/definitions"
 import { registerTestTheme } from "../themes/test-fixtures"
 
-// image-bottom 的 caption 遮罩条只在 Branding 真会画内容页脚时才上移
-// 让位。页脚绘制条件是 branding:"full"（cover-only 默认与 minimal 都不画
-// meta 行），caption 让位谓词必须与它一致，否则默认姿态下条带为不存在的
-// 页脚悬空 40px（2026-08-22 根因修复的回归钉）。
 const slide: Slide = {
   type: "content",
   kind: "photo",
@@ -19,21 +15,11 @@ const slide: Slide = {
   ],
 }
 
-const TEST_THEME_ID = "image-bottom-caption"
-const SILENT_THEME_ID = "image-bottom-caption-silent"
-
-beforeEach(() => {
-  registerTestTheme(TEST_THEME_ID, "brief", { content: { photo: "image-bottom" } })
-  registerTestTheme(SILENT_THEME_ID, "brief", {
-    content: { photo: { face: "image-bottom", brand: "none" } },
-  })
-})
-
 afterEach(() => {
   __resetRegisteredThemes()
 })
 
-function makeIr(branding?: PptxIR["branding"], themeId = TEST_THEME_ID): PptxIR {
+function makeIr(themeId: string): PptxIR {
   return {
     version: "5",
     filename: "deck.pptx",
@@ -46,45 +32,18 @@ function makeIr(branding?: PptxIR["branding"], themeId = TEST_THEME_ID): PptxIR 
         },
       },
     },
-    ...(branding ? { branding } : {}),
     slides: [slide],
   }
 }
 
-function bandYs(markup: string): number[] {
-  // 整宽 40 高的半透明黑 rect（caption 条与 full 姿态下 Branding 的
-  // 页脚遮罩同款），收全部 y 值再断言。
-  return [...markup.matchAll(/<rect x="0" y="(\d+)" width="1280" height="40" fill="#0A0E14"/g)].map(
-    (m) => Number(m[1]),
-  )
-}
-
-describe("image-bottom caption band vs branding posture", () => {
-  it("sits flush at the page edge under the default cover-only posture", () => {
-    expect(bandYs(boundSlideToSvgMarkup(makeIr(), slide, 0))).toEqual([680])
-  })
-
-  it("sits flush under minimal (no content-page footer meta)", () => {
-    expect(bandYs(boundSlideToSvgMarkup(makeIr("minimal"), slide, 0))).toEqual([680])
-  })
-
-  it('lifts 40px above the drawn footer only under branding:"full"', () => {
-    expect(bandYs(boundSlideToSvgMarkup(makeIr("full"), slide, 0))).toContain(640)
-  })
-
-  it("stays flush when the menu entry silences full deck branding", () => {
-    expect(bandYs(boundSlideToSvgMarkup(makeIr("full", SILENT_THEME_ID), slide, 0))).toEqual([680])
-  })
-})
-
 describe("a takeover's caption marks", () => {
-  it.each(["image-bottom", "image-split", "image-top", "image-annotate"])("%s paints a marked run of the caption, not its asterisks", (face) => {
+  it.each(["image-split", "image-top"])("%s paints a marked run of the caption, not its asterisks", (face) => {
     registerTestTheme(`caption-marks-${face}`, "brief", { content: { photo: face } })
     const marked: Slide = {
       ...slide,
       components: [{ type: "image", asset_id: "hero", fit: "cover", caption: "示意图：**车间里的老工人**（AI 生成）" }, { type: "bullets", items: ["对象：受新规约束的城镇职工", "问题一：到龄以后就业有没有上升"] }],
     }
-    const ir = { ...makeIr(undefined, `caption-marks-${face}`), slides: [marked] }
+    const ir = { ...makeIr(`caption-marks-${face}`), slides: [marked] }
     const markup = boundSlideToSvgMarkup(ir, marked, 0)
     expect(markup).not.toContain("**")
     expect(markup).toMatch(/<tspan[^>]*>车间里的老工人<\/tspan>/)

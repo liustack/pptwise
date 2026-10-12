@@ -7,8 +7,7 @@ import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
  * Both captions sit on **one horizontal line**, left-aligned, always
  * horizontal, **below** the plot or grid. The y-axis name comes first with
  * "  ↑", then a gap, then the x-axis name with "  →". Character-column
- * stacking is forbidden here even for CJK — `stacksVertically` stays for
- * ink headings, not for axis titles.
+ * stacking is forbidden here even for CJK.
  *
  * Placement is the caller's job (always below the drawing):
  *  - cartesian plots (bar / line / area / scatter) put the pair under the

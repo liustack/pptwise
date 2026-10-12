@@ -81,32 +81,30 @@ async function expectCutExports(components: Component[]): Promise<void> {
 
 
 /**
- * Schema-max content on the narrowest curated layout, under a heading long
- * enough to take two lines — the tightest box this component can be handed
- * through a real theme menu.
+ * Schema-max content on brief's sheet, under a heading long enough to take
+ * two lines.
  *
  * It no longer overflows, and this file no longer has a fixture that does.
  * Two repairs took the overflow away one after the other. First `pest.tsx`'s
  * undersized-box shrink: its stage had been dead since the floor
  * `ITEM_SIZE_MIN / ITEM_SIZE` became exactly 1, and with the rhythm free to
  * close up again the 2x2 grid absorbed its own schema ceiling on an ordinary
- * layout. Then the step-aside (`src/render/step-aside.tsx`): the two-line
- * heading is exactly what makes `narrow-column` hand this page over, and the
- * sheet it hands it to is wider and taller than the 880px column, so the
- * grid fits there too.
+ * layout. Then the step-aside (`src/render/step-aside.tsx`): a face too
+ * narrow for the grid hands the page to a sheet that is wider and taller.
+ * The narrow column this fixture was written for has since been deleted.
  *
- * So the fixture stays, and proves the other half — that the tightest real
- * box in the menu costs this component nothing. The export gate's own
+ * So the fixture stays, and proves the other half: schema-max content costs
+ * this component nothing. The export gate's own
  * refusal is still pinned, on fixtures that still overflow: `five_forces`'s
  * sibling file and `generate-chart-decline-export.test.ts`.
  */
-function narrowIr(): PptxIR {
-  const themeId = registerTestTheme("pest-narrow", "brief", {
-    content: { comparison: "narrow-column" },
+function schemaMaxIr(): PptxIR {
+  const themeId = registerTestTheme("pest-schema-max", "brief", {
+    content: { comparison: "gauge-sheet" },
   })
   return {
     version: "5",
-    filename: "pest-narrow-fixture",
+    filename: "pest-schema-max-fixture",
     theme: { id: themeId },
     meta: {},
     assets: { images: {} },
@@ -171,12 +169,9 @@ describe("pest pathological content through the real generatePptx", () => {
     ])
   })
 
-  it("schema-max content on the narrowest curated layout loses nothing and exports cleanly", async () => {
-    const ir = narrowIr()
+  it("schema-max content under a two-line heading loses nothing and exports cleanly", async () => {
+    const ir = schemaMaxIr()
     const svg = renderSlideSvg(validateIr(ir).ir!, 1)
-    // The face handed the page over rather than squeezing the grid, and the
-    // page it handed it to holds every item.
-    expect(svg).toContain('data-face-stepped-aside="narrow-column"')
     expect(svg).not.toMatch(/data-dropped="[1-9]/)
     const bytes = await generatePptx(ir)
     expect(bytes.length).toBeGreaterThan(10_000)
@@ -187,16 +182,15 @@ describe("pest pathological content through the real generatePptx", () => {
 // The drop protocol, on this file's own fixtures: a page that cannot hold
 // what it was given paints no count of the loss, so the export is where the
 // author finds out. Every case above runs the default path and asserts its
-// fixture drops nothing, the narrow-layout one included — this component no
-// longer has a page in the menu it cannot fill.
+// fixture drops nothing, the schema-max one included.
 describe("pest over-capacity content is refused, not quietly shortened", () => {
   it("has no fixture left to refuse, and says so rather than pretending", async () => {
-    // This used to refuse `narrowIr()`. The step-aside closed that page (see
-    // `narrowIr`'s own comment), and a refusal test whose fixture no longer
+    // This used to refuse `schemaMaxIr()`. The step-aside closed that page (see
+    // `schemaMaxIr`'s own comment), and a refusal test whose fixture no longer
     // overflows is a test that passes for the wrong reason or not at all.
     // The gate itself is unchanged and still pinned by the fixtures that do
     // overflow, so what is asserted here is the fact that replaced the old
     // one: the tightest box a menu can hand this component costs it nothing.
-    await expect(generatePptx(narrowIr())).resolves.toBeDefined()
+    await expect(generatePptx(schemaMaxIr())).resolves.toBeDefined()
   })
 })

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest"
-import { BoundSlideSvg, boundSlideToSvgMarkup, boundSlideToRender } from "./__fixtures__/bound-slide"
+import { boundSlideToSvgMarkup, boundSlideToRender } from "./__fixtures__/bound-slide"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { CANVAS_W_PX } from "../constants"
 import { isBold } from "./fonts"
-import { parseSvgRoot, renderSvgMarkup } from "./serialize"
+import { parseSvgRoot } from "./serialize"
 import type { PptxIR, Slide } from "@/ir"
 import type { CanonicalThemeId } from "../themes"
 import { __resetRegisteredThemes } from "../themes/definitions"
@@ -226,7 +226,7 @@ describe("image-top with nothing under the image", () => {
 })
 
 describe("image takeover dropped-content propagation", () => {
-  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+  it.each(["image-split", "image-top"] as const)(
     "%s marks the page as dropped when its required image is absent",
     (face) => {
       const slide: Slide = {
@@ -267,7 +267,7 @@ describe("image takeover dropped-content propagation", () => {
   // contract: the takeover's single frame took the compare's left half and
   // the right half left with its label, unmarked. The takeover now steps
   // aside for any picture set it cannot hold.
-  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+  it.each(["image-split", "image-top"] as const)(
     "%s steps aside for an image_compare and paints both sides with their labels",
     (face) => {
       const slide: Slide = {
@@ -295,7 +295,7 @@ describe("image takeover dropped-content propagation", () => {
     },
   )
 
-  it.each(["image-split", "image-top", "image-bottom", "image-annotate"] as const)(
+  it.each(["image-split", "image-top"] as const)(
     "%s steps aside for a multi-item image_grid and paints every caption",
     (face) => {
       const slide: Slide = {
@@ -343,106 +343,7 @@ describe("image takeover dropped-content propagation", () => {
     expect(root.textContent).toContain("Field station, winter")
   })
 
-  it("image-annotate does not mark its selected image_compare source as dropped", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "photo",
-      heading: "Selected comparison anchor",
-      components: [
-        {
-          type: "image_compare",
-          left: { asset_id: "hero", label: "Before" },
-          right: { asset_id: "hero", label: "After" },
-        },
-      ],
-    }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-annotate" },
-    })
-    const doc = makeIr(themeId, slide)
-
-    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
-  })
-
-  it("image-annotate marks annotation overflow and unsupported sibling components", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "photo",
-      heading: "Annotated image",
-      components: [
-        { type: "image", asset_id: "hero", fit: "cover" },
-        { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
-        { type: "paragraph", text: "This component has no slot on the annotation surface." },
-      ],
-    }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-annotate" },
-    })
-    const doc = makeIr(themeId, slide)
-
-    // Two losses, two units. They used to be added together and declared as
-    // two content blocks, which was true of neither: one annotation past the
-    // fourth is a bullet item, and the paragraph is the only block that went.
-    const render = boundSlideToRender(doc, slide, 0)
-    expect(render.dropped).toBe(2)
-    expect(render.drops).toEqual(
-      expect.arrayContaining([
-        { kind: "item", count: 1 },
-        { kind: "component", count: 1 },
-      ]),
-    )
-    expect(render.drops).toHaveLength(2)
-  })
-
-  it("image-annotate declares a fifth annotation as an item, not a content block", () => {
-    // The shape a real deck reaches this face with: an image and its
-    // annotations, one past what the surface holds. Nothing about this page
-    // lost a component, and the export error must not say it did.
-    const slide: Slide = {
-      type: "content",
-      kind: "photo",
-      heading: "Annotated image",
-      components: [
-        { type: "image", asset_id: "hero", fit: "cover" },
-        { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
-      ],
-    }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-annotate" },
-    })
-    const render = boundSlideToRender(makeIr(themeId, slide), slide, 0)
-    expect(render.drops).toEqual([{ kind: "item", count: 1 }])
-  })
-
-  it("image-annotate marks a kept annotation it had to cut", () => {
-    const long =
-      "\u5f00\u901a\u94fe\u8def\u4ecd\u5728\u6253\u78e8\uff1a\u7b2c\u4e09\u5b63\u5ea6\u7684\u5ba2\u7fa4\u6536\u5165\u9884\u6d4b\u5b58\u5728\u6b63\u8d1f\u4e24\u6210\u7684\u504f\u5dee\u7a7a\u95f4\uff0c\u800c\u6559\u80b2\u5ba2\u7fa4\u7684\u5f00\u901a\u5468\u671f\u53c8\u6bd4\u5546\u4e1a\u5ba2\u7fa4\u957f\u51fa\u56db\u5468\uff0c\u4e24\u4ef6\u4e8b\u53e0\u5728\u4e00\u8d77\u624d\u662f\u771f\u6b63\u7684\u98ce\u9669"
-    const slide: Slide = {
-      type: "content",
-      kind: "photo",
-      heading: "Annotated image",
-      components: [
-        { type: "image", asset_id: "hero", fit: "cover" },
-        { type: "bullets", items: [long] },
-      ],
-    }
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-annotate" },
-    })
-    const doc = makeIr(themeId, slide)
-    // Four items or fewer, so nothing is dropped. The one item the face
-    // accepted is set into one or two lines and the tail is gone, which the
-    // face has to say on the line that carries the cut.
-    expect(boundSlideToRender(doc, slide, 0).dropped).toBe(0)
-    expect(renderSvgMarkup(<BoundSlideSvg ir={doc} slide={slide} index={0} />)).toContain('data-truncated="1"')
-    // The item is the author's own sentence, so the page as exported goes to
-    // the step-aside sheet, which sets it whole (`../ir/truncation-tiers.ts`).
-    const page = boundSlideToSvgMarkup(doc, slide, 0)
-    expect(page).toContain('data-face-stepped-aside="image-annotate"')
-    expect(page).not.toContain("data-truncated")
-  })
-
-  it("image-bottom propagates components rejected by layoutContentFit", () => {
+  it("image-top propagates components rejected by layoutContentFit", () => {
     const slide: Slide = {
       type: "content",
       kind: "photo",
@@ -456,7 +357,7 @@ describe("image takeover dropped-content propagation", () => {
       ],
     }
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-bottom" },
+      content: { photo: "image-top" },
     })
     const doc = makeIr(themeId, slide)
 
@@ -469,11 +370,10 @@ describe("image takeover dropped-content propagation", () => {
 // The frame is the component: a browser window bar or a phone bezel is what
 // makes a screenshot read as software that is running. A takeover that took a
 // `device_mockup` through `findImageSelection` painted the screen contents
-// alone, and the component silently degenerated into an `image`. Every face
-// that can be routed a photo kind now has exactly one of two postures, and
-// both of them put the frame on the page.
+// alone, and the component silently degenerated into an `image`. Both bleed
+// faces now decline a mockup, and the fallback puts the frame on the page.
 describe("device_mockup keeps its frame", () => {
-  const TAKEOVERS = ["image-split", "image-top", "image-bottom", "image-annotate", "show-spotlight"] as const
+  const TAKEOVERS = ["image-split", "image-top"] as const
 
   function mockupSlide(device: "browser" | "phone"): Slide {
     return {
@@ -521,7 +421,7 @@ describe("device_mockup keeps its frame", () => {
   // mockup after it — declined the whole face even though the bleed slot had
   // taken the photo and had no quarrel with anything, and the fallback's
   // single stack then dropped the mockup outright.
-  it.each(["image-split", "image-top", "image-bottom"] as const)(
+  it.each(["image-split", "image-top"] as const)(
     "%s keeps the face when the bleed picture is a plain image and a mockup rides along",
     (face) => {
       const slide: Slide = {
@@ -555,7 +455,7 @@ describe("device_mockup keeps its frame", () => {
 
   // The bleed faces decline rather than host: their picture runs off two or
   // three page edges, and a device without edges is not a device.
-  it.each(["image-split", "image-top", "image-bottom"] as const)("%s declines and falls back", (face) => {
+  it.each(["image-split", "image-top"] as const)("%s declines and falls back", (face) => {
     const slide = mockupSlide("browser")
     const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
       content: { photo: face },
@@ -563,26 +463,11 @@ describe("device_mockup keeps its frame", () => {
     const root = parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
     expect(root.querySelector("[data-takeover-mode='fallback']")).not.toBeNull()
   })
-
-  // image-annotate hosts it: its picture area is a bounded card inside the
-  // page, so the device's own renderer fills the slot the card reserved and
-  // the white photo mount steps out of the way.
-  it("image-annotate hosts the framed component instead of declining", () => {
-    const slide = mockupSlide("browser")
-    const themeId = registerTestTheme(`image-pages-${themeSerial++}`, "brief", {
-      content: { photo: "image-annotate" },
-    })
-    const root = parseSvgRoot(boundSlideToSvgMarkup(makeIr(themeId, slide), slide, 0))
-    expect(root.querySelector("[data-takeover-mode='fallback']")).toBeNull()
-    expect(root.querySelector("[data-device-mockup='browser']")).not.toBeNull()
-    // The caption belongs to the screen, and it is printed once.
-    expect(root.textContent?.match(/Live health board/g)).toHaveLength(1)
-  })
 })
 
 describe("takeover source lines", () => {
   const SOURCE = "Source: store counts compiled from operator filings, July 2025 against July 2026, all twenty tracked cities"
-  const FACES = ["image-split", "image-top", "image-bottom", "image-annotate"] as const
+  const FACES = ["image-split", "image-top"] as const
 
   function sourcedSlide(components: Slide["components"]): Slide {
     return { type: "content", kind: "photo", heading: "One city lost two thousand shops in a year", components, footnote: SOURCE } as Slide

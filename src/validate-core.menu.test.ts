@@ -5,16 +5,15 @@ import type { Menu } from "./themes/schema"
 import { validateIr } from "./validate-core"
 
 const BASE_MENU: Menu = {
-  cover: { face: "verdict-index" },
-  chapter: { face: "masthead-chapter" },
-  content: { points: { face: "two-column" } },
-  ending: { face: "poster-ending" },
+  cover: { face: "gauge-verdict" },
+  chapter: { face: "ghost-section-chapter" },
+  content: { points: { face: "gauge-sheet" } },
+  ending: { face: "signoff-ending" },
 }
 
 function publicStyle(id: string) {
   const style = structuredClone(CONSULTING_TOKENS)
   style.id = id
-  if (style.shape?.cover !== undefined) delete style.shape.cover
   return style
 }
 
@@ -98,7 +97,7 @@ describe("IR validation against the bound theme menu", () => {
 
   it("rejects cover components absent from the menu-bound cover face", () => {
     const id = "boundary-menu-reject"
-    installTheme(id, { ...BASE_MENU, cover: { face: "poster-center" } })
+    installTheme(id, { ...BASE_MENU, cover: { face: "institutional-block" } })
 
     const result = validateIr(
       deck(id, {
@@ -141,7 +140,7 @@ describe("IR validation against the bound theme menu", () => {
     expect(result.errors[0]?.message).toContain("points")
   })
 
-  it.each(["image-top", "image-bottom", "image-split", "image-annotate"] as const)(
+  it.each(["image-top", "image-split"] as const)(
     "requires an image component for the %s takeover surface",
     (face) => {
       const id = `required-${face}`
@@ -169,107 +168,6 @@ describe("IR validation against the bound theme menu", () => {
       expect(result.errors[0]?.message).toContain(`layout "${face}" requires an image or image_grid or image_compare or device_mockup component`)
     },
   )
-
-  it("refuses image-annotate items beyond what its picture page draws, and still reports them as density", () => {
-    // The fifth item used to pass with only the density warning, and the
-    // picture page left it off with a mark the export refused. validate
-    // draws content pages now, so it is refused here, naming the list.
-    const id = "annotation-capacity"
-    installTheme(id, {
-      ...BASE_MENU,
-      content: { photo: { face: "image-annotate" } },
-    })
-
-    const result = validateIr(
-      deck(id, {
-        id: "annotated-photo",
-        type: "content",
-        kind: "photo",
-        heading: "Five observations",
-        components: [
-          { type: "image", asset_id: "hero", fit: "cover" },
-          { type: "bullets", items: ["One", "Two", "Three", "Four", "Five"] },
-        ],
-      }),
-    )
-
-    expect(result.ok).toBe(false)
-    expect(result.errors).toEqual([
-      expect.objectContaining({
-        path: "slides.0.components.1.items",
-        page: 1,
-        slideId: "annotated-photo",
-        message: expect.stringContaining('face "image-annotate" draws 4 of the 5 items in this page\'s bullets'),
-      }),
-    ])
-    expect(result.warnings).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          path: "slides.0",
-          page: 1,
-          slideId: "annotated-photo",
-          message: expect.stringContaining('image-annotate layout\'s annotation capacity is 4'),
-        }),
-      ]),
-    )
-  })
-
-  it("rejects a content component that the resolved takeover surface has no slot for", () => {
-    const id = "annotation-component-contract"
-    installTheme(id, {
-      ...BASE_MENU,
-      content: { photo: { face: "image-annotate" } },
-    })
-
-    const result = validateIr(
-      deck(id, {
-        id: "annotated-photo",
-        type: "content",
-        kind: "photo",
-        heading: "Unsupported prose",
-        components: [
-          { type: "image", asset_id: "hero", fit: "cover" },
-          { type: "paragraph", text: "The annotation surface has no body slot." },
-        ],
-      }),
-    )
-
-    expect(result.ok).toBe(false)
-    expect(result.errors[0]).toMatchObject({
-      path: "slides.0.components",
-      page: 1,
-      slideId: "annotated-photo",
-    })
-    expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render paragraph components')
-  })
-
-  it("only lets the selected image-family source consume image-annotate's first image slot", () => {
-    const id = "annotation-image-selection"
-    installTheme(id, {
-      ...BASE_MENU,
-      content: { photo: { face: "image-annotate" } },
-    })
-
-    const result = validateIr(
-      deck(id, {
-        id: "annotated-photo",
-        type: "content",
-        kind: "photo",
-        heading: "One image anchor",
-        components: [
-          {
-            type: "image_compare",
-            left: { asset_id: "before", label: "Before" },
-            right: { asset_id: "after", label: "After" },
-          },
-          { type: "device_mockup", device: "browser", asset_id: "dashboard" },
-        ],
-      }),
-    )
-
-    expect(result.ok).toBe(false)
-    expect(result.errors[0]?.message).toContain('layout "image-annotate" does not render device_mockup components')
-  })
 
   it("accepts a boundary page filled exactly to the bound face's item capacity", () => {
     const id = "boundary-items-at-cap"
@@ -309,7 +207,7 @@ describe("IR validation against the bound theme menu", () => {
     // The face and its limit are both named: an author who reads this knows
     // what to shorten and by how much, which is the whole point of turning
     // a silent `items.slice(0, 3)` into an error.
-    expect(result.errors[0]?.message).toContain('face "verdict-index"')
+    expect(result.errors[0]?.message).toContain('face "gauge-verdict"')
     expect(result.errors[0]?.message).toContain("at most 3 items")
     expect(result.errors[0]?.message).toContain("has 4")
   })
@@ -318,7 +216,7 @@ describe("IR validation against the bound theme menu", () => {
     const id = "boundary-two-blocks"
     installTheme(id, BASE_MENU)
 
-    // `verdict-index` declares `body accepts: ["bullets"], capacity: 1` and
+    // `gauge-verdict` declares `body accepts: ["bullets"], capacity: 1` and
     // draws the first block it finds. The second one used to reach no page,
     // no error and no audit — the page simply printed less than it was given.
     const result = validateIr(
@@ -339,7 +237,7 @@ describe("IR validation against the bound theme menu", () => {
       page: 1,
       slideId: "cover",
     })
-    expect(result.errors[0]?.message).toContain('face "verdict-index"')
+    expect(result.errors[0]?.message).toContain('face "gauge-verdict"')
     expect(result.errors[0]?.message).toContain("body slot")
     expect(result.errors[0]?.message).toContain("has 2")
   })

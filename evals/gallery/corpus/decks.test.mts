@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { getThemeDefinition } from "@/themes/definitions"
-import { layoutPage, themeDeck } from "./decks"
+import { themeDeck } from "./decks"
 import { LEXICONS } from "./lexicon"
 
 const emptyAssets = { images: {} }
@@ -35,37 +35,5 @@ describe("themeDeck corpus thicken (gallery r2 D10/D11/D12/D21)", () => {
 
     const runway = themeDeck("runway", zh, emptyAssets).slides[7]!
     expect(runway.components.map((c) => c.type)).toEqual(["verdict_banner", "paragraph"])
-  })
-})
-
-describe("runway show layout corpus", () => {
-  const zh = LEXICONS.zh
-
-  it("authors the 132px show headline as one short cover claim", () => {
-    expect(themeDeck("runway", zh, emptyAssets).slides[0]?.heading).toBe(zh.kickers[0])
-    expect(layoutPage("show-headline", zh, emptyAssets).slides[0]?.heading).toBe(zh.kickers[0])
-  })
-
-  it("authors every gated show face with the component shape that reaches its exact composition", () => {
-    const gallery = layoutPage("show-gallery", zh, emptyAssets).slides[0]!
-    expect(gallery.components).toHaveLength(1)
-    expect(gallery.components[0]?.type).toBe("image_grid")
-    if (gallery.components[0]?.type === "image_grid") {
-      expect(gallery.components[0].items).toHaveLength(6)
-      // One caption per frame. Six frames over a four-caption pool printed
-      // frames one and two's captions again under frames five and six.
-      expect(new Set(gallery.components[0].items.map((item) => item.caption)).size).toBe(6)
-    }
-
-    const spotlight = layoutPage("show-spotlight", zh, emptyAssets).slides[0]!
-    expect(spotlight.components.map((component) => component.type)).toEqual(["image", "insight_panel"])
-
-    const statement = layoutPage("show-statement", zh, emptyAssets).slides[0]!
-    expect(statement.components[0]?.type).toBe("numbered_cards")
-    if (statement.components[0]?.type === "numbered_cards") expect(statement.components[0].items).toHaveLength(3)
-
-    const figures = layoutPage("show-figures", zh, emptyAssets).slides[0]!
-    expect(figures.components[0]?.type).toBe("kpi_cards")
-    if (figures.components[0]?.type === "kpi_cards") expect(figures.components[0].items).toHaveLength(3)
   })
 })

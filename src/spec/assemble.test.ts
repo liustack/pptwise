@@ -16,10 +16,10 @@ beforeAll(() => {
       shape: { radius: 2, gapScale: 1, typeScale: 1 },
     },
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
-      content: { points: { face: "two-column" } },
-      ending: { face: "poster-ending" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
+      content: { points: { face: "gauge-sheet" } },
+      ending: { face: "signoff-ending" },
     },
   })
 })

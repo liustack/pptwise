@@ -31,19 +31,9 @@ export interface BleedExemption {
   readonly why: string
 }
 
-export const DESIGNED_BLEED: readonly BleedExemption[] = [
-  {
-    layout: "rail-chapter",
-    kind: "page-overflow",
-    // The chapter ordinal only. Any other text bleeding off this layout is
-    // still a defect.
-    text: /^\d{1,3}$/,
-    // `chapter-rail-chapter.tsx`: font-size 260 at 6% opacity, baseline 650,
-    // right-anchored at x=1224. A watermark sized to run off the bottom edge,
-    // not a label that failed to fit.
-    why: "rail-chapter's oversized chapter ordinal is a 6%-opacity watermark, drawn to bleed past the bottom edge",
-  },
-]
+// Empty since the rail-chapter face, whose 6%-opacity chapter ordinal was
+// drawn to run off the bottom edge, was deleted with the faces no menu used.
+export const DESIGNED_BLEED: readonly BleedExemption[] = []
 
 /** The exemption matching this finding, if any. */
 export function bleedExemption(

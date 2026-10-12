@@ -1,11 +1,8 @@
 import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
-import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
-import { fitSvgLine } from "../../lib/svg-text-layout"
-import { renderFittedEvidence, textColumnMaxWidth } from "../fitted-evidence"
-import { evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
+import { fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
 
 /** swiss 稀排脸：左对齐超黑。不画顶边红条（motif 已画）。 */
@@ -88,69 +85,6 @@ export function statement({ slide, ctx }: SvgTemplateProps) {
       ))}
       <rect x={88} y={490} width={120} height={6} fill={colors.text} />
       <SourceLines block={source} x={88} y={560} fontFamily={fonts.body} fill={colors.muted} />
-    </>
-  )
-}
-
-export function oneEvidence({ slide, index, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const evidence = pickEvidence(slide.components)
-  const evidenceRect = { x: 520, y: 220, w: 560, h: 260 }
-  const textX = 220
-  const textW = evidence ? textColumnMaxWidth(textX, evidenceRect.x) : 880
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: textW,
-    fontSize: 42,
-    maxLines: 2,
-    minPt: 24,
-    lineHeightRatio: 1.2,
-    fontFamily: fonts.heading,
-    bold: true,
-  })
-  const note = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: textW, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
-    : null
-  const sourceRaw = evidenceSource(slide)
-  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: textW, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
-  // The card sets every line whole or hands the page over: a line it would
-  // cut goes to the shared face, which sets it at its own measure and marks
-  // what it still cannot hold.
-  if (heading.truncated || note?.truncated || source?.truncated) return null
-  return (
-    <>
-      <rect x={160} y={180} width={960} height={340} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
-      <text x={220} y={278} fontFamily={fonts.heading} fontSize={30} fontWeight="700" fill={colors.accent} dominantBaseline="alphabetic">
-        {pad2(index + 1)}
-      </text>
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          x={220}
-          y={352 + i * heading.lineHeight}
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="700"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: emphasisRunInk(colors),
-            baseFill: colors.text,
-            fontWeight: "700",
-          })}
-        </text>
-      ))}
-      {note && (
-        <text x={220} y={410} fontFamily={fonts.body} fontSize={note.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {note.text}
-        </text>
-      )}
-      {source && (
-        <text x={220} y={472} fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {source.text}
-        </text>
-      )}
-      {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
     </>
   )
 }

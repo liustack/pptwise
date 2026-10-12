@@ -60,17 +60,12 @@ export const aliases = {
   items: [{ itemsKey: "points", aliases: { title: "label", name: "label" } }],
 } satisfies ComponentAliasSpec
 
-// Two axis lines, quadrant names, and a dot per subject — a plot, not a card,
-// so the bento shell paints nothing underneath it.
-//
 // Deliberately not evidence-ranked: the `assertion_evidence` arrangement puts
 // an exhibit in a side panel beside a claim, and half a rect is where this
 // drawing's labels start colliding. A map is the page, not the panel.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

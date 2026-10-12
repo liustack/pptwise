@@ -82,13 +82,9 @@ export const aliases = {
   ],
 } satisfies ComponentAliasSpec
 
-// Every node paints its own box and the connectors are drawn by the diagram
-// itself, so the bento shell would frame an already-framed drawing.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

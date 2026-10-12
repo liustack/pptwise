@@ -68,8 +68,8 @@ import { traits as prosConsTraits } from "@/ir/components/pros-cons"
  * Component trait registry (W2 task 5, spec §3/§6/§8 — re-derived as a pure
  * aggregator in src domain reorg wave 2, spec §4.3). Single home for the
  * render-time layout/degrade machinery's component classifications
- * `ReadonlySet`s (`STRETCHABLE_TYPES`/`SELF_VISUAL_TYPES`/`SCALABLE_TYPES`/
- * `PASSTHROUGH_SHELL_TYPES`/`FULL_BODY_TYPES`/`COLUMN_SPANNING_TYPES`) plus the ordered
+ * `ReadonlySet`s (`STRETCHABLE_TYPES`/`SCALABLE_TYPES`/`FULL_BODY_TYPES`/
+ * `COLUMN_SPANNING_TYPES`) plus the ordered
  * `EVIDENCE_TYPES` tuple.
  *
  * **Aggregator, not author (src domain reorg wave 2).** Every component's
@@ -101,7 +101,7 @@ import { traits as prosConsTraits } from "@/ir/components/pros-cons"
  *
  * This registry is still the *dynamic/render-time* half of the inventory's
  * "容量双系统" (2026-07-18 decision #5): it still runs on every render to
- * decide stretch/self-visual/scalable/passthrough-shell/evidence-priority
+ * decide stretch/scalable/full-body/column-spanning/evidence-priority
  * behavior — nothing here is new metadata. The *static/authoring-time* half —
  * `layouts/registry.ts`'s slot `capacity` numbers and `audit/capacity.ts`'s
  * `CAPACITY` table — is a separate, declarative concern; this file has no
@@ -232,48 +232,15 @@ export const STRETCHABLE_TYPES: ReadonlySet<ComponentType> = typesWith("stretcha
 export const COLUMN_SPANNING_TYPES: ReadonlySet<ComponentType> = typesWith("columnSpanning")
 
 /**
- * Component types that already paint their own card/frame — callout's
- * left-bar-and-fill, code's dark panel, comparison's header row + rule
- * lines, blockquote's decorative mark/attribution treatment, verdict_banner's own
- * editorial rule and typography. Consulted by `bento-layout.ts`'s
- * `sortUnitsByHeroWeight` (hero-weight ranking) and
- * `content-bento-panel.tsx`'s `renderCell`/`cellOverBudget` (these render
- * bare — stacking bento's own outline shell underneath one of them would be
- * a redundant "卡中卡", card-in-a-card). Declared per-component via
- * `traits.selfVisual`, aggregated here.
- */
-export const SELF_VISUAL_TYPES: ReadonlySet<ComponentType> = typesWith("selfVisual")
-
-/**
  * Component types whose content is a rendered graphic (no text-fit/
  * truncation semantics of its own) rather than reflowable text — safe to
  * scale uniformly to fit a slot instead of forcing a text-degrade path.
- * Two independent consumers scale it differently: `content-bento-panel.tsx`
- * only ever shrinks (`scale = budgetH/measured` when over budget), while
- * `content-stacked-poster.tsx` also scales *up* to fill a hero/strip slot
- * (capped at that file's own `HERO_SCALE_MAX`) since a poster hero is meant
- * to read as a dominant image. Declared per-component via `traits.scalable`,
- * aggregated here — `component-traits.test.ts` pins `{"chart", "image",
- * "flowchart"}` (flowchart added so a lone diagram can use leftover body
- * height: `svg-content.tsx` skips `capTopAir` for scalable types).
+ * `svg-content.tsx` skips `capTopAir` for a lone scalable component, so it
+ * can use leftover body height instead of welding under the heading.
+ * Declared per-component via `traits.scalable`, aggregated here.
+ * `component-traits.test.ts` pins `{"chart", "image", "flowchart"}`.
  */
 export const SCALABLE_TYPES: ReadonlySet<ComponentType> = typesWith("scalable")
-
-/**
- * Component types that already draw their own internal frame per node —
- * steps' numbered-badge cards, flowchart's bordered node boxes,
- * architecture's filled layer bands, timeline's axis/dots — plus paragraph
- * (bare text reads better unframed in a bento grid, 2026-07-09 redesign) and
- * blockquote (its own decorative mark/attribution treatment).
- * `content-bento-panel.tsx`'s `renderCell` skips painting the bento outline
- * shell (no fill/stroke) for these — "双壳治理" (double-shell governance): a
- * panel+stroke shell painted behind an already-carded diagram/bare paragraph
- * is a redundant second shell. Unlike `SELF_VISUAL_TYPES`, these still
- * render through the ordinary-component grid-cell path (same box, same
- * padding, same audit annotations) — only the shell paint is skipped.
- * Declared per-component via `traits.passthroughShell`, aggregated here.
- */
-export const PASSTHROUGH_SHELL_TYPES: ReadonlySet<ComponentType> = typesWith("passthroughShell")
 
 /**
  * Component types considered "evidence" for the `assertion_evidence`
@@ -281,7 +248,7 @@ export const PASSTHROUGH_SHELL_TYPES: ReadonlySet<ComponentType> = typesWith("pa
  * load-bearing: the *first* type in this list found among a slide's
  * components is the one enlarged/centered as the slide's single strongest
  * evidence. An unordered set can't express "chart beats image beats
- * comparison beats kpi_cards", so unlike the 4 sets above this stays an
+ * comparison beats kpi_cards", so unlike the sets above this stays an
  * ordered tuple, not a `Set` — spec §4.1's named exception to the
  * aggregation-from-domain-files rule above: order is cross-component
  * comparative knowledge no single `src/ir/components/<name>.ts` file could
@@ -329,9 +296,8 @@ export const EVIDENCE_TYPES = [
 
 /**
  * First evidence component in `EVIDENCE_TYPES` priority order, or
- * `undefined` when the slide has none of those types. Shared by the
- * `assertion_evidence` arrangement and the pin-only `one-evidence` layout
- * so the two cannot drift.
+ * `undefined` when the slide has none of those types. The
+ * `assertion_evidence` arrangement picks its evidence with it.
  */
 export function pickEvidence(components: readonly Component[]): Component | undefined {
   for (const t of EVIDENCE_TYPES) {

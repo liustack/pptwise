@@ -5,12 +5,10 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人听它说话。"
 const LUXE_GOLD = "#C6A15B"
-const BOARD_CLAIM = "#3A2E24"
 
 function ir(slides: Slide[], meta: Record<string, string> = {}, branding: PptxIR["branding"] | null = "full"): PptxIR {
   return {
@@ -146,46 +144,4 @@ describe("vermilion sparse faces", () => {
     expect(Number(source.getAttribute("y"))).toBeLessThanOrEqual(648)
   })
 
-  it("one-evidence is a dossier card with a red spine and 案卷 index", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "维护工单平均提前 6.5 天生成",
-      subheading: "217 张工单全量统计 · 2026 Q2",
-      components: [],
-    } as Slide
-    const { markup, root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const spine = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "10")
-    expect(spine?.getAttribute("x")).toBe("160")
-    expect(spine?.getAttribute("height")).toBe("320")
-    expect(spine?.getAttribute("fill")).toBe(ctx.colors.primary)
-    const index = Array.from(root.querySelectorAll("text")).find((t) => (t.textContent ?? "").includes("案卷"))!
-    expect(index.textContent).toBe("案卷 · 01")
-    expect(index.getAttribute("letter-spacing")).toBeNull()
-    expect(index.getAttribute("fill")).toBe(ctx.colors.primary)
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("维护工单"),
-    )!
-    expect(claim.getAttribute("fill")).toBe(ctx.colors.text)
-    expect(markup).not.toContain(BOARD_CLAIM)
-    expect(markup).not.toContain(LUXE_GOLD)
-  })
-
-  it("one-evidence labels the card in the deck's language", () => {
-    // An English deck used to print 「案卷 · 13」 over its exhibit.
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "Work orders now open 6.5 days early",
-      components: [],
-    } as Slide
-    const { markup } = render(<OneEvidenceContent ir={ir([slide])} slide={slide} index={12} ctx={ctx} />)
-    expect(markup).toContain("File · 13")
-    expect(markup).not.toContain("案卷")
-  })
 })

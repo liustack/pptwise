@@ -56,13 +56,9 @@ export const aliases = {
   items: [{ itemsKey: "operands", aliases: { title: "label", name: "label", text: "note", desc: "note" } }],
 } satisfies ComponentAliasSpec
 
-// Every term paints its own panel, and the result paints a filled one, so a
-// bento shell underneath would be a second frame around a framed row.
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

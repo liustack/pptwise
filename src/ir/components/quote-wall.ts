@@ -77,18 +77,15 @@ export const aliases = {
 } satisfies ComponentAliasSpec
 
 /**
- * `selfVisual: true`，与 `blockquote`/`callout` 同一姿态：每段引语自己已经
- * 画了卡片和引号，bento 再套一层外壳就是卡中卡。`columnSpanning: true`：几个
+ * `columnSpanning: true`：几个
  * 人并排说话是这个组件的形状，挤进两栏的一栏就只剩两三个字一行。其余全
  * false：一堵引语墙纵向拉伸只会拉出空腔（stretchable），是可回流文字而非可
- * 整体缩放的图（scalable/passthroughShell），不是整页画布（fullBody），别人说
+ * 整体缩放的图（scalable），不是整页画布（fullBody），别人说
  * 的话也不是 chart/data_table 那种可复核的证据（evidence）。
  */
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   columnSpanning: true,
   evidence: false,

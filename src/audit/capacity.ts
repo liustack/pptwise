@@ -13,8 +13,6 @@
  *   1152×420|460、creative 1168×380|400|420|460）。thesis 已随
  *   Task 2 换骨改为编号导轨式（见下），不再是 1120×380|400 的贡献者。
  *   ikb-swiss/anthropic-clay 已随主题换骨硬删（Task 5），不再计入。
- *   terminal 走卡片拼盘（`bento-layout.ts`），不经
- *   `layoutContentFit`/两栏切分，不引入比 1096 更窄的矩形，同样不改变本表。
  * - **brief 结论横幅式换骨（Task 1，2026-07-06）**：Content 页改为
  *   `MckinseyNavyContent`（`brief.tsx`）——顶部一条 `x=96 w=1088` 的
  *   filled 断言横幅（1 行标题高 88px / 2 行 132px），`SvgContent` 内容矩形随

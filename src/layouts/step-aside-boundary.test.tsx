@@ -29,9 +29,6 @@ import type { PptxIR, Slide } from "@/ir"
 import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "../render/full-slide-svg"
 import { renderSvgMarkup } from "../render/serialize"
-import { AsymmetricTriptychContent } from "./content-asymmetric-triptych"
-import { BentoPanelContent } from "./content-bento-panel"
-import { CrayonboxCardsContent } from "./content-crayonbox-cards"
 import { GaugeExhibitContent } from "./content-gauge-exhibit"
 import { GaugeFigureContent } from "./content-gauge-figure"
 import { GaugePointContent } from "./content-gauge-point"
@@ -67,29 +64,8 @@ import { NoticeExhibitContent } from "./content-notice-exhibit"
 import { MarqueeStatementContent } from "./content-marquee-statement"
 import { PitchPhotoContent } from "./content-pitch-photo"
 import { GridStatementContent } from "./content-grid-statement"
-import { GaugeStatsContent } from "./content-gauge-stats"
-import { OneEvidenceContent } from "./content-one-evidence"
-import { QuoteStageContent } from "./content-quote-stage"
-import { StackedPosterContent } from "./content-stacked-poster"
-import { NarrowColumnContent } from "./content-narrow-column"
-import { QuietFrameContent } from "./content-quiet-frame"
-import { RailNumberedContent } from "./content-rail-numbered"
-import { ShowFiguresContent } from "./content-show-figures"
-import { ShowGalleryContent } from "./content-show-gallery"
-import { ShowStatementContent } from "./content-show-statement"
-import { SplitBandContent } from "./content-split-band"
 import { StatHeroContent } from "./content-stat-hero"
-import { ToneAdaptiveContent } from "./content-tone-adaptive-content"
-import { TwoColumnContent } from "./content-two-column"
 import type { ContentLayout } from "./types"
-
-/** `n` bullet rows, one line each. The dial for a face a chart cannot measure. */
-function bulletRows(n: number) {
-  return {
-    type: "bullets",
-    items: Array.from({ length: n }, (_, i) => `Quarterly operations review, volume ${i + 1}`),
-  }
-}
 
 /** A line chart of `n` series: one label row per series, so `n` is height. */
 function lineChart(n: number) {
@@ -155,14 +131,6 @@ interface FaceCase {
 }
 
 const CASES: FaceCase[] = [
-  { face: "narrow-column", Face: NarrowColumnContent, themeId: "brief", regions: ["face", "aside", "declined"] },
-  { face: "two-column", Face: TwoColumnContent, themeId: "brief", regions: ["face", "aside", "declined"] },
-  { face: "rail-numbered", Face: RailNumberedContent, themeId: "brief", regions: ["face", "aside", "declined"] },
-  { face: "quiet-frame", Face: QuietFrameContent, themeId: "brief", regions: ["face", "aside", "declined"] },
-  { face: "split-band", Face: SplitBandContent, themeId: "brief", regions: ["face", "aside", "declined"] },
-  { face: "quote-stage", Face: QuoteStageContent, themeId: "brief", regions: ["aside", "declined"] },
-  { face: "tone-adaptive-content", Face: ToneAdaptiveContent, themeId: "terminal", regions: ["face", "aside", "declined"] },
-  { face: "gauge-stats", Face: GaugeStatsContent, themeId: "brief", regions: ["face", "aside", "declined"] },
   // A line chart of up to three series first takes the board's change
   // column beside a narrowed plot, then the full band once it no longer fits
   // there, so both of the face's own compositions sit in the first region.
@@ -301,46 +269,6 @@ const CASES: FaceCase[] = [
     components: (n) => statHeroBody(n),
     regions: ["face", "aside", "declined"],
   },
-  { face: "crayonbox-cards", Face: CrayonboxCardsContent, themeId: "crayon", regions: ["face", "aside", "declined"] },
-  // A fixed body band is only ever worth trading for the sheet on a page
-  // that has not already spent the sheet's room on a second heading line, a
-  // subheading and a footnote — see `shortPage`.
-  { face: "show-figures", Face: ShowFiguresContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
-  { face: "show-gallery", Face: ShowGalleryContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
-  { face: "show-statement", Face: ShowStatementContent, themeId: "runway", shortPage: true, regions: ["face", "aside", "declined"] },
-  // A chart is evidence this face places by shrinking it to fit, so a lone
-  // one never reaches the body slot. A bullet list is not evidence at all,
-  // and its height grows one row at a time. Its floor of 640 reads like
-  // more room than the sheet's 612 until the heading is set: `bodyTop`
-  // follows a display title down where the sheet's follows a 34px one.
-  {
-    face: "one-evidence",
-    Face: OneEvidenceContent,
-    themeId: "brief",
-    components: (n) => [bulletRows(n)],
-    shortPage: true,
-    regions: ["face", "aside", "declined"],
-  },
-  // Same reason: the poster grammar keeps a scalable chart and scales it
-  // into the hero slot, so the dial has to be something that busts it.
-  //
-  // On `brief`'s type scale the degrade stack measures 1168x360 against
-  // a 1104x448 sheet, which is the window. On `stage` the same page is
-  // 1168x360 against 1104x367 and there is none — a face's own heading size
-  // is part of how much room its body has left, so whether this trade is
-  // ever worth making is a per-theme fact, not a per-face one.
-  //
-  // The full page, not the short one: the poster band pays for a subheading
-  // out of the same 460px the body wants, where the sheet pays a line of
-  // 18px type for it. On a short page the two rects land within one bullet
-  // row of each other and the window closes between two integers.
-  {
-    face: "stacked-poster",
-    Face: StackedPosterContent,
-    themeId: "brief",
-    components: (n) => [bulletRows(n)],
-    regions: ["face", "aside", "declined"],
-  },
   // The body here is the face's own paragraph block, four lines at 27px on
   // an 880px measure, not a component box, so the dial is the paragraph's
   // length. Past four lines at the floor the face would cut it and hands the
@@ -377,34 +305,6 @@ const CASES: FaceCase[] = [
     themeId: "brief",
     components: (n) => statHeroBody(n),
     regions: ["face", "aside", "declined"],
-  },
-  // A chart is scalable, so the bento grid shrinks one into whatever cell it
-  // gets and the degrade path is never reached. A bullets list is not: it
-  // busts its card's budget, the grid gives up, and the single stack it
-  // degrades to is this face's body slot.
-  {
-    face: "bento-panel",
-    Face: BentoPanelContent,
-    themeId: "terminal",
-    components: (n) => [
-      { type: "bullets", items: Array.from({ length: n }, (_, i) => `Point number ${i}`), style: "default" },
-      { type: "paragraph", text: "Renewal recovered across every segment." },
-    ],
-    regions: ["face", "aside", "declined"],
-  },
-  // The lead column is the tall one. The two framed panels on the right are
-  // where a region runs short, so the chart goes second, behind a lead that
-  // is not running text: a paragraph gives the lead column up to the chart.
-  {
-    face: "asymmetric-triptych",
-    Face: AsymmetricTriptychContent,
-    themeId: "brief",
-    components: (n) => [
-      { type: "verdict_banner", tone: "positive", text: "Renewal recovered." },
-      lineChart(n),
-      { type: "paragraph", text: "Activation coverage reached eighty-eight percent." },
-    ],
-    regions: ["aside", "declined"],
   },
 ]
 

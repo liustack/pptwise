@@ -7,8 +7,3 @@ export function faceParam<T extends MenuParamValue>(params: FaceParams, name: st
   const value = params?.[name]
   return value === undefined ? fallback : (value as T)
 }
-
-/** Read a parameter whose omission has structural meaning to the face. */
-export function optionalFaceParam<T extends MenuParamValue>(params: FaceParams, name: string): T | undefined {
-  return params?.[name] as T | undefined
-}

@@ -39,13 +39,9 @@ export const aliases = {
   items: [{ itemsKey: "segments", aliases: { title: "label", name: "label" } }],
 } satisfies ComponentAliasSpec
 
-// A hub, its wedges, and rim labels: one composed figure, so the bento shell
-// paints nothing underneath it.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

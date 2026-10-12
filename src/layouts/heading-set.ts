@@ -26,7 +26,6 @@
  * or declined.
  */
 import type { ComponentCtx } from "../components/types"
-import { fitSvgLine } from "../lib/svg-text-layout"
 import { fitEmphasisHeading } from "../render/emphasis"
 import type { LayoutDefinition } from "./registry"
 import { textRoom, type TextRoom } from "./text-room"
@@ -58,21 +57,9 @@ export function cutOrWhole(layout: { truncated: boolean }): HeadingVerdict {
   return layout.truncated ? "cut" : "whole"
 }
 
-/**
- * The verdict of `fitHeadingLines` over `fit` for `text`. `scaled: false` for
- * a face that sets its heading at its own size whatever the theme's
- * `typeScale` says.
- */
-export function fitVerdict(text: string | undefined, fit: HeadingFitNumbers, ctx: HeadingCtx, scaled = true): HeadingVerdict {
-  return cutOrWhole(fitEmphasisHeading(text, { ...fit, fontFamily: ctx.fonts.heading, ...(scaled ? { typeScale: ctx.shape?.typeScale } : {}) }))
-}
-
-/**
- * The verdict of `fitSvgLine` over `line` in the heading face, for a face that
- * sets its heading on one line, shrinking it to `minFontSize` before it cuts.
- */
-export function lineVerdict(text: string, line: { maxWidth: number; fontSize: number; minFontSize: number; bold?: boolean }, ctx: HeadingCtx): HeadingVerdict {
-  return cutOrWhole(fitSvgLine(text, { ...line, fontFamily: ctx.fonts.heading }))
+/** The verdict of `fitHeadingLines` over `fit` for `text`, at the theme's `typeScale`. */
+function fitVerdict(text: string | undefined, fit: HeadingFitNumbers, ctx: HeadingCtx): HeadingVerdict {
+  return cutOrWhole(fitEmphasisHeading(text, { ...fit, fontFamily: ctx.fonts.heading, typeScale: ctx.shape?.typeScale }))
 }
 
 /**

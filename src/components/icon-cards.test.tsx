@@ -5,7 +5,6 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
-import { explodeIntoUnits } from "../render/bento-layout"
 import { iconCards } from "./icon-cards"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { CANONICAL_THEME_IDS } from "../themes"
@@ -400,10 +399,6 @@ describe("icon_cards item tag", () => {
     expect(findings.map((f) => f.code)).toEqual(["stepped-aside"])
     expect(findings[0]!.detail).toEqual({ face: "gauge-sheet" })
   })
-
-  it("explodes tagged cards into a bento's tiles, which set each tag beside its icon", () => {
-    expect(explodeIntoUnits([tagged]).map((unit) => unit.kind)).toEqual(tagged.items.map(() => "icon-card-item"))
-  })
 })
 
 describe("a title over the cards and a card's tone", () => {
@@ -439,10 +434,5 @@ describe("a title over the cards and a card's tone", () => {
     const strokes = Array.from(parseSvgRoot(markup).querySelectorAll("g[transform] [stroke]")).map((el) => el.getAttribute("stroke"))
     expect(strokes).toContain(ctx.colors.danger)
     expect(strokes).toContain(ctx.colors.accent)
-  })
-
-  it("keeps a titled set whole in a bento grid, and tiles a toned one", () => {
-    expect(explodeIntoUnits([lessons]).map((u) => u.kind)).toEqual(["component"])
-    expect(explodeIntoUnits([{ ...lessons, title: undefined }]).map((u) => u.kind)).toEqual(["icon-card-item", "icon-card-item"])
   })
 })

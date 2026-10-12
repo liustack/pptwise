@@ -92,7 +92,6 @@ export const LUXE_TOKENS: StyleTokens = {
   shape: {
     radius: 0,
     gapScale: 1.1, // 黑金直角凌厉+呼吸感（spec 提案，2026-07-10）
-    cover: { metaPlacement: "bottom-right" },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#0B0908" },

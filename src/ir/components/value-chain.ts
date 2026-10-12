@@ -92,9 +92,7 @@ export const aliases = {
 // Chevrons, bands and wedge all paint their own edges.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

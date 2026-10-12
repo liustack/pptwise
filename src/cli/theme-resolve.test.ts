@@ -20,20 +20,20 @@ function tmp(prefix: string): Promise<string> {
 }
 
 const MENU: Menu = {
-  cover: { face: "poster-center", params: { density: "tight", tone: "dark" } },
-  chapter: { face: "masthead-chapter" },
+  cover: { face: "institutional-block", params: { density: "tight", tone: "dark" } },
+  chapter: { face: "ghost-section-chapter" },
   content: {
-    points: { face: "two-column" },
-    list: { face: "bento-panel" },
+    points: { face: "gauge-sheet" },
+    list: { face: "gauge-sheet" },
   },
-  ending: { face: "poster-ending" },
+  ending: { face: "signoff-ending" },
 }
 
 describe("menusEqual", () => {
   it("treats params key insertion order as equal", () => {
     const reordered: Menu = {
       ...MENU,
-      cover: { face: "poster-center", params: { tone: "dark", density: "tight" } },
+      cover: { face: "institutional-block", params: { tone: "dark", density: "tight" } },
     }
     expect(menusEqual(MENU, reordered)).toBe(true)
   })
@@ -42,8 +42,8 @@ describe("menusEqual", () => {
     const reordered: Menu = {
       ...MENU,
       content: {
-        list: { face: "bento-panel" },
-        points: { face: "two-column" },
+        list: { face: "gauge-sheet" },
+        points: { face: "gauge-sheet" },
       },
     }
     expect(menusEqual(MENU, reordered)).toBe(true)

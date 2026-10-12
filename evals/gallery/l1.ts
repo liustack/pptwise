@@ -1084,7 +1084,7 @@ function walkText(
         // the source and the count) and of lecture's chalkboard pages (10 to
         // 15px captions, keys, the lesson's step, the source, the stamp, the
         // ledge and the count) are approved board sizes, like brief's meta.
-        const fontFloorExempt = ["gauge-spec", "show-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec"].includes(
+        const fontFloorExempt = ["gauge-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec"].includes(
           el.getAttribute("data-font-floor-exempt") ?? "",
         )
         if (!decor && !fontFloorExempt && fontSizeAttr !== null && Number(fontSizeAttr) < FONT_FLOOR) {

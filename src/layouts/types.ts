@@ -30,57 +30,18 @@ export type ChapterLayout = (p: SvgTemplateProps) => React.ReactElement
 export type ContentLayout = (p: SvgTemplateProps) => React.ReactElement
 export type EndingLayout = (p: SvgTemplateProps) => React.ReactElement
 
-/** P1 仅两个（spec §4.2）。P2 扩展时在此加 id 并在 index.ts 注册。 */
-// Wave 1（cover 补齐）：新增 4 个 id，与 P1 的 2 个合并
+/** 每个 id 都由某个内置主题的菜单用到。新增时在此加 id 并在 index-cover.ts 注册。 */
 export type CoverLayoutId =
-  | "banner-title" | "poster-center"
-  | "left-anchor" | "constellation" | "editorial-masthead" | "tone-adaptive-header"
-  | "split-diagonal" // P3 Item ①：新表达（非提炼），thesis/terminal 吸纳
-  | "fashion-masthead" // 2026-07-10：时尚 magazine 超大报头（新表达）
-  // 主题重设计第一期（2026-08-18，cover 池 8 -> 9）：左轴单栏 + 引首块，
-  // 内容右边界收在 x1180 给右缘落款列让路——见 cover-colophon.tsx 的文件头。
-  | "colophon"
-  // 第七波封面保真（2026-08-22，cover 池 9 -> 13）：四家板面构图在池里不存在，
-  // 按构造进共享池。institutional-block = 左置巨字+签名块，memo-head =
-  // MEMORANDUM 眉行+红双线+末词下划，board-head = 左轴板书+粉笔弧，
-  // bill-head = 出血巨字+底粗线。stage 复用 poster-center，不另开 id。
+  // 第七波封面保真（2026-08-22）：institutional-block = 左置巨字+签名块。
   | "institutional-block"
-  | "memo-head"
-  | "board-head"
-  // 封面还原第一波（2026-08-22，cover 池 13 -> 19）：六家板面构图在池里
-  // 不存在，按构造进共享池。verdict-index = 结论句+强调色块+编号论据，
-  // band-title = 通栏色带承反白标题，header-band = 顶栏只承 meta、标题落纸面，
-  // paper-masthead = 纸底巨号+右缘年份一字一行，horizon-wedge = 底缘缓坡楔，
-  // corner-wedge = 右下角三角楔。单 signer 坐标写在文件常量里，共用构造的
-  // 对齐、带高、峰点走菜单脸参数，零 theme id。
-  | "verdict-index"
-  | "band-title"
-  | "header-band"
-  | "paper-masthead"
-  | "horizon-wedge"
-  | "corner-wedge"
-  // Wave 8 batch 1 (2026-08-23): board-locked pinOnly covers. Not in the
-  // default auto-pick set. ikb-field-cover = full primary field + left
-  // title + foot bar. stat-cover = display heading as the page's number.
-  // type-rule-cover = type plus a short rule, no constellation.
+  // Wave 8 batch 1 (2026-08-23): board-locked covers. ikb-field-cover = full
+  // primary field + left title + foot bar. stat-cover = display heading as
+  // the page's number.
   | "ikb-field-cover"
   | "stat-cover"
-  | "type-rule-cover"
-  // Wave 8 batch 2 (2026-08-23): education and humanities board locks.
-  | "thesis-plate-cover"
-  | "chalk-band-cover"
-  | "capsule-open-cover"
-  | "issue-head-cover"
-  | "vertical-title-cover"
-  // Wave 8 batch 3 (2026-08-23): luxe / runway / vermilion / almanac / clinic / arena board locks.
-  | "invitation-plate-cover"
-  | "lookbook-open-cover"
+  // Wave 8 batch 3 (2026-08-23).
   | "red-head-cover"
-  | "pledge-open-cover"
-  | "report-open-cover"
   | "gauge-verdict"
-  | "crayonbox-open"
-  | "show-headline"
   // terminal sample redesign (2026-10-05): the incident console's cover.
   | "console-cover"
   // memo sample redesign (2026-10-05): the typed memorandum's cover.
@@ -118,39 +79,19 @@ export type CoverLayoutId =
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
-  | "banner-chapter" | "rail-chapter" | "poster-chapter"
-  | "constellation-chapter" | "masthead-chapter" | "tone-adaptive-chapter"
-  | "fashion-chapter" // 2026-07-10：时尚 magazine 满版色块出血大号（新表达）
-  | "roman-chapter" // 2026-07-12：财经罗马数字+圆环光晕（新表达，ledger 先挂）
-  | "verse-chapter" // editorial-verse wave: pinOnly centered verse as chapter open
   // Wave 8 batch 1 pinOnly chapter faces.
-  | "ghost-rule-chapter"
   | "block-numeral-chapter"
   | "ghost-section-chapter"
-  | "ember-index-chapter"
-  | "stroke-index-chapter"
-  | "act-chapter"
   // Wave 8 batch 2 pinOnly chapter faces.
-  | "folio-ghost-chapter"
-  | "lesson-box-chapter"
-  | "sticker-numeral-chapter"
   | "fascicle-ghost-chapter"
-  | "volume-slip-chapter"
   // Wave 8 batch 3 pinOnly chapter faces.
-  | "gilt-ordinal-chapter"
-  | "look-range-chapter"
   | "seal-numeral-chapter"
   | "field-band-chapter"
   | "subject-rule-chapter"
   // Wave 8 batch 4 pinOnly chapter faces.
-  | "one-word-chapter"
-  | "chalk-rule-chapter"
   | "decimal-index-chapter"
   | "issue-line-chapter"
-  | "hall-label-chapter"
   | "gauge-section"
-  | "crayonbox-sticker"
-  | "show-plate"
   // terminal sample redesign (2026-10-05): the incident console's chapter page.
   | "console-chapter"
   // homeroom sample redesign (2026-10-06): a part of the lesson on a band of board.
@@ -178,37 +119,14 @@ export type ChapterLayoutId =
   // lecture sample redesign (2026-10-08): the board wiped for the next part of the lesson.
   | "chalkboard-chapter"
 export type EndingLayoutId =
-  | "banner-ending" | "rail-ending" | "poster-ending"
-  | "constellation-ending" | "masthead-ending" | "tone-adaptive-ending"
-  | "fashion-ending" // 2026-07-10：时尚 runway 满版收尾（新表达）
   // Wave 8 batch 1 pinOnly ending faces.
-  | "action-pad-ending"
   | "signoff-ending"
   | "close-word-ending"
-  | "ask-ending"
-  | "rule-close-ending"
-  | "pill-cta-ending"
-  // Wave 8 batch 2 pinOnly ending faces.
-  | "defense-close-ending"
-  | "homework-close-ending"
-  | "reminder-list-ending"
-  | "afterword-ending"
-  | "seal-close-ending"
   // Wave 8 batch 3 pinOnly ending faces.
-  | "gilt-word-ending"
-  | "window-close-ending"
   | "deliberation-ending"
-  | "scorecard-ending"
-  | "care-plan-ending"
   // Wave 8 batch 4 pinOnly ending faces.
-  | "release-close-ending"
-  | "next-lecture-ending"
   | "resolution-ending"
-  | "decision-close-ending"
-  | "exit-word-ending"
   | "gauge-next"
-  | "crayonbox-todo"
-  | "show-finale"
   // terminal sample redesign (2026-10-05): the incident console's close.
   | "console-ending"
   // memo sample redesign (2026-10-05): the typed memorandum's sign-off.
@@ -246,35 +164,12 @@ export type EndingLayoutId =
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
-  | "rail-numbered" | "stacked-poster"
-  | "bento-panel" | "narrow-column" | "tone-adaptive-content"
-  | "two-column" // P3 Item ②：跨主题通用第二 content 版式（轮换素材）
-  // P1 variety wave, task 4 (content-pool expansion): a lead+stacked-pair
-  // triptych and a whitespace-led centered frame — see each file's own
-  // composition-sketch header. The third member (side-highlight) was later
-  // retired with its 176px primary side panel. banner-heading (the
-  // assertion-banner content face) was later retired: heading treatments
-  // keep the title face, leftover pins migrate to two-column.
-  | "asymmetric-triptych" | "quiet-frame"
-  // Content-layout expansion wave, task T2: the pool's first horizontal
-  // split — a full-bleed header band over an ordinary body band.
-  | "split-band"
-  // quote-stage wave, task T2 (content-pool expansion, 12 -> 13): the
-  // pool's first `pinOnly` member (registry.ts's `LayoutDefinition.pinOnly`)
-  // — a single-heading "金句" page, capacity-1 body — see the file's own
-  // composition-sketch header.
-  | "quote-stage"
-  // editorial-verse wave: two more pinOnly content members (statement =
-  // whole-page verse, pull-quote = centered quote + attribution + prose).
-  // Neither enters the auto-pick pool.
+  // editorial-verse wave: statement = whole-page verse, pull-quote =
+  // centered quote + attribution + prose.
   | "statement"
   | "pull-quote"
-  // speech-layouts wave: pinOnly content members (stat-hero = whole-page
-  // number, one-evidence = assertion + one visual). None enter the auto-pick
-  // pool. The wave's third, mono-bleed, left with playbill in 2026-10.
+  // speech-layouts wave: stat-hero = whole-page number.
   | "stat-hero"
-  | "one-evidence"
-  | "gauge-stats"
   | "gauge-point"
   // brief sample redesign: the board's ordinary content page, its evidence
   // page, and its single-figure page. Theme-locked, never auto-picked.
@@ -338,9 +233,3 @@ export type ContentLayoutId =
   | "notice-statement"
   | "notice-figure"
   | "notice-exhibit"
-  | "crayonbox-cards"
-  | "crayonbox-point"
-  | "show-gallery"
-  | "show-spotlight"
-  | "show-statement"
-  | "show-figures"

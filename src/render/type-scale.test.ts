@@ -24,7 +24,7 @@ function applyTypeScale(id: string, typeScale: number): string {
 }
 
 function coverTheme(source: CanonicalThemeId, typeScale?: number): string {
-  const id = registerTestTheme(`type-scale-cover-${themeSerial++}`, source, { cover: "poster-center" })
+  const id = registerTestTheme(`type-scale-cover-${themeSerial++}`, source, { cover: "institutional-block" })
   return typeScale === undefined ? id : applyTypeScale(id, typeScale)
 }
 
@@ -144,7 +144,7 @@ describe("typeScale multiplies heading/display size before fit", () => {
     expect(scaled.fontSize).toBeGreaterThanOrEqual(40)
   })
 
-  it("poster-center heading at typeScale 1.5 is 1.5× the omitted size", () => {
+  it("cover heading at typeScale 1.5 is 1.5× the omitted size", () => {
     const baseSvg = renderSlideSvg(coverIr("brief", "战略"), 0)
     const scaledSvg = renderSlideSvg(coverIr("brief", "战略", 1.5), 0)
     expect(fontSizeFor(scaledSvg, "战略")).toBe(Math.round(fontSizeFor(baseSvg, "战略") * 1.5))

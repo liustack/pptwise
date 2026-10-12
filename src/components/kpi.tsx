@@ -23,16 +23,11 @@ const CARD_H = 120
 const DELTA_SIZE = 20
 const DELTA_GAP = 8
 
-// Exported for content-bento-panel.tsx's own per-item KPI cards
-// (`renderKpiCardBody`) — same delta arrow/color mapping, just laid out
-// into a compact bento cell instead of this file's wide row card.
-//
 // Background-agnostic by design: this function has no idea what surface its
 // caller will paint the arrow on, so it returns the raw semantic color
 // (green/red/"") and leaves ink-vs-background calibration to each call
-// site's own `accessibleInk` wrap (bench-driven fix round, defect B — see
-// this file's own call site below and content-bento-panel.tsx's identical
-// one). Pre-fix, both call sites rendered `dp.color` raw — a real,
+// site's own `accessibleInk` wrap (bench-driven fix round, defect B, see
+// this file's own call site below). Pre-fix, the call sites rendered `dp.color` raw — a real,
 // reproducible defect (not theme-specific: the full-matrix sweep found at
 // least one of up/down failing on every one of the 13 themes across the two
 // call sites combined, not just the journal/bulletin/luxe instances the
@@ -72,10 +67,9 @@ function deltaArrow(delta: "up" | "down" | "flat"): string {
 /**
  * The type scale the value line is rendered at, handed to
  * `splitKpiValueWidths` so it can reason about the size the value will
- * actually come out at. This file's own card uses `CARD_VALUE_SCALE`;
- * `content-bento-panel.tsx` passes its own, larger one.
+ * actually come out at. This file's own card uses `CARD_VALUE_SCALE`.
  */
-export interface KpiValueScale {
+interface KpiValueScale {
   /** Design size of the value text (`fitSvgLine`'s `fontSize`). */
   readonly fontSize: number
   /** Floor `fitSvgLine` shrinks to before it starts cutting characters. */
@@ -88,11 +82,6 @@ export interface KpiValueScale {
 
 const CARD_VALUE_SCALE: KpiValueScale = { fontSize: 40, minFontSize: 22, unitRatio: 0.45 }
 
-// Exported for content-bento-panel.tsx's `renderKpiCardBody` — same
-// value/unit width split technique (see the comment at its call site below),
-// reused verbatim so the two KPI renderers can't drift on this
-// overflow-safety math.
-//
 // Value first (review round 3, D-cluster 5a). The split used to be flatly
 // proportional to each side's character count, which reads well until the
 // unit is the longer string: `value="5"` / `unit="weeks"` on the gallery's
@@ -171,8 +160,7 @@ export function unitGap(unit: string): "" | " " {
  * The unit tspan's text, its gap (`unitGap`) first, or `null` when it has no
  * room worth drawing.
  *
- * Shared with `content-bento-panel.tsx` for the same reason
- * `splitKpiValueWidths` is. The `null` cases are what the value-first split
+ * The `null` cases are what the value-first split
  * above made reachable: a unit can now be squeezed down to nothing, and both
  * degenerate results read badly glued to a number — an empty tspan is a
  * stray empty run in the exported OOXML, and a lone "…" after a figure reads
@@ -211,7 +199,7 @@ export function kpiUnitCut(unit: string | undefined, fitted: string | null): boo
  * the figure stood at its design size ("2.0" left without "billion years")
  * now costs the figure a few points of type instead.
  */
-export function fitKpiFigure(
+function fitKpiFigure(
   value: string,
   unit: string | undefined,
   availableWidth: number,
@@ -287,8 +275,7 @@ export function rowValueFontSize(
 /**
  * 弱模型冗余单位去重（2026-07-10 无图矩阵真机抓到：terminal 4/4、magazine 1/4
  * KPI 卡渲成「35%%」）：模型常把 "35%" 填进 value 后又把 "%" 填进 unit，
- * 拼接即重复。value 已以 unit 结尾时丢弃 unit。导出供 bento KPI 卡
- * （content-bento-panel）同源复用，两条 KPI 渲染路径不漂移。
+ * 拼接即重复。value 已以 unit 结尾时丢弃 unit。
  */
 /**
  * A figure as the reader sees it. An author marks the figure a page is about
@@ -673,10 +660,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   // this fix landed): this line renders on the card's own
                   // `colors.surface` shell (the `<rect fill={ctx.colors.
                   // surface}>` above), not the page background, so contrast
-                  // is checked against that surface — same background
-                  // parameter `content-bento-panel.tsx`'s own KPI value text
-                  // uses for the same reason (see that file's header
-                  // comment). A flat 0.7 fillOpacity blended colors.muted
+                  // is checked against that surface. A flat 0.7 fillOpacity blended colors.muted
                   // toward colors.surface close enough to fail 4.5:1 on all
                   // 13 themes (the pinned measurement). accessibleOpacity
                   // falls back to full opacity wherever the blend doesn't

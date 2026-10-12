@@ -42,13 +42,9 @@ export const aliases = {
   items: [{ itemsKey: "ribs", aliases: { title: "label", name: "label", items: "causes" } }],
 } satisfies ComponentAliasSpec
 
-// A spine, its ribs, and one head: a drawing that frames itself, so the
-// bento shell paints nothing underneath it.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

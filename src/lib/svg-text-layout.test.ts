@@ -1315,7 +1315,7 @@ describe("space-delimited mixed text wraps Chinese per character", () => {
   const at = (text: string, maxWidth: number, fontSize = 16, fontFamily?: string) =>
     layoutSvgText(text, { maxWidth, fontSize, maxLines: 64, minPt: fontSize, fontFamily })
 
-  it("fills the line after a lone Latin word (arena split-band repro)", () => {
+  it("fills the line after a lone Latin word (arena repro)", () => {
     // Pre-fix the clause after "BP" moved to the next line whole:
     // ["BP", "前三手的英雄池扩展到二十", "一个。"].
     expect(at("BP 前三手的英雄池扩展到二十一个。", 240).lines).toEqual(["BP 前三手的英雄池扩展到二十", "一个。"])

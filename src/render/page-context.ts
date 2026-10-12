@@ -39,13 +39,10 @@ export interface PageRenderContext {
   decorKeepOut?: readonly DecorKeepOutRect[]
   geometry: {
     brandedFrameBottomY?: number
-    imageBottomCaptionBottomY: number
   }
 }
 
 const FRAME_BOTTOM_BRANDED = 624
-const CANVAS_BOTTOM = 720
-const FOOTER_HEIGHT = 40
 
 /**
  * A theme may keep the footer off a content page that wears a photo
@@ -148,7 +145,6 @@ export function resolvePageRenderContext(
       : {}),
     geometry: {
       ...(branding === "full" || footerRow !== null ? { brandedFrameBottomY: FRAME_BOTTOM_BRANDED } : {}),
-      imageBottomCaptionBottomY: footerRow !== null ? CANVAS_BOTTOM - FOOTER_HEIGHT : CANVAS_BOTTOM,
     },
   }
 }

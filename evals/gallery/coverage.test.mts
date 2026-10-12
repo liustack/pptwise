@@ -29,9 +29,9 @@ describe("mapJobSubject", () => {
       inventory: "theme",
       id: "brief",
     })
-    expect(mapJobSubject({ band: "face", subject: "two-column" })).toEqual({
+    expect(mapJobSubject({ band: "face", subject: "gauge-sheet" })).toEqual({
       inventory: "layout",
-      id: "two-column",
+      id: "gauge-sheet",
     })
     expect(mapJobSubject({ band: "component", subject: "callout" })).toEqual({
       inventory: "component",
@@ -115,7 +115,6 @@ describe("gallery inventory coverage", () => {
 
     const served = servedLayoutIds(CANONICAL_THEME_IDS)
     const appendix = matrix.filter((job) => job.section === UNSERVED_SECTION)
-    expect(appendix.length).toBeGreaterThan(0)
     expect(appendix.every((job) => job.band === "face")).toBe(true)
     expect(appendix.every((job) => job.theme === "brief")).toBe(true)
     expect([...new Set(appendix.map((job) => job.subject))].sort()).toEqual(unservedLayoutIds(CANONICAL_THEME_IDS))

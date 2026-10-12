@@ -87,7 +87,6 @@ export const INSIGHT_TOKENS: StyleTokens = {
   shape: {
     radius: 2,
     gapScale: 0.95, // 信息图利落+数据密度
-    cover: { metaPlacement: "top" },
   },
   defaultBackgrounds: {
     cover: { kind: "gradient", from: "#151B23", to: "#0C1016", direction: "tb" },

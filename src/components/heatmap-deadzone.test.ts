@@ -59,10 +59,10 @@ function confinedTheme(id: string, surface: string, primary: string) {
     },
     brand: {},
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "banner-chapter" },
-      content: { data: { face: "narrow-column" } },
-      ending: { face: "banner-ending" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
+      content: { data: { face: "gauge-sheet" } },
+      ending: { face: "signoff-ending" },
     },
   } satisfies ThemeFile
 }

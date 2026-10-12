@@ -184,7 +184,7 @@ describe("five_forces pathological content through the real generatePptx", () =>
 
   it("schema-max content on the narrowest curated layout (defect-F fontScale floor) still exports cleanly", async () => {
     const themeId = registerTestTheme("five-forces-narrow", "brief", {
-      content: { hierarchy: "narrow-column" },
+      content: { hierarchy: "gauge-sheet" },
     })
     const bytes = await generatePptx({
       version: "5",

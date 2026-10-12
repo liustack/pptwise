@@ -46,8 +46,8 @@ export interface ComponentAliasSpec {
 /**
  * The render-time behavior axes `src/render/component-traits.ts` classifies
  * as independent `ReadonlySet<ComponentType>` collections
- * (`STRETCHABLE_TYPES`/`SELF_VISUAL_TYPES`/`SCALABLE_TYPES`/
- * `PASSTHROUGH_SHELL_TYPES`/`FULL_BODY_TYPES`/`COLUMN_SPANNING_TYPES`),
+ * (`STRETCHABLE_TYPES`/`SCALABLE_TYPES`/`FULL_BODY_TYPES`/
+ * `COLUMN_SPANNING_TYPES`),
  * plus `evidence` — spec
  * §4.1's named exception for `EVIDENCE_TYPES`: that collection carries
  * cross-component *priority order* (which type wins when more than one
@@ -72,12 +72,8 @@ export interface ComponentAliasSpec {
 export interface ComponentTraits {
   /** Feeds `STRETCHABLE_TYPES` — may `growStretchables` stretch this component to fill leftover column height? */
   readonly stretchable: boolean
-  /** Feeds `SELF_VISUAL_TYPES` — does this component already paint its own card/frame? */
-  readonly selfVisual: boolean
   /** Feeds `SCALABLE_TYPES` — is this component's content a rendered graphic safe to scale uniformly (not reflowable text)? */
   readonly scalable: boolean
-  /** Feeds `PASSTHROUGH_SHELL_TYPES` — does this component draw its own internal frame, so the bento shell paint should be skipped? */
-  readonly passthroughShell: boolean
   /** Feeds `FULL_BODY_TYPES` — must this component be the slide's sole component, filling the whole content rect itself? */
   readonly fullBody: boolean
   /** Feeds `COLUMN_SPANNING_TYPES` — should this page-level component span a multi-column arrangement instead of occupying one column? */

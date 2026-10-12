@@ -2,15 +2,15 @@
 import { afterEach, describe, it, expect, vi } from "vitest"
 import { BoundSlideSvg } from "./__fixtures__/bound-slide"
 import { render } from "@testing-library/react"
-import { FullSlideSvg, resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
+import { resolveBackgroundHex, resolveOverrideBackgroundHex } from "./full-slide-svg"
 import { renderSvgMarkup, parseSvgRoot } from "./serialize"
 import { assertSubset } from "./subset-validate"
 import { svgToOps } from "../pptx/svg2pptx/dispatch"
 import { MOTIFS } from "../motifs"
-import { __resetRegisteredThemes, compileBuiltinTheme, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
+import { __resetRegisteredThemes, getThemeDefinition, THEME_DEFINITIONS } from "../themes/definitions"
 import { registerTestTheme, type TestThemeFaces } from "../themes/test-fixtures"
-import { accessibleInk, blendOver, contrastRatio, readableOn } from "./ink"
-import { BUILTIN_THEME_FILES, resolveStyle } from "../themes"
+import { accessibleInk, blendOver, contrastRatio } from "./ink"
+import { resolveStyle } from "../themes"
 import {
   CONTENT_DECOR_CONTRAST_CEILING,
   effectivePaintOpacity,
@@ -20,7 +20,6 @@ import {
   midgroundSaturationCeiling,
   paintedLeaves,
 } from "../motifs/decor-budget"
-import { textInkBox } from "./depth-contract/geometry"
 import type { PptxIR, Slide } from "@/ir"
 import { slideToRender } from "./render-slide"
 
@@ -95,16 +94,16 @@ describe("FullSlideSvg", () => {
       heading: "第一部分：市场洞察",
       components: [],
     }
-    const doc = irWithFace(chapter, "thesis", { chapter: "masthead-chapter" })
+    const doc = irWithFace(chapter, "thesis", { chapter: "ghost-section-chapter" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={chapter} index={0} />)
     const ghost = Array.from(container.querySelectorAll("text")).find(
-      (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 160,
+      (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 140,
     )
     const heading = Array.from(container.querySelectorAll("text")).find((text) =>
       text.textContent?.includes("第一部分：市场洞察"),
     )
 
-    expect(container.querySelector('[data-face="masthead-chapter"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="ghost-section-chapter"]')).not.toBeNull()
     expect(ghost?.closest("[data-depth]")?.getAttribute("data-depth")).toBe("mid")
     expect(heading?.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
   })
@@ -115,7 +114,7 @@ describe("FullSlideSvg", () => {
       heading: "第一部分：市场洞察",
       components: [],
     }
-    const doc = irWithFace(chapter, "brief", { chapter: "masthead-chapter" })
+    const doc = irWithFace(chapter, "brief", { chapter: "ghost-section-chapter" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={chapter} index={0} />)
     const depths = Array.from(container.querySelectorAll("[data-depth]")).map((el) => el.getAttribute("data-depth"))
     expect(depths).toEqual(["bg", "mid", "fg"])
@@ -200,7 +199,7 @@ describe("FullSlideSvg", () => {
   it("paints the luxe invitation frame in the foreground at the theme accent", () => {
     // luxe's own cover draws its gilt card itself since the 2026-10-08 redesign; the motif still frames a cover face that leaves it room.
     const slide: Slide = { type: "cover", heading: "封面", components: [] }
-    const doc = irWithFace(slide, "luxe", { cover: "invitation-plate-cover" })
+    const doc = irWithFace(slide, "luxe", { cover: "institutional-block" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     const piece = container.querySelector('[data-decor-piece="invitation"]')!
     expect(piece.getAttribute("data-decor-role")).toBe("structure")
@@ -221,45 +220,6 @@ describe("FullSlideSvg", () => {
     const line = piece.querySelector("polyline")!
     expect(line.getAttribute("stroke")).toBe(resolveStyle("clinic").colors.accent)
     expect(line.getAttribute("opacity")).toBeNull()
-  })
-
-  it("brings a brief ghost index fully inside the canvas and removes its bleed exemption", () => {
-    const chapter: Slide = { type: "chapter", heading: "第一部分", components: [] }
-    const content: Slide = {
-      type: "content",
-      kind: "points",
-      heading: "市场洞察",
-      components: [{ type: "paragraph", text: "正文" }],
-    }
-    // brief's ghost-bleed index rides the shared heading system, which its
-    // own gauge faces do not use since the 2026-10-02 redesign. A workspace
-    // copy of brief that keeps the id and names narrow-column for points
-    // still reaches it, so the page is drawn with that copy, by value.
-    const file = BUILTIN_THEME_FILES.brief
-    const theme = compileBuiltinTheme({
-      ...file,
-      menu: { ...file.menu, content: { ...file.menu.content, points: { face: "narrow-column" } } },
-    })
-    const doc: PptxIR = { ...ir([chapter, content]), theme: { id: "brief" } }
-    const { container } = render(<FullSlideSvg ir={doc} slide={content} index={1} theme={theme} />)
-    const ghost = Array.from(container.querySelectorAll('[data-depth="mid"] text')).find(
-      (text) => text.textContent === "01" && Number(text.getAttribute("font-size")) >= 200,
-    )!
-    const box = textInkBox({
-      content: ghost.textContent ?? "",
-      x: Number(ghost.getAttribute("x")),
-      y: Number(ghost.getAttribute("y")),
-      fontSize: Number(ghost.getAttribute("font-size")),
-      fontFamily: ghost.getAttribute("font-family") ?? "",
-      fontWeight: ghost.getAttribute("font-weight"),
-      textAnchor: ghost.getAttribute("text-anchor") ?? "start",
-    })
-
-    expect(ghost.hasAttribute("data-bleed")).toBe(false)
-    expect(box.x).toBeGreaterThanOrEqual(0)
-    expect(box.y).toBeGreaterThanOrEqual(0)
-    expect(box.x + box.w).toBeLessThanOrEqual(1280)
-    expect(box.y + box.h).toBeLessThanOrEqual(720)
   })
 
   it("renders content components for a content slide (omitted branding draws no footer)", () => {
@@ -503,7 +463,7 @@ describe("resolveOverrideBackgroundHex (post-v0.3 W8 fix round, backlog item 1)"
 describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlog item 1)", () => {
   const classroomIr = (slide: Slide): PptxIR =>
     slide.type === "chapter"
-      ? irWithFace(slide, "homeroom", { chapter: "rail-chapter" })
+      ? irWithFace(slide, "homeroom", { chapter: "ghost-section-chapter" })
       : { ...ir([slide]), theme: { id: "homeroom" } }
   const HEADING = "背景覆盖探针"
   const railChapter = (background?: Slide["background"]): Slide =>
@@ -518,13 +478,18 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)
     return heading?.getAttribute("fill") ?? null
   }
+  // ghost-section-chapter inks its heading with accessibleInk(text, ctx.defaultBg, size).
+  const headingInkOn = (markup: string, bg: string): string => {
+    const root = parseSvgRoot(markup)
+    const heading = Array.from(root.querySelectorAll("text")).find((t) => t.textContent === HEADING)!
+    return accessibleInk(resolveStyle("homeroom").colors.text, bg, Number(heading.getAttribute("font-size")))
+  }
 
   it("invariant: a slide with no background override still picks the theme's own default-background ink (byte-identical to before this fix)", () => {
     const slide = railChapter()
     const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
-    // readableOn("#ECF0F2") — homeroom's paper chapter default after wave 8 batch 2.
-    expect(headingFill(markup)).toBe(readableOn("#ECF0F2"))
-    expect(headingFill(markup)).toBe("#0A0E14")
+    // "#ECF0F2" is homeroom's paper chapter default.
+    expect(headingFill(markup)).toBe(headingInkOn(markup, "#ECF0F2"))
   })
 
   it("a color slide.background override changes the picked ink to match the real painted background, not the theme default", () => {
@@ -532,21 +497,8 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     // to flip to white, which it only can if the override is really read.
     const slide = railChapter({ kind: "color", value: "#4A6B8A" })
     const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
-    expect(readableOn("#ECF0F2")).not.toBe(readableOn("#4A6B8A"))
-    expect(headingFill(markup)).toBe(readableOn("#4A6B8A"))
-    expect(headingFill(markup)).toBe("#FFFFFF")
-  })
-
-  it("a gradient slide.background override resolves ctx.defaultBg via the midpoint blend, not the from stop (from and midpoint disagree here)", () => {
-    // from "#000000" alone would pick white ink (readableOn("#000000") ===
-    // "#FFFFFF") — the midpoint "#808080" picks dark ink instead
-    // (readableOn("#808080") === "#0A0E14"), so this only passes if the
-    // render path actually goes through the midpoint, not `.from`.
-    expect(readableOn("#000000")).toBe("#FFFFFF")
-    expect(readableOn("#808080")).toBe("#0A0E14")
-    const slide = railChapter({ kind: "gradient", from: "#000000", to: "#FFFFFF" })
-    const markup = renderSvgMarkup(<BoundSlideSvg ir={classroomIr(slide)} slide={slide} index={0} />)
-    expect(headingFill(markup)).toBe("#0A0E14")
+    expect(headingInkOn(markup, "#ECF0F2")).not.toBe(headingInkOn(markup, "#4A6B8A"))
+    expect(headingFill(markup)).toBe(headingInkOn(markup, "#4A6B8A"))
   })
 
   it("an asset slide.background override does not change autoScrimColor's own theme-default source (out of this fix's scope, see full-slide-svg.tsx's own comment)", () => {
@@ -594,10 +546,10 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
       components: [{ type: "paragraph", text: "文" }],
       background: { kind: "asset", asset_id: "bg1" },
     } as Slide
-    // homeroom's tokens on the native narrow-column face: homeroom's own
-    // menu now sets its points on the lesson sheet, so a test theme keeps
-    // the probe on the face whose subheading reads ctx.defaultBg.
-    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "homeroom", { content: { points: "narrow-column" } })
+    // homeroom's tokens on gauge-sheet: homeroom's own menu sets its points
+    // on the lesson sheet, so a test theme keeps the probe on a face whose
+    // subheading reads accessibleInk(muted, ctx.defaultBg, size).
+    const themeId = registerTestTheme(`full-slide-svg-${testThemeSerial++}`, "homeroom", { content: { points: "gauge-sheet" } })
     const doc: PptxIR = {
       version: "5",
       filename: "deck.pptx",
@@ -621,11 +573,11 @@ describe("ctx.defaultBg prefers slide.background (post-v0.3 W8 fix round, backlo
     // on its own — the two literal `contrastRatio` pins above are what keep
     // the original defect on the record, and they are theme-independent
     // arithmetic, so they stay true regardless of luxe's palette. The live
-    // probe uses homeroom (unassigned, so the native narrow-column
-    // subheading still consumes accessibleInk(accent, ctx.defaultBg)).
+    // probe uses homeroom on gauge-sheet.
     const tokens = resolveStyle("homeroom")
     const scrim = resolveBackgroundHex(tokens.defaultBackgrounds.content, tokens.colors.bg)
-    expect(subheadingText!.getAttribute("fill")).toBe(accessibleInk(tokens.colors.accent, scrim, 22))
+    const size = Number(subheadingText!.getAttribute("font-size"))
+    expect(subheadingText!.getAttribute("fill")).toBe(accessibleInk(tokens.colors.muted, scrim, size))
   })
 })
 
@@ -826,9 +778,9 @@ describe("content kind 确定性菜单分发", () => {
 describe("registered theme menu faces", () => {
   it("通过 cover 菜单承载指定边界脸", () => {
     const slide: Slide = { type: "cover", heading: "标题", components: [] }
-    const doc = irWithFace(slide, "brief", { cover: "poster-center" })
+    const doc = irWithFace(slide, "brief", { cover: "institutional-block" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
-    expect(container.querySelector('[data-face="poster-center"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="institutional-block"]')).not.toBeNull()
   })
 
   it("通过 content kind 菜单承载源主题菜单外的指定脸", () => {
@@ -838,9 +790,9 @@ describe("registered theme menu faces", () => {
       heading: "标题",
       components: [{ type: "paragraph", text: "正文" }],
     }
-    const doc = irWithFace(slide, "luxe", { content: { points: "split-band" } })
+    const doc = irWithFace(slide, "luxe", { content: { points: "gauge-sheet" } })
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
-    expect(container.querySelector('[data-face="split-band"]')).not.toBeNull()
+    expect(container.querySelector('[data-face="gauge-sheet"]')).not.toBeNull()
   })
 })
 
@@ -1049,9 +1001,9 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
   // column as a pale hairline. `ink`'s cover was reported for exactly that in
   // the 2026-08-20 review.
   const CASES = [
-    ["fashion-masthead", "cover"],
-    ["fashion-chapter", "chapter"],
-    ["fashion-ending", "ending"],
+    ["lineup-cover", "cover"],
+    ["lineup-chapter", "chapter"],
+    ["lineup-ending", "ending"],
   ] as const
 
   for (const [layout, type] of CASES) {
@@ -1067,7 +1019,7 @@ describe("layouts that paint their own full-bleed field (LayoutDefinition.paints
 
   it("an ordinary layout still gets the theme background under it", () => {
     const slide: Slide = { type: "cover", heading: "标题", components: [] }
-    const doc = irWithFace(slide, "ink", { cover: "poster-center" })
+    const doc = irWithFace(slide, "ink", { cover: "institutional-block" })
     const { container } = render(<BoundSlideSvg ir={doc} slide={slide} index={0} />)
     expect(fullBleedFills(container)).toContain("#F7F2E7")
   })

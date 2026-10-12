@@ -18,7 +18,7 @@ import * as thesis from "./thesis"
 
 export type SparseLayoutId = Extract<
   ContentLayoutId,
-  "statement" | "pull-quote" | "stat-hero" | "one-evidence"
+  "statement" | "pull-quote" | "stat-hero"
 >
 
 /**
@@ -44,12 +44,10 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   lecture: {
     statement: lecture.statement,
     "stat-hero": lecture.statHero,
-    "one-evidence": lecture.oneEvidence,
   },
   swiss: {
     "stat-hero": swiss.statHero,
     statement: swiss.statement,
-    "one-evidence": swiss.oneEvidence,
   },
   memo: {
     "pull-quote": memo.pullQuote,
@@ -58,7 +56,6 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   },
   museum: {
     statement: museum.statement,
-    "one-evidence": museum.oneEvidence,
     "stat-hero": museum.statHero,
   },
   luxe: {
@@ -74,7 +71,6 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   brief: {
     statement: brief.statement,
     "stat-hero": brief.statHero,
-    "one-evidence": brief.oneEvidence,
   },
   ledger: {
     statement: ledger.statement,
@@ -84,12 +80,10 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   terminal: {
     "stat-hero": terminal.statHero,
     statement: terminal.statement,
-    "one-evidence": terminal.oneEvidence,
   },
   vermilion: {
     statement: vermilion.statement,
     "stat-hero": vermilion.statHero,
-    "one-evidence": vermilion.oneEvidence,
   },
   journal: {
     "pull-quote": journal.pullQuote,
@@ -99,12 +93,10 @@ export const FACES: Partial<Record<string, FaceMap>> = {
   rally: {
     statement: rally.statement,
     "stat-hero": rally.statHero,
-    "one-evidence": rally.oneEvidence,
   },
   almanac: {
     statement: almanac.statement,
     "stat-hero": almanac.statHero,
-    "one-evidence": almanac.oneEvidence,
   },
   thesis: {
     "pull-quote": thesis.pullQuote,

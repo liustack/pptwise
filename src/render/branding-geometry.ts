@@ -10,16 +10,6 @@
  * Shared geometry with no behaviour lives here instead.
  */
 
-/**
- * Top of the heading region. Every motif's safe-zone note names this line
- * as the edge decoration must stay above (`(96,48,1040×122)` in
- * `docs/designing-themes.md`), so the topmost content on a page (a kicker's
- * em-box top) sits on or below it. `tone-adaptive-content` already seats
- * its 22px kicker here. `banner-heading`'s 12px kicker used to start at
- * y=40, eight pixels inside the band.
- */
-export const TITLE_ZONE_TOP = 48
-
 /** The hairline `Branding` draws across the bottom of content slides when deck branding is explicit `"full"`. */
 export const FOOTER_DIVIDER_Y = 664
 

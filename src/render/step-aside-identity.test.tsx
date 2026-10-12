@@ -7,18 +7,20 @@
 // `branding: "none"` means the face draws the deck's metadata itself, in a
 // place of its own. Neither is true of a page drawn by the shared step-aside,
 // and honouring them there stripped the page of its decoration and lost the
-// organization, version and date outright — between one series count and the
-// next, in the same deck.
+// deck's organization outright, between one row count and the next, in the
+// same deck.
 import { describe, expect, it } from "vitest"
-import type { PptxIR } from "@/ir"
+import type { PptxIR, Slide } from "@/ir"
 import { renderSlideSvg } from "@/api"
 import { resolveStyle } from "../themes"
 import { buildCtx, resolveBackgroundHex } from "./full-slide-svg"
 import { parseSvgRoot, renderSvgMarkup } from "./serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
-import { GaugeStatsContent } from "../layouts/content-gauge-stats"
+import { GaugeSheetContent } from "../layouts/content-gauge-sheet"
 import { registerTestTheme } from "../themes/test-fixtures"
-import { THEME_DEFINITIONS } from "../themes/definitions"
+import { getThemeDefinition } from "../themes/definitions"
+import { resolveEffectiveFace } from "./layout-selection"
+import { resolvePageRenderContext } from "./page-context"
 
 const CANVAS_W = 1280
 
@@ -28,19 +30,20 @@ function ctxFor(themeId: string) {
 }
 
 /**
- * A deck whose data page goes to `gauge-stats`. Brief no longer offers that
- * face (its data page is gauge-sheet since the 2026-10-02 redesign, and its
- * own footer is folio-motif), so the deck binds a copy of a theme that keeps
- * the shared Branding footer, with gauge-stats on its data page.
+ * A deck whose points page goes to `gauge-sheet`, which declares `branding:
+ * "none"`. The deck binds a copy of a theme that keeps the shared Branding
+ * footer, with gauge-sheet on its points page.
  */
 let gaugeThemeId: string | undefined
 function gaugeTheme(): string {
-  gaugeThemeId ??= registerTestTheme("identity-gauge-stats", "thesis", { content: { data: "gauge-stats" } })
+  gaugeThemeId ??= registerTestTheme("identity-gauge-sheet", "thesis", { content: { points: "gauge-sheet" } })
   return gaugeThemeId
 }
 
-/** A page rich enough that `gauge-stats` hands it to the step-aside. */
-function gaugeDeck(seriesCount: number, branding: "full" | "cover-only"): PptxIR {
+const PROSE = { type: "paragraph", text: "Each driver is a planning problem with its own owner, budget and quarterly target." }
+
+/** Eight rows the sheet's band holds. Nine only the full step-aside sheet holds. */
+function gaugeDeck(rows: number, branding: "full" | "cover-only"): PptxIR {
   return {
     version: "5",
     filename: "identity.pptx",
@@ -51,22 +54,11 @@ function gaugeDeck(seriesCount: number, branding: "full" | "cover-only"): PptxIR
     slides: [
       {
         type: "content",
-        kind: "data",
+        kind: "points",
         heading: "续约结构的四个季度",
-        subheading: "续约率回升到百分之九十一。",
         components: [
-          {
-            type: "chart",
-            chart_type: "line",
-            axes: { x_title: "季度", y_title: "席位", show_grid: true },
-            series: Array.from({ length: seriesCount }, (_, i) => ({
-              name: `分部 ${i + 1}`,
-              data: [
-                { x: "Q1", y: 10 + i },
-                { x: "Q2", y: 20 + i },
-              ],
-            })),
-          },
+          { type: "bullets", items: Array.from({ length: rows }, (_, i) => `Quarterly review point number ${i + 1}`) },
+          PROSE,
         ],
         footnote: "来源：运营周报",
       },
@@ -79,132 +71,47 @@ function page(ir: PptxIR): string {
 }
 
 describe("a stepped-aside page keeps the theme it belongs to", () => {
-  it("keeps the deck's branding on a face that used to draw its own", () => {
-    // `gauge-stats` declares `branding: "none"` because it paints the deck's
-    // organization and date itself (`GaugeMeta`). Stepping aside skips that
-    // drawing, so the shared Branding has to stand in — and before it did,
-    // all three lines simply vanished between a 12-series page and a
-    // 13-series one in the same deck.
-    //
-    // On the face's own page the header carries the organization, version
-    // and date. On the stepped-aside page the shared footer stands in with
-    // the marks the deck's footer asks for, which under `"full"` is the
-    // organization (the date stays on the cover).
-    const held = page(gaugeDeck(12, "full"))
-    const aside = page(gaugeDeck(13, "full"))
+  it("keeps the deck's branding on a face that draws its own", () => {
+    // `gauge-sheet` declares `branding: "none"` because it sets the deck's
+    // organization itself. Stepping aside skips that drawing, so the shared
+    // Branding has to stand in, with the marks the deck's footer asks for,
+    // which under `"full"` is the organization (the date stays on the cover).
+    const held = page(gaugeDeck(8, "full"))
+    const aside = page(gaugeDeck(9, "full"))
     expect(held).not.toContain("data-face-mode")
-    expect(aside).toContain('data-face-stepped-aside="gauge-stats"')
-    for (const fact of ["云觅咨询", "v2", "2026-08"]) expect(held).toContain(fact)
+    expect(aside).toContain('data-face-stepped-aside="gauge-sheet"')
+    expect(held).toContain("云觅咨询")
     expect(aside).toContain("云觅咨询")
     expect(aside).toContain('data-footer="row"')
   })
 
-  it("paints the motif a suppressing face had turned off", () => {
-    // `crayonbox-cards` and `show-figures` declare `suppressMotif` about
-    // their own artwork. A page with none of that artwork on it has no
-    // reason to keep the theme's decoration off. A theme-wide motif is a
-    // built-in's alone (a public theme decorates entry by entry), and since
-    // crayon's list page left `crayonbox-cards` for its crayonbox sheet in
-    // 2026-10 no built-in pairs one with a face that steps aside, so crayon's
-    // list page is pointed back at it for this test.
-    const menu = THEME_DEFINITIONS.crayon.menu.content
-    const list = menu.list
-    menu.list = { face: "crayonbox-cards" }
-    const ir = {
-      version: "5",
-      filename: "motif.pptx",
-      theme: { id: "crayon" },
-      meta: {},
-      assets: { images: {} },
-      slides: [
-        {
-          type: "content",
-          kind: "list",
-          heading: "本周的四件事",
-          components: [
-            {
-              type: "chart",
-              chart_type: "line",
-              axes: { x_title: "季度", y_title: "席位", show_grid: true },
-              series: Array.from({ length: 13 }, (_, i) => ({
-                name: `分部 ${i + 1}`,
-                data: [
-                  { x: "Q1", y: 10 + i },
-                  { x: "Q2", y: 20 + i },
-                ],
-              })),
-            },
-          ],
-        },
-      ],
-    } as unknown as PptxIR
-    let markup: string
-    try {
-      markup = page(ir)
-    } finally {
-      menu.list = list
+  it("lifts a face's motif and branding suppressions off a stepped-aside page", () => {
+    // terminal's console-sheet declares `suppressMotif` about its own
+    // artwork, and gauge-sheet declares `branding: "none"`. A page drawn by
+    // the step-aside carries none of that artwork, so it keeps neither.
+    const slide = { type: "content", kind: "points", heading: "Heading", components: [PROSE] } as unknown as Slide
+    for (const [themeId, field] of [
+      ["terminal", "motifOn"],
+      [gaugeTheme(), "brandOn"],
+    ] as const) {
+      const ir = {
+        version: "5",
+        filename: "x.pptx",
+        theme: { id: themeId },
+        branding: "full",
+        meta: {},
+        assets: { images: {} },
+        slides: [slide],
+      } as unknown as PptxIR
+      const theme = getThemeDefinition(themeId)
+      const face = resolveEffectiveFace(ir, slide, theme)
+      expect(resolvePageRenderContext(ir, slide, face, theme)[field], themeId).toBe(false)
+      expect(resolvePageRenderContext(ir, slide, face, theme, true)[field], themeId).toBe(true)
     }
-    expect(markup).toContain('data-face-stepped-aside="crayonbox-cards"')
-    // Named, not sniffed. `data-decor` alone does not even distinguish the
-    // attribute: this face paints its own `data-decor-piece="sun"` on the
-    // page it draws itself, so the loose check passed while carrying no
-    // motif at all. These are the two pieces `crayonbox-motif` paints,
-    // inside the container `FullSlideSvg` wraps a motif in.
-    expect(markup).toContain('data-decor="true"')
-    const pieces = [...markup.matchAll(/data-decor-piece="([^"]+)"/g)].map((m) => m[1]!).sort()
-    expect(pieces).toEqual(["crayonbox-stars", "crayonbox-sun"])
   })
 
-  it("keeps the theme accent rather than the face's neutralised one", () => {
-    // The show family hands its own fallback a ctx whose accent is swapped
-    // for `primary`. That is a decision about the show composition, and a
-    // page drawn without it should still be runway's. runway's data page left
-    // `show-figures` for its lineup sheet in 2026-10, so it is pointed back at
-    // it for this test.
-    const tokens = resolveStyle("runway")
-    const menu = THEME_DEFINITIONS.runway.menu.content
-    const data = menu.data
-    menu.data = { face: "show-figures" }
-    const ir = {
-      version: "5",
-      filename: "accent.pptx",
-      theme: { id: "runway" },
-      meta: {},
-      assets: { images: {} },
-      slides: [
-        {
-          type: "content",
-          kind: "data",
-          heading: "四个季度的席位",
-          components: [
-            {
-              type: "chart",
-              chart_type: "line",
-              axes: { x_title: "季度", y_title: "席位", show_grid: true },
-              series: Array.from({ length: 14 }, (_, i) => ({
-                name: `分部 ${i + 1}`,
-                data: [
-                  { x: "Q1", y: 10 + i },
-                  { x: "Q2", y: 20 + i },
-                ],
-              })),
-            },
-          ],
-        },
-      ],
-    } as unknown as PptxIR
-    let markup: string
-    try {
-      markup = page(ir)
-    } finally {
-      menu.data = data
-    }
-    expect(markup).toContain('data-face-stepped-aside="show-figures"')
-    expect(markup.toUpperCase()).toContain(tokens.colors.accent.toUpperCase())
-  })
-
-  it("draws nothing outside the canvas on any of the three", () => {
-    for (const ir of [gaugeDeck(13, "full"), gaugeDeck(13, "cover-only")]) {
+  it("draws nothing outside the canvas", () => {
+    for (const ir of [gaugeDeck(9, "full"), gaugeDeck(9, "cover-only")]) {
       const markup = page(ir)
       expect(auditSvgMarkup(markup)).toEqual([])
       const root = parseSvgRoot(markup)
@@ -215,11 +122,11 @@ describe("a stepped-aside page keeps the theme it belongs to", () => {
 
   it("is reached through the face, not only through FullSlideSvg", () => {
     const ctx = ctxFor("brief")
-    const ir = gaugeDeck(13, "full")
+    const ir = gaugeDeck(9, "full")
     const slide = ir.slides[0]!
     const markup = renderSvgMarkup(
       <svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
-        <GaugeStatsContent ir={ir} slide={slide} index={0} ctx={ctx} />
+        <GaugeSheetContent ir={ir} slide={slide} index={0} ctx={ctx} />
       </svg>,
     )
     expect(markup).toContain('data-face-mode="fallback"')

@@ -19,10 +19,10 @@ function theme(extra: Record<string, unknown> = {}) {
     label: "Acme",
     style: publicStyle("acme"),
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
-      content: { points: { face: "two-column" } },
-      ending: { face: "poster-ending" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
+      content: { points: { face: "gauge-sheet" } },
+      ending: { face: "signoff-ending" },
     },
     ...extra,
   }
@@ -35,7 +35,7 @@ describe("ThemeFileSchema", () => {
     )
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.menu.content.points?.face).toBe("two-column")
+      expect(result.data.menu.content.points?.face).toBe("gauge-sheet")
       expect(result.data).not.toHaveProperty("base")
     }
   })
@@ -65,16 +65,6 @@ describe("ThemeFileSchema", () => {
     expect(result.success).toBe(false)
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.path.join(".")).join("\n")).toMatch(/occasions\.0/)
-    }
-  })
-
-  it("keeps built-in-only board constructor fields out of the public style schema", () => {
-    // CONSULTING_TOKENS carries `shape.cover` board knobs, which only the
-    // engine-internal built-in declaration may express.
-    const result = ThemeFileSchema.safeParse(theme({ style: { ...CONSULTING_TOKENS, id: "acme" } }))
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.issues.map((issue) => issue.path.join(".")).join("\n")).toMatch(/style\.shape/)
     }
   })
 

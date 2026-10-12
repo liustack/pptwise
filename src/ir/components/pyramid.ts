@@ -57,13 +57,9 @@ export const aliases = {
   ],
 } satisfies ComponentAliasSpec
 
-// The bands are the drawing; the legend cards paint their own outline. A
-// bento shell around either would be a frame on a frame.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

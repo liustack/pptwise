@@ -2,14 +2,10 @@ import { SourceLines } from "../source-lines"
 import type { SvgTemplateProps } from "../types"
 import { footerOrganization, showsDocumentMeta } from "../../render/document-meta"
 import { sectionNameFor } from "../../lib/derive"
-import { pickEvidence } from "../../render/component-traits"
 import { renderEmphasisTspans, emphasisRunInk } from "../../render/emphasis"
 import { heroCaption, heroUnit, heroValue } from "../minimal-shared"
-import { fitSvgLine } from "../../lib/svg-text-layout"
-import { renderFittedEvidence } from "../fitted-evidence"
-import { deckWord, evidenceSource, fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot, pad2 } from "./shared"
+import { fitHeroLine, fitHeroSource, fitSparseHeading, fitStatementSource, sourcePastFoot } from "./shared"
 import { StatHeroFallbackContent } from "../content-stat-hero-fallback"
-import { SIBLING_AIR_PX } from "../../render/spacing"
 
 /** museum 稀排脸：展签格言、衬板单证据、铜金巨数。 */
 
@@ -70,78 +66,6 @@ export function statement({ ir, slide, index, ctx, page }: SvgTemplateProps) {
       {footer && (
         <text x={640} y={580} textAnchor="middle" fontFamily={fonts.body} fontSize={17} fill={colors.muted} dominantBaseline="alphabetic">
           {footer}
-        </text>
-      )}
-    </>
-  )
-}
-
-export function oneEvidence({ ir, slide, index, ctx }: SvgTemplateProps) {
-  const { colors, fonts } = ctx
-  const evidence = pickEvidence(slide.components)
-  const heading = fitSparseHeading(slide.heading, {
-    maxWidth: 720,
-    fontSize: 44,
-    maxLines: 2,
-    minPt: 24,
-    lineHeightRatio: 1.28,
-    fontFamily: fonts.heading,
-    bold: false,
-  })
-  const panelY = 170
-  const headingY = evidence
-    ? panelY + SIBLING_AIR_PX + Math.round(heading.fontSize * 0.75)
-    : 300
-  const headingLast = headingY + Math.max(0, heading.lines.length - 1) * heading.lineHeight
-  const noteY = evidence ? headingLast + 18 : 366
-  const note = slide.subheading
-    ? fitSvgLine(slide.subheading, { maxWidth: 720, fontSize: 22, minFontSize: 16, fontFamily: fonts.body })
-    : null
-  const sourceRaw = evidenceSource(slide)
-  const source = sourceRaw ? fitSvgLine(sourceRaw, { maxWidth: 720, fontSize: 16, minFontSize: 16, fontFamily: fonts.body }) : null
-  // The panel sets every line whole or hands the page over: a line it would
-  // cut goes to the shared face, which sets it at its own measure and marks
-  // what it still cannot hold.
-  if (heading.truncated || note?.truncated || source?.truncated) return null
-  const textBottom = note ? noteY + note.fontSize * 0.25 : headingLast + heading.fontSize * 0.25
-  const panelBottom = 500
-  const evidenceY = Math.min(Math.max(Math.ceil(textBottom + 14), 340), panelBottom - 140)
-  const evidenceRect = { x: 280, y: evidenceY, w: 720, h: Math.max(140, panelBottom - 10 - evidenceY) }
-  return (
-    <>
-      <rect x={240} y={panelY} width={800} height={330} fill={colors.surface} stroke={colors.border} strokeWidth={1} />
-      {heading.lines.map((line, i) => (
-        <text
-          key={i}
-          x={640}
-          y={headingY + i * heading.lineHeight}
-          textAnchor="middle"
-          fontFamily={fonts.heading}
-          fontSize={heading.fontSize}
-          fontWeight="400"
-          fill={colors.text}
-          dominantBaseline="alphabetic"
-        >
-          {renderEmphasisTspans(heading.lineSegs[i] ?? [{ text: line, emphasized: false }], {
-            accent: emphasisRunInk(colors),
-            baseFill: colors.text,
-            fontWeight: "400",
-          })}
-        </text>
-      ))}
-      {note && (
-        <text x={640} y={noteY} textAnchor="middle" fontFamily={fonts.body} fontSize={note.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {note.text}
-        </text>
-      )}
-      {evidence && renderFittedEvidence(evidence, evidenceRect, ctx)}
-      <rect x={560} y={540} width={160} height={40} fill="none" stroke={colors.accent} strokeWidth={1} />
-      <text x={640} y={566} textAnchor="middle" fontFamily={fonts.body} fontSize={16} fill={colors.accent} dominantBaseline="alphabetic">
-        {`${deckWord(ir, "展品", "Exhibit")} № ${pad2(index + 1)}`}
-      </text>
-      {source && (
-        <text x={640} y={620} textAnchor="middle" fontFamily={fonts.body} fontSize={source.fontSize} fill={colors.muted} dominantBaseline="alphabetic">
-          {source.text}
         </text>
       )}
     </>

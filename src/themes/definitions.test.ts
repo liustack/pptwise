@@ -152,8 +152,6 @@ describe("THEME_DEFINITIONS", () => {
   })
 
   it("每套主题各自的专属脸只出现在自己的菜单里，不外溢", () => {
-    // gauge-stats 在 2026-10-02 样例重做后不再挂在 brief 菜单上，内置主题里
-    // 没有主人，只剩 gallery 借用，故不在此表。
     const exclusive: Record<string, string> = {
       "gauge-point": "brief",
       "gauge-sheet": "brief",
@@ -218,10 +216,10 @@ describe("emphasis run ink", () => {
 // ── registerTheme: one complete v2 file in, one theme definition out ──────
 
 const TEST_MENU: Menu = {
-  cover: { face: "poster-center" },
-  chapter: { face: "banner-chapter" },
-  content: { points: { face: "two-column" } },
-  ending: { face: "banner-ending" },
+  cover: { face: "institutional-block" },
+  chapter: { face: "ghost-section-chapter" },
+  content: { points: { face: "gauge-sheet" } },
+  ending: { face: "signoff-ending" },
 }
 
 /** A structurally valid public v2 theme file. `overrides` lets each test
@@ -269,7 +267,7 @@ describe("registerTheme", () => {
   it("registers a theme, visible to getThemeDefinition and getInstalledThemeIds", () => {
     registerTheme(testTheme())
     expect(getInstalledThemeIds()).toContain("acme")
-    expect(getThemeDefinition("acme").menu.cover.face).toBe("poster-center")
+    expect(getThemeDefinition("acme").menu.cover.face).toBe("institutional-block")
     expect(getThemeDefinition("acme").menu).toEqual(TEST_MENU)
   })
 
@@ -325,7 +323,7 @@ describe("registerTheme", () => {
     expect(() => registerTheme({})).toThrow(/invalid theme definition/)
     // The retired programmatic shape (layout arrays, no menu) has no way in.
     expect(() =>
-      registerTheme({ id: "acme", style: testTheme().style, layouts: { cover: ["poster-center"] } }),
+      registerTheme({ id: "acme", style: testTheme().style, layouts: { cover: ["institutional-block"] } }),
     ).toThrow(/invalid theme definition/)
   })
 
@@ -348,8 +346,8 @@ describe("registerTheme", () => {
   })
 
   it("rejects a face that exists but does not apply to that page type", () => {
-    expect(() => registerTheme(testTheme({ menu: { ...TEST_MENU, cover: { face: "two-column" } } }))).toThrow(
-      /menu\.cover\.face layout "two-column" is not valid for "cover" slides/,
+    expect(() => registerTheme(testTheme({ menu: { ...TEST_MENU, cover: { face: "gauge-sheet" } } }))).toThrow(
+      /menu\.cover\.face layout "gauge-sheet" is not valid for "cover" slides/,
     )
   })
 
@@ -546,10 +544,10 @@ describe("getThemeDefinition", () => {
     const def = getThemeDefinition("acme")
     expect(def.id).toBe("acme")
     expect(def.menu).toEqual(TEST_MENU)
-    expect(def.menu.cover.face).toBe("poster-center")
-    expect(def.menu.chapter.face).toBe("banner-chapter")
-    expect(def.menu.content.points?.face).toBe("two-column")
-    expect(def.menu.ending.face).toBe("banner-ending")
+    expect(def.menu.cover.face).toBe("institutional-block")
+    expect(def.menu.chapter.face).toBe("ghost-section-chapter")
+    expect(def.menu.content.points?.face).toBe("gauge-sheet")
+    expect(def.menu.ending.face).toBe("signoff-ending")
   })
 
   it("throws for an unknown id instead of falling back to brief", () => {

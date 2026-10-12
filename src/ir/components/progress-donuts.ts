@@ -110,9 +110,7 @@ export const aliases = {
 
 export const traits = {
   stretchable: true,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits

@@ -656,7 +656,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     },
   )
 
-  it("accepts bullets on a brief cover — verdict-index declares a body slot for them", () => {
+  it("accepts bullets on a brief cover — gauge-verdict declares a body slot for them", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "cover", heading: "H", components: [bullets] }],
@@ -665,7 +665,7 @@ describe("boundary-page render-surface gate (bench-driven fixes wave, defect D)"
     expect(v.errors).toEqual([])
   })
 
-  it("still rejects a paragraph on a brief cover — verdict-index only accepts bullets", () => {
+  it("still rejects a paragraph on a brief cover — gauge-verdict only accepts bullets", () => {
     const v = validateIr({
       ...raw,
       slides: [{ type: "cover", heading: "H", components: [{ type: "paragraph", text: "x" }] }],
@@ -1057,8 +1057,8 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     )
   })
 
-  it("pacing binds but the layout allows more (bento-panel exception): names both sides", () => {
-    const themeId = registerTestTheme("api-bento-exception", "stage", { content: { list: "bento-panel" } })
+  it("pacing binds but the layout allows more (a capacity-5 face): names both sides", () => {
+    const themeId = registerTestTheme("api-roomy-face", "stage", { content: { list: "lesson-sheet" } })
     const v = validateIr({
       ...raw,
       theme: { id: themeId },
@@ -1067,7 +1067,7 @@ describe("describeQualityIssue: density/bullets English messages (W3 task 3, spe
     })
     expect(v.ok).toBe(true)
     expect(densityMessage(v)).toBe(
-      "too many components on this slide (max 4 — bento-panel fits 6 but balanced pacing caps at 4) — split into multiple slides",
+      "too many components on this slide (max 4 — lesson-sheet fits 5 but balanced pacing caps at 4) — split into multiple slides",
     )
   })
 
@@ -2063,10 +2063,10 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
       // Narrow (single-face) menu — proves resolution actually respects the
       // registered theme's own menu rather than any built-in's.
       menu: {
-        cover: { face: "poster-center" },
-        chapter: { face: "banner-chapter" },
-        content: { points: { face: "two-column" } },
-        ending: { face: "banner-ending" },
+        cover: { face: "institutional-block" },
+        chapter: { face: "ghost-section-chapter" },
+        content: { points: { face: "gauge-sheet" } },
+        ending: { face: "signoff-ending" },
       },
     }
   }
@@ -2085,7 +2085,7 @@ describe("registerTheme end-to-end (W3 task 4)", () => {
     // distinctive primary color from the registered theme's own style tokens
     expect(svg).toContain("#123ABC")
     // respects the registered theme's narrow (single-entry) curated cover layout
-    expect(svg).toContain('data-face="poster-center"')
+    expect(svg).toContain('data-face="institutional-block"')
   })
 
   it("validateIr accepts a registered theme id and still rejects an unknown id with the enlarged available list", () => {
@@ -2168,8 +2168,8 @@ describe("generatePptx", () => {
     // footer through folio-motif, which sets the organization and the
     // confidentiality label but not the date (motif-folio-motif.test.tsx).
     const themeId = registerTestTheme("api-branding-face", "thesis", {
-      cover: "tone-adaptive-header",
-      content: { points: "quiet-frame" },
+      cover: "gauge-verdict",
+      content: { points: "gauge-sheet" },
     })
     const base = {
       version: "5",

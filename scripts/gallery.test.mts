@@ -50,6 +50,9 @@ await installNodePlatform()
 const themeIds = listThemes()
   .map((t) => t.id)
   .sort()
+// The appendix exists only while some registered face is on no menu. Every
+// face is on one today, so the matrix carries no appendix section at all.
+const appendixSections = unservedLayoutIds(themeIds).length > 0 ? [UNSERVED_SECTION] : []
 
 /** Built once — loading the committed JPEG fixtures is the slow part. */
 let cached: Record<LanguageId, CorpusAssets> | undefined
@@ -114,7 +117,7 @@ describe("gallery coverage", () => {
     const jobs = buildMatrix(themeIds, await assets())
     expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["aside", "component", "compose", "deck", "face"])
     const sections = [...new Set(jobs.map((j) => j.section))]
-    expect(sections).toEqual([...themeIds, UNSERVED_SECTION])
+    expect(sections).toEqual([...themeIds, ...appendixSections])
     for (const themeId of themeIds) {
       const bands = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.band))
       // `aside` is not owed by every section: the step-aside sheet is the
@@ -130,7 +133,7 @@ describe("gallery coverage", () => {
     expect([...composeSections].sort()).toEqual([...new Set(COMPOSITION_PAGES.map((p) => p.theme))].sort())
     // The appendix is faces only — it exists to close the layout gap, not to
     // be a 25th theme.
-    expect([...new Set(jobs.filter((j) => j.section === UNSERVED_SECTION).map((j) => j.band))]).toEqual(["face"])
+    expect(jobs.filter((j) => j.section === UNSERVED_SECTION).every((j) => j.band === "face")).toBe(true)
   })
 
   it("dresses every component in every theme's own skin, and only the baseline in three scripts", async () => {
@@ -287,8 +290,8 @@ describe("gallery theme menu strip", () => {
 
     const appendix = buildMatrix(themeIds, await assets(), { only: "face", section: UNSERVED_SECTION })
     const { manifest: other } = renderMatrix(appendix, mkdtempSync(join(tmpdir(), "pptwise-gallery-app-")), "test")
-    expect(other.sections.map((s) => s.id)).toEqual([UNSERVED_SECTION])
-    expect(other.sections[0]!.menu).toBeUndefined()
+    expect(other.sections.map((s) => s.id)).toEqual(appendixSections)
+    for (const section of other.sections) expect(section.menu, section.id).toBeUndefined()
   }, 120_000)
 })
 
@@ -414,39 +417,18 @@ describe("gallery face band corpus", () => {
     }
 
     expect(typesOf("pull-quote")).toContain("blockquote")
-    expect(typesOf("one-evidence")).toContain("chart")
-    expect(typesOf("bento-panel")).toEqual(expect.arrayContaining(["kpi_cards", "icon_cards"]))
-    expect(typesOf("stacked-poster")).toContain("image")
   })
 
-  it("varies the first body type across the two-compact layout family", async () => {
+  it("gives image-split and image-top different secondary types", async () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
-    const twoCompact = [
-      "two-column",
-      "narrow-column",
-      "rail-numbered",
-      "tone-adaptive-content",
-      "quiet-frame",
-      "split-band",
-    ]
-    const leads = twoCompact.map((layoutId) => {
-      const job = jobs.find((j) => j.subject === layoutId)
-      expect(job, layoutId).toBeTruthy()
-      return job!.ir.slides[0]!.components[0]!.type
-    })
-    expect(new Set(leads).size, `leads: ${leads.join(", ")}`).toBeGreaterThanOrEqual(4)
-  })
-
-  it("gives image-split, image-top, and image-bottom different secondary types", async () => {
-    const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
-    const secondaries = (["image-split", "image-top", "image-bottom"] as const).map((layoutId) => {
+    const secondaries = (["image-split", "image-top"] as const).map((layoutId) => {
       const job = jobs.find((j) => j.subject === layoutId)
       expect(job, layoutId).toBeTruthy()
       const types = job!.ir.slides[0]!.components.map((c) => c.type)
       expect(types[0], layoutId).toBe("image")
       return types[1]
     })
-    expect(new Set(secondaries).size, `secondaries: ${secondaries.join(", ")}`).toBe(3)
+    expect(new Set(secondaries).size, `secondaries: ${secondaries.join(", ")}`).toBe(2)
   })
 })
 
@@ -461,7 +443,7 @@ describe("gallery corpus", () => {
   // on the Windows CI runner, and the failure did not say which theme was
   // slow. A section takes seconds, so the default limit holds as themes are
   // added, and a failure names the section it happened in.
-  const sections = [...themeIds, UNSERVED_SECTION]
+  const sections = [...themeIds, ...appendixSections]
 
   it("splits into sections that hold every page of the matrix exactly once", async () => {
     const whole = buildMatrix(themeIds, await assets()).map((j) => j.id)

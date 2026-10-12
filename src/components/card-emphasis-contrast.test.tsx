@@ -34,7 +34,6 @@ function ctxFor(themeId: string): ComponentCtx {
     fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
     bodyFontPx: 24,
     defaultBg: tokens.colors.bg,
-    themeId,
     images: { "shot-1": { src: "data:image/png;base64,AAAA" }, "shot-2": { src: "data:image/png;base64,BBBB" } },
   }
 }

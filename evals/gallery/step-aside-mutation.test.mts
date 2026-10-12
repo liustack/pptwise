@@ -31,15 +31,22 @@ const { LEXICONS } = await import("./corpus/lexicon")
 await installNodePlatform()
 
 /**
- * Four of the nine, verbatim from the ratchet this change emptied: the pages
- * only the step-aside closes. The fifth, crayon's bar chart, now fits the
- * crayonbox sheet crayon moved to in 2026-10, and is held below.
+ * The pages only the step-aside closes today, found by rendering every
+ * component on every theme in English with it switched off. The four this
+ * list first held (crayon and runway people_cards and rings) were drawn on
+ * the retired narrow-column sheet, and on their own themes' points faces
+ * they fit without help. The fifth of the original nine, crayon's bar chart,
+ * fits the crayonbox sheet crayon moved to in 2026-10, and is held below.
  */
 const CLOSED_OVERFLOWS: readonly string[] = [
-  "crayon · people_cards · en: 1×component",
-  "crayon · rings · en: 1×component",
-  "runway · people_cards · en: 1×component",
-  "runway · rings · en: 1×component",
+  "brief · from_to · en: 1×component",
+  "brief · journey_map · en: 1×component",
+  "brief · rings · en: 1×component",
+  "brief · staircase · en: 1×component",
+  "ink · flowchart · en: 1×label",
+  "ink · issue_tree · en: 10×item",
+  "memo · fishbone · en: 4×item",
+  "memo · issue_tree · en: 10×item",
 ]
 
 /**
@@ -71,8 +78,8 @@ async function dropsOn(themeId: string, id: string): Promise<string[]> {
     .map((m) => `${m[1]}×${m[2]}`)
 }
 
-describe("the nine overflows the step-aside closed", () => {
-  it("the four only it closes come back when it always declines", { timeout: 300_000 }, async () => {
+describe("the overflows the step-aside closes", () => {
+  it("the pages only it closes come back when it always declines", { timeout: 300_000 }, async () => {
     const found: string[] = []
     for (const entry of CLOSED_OVERFLOWS) {
       const [themeId, componentId] = entry.split(" · ")

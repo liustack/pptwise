@@ -3,7 +3,7 @@ import { LAYOUT_REGISTRY, type LayoutDefinition } from "../layouts/registry"
 import { __resetRegisteredThemes, registerTheme } from "./definitions"
 import { CONSULTING_TOKENS } from "./builtin/brief"
 
-const twoColumn = LAYOUT_REGISTRY["two-column"]!
+const pointsFace = LAYOUT_REGISTRY["gauge-sheet"]!
 const ORPHAN_TAKEOVER_ID = "orphan-takeover"
 let originalParams: LayoutDefinition["params"]
 let originalSuppressMotif: LayoutDefinition["suppressMotif"]
@@ -18,18 +18,18 @@ function file(id: string, params?: Record<string, string | number | boolean>) {
       shape: { radius: 2, gapScale: 1, typeScale: 1 },
     },
     menu: {
-      cover: { face: "poster-center" },
-      chapter: { face: "masthead-chapter" },
-      content: { points: { face: "two-column", ...(params ? { params } : {}) } },
-      ending: { face: "poster-ending" },
+      cover: { face: "institutional-block" },
+      chapter: { face: "ghost-section-chapter" },
+      content: { points: { face: "gauge-sheet", ...(params ? { params } : {}) } },
+      ending: { face: "signoff-ending" },
     },
   }
 }
 
 beforeEach(() => {
-  originalParams = twoColumn.params
-  originalSuppressMotif = twoColumn.suppressMotif
-  twoColumn.params = {
+  originalParams = pointsFace.params
+  originalSuppressMotif = pointsFace.suppressMotif
+  pointsFace.params = {
     gutter: { type: "number", min: 16, max: 64 },
     columns: { type: "number", integer: true, min: 1, max: 2 },
     emphasis: { type: "string", values: ["primary", "accent"] },
@@ -38,15 +38,15 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  twoColumn.params = originalParams
-  twoColumn.suppressMotif = originalSuppressMotif
+  pointsFace.params = originalParams
+  pointsFace.suppressMotif = originalSuppressMotif
   delete LAYOUT_REGISTRY[ORPHAN_TAKEOVER_ID]
   __resetRegisteredThemes()
 })
 
 describe("registerTheme menu parameter gate", () => {
   it("rejects motif decor on a face that suppresses motifs", () => {
-    twoColumn.suppressMotif = true
+    pointsFace.suppressMotif = true
     const input = file("suppressed-motif")
 
     expect(() => registerTheme({
@@ -55,7 +55,7 @@ describe("registerTheme menu parameter gate", () => {
         ...input.menu,
         content: {
           points: {
-            face: "two-column",
+            face: "gauge-sheet",
             decor: { kind: "motif", id: "gauge-motif" },
           },
         },
@@ -103,7 +103,7 @@ describe("registerTheme menu parameter gate", () => {
 
   it("rejects an undeclared parameter on the selected face", () => {
     expect(() => registerTheme(file("params-unknown", { mystery: 1 }))).toThrow(
-      /menu\.content\.points\.params\.mystery.*not declared by layout "two-column"/i,
+      /menu\.content\.points\.params\.mystery.*not declared by layout "gauge-sheet"/i,
     )
   })
 
@@ -135,9 +135,9 @@ describe("registerTheme menu parameter gate", () => {
   })
 
   it("rejects any parameter when a face declares no adjustable parameters", () => {
-    twoColumn.params = undefined
+    pointsFace.params = undefined
     expect(() => registerTheme(file("params-closed", { gutter: 32 }))).toThrow(
-      /layout "two-column" declares no adjustable parameters/i,
+      /layout "gauge-sheet" declares no adjustable parameters/i,
     )
   })
 })

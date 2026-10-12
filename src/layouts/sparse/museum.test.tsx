@@ -5,7 +5,6 @@ import { renderSvgMarkup, parseSvgRoot } from "../../render/serialize"
 import { assertSubset } from "../../render/subset-validate"
 import { StatementContent } from "../content-statement"
 import { StatHeroContent } from "../content-stat-hero"
-import { OneEvidenceContent } from "../content-one-evidence"
 import type { PptxIR, Slide } from "@/ir"
 
 const VERSE = "设备不会突然坏，只是没人听它说话。"
@@ -70,52 +69,6 @@ describe("museum sparse faces", () => {
     expect(markup).toContain("2026")
     expect(markup).not.toContain(LUXE_GOLD)
     expect(markup).not.toContain(BOARD_TEXT)
-  })
-
-  it("one-evidence sits the claim on a surface panel with an exhibit number", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "工单平均提前 **6.5 天**",
-      subheading: "试点客户 90 天 · 217 张工单",
-      components: [],
-    } as Slide
-    const { markup, root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    expect(() => assertSubset(root)).not.toThrow()
-    const panel = Array.from(root.querySelectorAll("rect")).find((r) => r.getAttribute("width") === "800")
-    expect(panel?.getAttribute("fill")).toBe(ctx.colors.surface)
-    expect(panel?.getAttribute("stroke")).toBe(ctx.colors.border)
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("工单平均提前"),
-    )!
-    expect(claim.getAttribute("x")).toBe("640")
-    expect(claim.getAttribute("text-anchor")).toBe("middle")
-    const glyphTop = Number(claim.getAttribute("y")) - Math.round(Number(claim.getAttribute("font-size")) * 0.75)
-    expect(glyphTop - Number(panel!.getAttribute("y"))).toBeGreaterThanOrEqual(24)
-    const em = Array.from(root.querySelectorAll("tspan")).find((t) => (t.textContent ?? "").includes("6.5"))
-    expect(em?.getAttribute("fill")).toBe(ctx.colors.accent)
-    expect(markup).toContain("展品 № 01")
-  })
-
-  it("one-evidence without ** keeps the claim on text fill", () => {
-    const slide: Slide = {
-      type: "content",
-      kind: "points",
-      layout: "one-evidence",
-      heading: "工单平均提前 6.5 天",
-      components: [],
-    } as Slide
-    const { root } = render(
-      <OneEvidenceContent ir={ir([slide])} slide={slide} index={0} ctx={ctx} />,
-    )
-    const claim = Array.from(root.querySelectorAll("text")).find((t) =>
-      (t.textContent ?? "").includes("工单平均提前"),
-    )!
-    expect(claim.querySelector("tspan")).toBeNull()
-    expect(claim.getAttribute("fill")).toBe(ctx.colors.text)
   })
 
   it("stat-hero is a centered accent numeral over a seam line", () => {

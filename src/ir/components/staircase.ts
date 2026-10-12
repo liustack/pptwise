@@ -45,14 +45,9 @@ export const aliases = {
   items: [{ itemsKey: "items", aliases: { label: "title", name: "title", text: "note", desc: "note" } }],
 } satisfies ComponentAliasSpec
 
-// Every tread paints its own box, so a bento outline shell underneath would
-// be a second shell around an already-carded drawing — same posture as
-// `steps` and `flowchart`.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

@@ -114,14 +114,9 @@ export const aliases = {
   ],
 } satisfies ComponentAliasSpec
 
-// The grid rules its own columns and owns the page, the same posture
-// `heatmap` takes: a bento shell around it would be a second frame around a
-// drawing that already draws its own.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: false,
   fullBody: true,
   evidence: false,
 } as const satisfies ComponentTraits

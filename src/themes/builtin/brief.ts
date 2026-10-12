@@ -56,8 +56,9 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * **量规重构（2026-08-25）**：brief 从顶缘通栏批注线切换为左上
  * 定位角标，正文轴移到 x160，meta 移到右上眉线。新建 `gauge-motif` 与
  * 五个 `gauge-*` 版式，而不是修改 `banner-motif`、`verdict-index`、
- * `ghost-rule-chapter` 或 `action-pad-ending`。这些旧构件仍由既有主题和页面
- * 引用，原地修改会把 brief 的设计变更扩散给借用方。本轮只改
+ * `ghost-rule-chapter` 或 `action-pad-ending`。当时这些旧构件仍由既有主题和
+ * 页面引用，原地修改会把 brief 的设计变更扩散给借用方（2026-10-12 它们随孤儿
+ * 版式一起删除，`shape.cover` 的 verdict* knobs 也一并删掉）。本轮只改
  * brief 的锁，色板不动。
  *
  * **菜单分派（S1-B）**：量规家族承主场（data 走 gauge-stats，statement 走同族的 gauge-point），先结论的报告腔靠 points 的窄栏与 evidence 的单证据页说话，不借别人的嘴，故无 quote。
@@ -103,15 +104,6 @@ export const CONSULTING_TOKENS: StyleTokens = {
   shape: {
     radius: 2,
     gapScale: 1, // 微圆克制（咨询报告利落，全推广批次 2026-07-10）
-    cover: {
-      verdictTitleY: 304,
-      verdictTitleSize: 60,
-      verdictKickerY: 150,
-      verdictColNumY: 560,
-      verdictColBodyY: 592,
-      verdictFootY: 676,
-      verdictFootRule: true,
-    },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F7F6F2" },

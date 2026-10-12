@@ -1517,7 +1517,7 @@ describe("a chart uses the height it was allocated, whatever its type", () => {
     expect(chart.measure(funnelOf(12), 970, ctx)).toBeGreaterThan(240)
   })
 
-  it("paints all twelve stage names in the 328px band gauge-stats grants", () => {
+  it("paints all twelve stage names in a 328px band", () => {
     const component = funnelOf(12)
     const { container } = svg(chart.render(component, { x: 0, y: 0, w: 970, h: 328 }, ctx))
     const labels = [...container.querySelectorAll("text[data-value-label]")].map((el) => el.textContent)

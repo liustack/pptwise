@@ -136,9 +136,7 @@ export const aliases = {} satisfies ComponentAliasSpec
 
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   evidence: true,
   // A table read across its options cannot be read at half a page: in two

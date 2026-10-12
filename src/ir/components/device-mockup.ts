@@ -61,12 +61,9 @@ export const schema = z
 
 export const aliases = {} satisfies ComponentAliasSpec
 
-// selfVisual (not scalable, unlike `image`): the device frame *is* the
-// component's own card/frame — stacking bento's outline shell underneath
-// it, or content-stacked-poster.tsx's scale-to-fill-slot treatment (which
-// would stretch the device frame's carefully-derived aspect ratio out of
-// shape), would both undercut the exact "reads as a real device" effect
-// this component exists to deliver. evidence: true — a framed product
+// Not scalable, unlike `image`: scaling would stretch the device frame's
+// carefully derived aspect ratio out of shape and undercut the "reads as a
+// real device" effect this component exists to deliver. evidence: true — a framed product
 // screenshot is the strongest available proof a slide can show for "this
 // software is real and running" (the direct fix for the probe evidence
 // this component closes), so it is evidence-eligible alongside `image`
@@ -75,9 +72,7 @@ export const aliases = {} satisfies ComponentAliasSpec
 // stronger evidence once it's framed as a real device).
 export const traits = {
   stretchable: false,
-  selfVisual: true,
   scalable: false,
-  passthroughShell: false,
   fullBody: false,
   evidence: true,
 } as const satisfies ComponentTraits

@@ -57,16 +57,6 @@ export function sealStudioGlyph(org: string | undefined): string | undefined {
 }
 
 /**
- * Chapter-index kicker for `verse-chapter`. The large heading is the verse
- * itself, so the kicker carries only the index — duplicating `heading` here
- * would print the same line twice.
- */
-export function chapterIndexKicker(n: number, heading: string | undefined): string {
-  if (hasCjk(heading ?? "")) return `第 ${n} 章`
-  return `CHAPTER ${String(n).padStart(2, "0")}`
-}
-
-/**
  * The source line of a page with one small line for "where this came from",
  * and the page's own `footnote` with it.
  *
@@ -77,7 +67,7 @@ export function chapterIndexKicker(n: number, heading: string | undefined): stri
  * lost its footnote with nothing to say so. Both go on the line now, the
  * component's first, joined the way a kicker joins two of the page's texts.
  */
-export function joinSources(primary: string | undefined, footnote: string | undefined): string | undefined {
+function joinSources(primary: string | undefined, footnote: string | undefined): string | undefined {
   const parts = [primary?.trim(), footnote?.trim()].filter((part): part is string => Boolean(part))
   return parts.length > 0 ? parts.join(" \u00b7 ") : undefined
 }

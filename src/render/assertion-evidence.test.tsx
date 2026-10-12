@@ -167,14 +167,15 @@ describe("assertion_evidence variant", () => {
     expect(auditSvgMarkup(markup)).toEqual([])
   })
 
-  it("never lets the support stack (including its drop-pill) spill past the content rect — flagship 2-item recipe and a 5-item extreme squeeze, at quiet-frame's own real geometry (regression round 2: footer spill)", () => {
+  it("never lets the support stack (including its drop-pill) spill past the content rect — flagship 2-item recipe and a 5-item extreme squeeze, at a narrow 880×349 rect (regression round 2: footer spill)", () => {
     // `.issues/2026-08-05-component-waves/device-mockup-report.md`'s own
     // repro geometry: `brief` theme, `quiet-frame` layout, a content
     // rect of exactly this shape — computed once by hand from quiet-frame's
     // own constants (`content-quiet-frame.tsx`: FRAME_X=200, FRAME_W=880,
     // contentY=228 at this heading's line count, contentBottom=620) and
-    // pinned here as a literal so this test doesn't silently drift if
-    // quiet-frame's own geometry changes later. quiet-frame's own footer
+    // pinned here as a literal so this test doesn't silently drift. The
+    // quiet-frame face itself has since been deleted, and the rect stays as a
+    // narrow-content regression case. quiet-frame's own footer
     // brand footer sits at y=664 (divider) / y=700 (text) — well below 620, so
     // *any* v-overflow finding against this rect is unambiguous evidence of
     // spill, not a "getting close" false alarm.

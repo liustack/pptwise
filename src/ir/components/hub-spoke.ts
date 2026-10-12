@@ -49,14 +49,9 @@ export const aliases = {
   items: [{ itemsKey: "items", aliases: { title: "label", name: "label", text: "description", desc: "description" } }],
 } satisfies ComponentAliasSpec
 
-// Same posture as `cycle` and `flowchart`: every spoke paints its own capsule
-// and the hub its own circle, so a bento outline shell underneath would be a
-// second shell around an already-carded diagram.
 export const traits = {
   stretchable: false,
-  selfVisual: false,
   scalable: false,
-  passthroughShell: true,
   fullBody: false,
   evidence: false,
 } as const satisfies ComponentTraits

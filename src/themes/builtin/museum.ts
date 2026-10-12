@@ -86,7 +86,6 @@ export const MUSEUM_TOKENS: StyleTokens = {
   shape: {
     radius: 0,
     gapScale: 1.3, // 展签直角 + airy 厅堂留白（ink 同档）
-    cover: { metaPlacement: "top" },
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#211A12" },
