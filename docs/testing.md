@@ -137,12 +137,11 @@ Inspect the hash diff and page inventory. Do not edit individual hashes by hand.
 
 ### Byte fixtures
 
-Two fixtures pin the exact output for unassigned theme behavior:
+One fixture pins the exact output for unassigned theme behavior:
 
 - `src/render/__fixtures__/emphasis-unassigned-bytes.json`
-- `src/render/heading-treatments/__fixtures__/unassigned-bytes.json`
 
-Rerecord both through the single writer:
+Rerecord it through the writer:
 
 ```bash
 pnpm fixtures:unassigned-bytes

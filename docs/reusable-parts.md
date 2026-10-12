@@ -130,7 +130,7 @@ A takeover face now receives its menu entry's `params`, the way a standard face 
 
 | field | what it does | code | board |
 | :-- | :-- | :-- | :-- |
-| `kpi_cards.items[].note` | the line under a figure that puts it in context. The ordinary card prints it under the label in body ink, the bento cell the same way. A face with no place for it hands the page to the ordinary cards | [kpi-cards.ts](../src/ir/components/kpi-cards.ts), [kpi.tsx](../src/components/kpi.tsx), [content-bento-panel.tsx](../src/layouts/content-bento-panel.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
+| `kpi_cards.items[].note` | the line under a figure that puts it in context. The ordinary card prints it under the label in body ink. A face with no place for it hands the page to the ordinary cards | [kpi-cards.ts](../src/ir/components/kpi-cards.ts), [kpi.tsx](../src/components/kpi.tsx) | [design/components/kpi_cards](../design/components/kpi_cards/README.md) |
 
 `blockquote.attribution` was already the field for who said it. `figures` prints it under the quote as the speaker, and `rail` prints it above the quote as the block's label.
 
@@ -138,7 +138,7 @@ A takeover face now receives its menu entry's `params`, the way a standard face 
 
 | behaviour | what it does | code | board |
 | :-- | :-- | :-- | :-- |
-| Takeovers draw the source line | `image-split`, `image-top`, `image-bottom` and `image-annotate`, and the plain pages they hand image groups to, set `footnote` at 16px muted within two lines and keep their body clear of it. They drew none before, on every theme | [image-pages.tsx](../src/render/image-pages.tsx) (`takeoverSource`) | [design/faces/image-split](../design/faces/image-split/README.md) |
+| Takeovers draw the source line | `image-split` and `image-top`, and the plain pages they hand image groups to, set `footnote` at 16px muted within two lines and keep their body clear of it. They drew none before, on every theme | [image-pages.tsx](../src/render/image-pages.tsx) (`takeoverSource`) | [design/faces/image-split](../design/faces/image-split/README.md) |
 | The audit finds a source line no one painted | `pptwise audit` reports `content-dropped` (kind `footnote`) when a page's `footnote` is not spelled out by any run of its text | [source-line.ts](../src/audit/source-line.ts), [deck-audit.ts](../src/audit/deck-audit.ts) | none |
 | A heading's length leaves out its marks | the 48-character heading limit in spec validation and the IR quality check counts the words a reader sees, not the `**` around a marked run | [spec/index.ts](../src/spec/index.ts), [ir-quality.ts](../src/render/ir-quality.ts) | none |
 | A marked run in a quote is painted | the ordinary `blockquote` sets a `**…**` run in the theme's emphasis instead of printing the asterisks | [blockquote.tsx](../src/components/blockquote.tsx) | none |
@@ -214,8 +214,6 @@ A face can now declare `fullBodyCompanions`, the component types it sets beside 
 | A unit stands apart from its number, a magnitude does not | a waterfall prints 「382.1 万辆」 and "3.82 million units", not 「382.1万辆」. A percent sign or a Latin magnitude (k, m, bn) stays glued to its figure, "12%" and "2m", in a waterfall and on a chart axis alike, so "2 m" no longer reads as two metres | [quantity-format.ts](../src/lib/quantity-format.ts), [waterfall.tsx](../src/components/waterfall.tsx) | none |
 | Chart value labels name their font | bar, horizontal bar, pie, donut, funnel and dumbbell value labels carry the body font, so a preview renderer no longer falls back to a serif | [chart-svg.tsx](../src/components/chart-svg.tsx) | none |
 | A dumbbell row that fell keeps its labels apart | the end value sits before the end dot when the row fell, instead of running over the start dot | [chart-svg.tsx](../src/components/chart-svg.tsx) (`renderDumbbell`) | none |
-| Card faces fit their footnote | `bento-panel`, `tone-adaptive-content` and `stacked-poster` shrink a long footnote to 16px and then cut it with `data-truncated`, instead of running past the type area | [face-footnote.tsx](../src/render/face-footnote.tsx) | none |
-| A deck with no chapters numbers pages plainly | `rail-numbered` prints 「01」 to 「10」 in a deck with no chapter pages, instead of a section number like "1.10" for a section that does not exist | [content-rail-numbered.tsx](../src/layouts/content-rail-numbered.tsx) | none |
 | `theme try` compares themes with different menus | a sample page whose kind a theme does not offer is left out of that theme's column and marked in the cell, instead of failing the whole comparison | [commands.ts](../src/cli/commands.ts) (`runThemeTry`), [preview-html.ts](../src/cli/preview-html.ts) | none |
 | A bullet's length leaves out its marks | the bullet length checks in validate count the words a reader sees, not the `**` around a marked run | [ir-quality.ts](../src/render/ir-quality.ts) | none |
 
@@ -735,12 +733,6 @@ The tests draw every board page on homeroom and on ember, a dark theme whose pri
 | `duration`, `duration_unit`, `checkpoint` and `points` on `roadmap` | a phase's length, the check at its end and what it covers, so a face can lay the phases to scale | [roadmap.ts](../src/ir/components/roadmap.ts), [roadmap.tsx](../src/components/roadmap.tsx) | [design/components/roadmap](../design/components/roadmap/README.md) |
 | `tone` on pyramid levels | a level in the success, warning or danger ink, so its colour says how guarded it is | [pyramid.ts](../src/ir/components/pyramid.ts), [pyramid.tsx](../src/components/pyramid.tsx) | [design/components/pyramid](../design/components/pyramid/README.md) |
 
-### Engine behaviour
-
-| behaviour | what it does | code | board |
-| :-- | :-- | :-- | :-- |
-| A bento keeps equal items in order | items of equal weight that outrank the rest take the grid's biggest cells in the order they were written, so three icon cards beside a photograph read 1, 2, the photograph, 3 | [bento-layout.ts](../src/render/bento-layout.ts) (`sortUnitsByHeroWeight`) | none |
-
 ## ember low-altitude delivery pitch sample, 2026-10
 
 The round redrew ember to a sixteen-page Chinese and English seed-round pitch from a drone delivery startup that has not flown yet: how big the order pool is and how empty the sky still is, why now, which planned landing points are set aside for medical use, what six pioneers have proven and not published, the wedge, three hypotheses to prove in 18 months, the cost figures they are measured against, five gates before flying, six risks that have each happened before, the milestones with the gate that can stop them, and the ask. Its decisions, the design system every ember page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-06-ember/`](../design/rounds/2026-10-06-ember/README.md). The rules are restated for the next design session in [Designing for ember](./design-ember.md).
@@ -802,8 +794,6 @@ The tests draw every board page on ember and on homeroom and brief, two light th
 | An outlined word exports as one | a text drawn with no fill and a stroke exports as outlined text in PowerPoint, the stroke's colour and width over a transparent fill | [text.ts](../src/pptx/svg2pptx/text.ts), [render.ts](../src/pptx/svg2pptx/render.ts) | [design/faces/pitch-chapter](../design/faces/pitch-chapter/README.md) |
 | The audit reads an outlined word by its stroke | contrast for a text with no fill is measured on its stroke | [deck-audit.ts](../src/audit/deck-audit.ts) | none |
 | A line struck through on purpose passes L1 | a line marked `data-strike` is not counted as a line through a word | [l1.ts](../evals/gallery/l1.ts) | [design/compositions/equation](../design/compositions/equation/README.md) |
-| The ask ending prints the author's button | the shared ask ending's button carries the page's first bullet or its paragraph, and is not drawn without either. It used to print "Let's talk" in English on every deck | [ending-ask-ending.tsx](../src/layouts/ending-ask-ending.tsx) | none |
-| A stacked poster names its chapter in the deck's language | the breadcrumb reads 「第一章 · …」 on a Chinese deck and "Chapter 01 · …" on any other | [content-stacked-poster.tsx](../src/layouts/content-stacked-poster.tsx) | none |
 
 ## rally summer concert season proposal sample, 2026-10
 
@@ -866,7 +856,6 @@ The tests draw every board page on rally and on homeroom and brief, two light th
 | A callout's icon reads on its panel | an icon whose variant colour would sit on the panel nearly unseen (an info callout's primary on a dark theme, a pale yellow tip on a light one) takes the readable ink | [callout.tsx](../src/components/callout.tsx) | none |
 | A marked card and ring stand out on a dark primary | a marked numbered card fills in the text ink when the primary does not stand off the cards, and a marked progress ring takes the first ink that reads on the page | [numbered-cards.tsx](../src/components/numbered-cards.tsx), [progress-donuts.tsx](../src/components/progress-donuts.tsx) | none |
 | A share bar names its crowded thin parts in a key | parts too narrow for their words and too close to name over the bar are named in a key under it, with a swatch each, and the totals follow under the key. The whole bar used to be declared dropped | [share-bar.tsx](../src/components/share-bar.tsx) | none |
-| Tagged icon cards get a bento tile each | each tile sets its tag beside its icon. Kept whole, four tagged cards shared one tile and lost their words to its width | [bento-layout.ts](../src/render/bento-layout.ts), [icon-card-body.tsx](../src/components/icon-card-body.tsx) | none |
 | A dashed outline exports dashed from any shape | a rect, a rounded rect, a circle or a path with a `stroke-dasharray` opens in PowerPoint dashed, not only a line | [style.ts](../src/pptx/svg2pptx/style.ts) | [design/compositions/season](../design/compositions/season/README.md) |
 | A subpath after a close exports whole | a path that draws on after closing a shape starts again at the closed shape's first point, as in SVG. PowerPoint used to drop the whole path (the scale icon's pans) | [path.ts](../src/pptx/svg2pptx/path.ts) | none |
 | The ticket's words are plain | a section name or a subheading with `**…**` marks prints on the stub without its asterisks | [marquee.tsx](../src/layouts/compositions/marquee.tsx) | none |
@@ -976,7 +965,7 @@ The tests draw every board page on thesis and on brief and rally, a light theme 
 | `manuscript-chapter` | the page's photograph under ivory from the left, the section's number at 120px in emerald, the title, the subheading, the deck's contents with this section lit and each section's pages | [chapter-manuscript-chapter.tsx](../src/layouts/chapter-manuscript-chapter.tsx) | thesis | [design/faces/manuscript-chapter](../design/faces/manuscript-chapter/README.md) |
 | `manuscript-ending` | the deck's label over a gold rule, the author's own small title (`kicker`), the points from `bullets` numbered in gold, a hairline, the closing line at 46px in emerald | [ending-manuscript-ending.tsx](../src/layouts/ending-manuscript-ending.tsx) | thesis | [design/faces/manuscript-ending](../design/faces/manuscript-ending/README.md) |
 
-`thesis-plate-cover`, `folio-ghost-chapter` and `defense-close-ending`, thesis's earlier boundary faces, stay registered for any theme that names them.
+`thesis-plate-cover`, `folio-ghost-chapter` and `defense-close-ending`, thesis's earlier boundary faces, were deleted on 2026-10-12 with the other faces no menu offered.
 
 ### Motif
 
@@ -1048,7 +1037,7 @@ The tests draw every board page on journal and on brief and rally, a light theme
 | `periodical-quote` | the masthead, whose words these are in a small line in the accent, a huge quotation mark, the words at 40/64 a sentence a line, the attribution exactly as written under a short rule, the source | [content-periodical-quote.tsx](../src/layouts/content-periodical-quote.tsx) | journal (quote) | [design/faces/periodical-quote](../design/faces/periodical-quote/README.md) |
 | `periodical-ending` | the masthead with the page's own section, the closing words at 44/74 as the author broke them, the sign-off right-aligned under a rule | [ending-periodical-ending.tsx](../src/layouts/ending-periodical-ending.tsx) | journal | [design/faces/periodical-ending](../design/faces/periodical-ending/README.md) |
 
-`issue-head-cover`, `afterword-ending` and `pull-quote`, journal's earlier cover, close and quotation faces, stay registered for any theme that names them. The cover and the close now appear in the gallery's appendix of faces no menu offers.
+`issue-head-cover` and `afterword-ending`, journal's earlier cover and close, were deleted on 2026-10-12 with the other faces no menu offered. `pull-quote`, its earlier quotation face, stays in other themes' menus.
 
 ### Motif
 
@@ -1114,7 +1103,7 @@ The tests draw every board page on ink and on brief and rally, a light theme and
 | `scroll-chapter` | a volume opens beside a tall painting in its mount: the volume number (`kicker`) upright in the accent, the name over a stroke of ink | [chapter-scroll-chapter.tsx](../src/layouts/chapter-scroll-chapter.tsx) | ink | [design/faces/scroll-chapter](../design/faces/scroll-chapter/README.md) |
 | `scroll-ending` | the closing words upright a clause a column over a veiled photograph, the hall and the date beside them, a seal (`stamp`), the day to remember (`subheading`) at the bottom left | [ending-scroll-ending.tsx](../src/layouts/ending-scroll-ending.tsx) | ink | [design/faces/scroll-ending](../design/faces/scroll-ending/README.md) |
 
-`vertical-title-cover`, `volume-slip-chapter` and `seal-close-ending`, ink's earlier cover, chapter and close, stay registered for any theme that names them and now appear in the gallery's appendix of faces no menu offers. ink's points, list, comparison, process, data, photo, fact and hierarchy pages leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `split-band`, `image-split`, `stat-hero` and `asymmetric-triptych` for `scroll-sheet`, and its quote leaves `pull-quote` for `scroll-quote`. The statement page keeps `statement`.
+`vertical-title-cover`, `volume-slip-chapter` and `seal-close-ending`, ink's earlier cover, chapter and close, were deleted on 2026-10-12 with the other faces no menu offered. ink's points, list, comparison, process, data, photo, fact and hierarchy pages leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `split-band`, `image-split`, `stat-hero` and `asymmetric-triptych` for `scroll-sheet`, and its quote leaves `pull-quote` for `scroll-quote`. The statement page keeps `statement`.
 
 ### Motif
 
@@ -1181,7 +1170,7 @@ The tests draw every board page on crayon and on brief and ledger, a light theme
 | `crayonbox-chapter` | a part's number on a tilted block of its section's crayon, a stroke of the crayon, the name and subtitle, the photograph framed in the crayon with its note | [chapter-crayonbox-chapter.tsx](../src/layouts/chapter-crayonbox-chapter.tsx) | crayon | [design/faces/crayonbox-chapter](../design/faces/crayonbox-chapter/README.md) |
 | `crayonbox-ending` | the next meeting in a capsule of the last section's crayon, the title with a sky stroke, a contact card drawn twice for each way to reach the school (`icon_cards`, or `bullets` read 「名字：说明」), the line to remember on a tangerine pill, over a veiled photograph | [ending-crayonbox-ending.tsx](../src/layouts/ending-crayonbox-ending.tsx) | crayon | [design/faces/crayonbox-ending](../design/faces/crayonbox-ending/README.md) |
 
-`crayonbox-open`, `crayonbox-sticker`, `crayonbox-cards`, `crayonbox-point` and `crayonbox-todo`, crayon's earlier faces, stay registered for any theme that names them and now appear in the gallery's appendix of faces no menu offers. crayon's points, list, comparison, process, photo and statement pages leave `narrow-column`, `crayonbox-cards`, `two-column`, `rail-numbered`, `image-top` and `crayonbox-point` for `crayonbox-sheet`, and crayon now offers the `data` kind there too.
+`crayonbox-open`, `crayonbox-sticker`, `crayonbox-cards`, `crayonbox-point` and `crayonbox-todo`, crayon's earlier faces, were deleted on 2026-10-12 with the other faces no menu offered. crayon's points, list, comparison, process, photo and statement pages leave `narrow-column`, `crayonbox-cards`, `two-column`, `rail-numbered`, `image-top` and `crayonbox-point` for `crayonbox-sheet`, and crayon now offers the `data` kind there too.
 
 ### Motif
 
@@ -1245,7 +1234,7 @@ The tests draw every board page on luxe and on brief and crayon, two light theme
 | `invitation-chapter` | a part opens under a veil of black inside a gilt frame: the occasion, the Roman numeral in gold, the chapter, the title in ivory over a gold rule, the subtitle | [chapter-invitation-chapter.tsx](../src/layouts/chapter-invitation-chapter.tsx) | luxe | [design/faces/invitation-chapter](../design/faces/invitation-chapter/README.md) |
 | `invitation-ending` | the card signed by the house: the occasion, a diamond, the closing words with the marked ones in gold, the signature (`subheading`) and the date | [ending-invitation-ending.tsx](../src/layouts/ending-invitation-ending.tsx) | luxe | [design/faces/invitation-ending](../design/faces/invitation-ending/README.md) |
 
-`invitation-plate-cover`, `gilt-ordinal-chapter` and `gilt-word-ending`, luxe's earlier cover, chapter and close, stay registered for any theme that names them and now appear in the gallery's appendix of faces no menu offers. luxe's points, list, comparison, process, data, photo, fact and hierarchy pages leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `tone-adaptive-content`, `image-split`, `stat-hero` and `asymmetric-triptych` for `invitation-sheet`. The statement and quote pages keep `statement` and `pull-quote`.
+`invitation-plate-cover`, `gilt-ordinal-chapter` and `gilt-word-ending`, luxe's earlier cover, chapter and close, were deleted on 2026-10-12 with the other faces no menu offered. luxe's points, list, comparison, process, data, photo, fact and hierarchy pages leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `tone-adaptive-content`, `image-split`, `stat-hero` and `asymmetric-triptych` for `invitation-sheet`. The statement and quote pages keep `statement` and `pull-quote`.
 
 ### Motif
 
@@ -1264,7 +1253,6 @@ The tests draw every board page on luxe and on brief and crayon, two light theme
 | behaviour | what it does | code | board |
 | :-- | :-- | :-- | :-- |
 | A face says where the page's frame starts | a drawing that runs a photograph from the page's left edge carries `data-frame-left`. The page renderer reads it off the body and hands it to the motif as `frameLeft`, so the motif frames the rest of the page and sets its footer beside the photograph | [frame-left.ts](../src/render/frame-left.ts), [full-slide-svg.tsx](../src/render/full-slide-svg.tsx), [types.ts](../src/motifs/types.ts) | [design/compositions/vitrine](../design/compositions/vitrine/README.md) |
-| A diamond under a centred title follows its last line | the shared centre-mirror heading treatment (luxe's, vermilion's with a subheading) set its diamond at y156 whatever the title's lines. It now stands 26px under the last baseline | [render.tsx](../src/render/heading-treatments/render.tsx) | none |
 | Compose leaves detail to the compositions that draw it | a chart's `reference` is offered to `climb`, a chart point's `note` to `solo`, `descent` and `ebb`, a chart's title to `swing`, a pending milestone to `lapse` and a titled callout to `lapse` and `mirror` as well as the compositions that drew them before | [index.ts](../src/layouts/compositions/index.ts) | none |
 | A separator declared, not printed | a category's parenthesis (`ebb`) and a caption's colon (`triptych`) are declared on the lines they split (`data-gloss-break`), so the fidelity check reads them back | [ebb.tsx](../src/layouts/compositions/ebb.tsx), [triptych.tsx](../src/layouts/compositions/triptych.tsx) | none |
 | A paired SimSun heading | luxe's heading pairs Times New Roman with SimSun, so figures and English titles take a Latin serif and Western quotation marks in PowerPoint | [luxe.ts](../src/themes/builtin/luxe.ts) | none |
@@ -1307,7 +1295,7 @@ The tests draw every board page on runway and on luxe and crayon, a dark theme a
 | `lineup-chapter` | a part opens on a full-page photograph with its number huge and its title at the right, or on its looks in a row (`image_grid`, drawn by `parade`) on paper | [chapter-lineup-chapter.tsx](../src/layouts/chapter-lineup-chapter.tsx) | runway | [design/faces/lineup-chapter](../design/faces/lineup-chapter/README.md) |
 | `lineup-ending` | the bow: the stage, the closing words huge in the serif, a short crimson rule, a tracked line | [ending-lineup-ending.tsx](../src/layouts/ending-lineup-ending.tsx) | runway | [design/faces/lineup-ending](../design/faces/lineup-ending/README.md) |
 
-`show-headline`, `show-plate`, `show-finale`, `show-statement`, `show-figures`, `show-spotlight` and `show-gallery`, runway's earlier faces, stay registered for any theme that names them and now appear in the gallery's appendix of faces no menu offers. runway's points, list, comparison, process, data, photo and statement pages leave `narrow-column`, `bento-panel`, `two-column`, `rail-numbered`, `show-figures`, `show-spotlight` and `show-statement` for `lineup-sheet`, and runway now offers the `fact` kind there too.
+`show-headline`, `show-plate`, `show-finale`, `show-statement`, `show-figures`, `show-spotlight` and `show-gallery`, runway's earlier faces, were deleted on 2026-10-12 with the other faces no menu offered. runway's points, list, comparison, process, data, photo and statement pages leave `narrow-column`, `bento-panel`, `two-column`, `rail-numbered`, `show-figures`, `show-spotlight` and `show-statement` for `lineup-sheet`, and runway now offers the `fact` kind there too.
 
 ### Motif
 
@@ -1373,7 +1361,7 @@ The tests draw every board page on museum and on runway and crayon, two pale the
 | `placard-chapter` | the doorway to the next hall: a pool of warm light, the hall's name in copper over its title at 68px, a copper rule, a tracked line, the door plate, over the page's photograph when it has one with the hall's name kept | [chapter-placard-chapter.tsx](../src/layouts/chapter-placard-chapter.tsx) | museum | [design/faces/placard-chapter](../design/faces/placard-chapter/README.md) |
 | `placard-ending` | the lights going down: a pool of light, the closing words at 64px in the serif, a copper rule, the lines the author broke the thanks into, the date | [ending-placard-ending.tsx](../src/layouts/ending-placard-ending.tsx) | museum | [design/faces/placard-ending](../design/faces/placard-ending/README.md) |
 
-`poster-center`, `hall-label-chapter`, `exit-word-ending`, `quiet-frame`, `split-band`, `one-evidence`, `stat-hero` and `asymmetric-triptych`, museum's earlier faces, stay registered for any theme that names them, and those no menu offers now appear in the gallery's appendix. museum's content kinds leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `split-band`, `image-split`, `statement`, `stat-hero`, `one-evidence` and `asymmetric-triptych` for `placard-sheet`.
+`poster-center`, `hall-label-chapter`, `exit-word-ending`, `quiet-frame`, `split-band`, `one-evidence`, `stat-hero` and `asymmetric-triptych`, museum's earlier faces, left museum's menu. `stat-hero` stays in other themes' menus, and the rest were deleted on 2026-10-12 with the other faces no menu offered. museum's content kinds leave `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `split-band`, `image-split`, `statement`, `stat-hero`, `one-evidence` and `asymmetric-triptych` for `placard-sheet`.
 
 ### Motif
 
@@ -1398,10 +1386,7 @@ No field was added: the IR schema stood 88 characters under its budget. The boar
 | :-- | :-- | :-- | :-- |
 | A picture cut round | a clip of one circle or ellipse, cropped or not, which the exportable subset admits beside the rectangle, read as the box round it, exported as an oval picture | [cropped-image.tsx](../src/render/cropped-image.tsx), [svg-image-box.ts](../src/lib/svg-image-box.ts), [image.ts](../src/pptx/svg2pptx/image.ts), [render.ts](../src/pptx/svg2pptx/render.ts) | [design/compositions/specimen](../design/compositions/specimen/README.md) |
 | A radial gradient's extent in PowerPoint | stops moved in by 1/√2 so the gradient ends on the shape's inscribed circle, as the SVG default does | [gradient.ts](../src/pptx/svg2pptx/gradient.ts) | [design/faces/placard-chapter](../design/faces/placard-chapter/README.md) |
-| A figure card keeps its unit | the figure gives a few points before its unit is cut, and a unit still cut marks the line `data-truncated`, which audit reports | [kpi.tsx](../src/components/kpi.tsx), [content-bento-panel.tsx](../src/layouts/content-bento-panel.tsx) | none |
-| A Chinese source line is upright | a face's footnote with Chinese in it is never slanted | [face-footnote.tsx](../src/render/face-footnote.tsx) | none |
-| The bento glow clears its figure | the figure is measured bold in the heading face before the glow is set beside it | [content-bento-panel.tsx](../src/layouts/content-bento-panel.tsx) | none |
-| The gallery exit keeps the author's lines | `exit-word-ending` sets each line the author broke the subtitle into | [ending-exit-word-ending.tsx](../src/layouts/ending-exit-word-ending.tsx) | none |
+| A figure card keeps its unit | the figure gives a few points before its unit is cut, and a unit still cut marks the line `data-truncated`, which audit reports | [kpi.tsx](../src/components/kpi.tsx) | none |
 | A tracked line keeps its full-width spaces | `paintLineupTracked` preserves the spaces between the parts of a line | [lineup.tsx](../src/layouts/compositions/lineup.tsx) | none |
 | A paired heading | museum's heading pairs Times New Roman with SimSun, so its figures print proportionally in PowerPoint | [museum.ts](../src/themes/builtin/museum.ts) | none |
 | The placard's small type is an approved size | captions, labels, the hall sign, the source and the door plate at 10 to 15px carry the `placard-spec` exemption the L1 audit knows | [l1.ts](../evals/gallery/l1.ts) | none |
@@ -1444,7 +1429,7 @@ The tests draw every board page on stage and on runway and crayon, two pale them
 | `keynote-chapter` | an act opens: its number in silver over its name at 150px bold and a line, over the page's photograph or on the black in a follow spot | [chapter-keynote-chapter.tsx](../src/layouts/chapter-keynote-chapter.tsx) | stage | [design/faces/keynote-chapter](../design/faces/keynote-chapter/README.md) |
 | `keynote-ending` | the last sentence alone at 64px bold in a follow spot, its marked words in silver, the occasion tracked at the foot, the clicker at its end | [ending-keynote-ending.tsx](../src/layouts/ending-keynote-ending.tsx) | stage | [design/faces/keynote-ending](../design/faces/keynote-ending/README.md) |
 
-`poster-center`, `one-word-chapter`, `release-close-ending`, `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `stacked-poster`, `image-top`, `statement`, `stat-hero` and `asymmetric-triptych`, stage's earlier faces, stay registered for any theme that names them, and those no menu offers now appear in the gallery's appendix. stage's `quote` stays on `pull-quote`.
+`poster-center`, `one-word-chapter`, `release-close-ending`, `quiet-frame`, `bento-panel`, `two-column`, `rail-numbered`, `stacked-poster`, `image-top`, `statement`, `stat-hero` and `asymmetric-triptych`, stage's earlier faces, left stage's menu. `image-top`, `statement` and `stat-hero` stay in other themes' menus, and the rest were deleted on 2026-10-12 with the other faces no menu offered. stage's `quote` stays on `pull-quote`.
 
 ### Motif
 
@@ -1515,7 +1500,7 @@ The tests draw every board page on lecture and on stage and crayon, two themes t
 | `chalkboard-chapter` | the board wiped for the next part: its number small, its name large with a stroke of yellow chalk | [chapter-chalkboard-chapter.tsx](../src/layouts/chapter-chalkboard-chapter.tsx) | lecture | [design/faces/chalkboard-chapter](../design/faces/chalkboard-chapter/README.md) |
 | `chalkboard-ending` | homework under the lit school at night: tasks with boxes to tick, the next date in yellow, the dismissal and a reminder | [ending-chalkboard-ending.tsx](../src/layouts/ending-chalkboard-ending.tsx) | lecture | [design/faces/chalkboard-ending](../design/faces/chalkboard-ending/README.md) |
 
-`board-head`, `chalk-rule-chapter`, `next-lecture-ending`, `narrow-column`, `bento-panel`, `two-column`, `rail-numbered`, `tone-adaptive-content`, `image-annotate`, `one-evidence` and `asymmetric-triptych`, lecture's earlier faces, stay registered for any theme that names them, and those no menu offers now appear in the gallery's appendix.
+`board-head`, `chalk-rule-chapter`, `next-lecture-ending`, `narrow-column`, `bento-panel`, `two-column`, `rail-numbered`, `tone-adaptive-content`, `image-annotate`, `one-evidence` and `asymmetric-triptych`, lecture's earlier faces, were deleted on 2026-10-12 with the other faces no menu offered.
 
 ### Motif
 
