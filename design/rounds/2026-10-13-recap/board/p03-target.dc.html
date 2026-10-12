@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>承诺对账</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 56px; display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; color: #5B6470">
+    <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; color: {{deep}}">01</span>今年的账
+  </div>
+  <div style="position: absolute; left: 80px; top: 84px; width: 1120px; font-size: 32px; line-height: 1.4; font-weight: 900">全年 4.41 亿元，完成 105%，一季度欠的账三季度补回来了</div>
+
+  <div style="position: absolute; left: 80px; top: 172px; width: 520px; display: flex; justify-content: space-between; font-size: 13px; color: #5B6470">
+    <span>单位：万元</span>
+    <span style="display: flex; gap: 18px">
+      <span style="display: flex; align-items: center; gap: 6px"><span style="display: block; width: 12px; height: 12px; box-sizing: border-box; border: 1.5px dashed #5B6470"></span>年初目标</span>
+      <span style="display: flex; align-items: center; gap: 6px"><span style="display: block; width: 12px; height: 12px; background: #2E353D"></span>实际</span>
+    </span>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 200px; width: 520px; height: 330px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; border-bottom: 1.5px solid #15191E">
+    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 8px">
+      <div style="width: 40px; height: 206px; box-sizing: border-box; border: 1.5px dashed #5B6470"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600; color: #B42318">8,700</span><div style="width: 40px; height: 186px; background: #2E353D"></div></div>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 8px">
+      <div style="width: 40px; height: 225px; box-sizing: border-box; border: 1.5px dashed #5B6470"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600">10,900</span><div style="width: 40px; height: 234px; background: #2E353D"></div></div>
+    </div>
+    <div style="position: relative; display: flex; justify-content: center; align-items: flex-end; gap: 8px">
+      <span style="position: absolute; left: -10px; right: -10px; top: -20px; text-align: center; font-size: 13px; font-weight: 700; color: {{deep}}">三季度末累计 +800</span>
+      <div style="width: 40px; height: 212px; box-sizing: border-box; border: 1.5px dashed #5B6470"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600">11,200</span><div style="width: 40px; height: 240px; background: #2E353D"></div></div>
+    </div>
+    <div style="display: flex; justify-content: center; align-items: flex-end; gap: 8px">
+      <div style="width: 40px; height: 257px; box-sizing: border-box; border: 1.5px dashed #5B6470"></div>
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600">13,300</span><div style="width: 40px; height: 285px; background: #2E353D"></div></div>
+    </div>
+  </div>
+  <div style="position: absolute; left: 80px; top: 538px; width: 520px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); text-align: center; font-size: 14px">
+    <span>一季度</span><span>二季度</span><span>三季度</span><span>四季度</span>
+  </div>
+
+  <div style="position: absolute; left: 660px; top: 172px; width: 540px; display: flex; flex-direction: column; font-size: 15px">
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #15191E; font-size: 13px; letter-spacing: 0.08em; color: #5B6470">
+      <span>季度</span><span style="text-align: right">年初目标</span><span style="text-align: right">实际</span><span style="text-align: right">差额</span><span style="padding-left: 16px">判定</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; align-items: center; height: 54px; border-bottom: 1px solid #D9DDE2; background: #FDF0EE; margin: 0 -12px; padding: 0 12px">
+      <span>一季度</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">9,600</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">8,700</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px; font-weight: 700; color: #B42318">−900</span>
+      <span style="padding-left: 16px; display: flex; align-items: center; gap: 6px; font-weight: 700; color: #B42318"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>未达</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; align-items: center; height: 54px; border-bottom: 1px solid #D9DDE2">
+      <span>二季度</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">10,500</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">10,900</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">+400</span>
+      <span style="padding-left: 16px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>达成</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; align-items: center; height: 54px; border-bottom: 1px solid #D9DDE2">
+      <span>三季度</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">9,900</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">11,200</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">+1,300</span>
+      <span style="padding-left: 16px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>超额</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; align-items: center; height: 54px; border-bottom: 1px solid #D9DDE2">
+      <span>四季度</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">12,000</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">13,300</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 19px">+1,300</span>
+      <span style="padding-left: 16px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>超额</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 70px 100px 100px 90px minmax(0, 1fr); column-gap: 12px; align-items: center; height: 60px; border-top: 2px solid #15191E; margin-top: -1px; font-weight: 700">
+      <span>全年</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px; font-weight: 600">42,000</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px; font-weight: 600">44,100</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px; font-weight: 600">+2,100</span>
+      <span style="padding-left: 16px; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 30px; font-weight: 700; color: {{accent}}">105.0%</span>
+    </div>
+    <div style="margin-top: 16px; font-size: 14px; color: #2E353D">同比增长 <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 18px; font-weight: 700">+19.8%</span>，2025 年为 3.68 亿元</div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 640px; font-size: 13px; color: #5B6470">口径：华东区渠道出货额（含税），单位万元</div>
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 28px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #5B6470">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>周启航 · 2026 年度述职　<span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600; color: #15191E">03</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  shade(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0B6E69';
+    return { accent, deep: this.shade(accent, 0.75) };
+  }
+}
+</script>
+</body>
+</html>

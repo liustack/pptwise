@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>封面</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <img src="/_blob/8600fcefb1b4c92aab03728ad020afc3" alt="城市夜景" style="position: absolute; left: 0; top: 0; width: 1280px; height: 280px; object-fit: cover; object-position: 50% 55%">
+
+  <div style="position: absolute; left: 80px; top: 316px; width: 1120px; display: flex; justify-content: space-between; align-items: baseline">
+    <span style="font-size: 15px; font-weight: 700; letter-spacing: 0.18em; color: {{deep}}">2026 年度述职</span>
+    <span style="font-size: 14px; color: #5B6470">2027 年 1 月</span>
+  </div>
+  <div style="position: absolute; left: 80px; top: 346px; width: 1120px; font-size: 44px; line-height: 1.3; font-weight: 900">完成 105%，增量来自我开的两条新渠道</div>
+  <div style="position: absolute; left: 80px; top: 430px; width: 1120px; height: 2px; background: #15191E"></div>
+
+  <div style="position: absolute; left: 80px; top: 452px; width: 500px; display: grid; grid-template-columns: 88px minmax(0, 1fr); row-gap: 12px; font-size: 16px; line-height: 1.5">
+    <span style="font-size: 13px; color: #5B6470; padding-top: 2px">述职人</span><span style="font-weight: 700">周启航</span>
+    <span style="font-size: 13px; color: #5B6470; padding-top: 2px">岗位</span><span>华东区渠道销售经理</span>
+    <span style="font-size: 13px; color: #5B6470; padding-top: 2px">部门</span><span>某消费电子品牌 · 华东区渠道部</span>
+    <span style="font-size: 13px; color: #5B6470; padding-top: 2px">述职对象</span><span>大区总监、人力资源部</span>
+  </div>
+
+  <div style="position: absolute; left: 620px; top: 452px; width: 580px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums">4.41<span style="font-family: 'Noto Sans SC', sans-serif; font-size: 16px; font-weight: 500; margin-left: 4px">亿元</span></span>
+      <span style="font-size: 14px; color: #5B6470">全年出货</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums">105.0%</span>
+      <span style="font-size: 14px; color: #5B6470">目标完成率</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; color: {{accent}}">4,950<span style="font-family: 'Noto Sans SC', sans-serif; font-size: 16px; font-weight: 500; margin-left: 4px">万元</span></span>
+      <span style="font-size: 14px; color: #5B6470">两条新渠道</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: {{deep}}"><span style="display: block; width: 10px; height: 10px; background: {{accent}}"></span>我牵头</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; bottom: 28px; font-size: 12px; color: #5B6470">示例人物，姓名和数据均为虚构</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  shade(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0B6E69';
+    return { accent, deep: this.shade(accent, 0.75) };
+  }
+}
+</script>
+</body>
+</html>

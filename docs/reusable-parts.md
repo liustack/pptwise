@@ -1588,6 +1588,60 @@ No field was added to the IR. The board's marks reuse fields that existed.
 | A face may let a `paragraph` stand beside a full-body component | `portrait-sheet` declares `fullBodyCompanions: ["paragraph"]`, so the self-assessment closes on its line | [content-portrait-sheet.tsx](../src/layouts/content-portrait-sheet.tsx) | [design/compositions/appraisal](../design/compositions/appraisal/README.md) |
 | profile's heading leads with Times New Roman over SimSun | an English title and its curly quotes are set in Times New Roman rather than full width in SimSun | [profile.ts](../src/themes/builtin/profile.ts) | [design/rounds/2026-10-12-profile](../design/rounds/2026-10-12-profile/README.md) |
 
+## recap channel sales year-end review sample, 2026-10
+
+The round drew recap, the 24th built-in theme, to a sixteen-page Chinese and English year-end review in which a channel sales manager for a consumer electronics brand accounts for the year to the regional director and HR: the year in one line, the target quarter by quarter, where the growth came from, three things done with the speaker's part apart from the team's, the team, the miss, the market, next year's target, plan and asks, and the close. The person and every figure are invented, and every page says so in its footer. Its decisions, the design system every recap page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-13-recap/`](../design/rounds/2026-10-13-recap/README.md). The rules are restated for the next design session in [Designing for recap](./design-recap.md).
+
+### Compositions
+
+The compositions take a twenty-fourth `setting`, `account` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): one person accounting for their year to the people who review it. White paper, a heavy claim in the body sans, figures in the theme's figure face, columns opened by a 2px rule of the ink, the accent on what the speaker led and the one figure a page is about, the danger red beside a cross on what went wrong, and a small legend that tells the speaker's part from the team's. The composition is handed the whole page and places the page's section line, claim and source itself.
+
+New, in the account setting only:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `gist` | the year in a heavy two-line claim with the miss underlined in red, a paragraph, and three figures under a rule each with its legend mark | a `paragraph` and a `kpi_cards` of two to four | [gist.tsx](../src/layouts/compositions/gist.tsx) | recap | [design/compositions/gist](../design/compositions/gist/README.md) |
+| `reckoning` | target against actual as paired bars a period, the missed one's figure in red, beside a ledger with the gap and a verdict a row and the year's total, and the period the running gap closes in named over the bars | a `scorecard` of two to six periods | [reckoning.tsx](../src/layouts/compositions/reckoning.tsx) | recap | [design/compositions/reckoning](../design/compositions/reckoning/README.md) |
+| `credit` | a bridge from last year to this, each step marked as the speaker's, the team's or a mistake, beside a ledger that subtotals the speaker's part and its share of the net change | a `waterfall` with a total at each end and notes on its steps | [credit.tsx](../src/layouts/compositions/credit.tsx) | recap | [design/compositions/credit](../design/compositions/credit/README.md) |
+| `casefile` | a photograph bled from the left and beside it a case told as rows (before, the speaker, the team) closing on a row of result figures | an `image`, a `row_cards` and a `kpi_cards` | [casefile.tsx](../src/layouts/compositions/casefile.tsx) | recap | [design/compositions/casefile](../design/compositions/casefile/README.md) |
+| `relay` | a year of months on one axis, the speaker's milestones above it and the team's below with progress bars, the one the speaker landed washed in the accent, and a closing line | a `timeline` of two lanes and a `callout` | [relay.tsx](../src/layouts/compositions/relay.tsx) | recap | [design/compositions/relay](../design/compositions/relay/README.md) |
+| `drawdown` | one figure very large in the accent, two bars of before and after under it, and the side figures in a column | a one-series `bar` chart of two or three points and a `kpi_cards` of three or four | [drawdown.tsx](../src/layouts/compositions/drawdown.tsx) | recap | [design/compositions/drawdown](../design/compositions/drawdown/README.md) |
+| `headcount` | a team's year as four counts with a person mark each, dashed for those who left, and people under a rule, a moved role drawn as from, arrow, to | an `image`, a `kpi_cards` of four and a `people_cards` | [headcount.tsx](../src/layouts/compositions/headcount.tsx) | recap | [design/compositions/headcount](../design/compositions/headcount/README.md) |
+| `postmortem` | a miss told as four figures across the top and four numbered rows in a grid, the mistake marked with a red cross and the fix with a tick | a `kpi_cards` of four and a `row_cards` of four | [postmortem.tsx](../src/layouts/compositions/postmortem.tsx) | recap | [design/compositions/postmortem](../design/compositions/postmortem/README.md) |
+| `deltas` | an open table of before, after and change with an icon a row, the changes signed and coloured, the row the page is about on the accent's tint, and a closing line | a `data_table` of three to five columns and a `callout` | [deltas.tsx](../src/layouts/compositions/deltas.tsx) | recap | [design/compositions/deltas](../design/compositions/deltas/README.md) |
+| `stretch` | this year's bars beside next year's targets as dashed boxes with their increase, and the target and the growth as figures beside them | a two-series `bar` chart whose second series is all targets and a `kpi_cards` of two or three | [stretch.tsx](../src/layouts/compositions/stretch.tsx) | recap | [design/compositions/stretch](../design/compositions/stretch/README.md) |
+| `sequence` | periods across the top, each phase's work a bar stepping down the page, the first filled with the accent, and what each period must bring in as small bars on one scale | a `roadmap` of two to four phases each with a period, one point and one figure row in one unit | [sequence.tsx](../src/layouts/compositions/sequence.tsx) | recap | [design/compositions/sequence](../design/compositions/sequence/README.md) |
+| `requests` | the asks as a table with an icon a row, the cost as a figure, what it buys, and an empty box for each choice of the page's ballot, closing on the sum against the growth | a `data_table` of four columns, a `callout` and a `ballot` of two to four choices | [requests.tsx](../src/layouts/compositions/requests.tsx) | recap | [design/compositions/requests](../design/compositions/requests/README.md) |
+
+The shared pieces are in [account.tsx](../src/layouts/compositions/account.tsx): `accountInks`, `accountText`, `accountMeta`, `accountMark` and `accountBlock` for inks that read on what they sit on, `fitAccount`, `accountWidth`, `paintAccount` and `paintAccountLine` for text at its exact size, `figureRuns`, `accountFigureWidth`, `paintAccountFigure` and `paintFigureLine` for figures in the figure face with a unit or a currency, `markOfTag`, `markOfRow` and `paintAccountMark` for the legend of who did what, `paintAccountBox` for a box to tick, `plainBars`, `unitWords`, `isFigure`, `figureNumber` and `formatFigure` for reading figures off the author's words, and `placeAccountHead`, `placeAccountSource` and `claimDrop` for the frame. The section line, the claim, the source and the footer row are in [account-shared.tsx](../src/layouts/account-shared.tsx). Any face can call them.
+
+The tests draw every board page on recap and on stage, crayon and profile, a dark theme and two light ones that share nothing with it ([account-pages.test.tsx](../src/layouts/compositions/account-pages.test.tsx)), and check that each page is drawn whole, inside the page, legible, and prints every word the author wrote. The gallery's 构图 band has a recap page for every new composition.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `account-sheet` | the ordinary content page: a numbered section line from the deck's `course` and the page's `stage`, the heavy claim at 32px across the measure, the body handed to the compositions in the account setting | [content-account-sheet.tsx](../src/layouts/content-account-sheet.tsx), [account-shared.tsx](../src/layouts/account-shared.tsx) | recap (every content kind) | [design/faces/account-sheet](../design/faces/account-sheet/README.md) |
+| `account-cover` | a photograph across the top, the occasion and the date, the year's conclusion at 44px, the speaker's particulars as fields and three figures | [cover-account-cover.tsx](../src/layouts/cover-account-cover.tsx) | recap | [design/faces/account-cover](../design/faces/account-cover/README.md) |
+| `account-chapter` | the part's number at 120px in the figure face with its name beside it, the title, and under a rule what the part covers with a figure or a state each, beside a photograph | [chapter-account-chapter.tsx](../src/layouts/chapter-account-chapter.tsx) | recap | [design/faces/account-chapter](../design/faces/account-chapter/README.md) |
+| `account-ending` | the commitment white on a block of the accent, the asks with an empty box each, and the speaker's signature | [ending-account-ending.tsx](../src/layouts/ending-account-ending.tsx) | recap | [design/faces/account-ending](../design/faces/account-ending/README.md) |
+
+### Motif
+
+`recap-motif` prints the footer row on content pages at y688: the deck's label at the left, then at the right the speaker (the deck's first author) and the occasion (the cover's `kicker`), and the page number in the figure face, PowerPoint's slide-number field. A face that credits a photograph sets the credit after the label. Board: [design/motifs/recap-motif](../design/motifs/recap-motif/README.md).
+
+### Page and component fields
+
+No field was added to the IR. The board's marks reuse fields that existed.
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `fonts.figure` on the theme | the face every figure is set in: Bahnschrift in the export, DIN Alternate in the macOS preview | [recap.ts](../src/themes/builtin/recap.ts) | [design/rounds/2026-10-13-recap](../design/rounds/2026-10-13-recap/README.md) |
+| a `tag` or a row's `highlight` and `tone` | the legend: a filled square of the accent for the speaker's own, an empty grey square for the team, a red cross for a mistake, a tick for done, an empty dark box for awaiting approval | [account.tsx](../src/layouts/compositions/account.tsx) | [design/compositions/credit](../design/compositions/credit/README.md) |
+| `ballot.choices` on a page | an empty box for each choice on every ask | [requests.tsx](../src/layouts/compositions/requests.tsx) | [design/compositions/requests](../design/compositions/requests/README.md) |
+| `bullets.style: "checklist"` on the close | an empty box at the end of each ask | [ending-account-ending.tsx](../src/layouts/ending-account-ending.tsx) | [design/faces/account-ending](../design/faces/account-ending/README.md) |
+| a value with a currency in front (`RMB 31m`) | read as a figure, the currency set in the body face before it | [account.tsx](../src/layouts/compositions/account.tsx) | [design/compositions/casefile](../design/compositions/casefile/README.md) |
+
 ## bulletin statement, fact and evidence pages, 2026-10
 
 The round gave bulletin the three content kinds its menu refused, drawn to a nine-page board on the NEV sample's own data: two statements, two facts and two evidence pages in Chinese, one of each in English. Its decisions, and every place the engine departs from the board, are in [`design/rounds/2026-10-09-bulletin-kinds/`](../design/rounds/2026-10-09-bulletin-kinds/README.md). The rules are added to [Designing for bulletin](./design-bulletin.md#statement-fact-and-evidence-pages).

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>一句话</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 56px; display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; color: #5B6470">
+    <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; color: {{deep}}">01</span>今年的账
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 140px; width: 1120px; font-size: 48px; line-height: 1.4; font-weight: 900">今年超额 5%，靠的是两条新渠道，<span style="text-decoration: underline; text-decoration-color: #B42318; text-decoration-thickness: 4px; text-underline-offset: 10px">苏北换总代</span>是我最大的失误</div>
+  <div style="position: absolute; left: 80px; top: 316px; width: 940px; font-size: 19px; line-height: 1.8; color: #2E353D">全年出货 4.41 亿元，完成 105%。净增的 7,300 万元里，约三分之二来自我今年开的连锁卖场和运营商两条渠道。苏北少的 400 万元，是我年初换总代时判断错了。</div>
+
+  <div style="position: absolute; left: 80px; top: 470px; width: 1120px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid #15191E">
+    <div style="padding: 22px 24px 0 0; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 60px; line-height: 1; font-weight: 600">105.0%</span>
+      <span style="font-size: 15px">全年目标完成率</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5B6470"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6470" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>达成</span>
+    </div>
+    <div style="padding: 22px 24px 0 24px; border-left: 1px solid #D9DDE2; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 60px; line-height: 1; font-weight: 600; color: {{accent}}">4,950<span style="font-family: 'Noto Sans SC', sans-serif; font-size: 16px; font-weight: 500; margin-left: 4px">万元</span></span>
+      <span style="font-size: 15px">两条新渠道出货</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: {{deep}}"><span style="display: block; width: 10px; height: 10px; background: {{accent}}"></span>我牵头</span>
+    </div>
+    <div style="padding: 22px 0 0 24px; border-left: 1px solid #D9DDE2; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 60px; line-height: 1; font-weight: 600; color: #B42318">−400<span style="font-family: 'Noto Sans SC', sans-serif; font-size: 16px; font-weight: 500; margin-left: 4px">万元</span></span>
+      <span style="font-size: 15px">苏北同比</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #B42318"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>我的失误</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 28px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #5B6470">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>周启航 · 2026 年度述职　<span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600; color: #15191E">02</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  shade(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0B6E69';
+    return { accent, deep: this.shade(accent, 0.75) };
+  }
+}
+</script>
+</body>
+</html>

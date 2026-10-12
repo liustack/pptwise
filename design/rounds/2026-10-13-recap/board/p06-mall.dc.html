@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>连锁卖场</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <img src="/_blob/24e3082642d7c6402ae2e468a3a39d9a" alt="卖场货架" style="position: absolute; left: 0; top: 0; width: 400px; height: 720px; object-fit: cover; object-position: 50% 50%">
+
+  <div style="position: absolute; left: 460px; top: 56px; display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; color: #5B6470">
+    <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; color: {{deep}}">02</span>今年做的事
+  </div>
+  <div style="position: absolute; left: 460px; top: 84px; width: 740px; font-size: 32px; line-height: 1.4; font-weight: 900">连锁卖场进了 120 家店，新增出货 3,100 万元</div>
+
+  <div style="position: absolute; left: 460px; top: 176px; width: 740px; display: flex; flex-direction: column; border-top: 2px solid #15191E">
+    <div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); column-gap: 20px; align-items: center; min-height: 72px; border-bottom: 1px solid #D9DDE2">
+      <span style="font-size: 14px; color: #5B6470">背景</span>
+      <span style="font-size: 18px">去年这家连锁我们一家店都没有</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); column-gap: 20px; align-items: center; min-height: 72px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: {{deep}}"><span style="display: block; width: 10px; height: 10px; background: {{accent}}"></span>我做的</span>
+      <span style="font-size: 18px">牵头谈了 4 个月，设计阶梯返利</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); column-gap: 20px; align-items: center; min-height: 72px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: #5B6470"><span style="display: block; width: 10px; height: 10px; box-sizing: border-box; border: 1.5px solid #5B6470"></span>团队做的</span>
+      <span style="font-size: 18px">2 名大客户专员完成进场和陈列</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 130px minmax(0, 1fr); column-gap: 20px; align-items: center; min-height: 150px; border-bottom: 1px solid #D9DDE2">
+      <span style="font-size: 14px; color: #5B6470">结果</span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 20px">
+        <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 700; color: {{accent}}">3,100</span><span style="font-size: 14px; color: #5B6470">新增出货（万元）</span></span>
+        <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 600">120</span><span style="font-size: 14px; color: #5B6470">家店</span></span>
+        <span style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 56px; line-height: 1; font-weight: 600">25.8</span><span style="font-size: 14px; color: #5B6470">单店年均（万元）</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 460px; right: 80px; bottom: 28px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #5B6470">
+    <span>示例人物，姓名和数据均为虚构　图为示意图</span>
+    <span>周启航 · 2026 年度述职　<span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600; color: #15191E">06</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  shade(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0B6E69';
+    return { accent, deep: this.shade(accent, 0.75) };
+  }
+}
+</script>
+</body>
+</html>

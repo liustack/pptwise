@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>结尾</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 0; top: 0; width: 620px; height: 720px; background: {{accent}}"></div>
+  <div style="position: absolute; left: 80px; top: 200px; width: 470px; display: flex; flex-direction: column; gap: 22px; color: #FFFFFF">
+    <span style="font-size: 50px; line-height: 1.35; font-weight: 900">5 亿元的目标我接下，三项支持请今天定</span>
+    <span style="display: block; width: 48px; height: 3px; background: #FFFFFF"></span>
+    <span style="font-size: 18px">需要评审小组确认</span>
+  </div>
+  <div style="position: absolute; left: 80px; bottom: 28px; font-size: 12px; color: #FFFFFF">示例人物，姓名和数据均为虚构</div>
+
+  <div style="position: absolute; left: 700px; top: 200px; width: 500px; display: flex; flex-direction: column; border-top: 2px solid #15191E">
+    <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; align-items: center; height: 76px; border-bottom: 1px solid #D9DDE2">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 700; color: #5B6470">1</span>
+      <span style="font-size: 19px; font-weight: 500">运营商、苏北各增 1 个编制</span>
+      <span style="display: block; width: 20px; height: 20px; box-sizing: border-box; border: 1.5px solid #15191E"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; align-items: center; height: 76px; border-bottom: 1px solid #D9DDE2">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 700; color: #5B6470">2</span>
+      <span style="font-size: 19px; font-weight: 500">卖场费用提到 880 万元</span>
+      <span style="display: block; width: 20px; height: 20px; box-sizing: border-box; border: 1.5px solid #15191E"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; align-items: center; height: 76px; border-bottom: 1px solid #D9DDE2">
+      <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 700; color: #5B6470">3</span>
+      <span style="font-size: 19px; font-weight: 500">苏北分销账期放到 45 天</span>
+      <span style="display: block; width: 20px; height: 20px; box-sizing: border-box; border: 1.5px solid #15191E"></span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 700px; top: 540px; width: 500px; display: flex; flex-direction: column; gap: 4px">
+    <span style="font-size: 20px; font-weight: 900">周启航</span>
+    <span style="font-size: 14px; color: #5B6470">华东区渠道销售经理 · 某消费电子品牌华东区渠道部</span>
+  </div>
+  <div style="position: absolute; right: 80px; bottom: 28px; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600">16</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#0B6E69' };
+  }
+}
+</script>
+</body>
+</html>

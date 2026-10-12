@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>客户变化</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0B6E69}a:hover{color:#15191E}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #15191E; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 56px; display: flex; align-items: baseline; gap: 10px; font-size: 14px; font-weight: 500; letter-spacing: 0.14em; color: #5B6470">
+    <span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0; color: {{deep}}">02</span>今年做的事
+  </div>
+  <div style="position: absolute; left: 80px; top: 84px; width: 1120px; font-size: 32px; line-height: 1.4; font-weight: 900">进店的人少了 7.5%，但成交多了 12%，客单价高了 11%</div>
+
+  <div style="position: absolute; left: 80px; top: 172px; width: 1120px; display: flex; flex-direction: column; font-size: 16px">
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; padding-bottom: 8px; border-bottom: 2px solid #15191E; font-size: 13px; letter-spacing: 0.08em; color: #5B6470">
+      <span>看板门店店均</span><span style="text-align: right">2025 年</span><span style="text-align: right">2026 年</span><span style="text-align: right">变化</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; align-items: center; height: 56px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"></path><path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"></path><path d="M16 17h4"></path><path d="M4 13h4"></path></svg>日均进店人数</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">186 人</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">172 人</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 700; color: #B42318">−7.5%</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; align-items: center; height: 56px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" x2="5" y1="5" y2="19"></line><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></svg>成交转化率</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">11.2%</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">13.6%</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 600">+2.4 个点</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; align-items: center; height: 56px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>客单价</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">1,280 元</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">1,420 元</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 600">+10.9%</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; align-items: center; height: 56px; border-bottom: 1px solid #D9DDE2; background: {{tint}}; margin: 0 -14px; padding: 0 14px">
+      <span style="display: flex; align-items: center; gap: 12px; font-weight: 700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{deep}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></svg>日均成交额</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">2.67 万元</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">3.32 万元</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 26px; font-weight: 700; color: {{deep}}">+24.6%</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 180px 180px 200px; column-gap: 20px; align-items: center; height: 56px; border-bottom: 1px solid #D9DDE2">
+      <span style="display: flex; align-items: center; gap: 12px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></svg>以旧换新订单占比</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">18%</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 20px">31%</span>
+      <span style="text-align: right; font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 22px; font-weight: 600">+13 个点</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 540px; width: 1120px; display: flex; align-items: flex-start; gap: 14px">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#15191E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+    <span style="font-size: 18px; line-height: 1.6; font-weight: 500">来的人少了，来的人更想买、买得更贵。明年的钱花在店里的转化上，不花在引流上。</span>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 640px; font-size: 13px; color: #5B6470">口径：周度补货看板覆盖的 380 家门店，全年店均</div>
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 28px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #5B6470">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>周启航 · 2026 年度述职　<span style="font-family: 'Barlow Semi Condensed', 'DIN Alternate', 'Bahnschrift', sans-serif; font-size: 14px; font-weight: 600; color: #15191E">11</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0B6E69","options":["#0B6E69","#1D4ED8","#C8102E","#15803D"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  shade(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  tintOf(hex, t) {
+    const n = parseInt(hex.slice(1), 16);
+    const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * t + 255 * (1 - t)));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  renderVals() {
+    const accent = this.props.accent ?? '#0B6E69';
+    return { accent, deep: this.shade(accent, 0.75), tint: this.tintOf(accent, 0.1) };
+  }
+}
+</script>
+</body>
+</html>
