@@ -39,7 +39,7 @@ export function binderSmall(size: number): Record<string, string> {
 export interface BinderInks {
   /** The paper: the page. */
   ground: string
-  /** The theme's surface, warm sand: where a photograph is missing. */
+  /** The theme's surface, white like the paper: the inside of the frame where a photograph is missing. */
   card: string
   /** Petrol: titles, figures, the running head, the chapter's half. */
   deep: string
@@ -294,14 +294,15 @@ export function Lead({ id, children }: { id: string; children: React.ReactNode }
  * A photograph filling `box`, cropped to it, its top corners (or all four)
  * rounded `r` by small pieces of `ground` laid over them, so PowerPoint, which
  * keeps a picture square, shows the same rounded photograph the preview does.
- * The card's surface stands in where the deck has no such asset.
+ * Where the deck has no such asset, a frame of the hairline around the
+ * card's surface stands in, so the place reads on paper of the same white.
  */
 export function paintBinderPhoto(assetId: string, box: Box, ctx: ComponentCtx, inks: BinderInks, opts: { r?: number; ground?: string; corners?: "top" | "all"; key?: string | number } = {}): React.ReactElement {
   const asset = ctx.images?.[assetId]
   const r = opts.r ?? 0
   const ground = opts.ground ?? inks.ground
   const { x, y, w, h } = box
-  if (!asset?.src) return <rect key={opts.key} data-binder-photo={assetId} x={x} y={y} width={w} height={h} fill={inks.card} />
+  if (!asset?.src) return <rect key={opts.key} data-binder-photo={assetId} x={x} y={y} width={w} height={h} fill={inks.card} stroke={inks.line} strokeWidth={1} />
   const top = [
     `M ${x} ${y} L ${x + r} ${y} A ${r} ${r} 0 0 0 ${x} ${y + r} Z`,
     `M ${x + w} ${y} L ${x + w} ${y + r} A ${r} ${r} 0 0 0 ${x + w - r} ${y} Z`,

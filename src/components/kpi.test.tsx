@@ -391,12 +391,13 @@ describe("kpi card stroke (Task 5d)", () => {
     })
   })
 
-  it("regression lock: only bulletin/runway's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
+  it("regression lock: only bulletin, runway and proposal's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const themeCtx = boundThemeCtx(id, {})
       const { container } = svg(kpi.render(component, { x: 0, y: 0, w: 1120 }, themeCtx))
       const rect = container.querySelector("rect")!
-      if (id === "bulletin" || id === "runway") {
+      // proposal is set as print: its cards are the paper's white inside a hairline.
+      if (id === "bulletin" || id === "runway" || id === "proposal") {
         expect(rect.getAttribute("stroke")).toBe(themeCtx.colors.cardStroke)
       } else {
         expect(rect.getAttribute("stroke")).toBeNull()

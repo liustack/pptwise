@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest"
-import { binderInks, blankToFill, leadGap, paintCheckbox, splitAside, splitDot, wholeMark } from "./binder"
+import { binderInks, blankToFill, leadGap, paintBinderPhoto, paintCheckbox, splitAside, splitDot, wholeMark } from "./binder"
 import { renderNode, testCtx } from "./__fixtures__/kit"
 
 /*
@@ -12,7 +12,8 @@ describe("binderInks", () => {
   it("reads proposal's board colours from its tokens", () => {
     const inks = binderInks(testCtx("proposal").ctx)
     expect(inks.ground).toBe("#FFFFFF")
-    expect(inks.card).toBe("#F3F0EA")
+    // The card is the paper's own white: proposal lays no cards.
+    expect(inks.card).toBe("#FFFFFF")
     expect(inks.deep).toBe("#0E3B53")
     // The brick red the maintainer put in place of the board's tangerine: one
     // ink for marks and small words alike.
@@ -63,6 +64,17 @@ describe("reading the author's words", () => {
   it("sets a word space after a Latin lead and none after a Chinese one", () => {
     expect(leadGap("这些回收期都还没扣：")).toBe("")
     expect(leadGap("None of these paybacks deduct:")).toBe(" ")
+  })
+})
+
+describe("a missing photograph", () => {
+  it("stands in as a hairline frame, so it reads on a card as white as the paper", () => {
+    const { ctx } = testCtx("proposal")
+    const inks = binderInks(ctx)
+    const { root } = renderNode(paintBinderPhoto("nowhere", { x: 64, y: 176, w: 360, h: 200 }, { ...ctx, images: {} }, inks))
+    const rect = root.querySelector("rect[data-binder-photo]")!
+    expect(rect.getAttribute("fill")).toBe(inks.card)
+    expect(rect.getAttribute("stroke")).toBe(inks.line)
   })
 })
 
