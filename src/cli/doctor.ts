@@ -765,7 +765,7 @@ export function renderDoctorReport(report: DoctorReport): string {
   if (report.workspace.ignore === "ignored") {
     lines.push(`  ${mark("ok")} git-ignored`)
   } else if (report.workspace.ignore === "not-ignored") {
-    lines.push(`  ${mark("n/a")} not git-ignored — the first render will add a local exclude line`)
+    lines.push(`  ${mark("n/a")} not git-ignored — the first render will write .pptwise/.gitignore and a local exclude line`)
   } else {
     lines.push(`  ${mark("n/a")} not a git repository`)
   }

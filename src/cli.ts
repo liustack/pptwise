@@ -56,7 +56,7 @@ program
     "--allow-dropped-content",
     "export anyway when a page holds more than fits and the layout drops blocks (skip the content-drop gate)",
   )
-  .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
+  .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .action(
     async (
       target: string,
@@ -90,7 +90,7 @@ program
   )
   .argument("<target>", "deck project directory or IR JSON file")
   .option("--json", "print the full report: status, every problem with its page, file and field, the preview, and the .pptx path")
-  .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
+  .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
   .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean }) => {
     try {
@@ -595,7 +595,7 @@ program
   .argument("<target>", "IR JSON file or deck project directory")
   .option("-o, --output <dir>", "output directory (default: .pptwise/<deck>/ under the project root)")
   .option("--html", "also write a self-contained preview.html (all slides inlined — thumbnail strip, keyboard navigation) for human review")
-  .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
+  .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .action(async (target: string, opts: { output?: string; html?: boolean; gitIgnore?: boolean }) => {
     try {
       console.log(

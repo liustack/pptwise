@@ -33,16 +33,18 @@
  *    drops those photos. Deck sources (`deck.spec.json`, `pages/`, project
  *    `assets/`, `theme.json`) stay where the user put them.
  * 3. **The directory ignores itself, once.** The first time this CLI creates
- *    `.pptwise/` it appends the entry to the repository's *local* exclude
- *    file — never the shared `.gitignore`, which is the user's to write. See
- *    {@link ensureGitIgnored} for the four ways that can go sideways and what
- *    each one does instead.
+ *    `.pptwise/` it writes `.pptwise/.gitignore` holding `*`, and appends the
+ *    entry to the repository's *local* exclude file — never the shared
+ *    `.gitignore` at the project root, which is the user's to write. The
+ *    inner file works when `.git` is read-only. See {@link ensureGitIgnored}
+ *    for the four ways the exclude line can go sideways and what each one
+ *    does instead.
  *
  * Everything here is fs- and process-facing, so it lives under `src/cli/`
  * (AGENTS.md's layout rule: Node-only code never enters `src/index.ts`'s
  * dependency closure).
  */
-import { appendFile, mkdir, readFile, readdir, stat, unlink } from "node:fs/promises"
+import { appendFile, mkdir, readFile, readdir, stat, unlink, writeFile } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { PptwiseError } from "../errors"
@@ -229,6 +231,9 @@ export async function inspectWorkspace(
   ignore: GitIgnoreStatus
 }> {
   const { anchor, root } = resolveWorkspaceRoot(opts)
+  // The folder's own `.gitignore` keeps everything in it out of git whether
+  // or not git is asked, so it settles the question first.
+  if (await isSelfIgnored(root)) return { anchor, root, ignore: "ignored" }
   const ignore = await gitIgnoreStatus(anchor, WORKSPACE_IGNORE_ENTRY, opts.runGit)
   return { anchor, root, ignore }
 }
@@ -301,13 +306,47 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+/** The file that keeps the artifact root out of git from the inside, and
+ *  its one rule. `*` matches every name in the folder, this file included,
+ *  so `git status` shows nothing there and no setting of the user's is
+ *  touched. Works where `.git` cannot be written (a sandbox that only grants
+ *  the working tree) and in a folder that is not a repository yet. */
+export const SELF_IGNORE_FILENAME = ".gitignore"
+export const SELF_IGNORE_RULES = "*\n"
+
+/**
+ * Write {@link SELF_IGNORE_FILENAME} into `root`, never over one already
+ * there. Shared with the DSH plugin's own copy of the rule
+ * (`dsh/preview-tool.js`), which creates the same folder for its previews.
+ */
+export async function writeSelfIgnore(root: string): Promise<void> {
+  try {
+    await writeFile(join(root, SELF_IGNORE_FILENAME), SELF_IGNORE_RULES, { flag: "wx" })
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code !== "EEXIST") throw e
+  }
+}
+
+/** Whether `root` holds a {@link SELF_IGNORE_FILENAME} with a bare `*` rule. */
+export async function isSelfIgnored(root: string): Promise<boolean> {
+  try {
+    const text = await readFile(join(root, SELF_IGNORE_FILENAME), "utf8")
+    return text.split(/\r?\n/u).some((line) => line.trim() === "*")
+  } catch {
+    return false
+  }
+}
+
 /**
  * Create `location.dir`, and — only on the run that first creates the
- * artifact root itself — make git ignore that root. Returns the note lines
- * the command should print after its summary; an empty array is the normal,
- * quiet case (the root already existed, or it was already ignored).
+ * artifact root itself — keep that root out of git two ways: a
+ * {@link SELF_IGNORE_FILENAME} inside it, and a line in the repository's
+ * local exclude file. Either alone is enough. The file covers a `.git` this
+ * process may not write, the exclude line covers a user who deletes the
+ * file. Returns the note lines the command should print after its summary;
+ * an empty array is the normal, quiet case.
  *
- * The ignore step is skipped when the caller passed `--no-git-ignore`: the
+ * Both steps are skipped when the caller passed `--no-git-ignore`: the
  * user having already stated who manages that directory.
  *
  * A root that cannot be created (a read-only checkout, a container mount)
@@ -331,18 +370,28 @@ export async function prepareWorkspaceDir(
   if (rootExisted || opts.gitIgnore === false) return []
 
   const ignoreEntry = WORKSPACE_IGNORE_ENTRY
+  // The exclude line first: once the folder holds its own `*` rule, git
+  // reports the folder as ignored already and the line would never be added.
   const outcome = await ensureGitIgnored(location.anchor, ignoreEntry, opts.runGit)
+  const selfIgnore = join(location.root, SELF_IGNORE_FILENAME)
+  let selfIgnored = true
+  const notes: string[] = []
+  try {
+    await writeSelfIgnore(location.root)
+  } catch (e) {
+    selfIgnored = false
+    notes.push(`note: could not write ${selfIgnore} (${(e as Error).message})`)
+  }
   if (outcome.kind === "appended") {
-    return [
-      `note: added ${ignoreEntry} to ${outcome.path} — a local ignore, your shared .gitignore is untouched`,
-    ]
+    notes.push(`note: added ${ignoreEntry} to ${outcome.path} — a local ignore, your shared .gitignore is untouched`)
+  } else if (outcome.kind === "failed") {
+    notes.push(
+      selfIgnored
+        ? `note: could not write ${outcome.path} (${outcome.reason}). ${selfIgnore} still keeps ${ignoreEntry} out of git`
+        : `note: could not write ${outcome.path} (${outcome.reason}) — add ${ignoreEntry} to your ignore rules yourself`,
+    )
   }
-  if (outcome.kind === "failed") {
-    return [
-      `note: could not write ${outcome.path} (${outcome.reason}) — add ${ignoreEntry} to your ignore rules yourself`,
-    ]
-  }
-  return []
+  return notes
 }
 
 /**

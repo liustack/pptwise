@@ -8,15 +8,18 @@ import { afterEach, describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
 import {
   RENDERED_SVG_PATTERN,
+  SELF_IGNORE_FILENAME,
   WORKSPACE_DIRNAME,
   WORKSPACE_IGNORE_ENTRY,
   deckSlug,
   ensureGitIgnored,
   inspectWorkspace,
+  isSelfIgnored,
   prepareWorkspaceDir,
   pruneRenderedSvgs,
   resolveWorkspaceLocation,
   workspaceStockAssetsDir,
+  writeSelfIgnore,
   type GitRunner,
   type WorkspaceLocation,
 } from "./workspace"
@@ -317,6 +320,47 @@ describe("prepareWorkspaceDir", () => {
     await expect(stat(loc.dir)).resolves.toBeDefined()
     expect(notes[0]).toMatch(/note: added \.pptwise\//)
     expect(await readFile(join(cwd, "git-common", "info", "exclude"), "utf8")).toContain(WORKSPACE_IGNORE_ENTRY)
+    expect(await readFile(join(loc.root, SELF_IGNORE_FILENAME), "utf8")).toBe("*\n")
+  })
+
+  it("in a real repository, git status shows nothing of the new root", async () => {
+    const repo = await trackedTmp()
+    await execFile("git", ["init", "-q"], { cwd: repo })
+    const loc = location({ anchor: repo, root: join(repo, WORKSPACE_DIRNAME), dir: join(repo, WORKSPACE_DIRNAME, "hello") })
+    await prepareWorkspaceDir(loc)
+    await writeFile(join(loc.dir, "hello.pptx"), "PK")
+    const { stdout } = await execFile("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: repo })
+    expect(stdout).toBe("")
+    expect(await readFile(join(repo, ".git", "info", "exclude"), "utf8")).toMatch(/(^|\n)\.pptwise\/\n/)
+  })
+
+  it.skipIf(process.platform === "win32")("with a read-only .git, still keeps the root out of git through its own .gitignore", async () => {
+    // Windows has no POSIX permission bits, so chmod 0o444 is not a product bug.
+    const repo = await trackedTmp()
+    await execFile("git", ["init", "-q"], { cwd: repo })
+    const excludeFile = join(repo, ".git", "info", "exclude")
+    const before = await readFile(excludeFile, "utf8")
+    await chmod(excludeFile, 0o444)
+    try {
+      const loc = location({ anchor: repo, root: join(repo, WORKSPACE_DIRNAME), dir: join(repo, WORKSPACE_DIRNAME, "hello") })
+      const notes = await prepareWorkspaceDir(loc)
+      expect(notes).toHaveLength(1)
+      expect(notes[0]).toContain(`${join(loc.root, SELF_IGNORE_FILENAME)} still keeps .pptwise/ out of git`)
+      await writeFile(join(loc.dir, "hello.pptx"), "PK")
+      const { stdout } = await execFile("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: repo })
+      expect(stdout).toBe("")
+      expect(await readFile(excludeFile, "utf8")).toBe(before)
+    } finally {
+      await chmod(excludeFile, 0o644)
+    }
+  })
+
+  it("never overwrites a .gitignore already in the root", async () => {
+    const root = await trackedTmp()
+    await writeFile(join(root, SELF_IGNORE_FILENAME), "*.svg\n")
+    await writeSelfIgnore(root)
+    expect(await readFile(join(root, SELF_IGNORE_FILENAME), "utf8")).toBe("*.svg\n")
+    expect(await isSelfIgnored(root)).toBe(false)
   })
 
   it("skips the ignore step when the artifact root already exists", async () => {
@@ -333,6 +377,7 @@ describe("prepareWorkspaceDir", () => {
       },
     })
     expect(notes).toEqual([])
+    await expect(stat(join(loc.root, SELF_IGNORE_FILENAME))).rejects.toThrow()
   })
 
   it("skips the ignore step when --no-git-ignore was passed", async () => {
@@ -349,6 +394,7 @@ describe("prepareWorkspaceDir", () => {
       },
     })
     expect(notes).toEqual([])
+    await expect(stat(join(loc.root, SELF_IGNORE_FILENAME))).rejects.toThrow()
   })
 
   it.skipIf(process.platform === "win32")("turns a read-only workspace into a PptwiseError that names both ways out", async () => {
@@ -377,5 +423,18 @@ describe("inspectWorkspace", () => {
     expect(report.anchor).toBe(cwd)
     expect(report.root).toBe(join(cwd, WORKSPACE_DIRNAME))
     expect(report.ignore).toBe("not-a-repo")
+  })
+
+  it("reports a root holding its own `*` .gitignore as ignored without asking git", async () => {
+    const cwd = await trackedTmp()
+    await mkdir(join(cwd, WORKSPACE_DIRNAME))
+    await writeFile(join(cwd, WORKSPACE_DIRNAME, SELF_IGNORE_FILENAME), "*\n")
+    const report = await inspectWorkspace({
+      cwd,
+      runGit: async () => {
+        throw new Error("git should not run when the root ignores itself")
+      },
+    })
+    expect(report.ignore).toBe("ignored")
   })
 })
