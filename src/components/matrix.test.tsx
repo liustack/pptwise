@@ -18,7 +18,7 @@ const ctx: ComponentCtx = {
     muted: "#6C6C6C",
     chartPalette: ["#051C2C", "#FFC72C"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
 }
 
@@ -416,7 +416,7 @@ describe("matrix in a half-page column", () => {
       { title: "Channel partner enablement", tag: "Q2", tone: "info" as const },
     ],
   }
-  const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia", mono: "Consolas" } }
+  const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia", mono: "Consolas", figure: "Georgia, Songti SC, STSong, serif" } }
 
   it("wraps a cell title across lines and keeps its tag below the last one", () => {
     const box = { x: 656, y: 284, w: 528 }

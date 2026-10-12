@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { eaFontFaceFor, isMonoFontFamily, pairedEaFace, pairedEaFamily, resolveFontFace, resolveFontStack, SAFE_FONTS } from "./fonts"
+import { deckFonts, eaFontFaceFor, isMonoFontFamily, pairedEaFace, pairedEaFamily, resolveFontFace, resolveFontStack, SAFE_FONTS } from "./fonts"
 
 describe("resolveFontFace", () => {
   it("returns the first stack member that is a known-safe font", () => {
@@ -110,6 +110,31 @@ describe("resolveFontStack", () => {
 // YaHei sets the curly quotes on the full em, and PowerPoint paints them from
 // the run's Latin face, so an English deck's YaHei text leads with the
 // Western cut and keeps YaHei second, for its CJK.
+describe("the figure role", () => {
+  it("resolves a DIN stack to Bahnschrift, previewed in DIN Alternate on macOS", () => {
+    expect(resolveFontFace(["DIN Alternate", "Bahnschrift", "Arial"], "figure")).toBe("Bahnschrift")
+    expect(resolveFontStack(["DIN Alternate", "Bahnschrift", "Arial"], "figure", true)).toBe(
+      "Bahnschrift, DIN Alternate, Arial, sans-serif",
+    )
+  })
+
+  it("falls back to Arial for a stack with no safe face", () => {
+    expect(resolveFontFace(["DIN Alternate"], "figure")).toBe("Arial")
+  })
+
+  it("is not read as mono text", () => {
+    expect(isMonoFontFamily(resolveFontStack(["Bahnschrift"], "figure", false))).toBe(false)
+  })
+
+  it("takes the heading list when the theme names no figure stack", () => {
+    const fonts = deckFonts({ heading: ["Georgia"], body: ["Microsoft YaHei"] }, true)
+    expect(fonts.figure).toBe(fonts.heading)
+    expect(deckFonts({ heading: ["Georgia"], body: ["Microsoft YaHei"], figure: ["Bahnschrift"] }, true).figure).toBe(
+      "Bahnschrift, DIN Alternate, Arial, sans-serif",
+    )
+  })
+})
+
 describe("resolveFontStack in a deck not written in Chinese", () => {
   it("sets a stack that resolves to Microsoft YaHei in its Western cut, with YaHei for the CJK", () => {
     // almanac, clinic and ember lead with YaHei and name Latin faces after it.
@@ -257,7 +282,7 @@ describe("eaFontFaceFor completeness over SAFE_FONTS", () => {
     "FangSong",
     "仿宋",
   ]
-  // The 11 Latin-only SAFE_FONTS members, and YaHei's Western cut, which a
+  // The 12 Latin-only SAFE_FONTS members, and YaHei's Western cut, which a
   // run names as its Latin face (all fall back to Microsoft YaHei).
   const LATIN_ONLY_FACES = [
     "Microsoft YaHei UI",
@@ -266,6 +291,7 @@ describe("eaFontFaceFor completeness over SAFE_FONTS", () => {
     "Tahoma",
     "Verdana",
     "Segoe UI",
+    "Bahnschrift",
     "Georgia",
     "Times New Roman",
     "Cambria",

@@ -25,7 +25,7 @@ const ctx: ComponentCtx = {
     muted: "#5D6B65",
     chartPalette: ["#006A4E"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
 }
 

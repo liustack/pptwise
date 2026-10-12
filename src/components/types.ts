@@ -13,7 +13,7 @@ import type { FigureStyle } from "../lib/quantity-format"
  */
 export interface ComponentCtx {
   colors: StyleColors
-  fonts: { heading: string; body: string; mono: string }
+  fonts: { heading: string; body: string; mono: string; figure: string }
   /** 主题细节 shape token（radius/gapScale/typeScale），缺省=各消费点 baked 值。 */
   shape?: StyleShape
   /** Resolved asset map (from `ir.assets.images`) for image-bearing components. */

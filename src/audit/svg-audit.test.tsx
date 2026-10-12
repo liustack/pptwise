@@ -218,7 +218,7 @@ describe("auditSvgMarkup — mono/proportional alignment with the real code rend
       muted: "#5D6B65",
       chartPalette: ["#006A4E", "#00A878"],
     },
-    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: resolveFontStack([], "mono", true) },
+    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: resolveFontStack([], "mono", true), figure: "Georgia" },
     bodyFontPx: 24,
   }
 
@@ -293,7 +293,7 @@ describe("auditSvgMarkup — bold-weight alignment with the real exporter (bold-
       muted: "#5D6B65",
       chartPalette: ["#051C2C", "#FFC72C"],
     },
-    fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia, Songti SC, STSong, serif", mono: resolveFontStack([], "mono", true) },
+    fonts: { heading: "Georgia, Songti SC, STSong, serif", body: "Georgia, Songti SC, STSong, serif", mono: resolveFontStack([], "mono", true), figure: "Georgia, Songti SC, STSong, serif" },
     bodyFontPx: 24,
   }
 

@@ -16,7 +16,7 @@ const ctx: ComponentCtx = {
     muted: "#6C6C6C",
     chartPalette: ["#051C2C", "#FFC72C"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
 }
 
@@ -295,7 +295,7 @@ describe("five_forces component", () => {
       buyer_power: { items: ["Activity leads the category by a clear margin", "Existing customers reliably expand"], intensity: "high" as const },
       substitutes: { items: ["Tightening workplace data regulations", "Longer lead times on key add-ons"], intensity: "low" as const },
     }
-    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas" } }
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas", figure: "Georgia" } }
     const w = 1088
     const h = fiveForces.measure(english, w, georgia)
     const { container } = svg(fiveForces.render(english, { x: 0, y: 0, w }, georgia))

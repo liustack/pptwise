@@ -16,7 +16,7 @@ const ctx: ComponentCtx = {
     muted: "#5D6B65",
     chartPalette: ["#006A4E"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: PACING_BUDGETS.balanced.bodyBaselinePx, // 24 — ambient default for tests that don't exercise a specific tier
 }
 

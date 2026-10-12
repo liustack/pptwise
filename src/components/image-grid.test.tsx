@@ -16,7 +16,7 @@ const ctx: ComponentCtx = {
     border: "#D5D5CB",
     chartPalette: ["#051C2C", "#FFC72C"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
   images: {
     a: { src: "data:image/png;base64,AAAA", alt: "Team offsite, group photo" },

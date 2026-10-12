@@ -17,7 +17,7 @@ const ctx: ComponentCtx = {
     border: "#CCCCCC",
     chartPalette: ["#006A4E"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
 }
 
@@ -428,7 +428,7 @@ describe("comparison 空首列表头归一化（2026-08-19 gallery 重渲：20 �
   })
 
   describe("a half-page box", () => {
-    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia, Songti SC, STSong, serif", mono: "Consolas" } }
+    const georgia: ComponentCtx = { ...ctx, fonts: { heading: "Georgia", body: "Georgia, Songti SC, STSong, serif", mono: "Consolas", figure: "Georgia" } }
     const english = {
       type: "comparison" as const,
       columns: ["Consulting", "Platforms", "K-12"],

@@ -455,12 +455,21 @@ const SIMSUN_KAITI_REGULAR_EXACT: Readonly<Record<number, number>> = Object.from
   Array.from({ length: 95 }, (_, i) => [32 + i, 0.5]),
 )
 
+// Bahnschrift, the figure face (`fonts.ts` FontRole "figure"), Regular and
+// Bold, read with the same cmap+hmtx parser from the cut Office for Mac
+// downloads from Microsoft's cloud font service and paints the face with
+// ("Bahnschrift Rounded", Version 2.09), each value rounded up to four
+// decimals. The two weights share every advance, so one table serves both.
+// Windows ships Bahnschrift with the system, a binary this rig does not
+// have to read.
+const BAHNSCHRIFT_EXACT: Readonly<Record<number, number>> = {32:0.2686,33:0.2706,34:0.3785,35:0.6241,36:0.5767,37:0.6871,38:0.6519,39:0.1778,40:0.3394,41:0.3394,42:0.4302,43:0.5284,44:0.2266,45:0.4795,46:0.2266,47:0.3785,48:0.5518,49:0.3326,50:0.5167,51:0.5289,52:0.5689,53:0.5445,54:0.5132,55:0.5035,56:0.5625,57:0.5132,58:0.2266,59:0.2266,60:0.4244,61:0.459,62:0.4292,63:0.4317,64:0.8902,65:0.6475,66:0.6456,67:0.6187,68:0.6563,69:0.5977,70:0.5591,71:0.6465,72:0.6788,73:0.2754,74:0.5054,75:0.6417,76:0.5733,77:0.7793,78:0.7002,79:0.6456,80:0.6226,81:0.6573,82:0.6519,83:0.6158,84:0.4815,85:0.6553,86:0.587,87:0.8467,88:0.5674,89:0.503,90:0.544,91:0.294,92:0.3785,93:0.294,94:0.503,95:0.4356,96:0.2945,97:0.5323,98:0.544,99:0.4981,100:0.5391,101:0.5362,102:0.3169,103:0.5391,104:0.5586,105:0.251,106:0.2681,107:0.5289,108:0.2896,109:0.8565,110:0.5586,111:0.545,112:0.544,113:0.5391,114:0.4268,115:0.5186,116:0.3262,117:0.5562,118:0.5,119:0.7735,120:0.5171,121:0.483,122:0.4947,123:0.3604,124:0.2754,125:0.3604,126:0.5137}
+
 interface ExactFaceTable {
   regular: Readonly<Record<number, number>>
   bold: Readonly<Record<number, number>>
 }
 
-type FaceKey = "georgia" | "yahei" | "yahei-ui" | "simsun-kaiti" | "times" | "unknown"
+type FaceKey = "georgia" | "yahei" | "yahei-ui" | "simsun-kaiti" | "times" | "bahnschrift" | "unknown"
 
 const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   georgia: GEORGIA,
@@ -473,6 +482,7 @@ const CLASS_TABLE_FOR: Readonly<Record<FaceKey, FaceFactorTable>> = {
   // Its printable ASCII is exact and its symbols are bounded, so the class
   // path only meets what neither covers, and there the envelope errs wide.
   times: ENVELOPE,
+  bahnschrift: ENVELOPE,
   unknown: ENVELOPE,
 }
 
@@ -485,6 +495,7 @@ const EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, ExactFaceTable>>> = {
   yahei: { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
   "yahei-ui": { regular: YAHEI_REGULAR_EXACT, bold: YAHEI_BOLD_EXACT },
   times: { regular: TIMES_REGULAR_EXACT, bold: TIMES_BOLD_EXACT },
+  bahnschrift: { regular: BAHNSCHRIFT_EXACT, bold: BAHNSCHRIFT_EXACT },
 }
 
 /** Every face whose Regular weight has a genuine binary to read. */
@@ -494,6 +505,7 @@ const REGULAR_EXACT_TABLE_FOR: Readonly<Partial<Record<FaceKey, Readonly<Record<
   "yahei-ui": YAHEI_REGULAR_EXACT,
   "simsun-kaiti": SIMSUN_KAITI_REGULAR_EXACT,
   times: TIMES_REGULAR_EXACT,
+  bahnschrift: BAHNSCHRIFT_EXACT,
 }
 
 /**
@@ -521,6 +533,7 @@ function classifyFaceKey(fontFamily: string | undefined): FaceKey {
   if (first === "microsoft yahei ui") return "yahei-ui"
   if (first === "simsun" || first === "宋体" || first === "kaiti" || first === "楷体") return "simsun-kaiti"
   if (first === "times new roman") return "times"
+  if (first === "bahnschrift") return "bahnschrift"
   return "unknown"
 }
 

@@ -46,13 +46,19 @@
  * marks, so its marks are its own and its bounds take YaHei behind it, the
  * `<a:ea>` face its runs carry.
  *
- * Needs the genuine binaries: macOS Georgia and the Office for Mac copies of
- * Microsoft YaHei, SimSun and KaiTi. Each file's `name` table is checked
+ * Bahnschrift, the figure face recap sets its numbers in, is read from the
+ * cut Office for Mac downloads and paints it with ("Bahnschrift Rounded",
+ * the same advances at both weights). Its runs carry YaHei behind them, so
+ * its bounds take YaHei's too.
+ *
+ * Needs the genuine binaries: macOS Georgia, the Office for Mac copies of
+ * Microsoft YaHei, SimSun and KaiTi, and Office's cloud copy of Bahnschrift. Each file's `name` table is checked
  * before it is read.
  *
  * Run: pnpm exec tsx scripts/gen-symbol-advances.mts
  */
 import { readFileSync, writeFileSync } from "node:fs"
+import { homedir } from "node:os"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -61,6 +67,10 @@ const OUT = path.join(ROOT, "src/lib/symbol-advances.ts")
 
 const OFFICE = "/Applications/Microsoft PowerPoint.app/Contents/Resources/DFonts/"
 const SYSTEM = "/System/Library/Fonts/Supplemental/"
+// Office for Mac fetches Bahnschrift from Microsoft's cloud font service the
+// first time a document names it, and paints it from the cut it stores here,
+// "Bahnschrift Rounded". Windows ships Bahnschrift with the system.
+const CLOUD = path.join(homedir(), "Library/Group Containers/UBF8T346G9.Office/FontCache/4/CloudFonts/Bahnschrift/")
 
 interface FaceFile {
   file: string
@@ -83,6 +93,8 @@ const FACES = {
   timesBold: { file: `${OFFICE}timesbd.ttf`, family: "Times New Roman", subfamily: "Bold" },
   courier: { file: `${SYSTEM}Courier New.ttf`, family: "Courier New", subfamily: "Regular" },
   courierBold: { file: `${SYSTEM}Courier New Bold.ttf`, family: "Courier New", subfamily: "Bold" },
+  bahnschrift: { file: `${CLOUD}29025492420.ttf`, family: "Bahnschrift Rounded", subfamily: "Regular" },
+  bahnschriftBold: { file: `${CLOUD}27696319145.ttf`, family: "Bahnschrift Rounded", subfamily: "Bold" },
 } as const satisfies Record<string, FaceFile>
 
 type FaceName = keyof typeof FACES
@@ -230,6 +242,8 @@ const TABLES = {
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
   times: { regular: ["times", "yahei", "simsun"], bold: ["timesBold", "yaheiBold", "simsun"] },
   "yahei-ui": { regular: ["yaheiUi", "yahei"], bold: ["yaheiUiBold", "yaheiBold"] },
+  // Bahnschrift sits over YaHei (`eaFontFaceFor`), like Georgia.
+  bahnschrift: { regular: ["bahnschrift", "yahei"], bold: ["bahnschriftBold", "yaheiBold"] },
 } as const satisfies Record<string, Record<"regular" | "bold", readonly FaceName[]>>
 const SUBSTITUTES: Record<keyof typeof TABLES, readonly FaceName[]> = {
   georgia: ALL,
@@ -237,6 +251,7 @@ const SUBSTITUTES: Record<keyof typeof TABLES, readonly FaceName[]> = {
   "simsun-kaiti": ALL,
   times: ALL_WITH_TIMES,
   "yahei-ui": ALL,
+  bahnschrift: ALL,
 }
 
 const codePoints: number[] = []
@@ -284,6 +299,7 @@ const LATIN_FACE_MARK_FACES = {
   "simsun-kaiti": { regular: ["simsun", "kaiti"], bold: ["simsun", "kaiti"] },
   times: { regular: ["times"], bold: ["timesBold"] },
   "yahei-ui": { regular: ["yaheiUi"], bold: ["yaheiUiBold"] },
+  bahnschrift: { regular: ["bahnschrift"], bold: ["bahnschriftBold"] },
 } as const satisfies Record<keyof typeof TABLES, Record<"regular" | "bold", readonly FaceName[]>>
 
 /** The advance every one of `faces` gives the code point, or `undefined` when one lacks it or they differ. */
@@ -316,7 +332,7 @@ writeFileSync(
 // generator for which faces each bound is the widest of, and why.
 
 export const SYMBOL_ADVANCE_BOUNDS: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui" | "bahnschrift", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${body}
 }
@@ -327,7 +343,7 @@ ${body}
 // bound. A mark the face lacks is left out.
 
 export const LATIN_FACE_MARK_ADVANCES: Readonly<
-  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
+  Record<"georgia" | "yahei" | "simsun-kaiti" | "times" | "yahei-ui" | "bahnschrift", Readonly<Record<"regular" | "bold", Readonly<Record<number, number>>>>>
 > = {
 ${markBody}
 }

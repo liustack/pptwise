@@ -150,7 +150,7 @@ const ctx: ComponentCtx = {
     muted: MUTED,
     chartPalette: PALETTE,
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
 }
 const box = { x: 80, y: 100, w: 1120 }

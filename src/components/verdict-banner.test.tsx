@@ -22,7 +22,7 @@ const ctx: ComponentCtx = {
     border: "#D8DEDB",
     chartPalette: ["#006A4E", "#00A878"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
 }
 
@@ -204,6 +204,7 @@ describe("verdict_banner component: tone color mapping", () => {
         heading: "Microsoft YaHei",
         body: "Microsoft YaHei",
         mono: "Consolas",
+        figure: "Microsoft YaHei",
       },
       bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
     }
@@ -229,7 +230,7 @@ describe("verdict_banner component: tone color mapping", () => {
   it("positive/warning resolve to the bright dark-theme variant on creative's real ctx", () => {
     const darkCtx: ComponentCtx = {
       colors: INSIGHT_TOKENS.colors,
-      fonts: { heading: "Lora", body: "Inter", mono: "Consolas" },
+      fonts: { heading: "Lora", body: "Inter", mono: "Consolas", figure: "Lora" },
       bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
     }
     const { container: pos } = svg(
@@ -258,7 +259,7 @@ describe("verdict_banner component: tone color mapping", () => {
     // ever keyed off those instead of `colors.bg` (which stays `#FFFFFF`).
     const customCtx: ComponentCtx = {
       colors: LEGACY_CUSTOM_TOKENS.colors,
-      fonts: { heading: "Inter", body: "Inter", mono: "Consolas" },
+      fonts: { heading: "Inter", body: "Inter", mono: "Consolas", figure: "Inter" },
       bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
     }
     const { container } = svg(
@@ -281,7 +282,7 @@ describe("verdict_banner component: tone color mapping", () => {
     // literally "navy" would wrongly flip to the dark-theme bright variant.
     const navyCtx: ComponentCtx = {
       colors: CONSULTING_TOKENS.colors,
-      fonts: { heading: "Bower", body: "Bower", mono: "Consolas" },
+      fonts: { heading: "Bower", body: "Bower", mono: "Consolas", figure: "Bower" },
       bodyFontPx: 24, // balanced default — this suite doesn't exercise body-text sizing
     }
     const { container } = svg(

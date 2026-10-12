@@ -14,7 +14,7 @@ const ctx: ComponentCtx = {
     bg: "#FFFFFF", surface: "#F4F4F4", primary: "#006A4E", accent: "#00A878",
     text: "#1A2421", muted: "#5D6B65", chartPalette: ["#006A4E", "#00A878"],
   },
-  fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Georgia", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
 }
 

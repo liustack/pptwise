@@ -18,7 +18,7 @@ const ctx: ComponentCtx = {
     border: "#DDDCD4",
     chartPalette: ["#1E2A4A", "#F5C518"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
   images: {
     "logo-a": { src: "data:image/png;base64,AAAA", alt: "Yunmi" },

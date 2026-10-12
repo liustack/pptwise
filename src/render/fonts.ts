@@ -97,7 +97,7 @@
 
 import type { StyleFonts } from "../themes/tokens"
 
-export type FontRole = "heading" | "body" | "mono"
+export type FontRole = "heading" | "body" | "mono" | "figure"
 
 /** Lower-cased names of fonts preinstalled on a stock Windows (and, for Latin, macOS). */
 export const SAFE_FONTS: Set<string> = new Set(
@@ -108,6 +108,10 @@ export const SAFE_FONTS: Set<string> = new Set(
     "Tahoma",
     "Verdana",
     "Segoe UI",
+    // Latin figure face: a DIN cut Windows 10 (1709) and later ships with the
+    // system. Office for Mac fetches it from Microsoft's cloud font service
+    // the first time a document names it.
+    "Bahnschrift",
     // Latin serif
     "Georgia",
     "Times New Roman",
@@ -138,6 +142,7 @@ const ROLE_DEFAULT: Record<FontRole, string> = {
   heading: "Microsoft YaHei",
   body: "Microsoft YaHei",
   mono: "Consolas",
+  figure: "Arial",
 }
 
 /**
@@ -260,6 +265,9 @@ const PREVIEW_FALLBACK = {
   kaiti: "Kaiti SC, STKaiti, Songti SC, STSong, serif",
   sans: "PingFang SC, Helvetica Neue, sans-serif",
   mono: "Menlo, monospace",
+  // Bahnschrift is not on macOS outside Office, and DIN Alternate is the
+  // same DIN family there.
+  figure: "DIN Alternate, Arial, sans-serif",
 } as const
 
 /**
@@ -319,7 +327,9 @@ export function resolveFontStack(stack: string[], role: FontRole, chinese: boole
   const fallback =
     role === "mono"
       ? PREVIEW_FALLBACK.mono
-      : KAITI_SAFE_FACES.has(key) || (ea !== undefined && KAITI_SAFE_FACES.has(ea.toLowerCase()))
+      : role === "figure"
+        ? PREVIEW_FALLBACK.figure
+        : KAITI_SAFE_FACES.has(key) || (ea !== undefined && KAITI_SAFE_FACES.has(ea.toLowerCase()))
         ? PREVIEW_FALLBACK.kaiti
         : SERIF_SAFE_FACES.has(key)
           ? PREVIEW_FALLBACK.serif
@@ -328,16 +338,25 @@ export function resolveFontStack(stack: string[], role: FontRole, chinese: boole
 }
 
 /**
- * The three font lists a deck's pages are set in: the theme's stacks, each
+ * The font lists a deck's pages are set in: the theme's stacks, each
  * resolved for the deck's language. `buildCtx` (`./full-slide-svg.tsx`) hands
- * them to every face, and validate measures a heading in the same three
+ * them to every face, and validate measures a heading in the same lists
  * (`../layouts/heading-set.ts`).
+ *
+ * `figure` is the face a theme sets its large numbers in. A theme that names
+ * no figure stack sets them in its heading face, so `figure` is the heading
+ * list then.
  */
-export function deckFonts(fonts: StyleFonts, chinese: boolean): { heading: string; body: string; mono: string } {
+export function deckFonts(
+  fonts: StyleFonts,
+  chinese: boolean,
+): { heading: string; body: string; mono: string; figure: string } {
+  const heading = resolveFontStack(fonts.heading, "heading", chinese)
   return {
-    heading: resolveFontStack(fonts.heading, "heading", chinese),
+    heading,
     body: resolveFontStack(fonts.body, "body", chinese),
     mono: resolveFontStack(fonts.mono ?? [], "mono", chinese),
+    figure: fonts.figure ? resolveFontStack(fonts.figure, "figure", chinese) : heading,
   }
 }
 

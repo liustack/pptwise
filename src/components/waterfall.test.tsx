@@ -18,7 +18,7 @@ const ctx: ComponentCtx = {
     muted: "#6C6C6C",
     chartPalette: ["#051C2C", "#FFC72C"],
   },
-  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
 }
 

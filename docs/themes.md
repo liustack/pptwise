@@ -72,7 +72,7 @@ There is no partial format, base reference, or load-time inheritance. Creating a
 
 `version`, `id`, `style`, and `menu` are required. `style.id` must equal the theme `id`. A theme id is a slug of lowercase letters, digits, and hyphens. Deck and workspace files may keep a factory preset id and shadow it.
 
-The style object is complete. Its required core contains background, surface, primary, accent, text, muted, chart palette, heading fonts, body fonts, and four default backgrounds. Additional colors, mono fonts, shape controls, and `allowCustomBackground` are optional.
+The style object is complete. Its required core contains background, surface, primary, accent, text, muted, chart palette, heading fonts, body fonts, and four default backgrounds. Additional colors, mono fonts, a figure font (`fonts.figure`, the face large numbers are set in, which falls back to the heading font), shape controls, and `allowCustomBackground` are optional.
 
 `emphasis` is how the theme strikes a `**marked**` run inside body text: `tint` recolors it in the accent, `pad` swipes a marker-pen block behind it, `underline` strikes a chalk line under it. Omitted equals `tint`. It is a property of the theme, not of any component, so every page of a deck strikes its marked runs the same way.
 

@@ -31,7 +31,7 @@ function ctxFor(themeId: string): ComponentCtx {
   return {
     colors: tokens.colors,
     shape: tokens.shape,
-    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+    fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
     bodyFontPx: 24,
     defaultBg: tokens.colors.bg,
     images: { "shot-1": { src: "data:image/png;base64,AAAA" }, "shot-2": { src: "data:image/png;base64,BBBB" } },

@@ -42,7 +42,7 @@
  *
  * The values are the `OS/2` table of the font files Office ships (Microsoft
  * PowerPoint.app's `DFonts`, macOS's Supplemental fonts for Georgia and
- * Courier New, Office's cloud cache for Segoe UI). The ratio depends only on
+ * Courier New, Office's cloud cache for Segoe UI and Bahnschrift). The ratio depends only on
  * two integers per face. PowerPoint for Windows has not been probed.
  */
 
@@ -73,6 +73,9 @@ const WIN_METRICS: ReadonlyMap<string, WinMetrics> = new Map([
   ["tahoma", win(2049, 423)],
   ["verdana", win(2059, 430)],
   ["segoe ui", win(2210, 514)],
+  // Read from the cut Office for Mac fetches from its cloud font service and
+  // paints Bahnschrift with ("Bahnschrift Rounded", regular and bold alike).
+  ["bahnschrift", win(2036, 422)],
   ["georgia", win(1878, 449)],
   ["times new roman", win(1825, 443)],
   ["cambria", win(1946, 455)],

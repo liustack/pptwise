@@ -85,6 +85,8 @@ export interface StyleFonts {
   heading: string[];
   body: string[];
   mono?: string[];
+  /** The stack large numbers are set in. Omitted, they take `heading`. */
+  figure?: string[];
 }
 
 export interface StyleTokens {

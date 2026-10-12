@@ -935,7 +935,7 @@ describe("checkIrQuality", () => {
         muted: "#5D6B65",
         chartPalette: ["#006A4E", "#00A878"],
       },
-      fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas" },
+      fonts: { heading: "Georgia", body: "Microsoft YaHei", mono: "Consolas", figure: "Georgia" },
       bodyFontPx: 24,
     }
     const box = { x: 0, y: 0, w: 1120 }

@@ -67,6 +67,7 @@ export const StyleTokensFileSchema = z
         heading: z.array(z.string().min(1)).min(1),
         body: z.array(z.string().min(1)).min(1),
         mono: z.array(z.string().min(1)).min(1).optional(),
+        figure: z.array(z.string().min(1)).min(1).optional(),
       })
       .strict(),
     shape: z

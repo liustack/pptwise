@@ -20,7 +20,7 @@ const ctx: ComponentCtx = {
     muted: "#6C6C6C",
     chartPalette: ["#051C2C", "#FFC72C", "#00A9E0", "#6C6C6C"],
   },
-  fonts: { heading: "Georgia", body: "Arial", mono: "Consolas" },
+  fonts: { heading: "Georgia", body: "Arial", mono: "Consolas", figure: "Georgia" },
   bodyFontPx: 24,
 }
 

@@ -855,6 +855,13 @@ describe("hasExactWidthTable", () => {
     expect(measureTextUnits("每周", { fontFamily: "Times New Roman, SimSun" })).toBeCloseTo(2, 4)
   })
 
+  it("is true for Bahnschrift, the figure face, whose two weights share every advance", () => {
+    expect(hasExactWidthTable("Bahnschrift, DIN Alternate, Arial, sans-serif")).toBe(true)
+    // The cloud cut's advances rounded up to four places: 1, 0, 5, %.
+    expect(measureTextUnits("105%", { fontFamily: "Bahnschrift" })).toBeCloseTo(0.3326 + 0.5518 + 0.5445 + 0.6871, 4)
+    expect(measureTextUnits("105%", { fontFamily: "Bahnschrift", bold: true })).toBeCloseTo(0.3326 + 0.5518 + 0.5445 + 0.6871, 4)
+  })
+
   it("is false for a face that classifies but has only a class-average table (SimSun/KaiTi)", () => {
     expect(hasExactWidthTable("SimSun")).toBe(false)
     expect(hasExactWidthTable("宋体")).toBe(false)
@@ -1401,7 +1408,7 @@ describe("non-ASCII marks never measure narrower than the face draws them", () =
   })
 
   it("never measures a covered character below its bound or below the class average", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman", bahnschrift: "Bahnschrift" } as const
     for (const [face, weights] of Object.entries(SYMBOL_ADVANCE_BOUNDS) as [keyof typeof families, (typeof SYMBOL_ADVANCE_BOUNDS)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
@@ -1459,7 +1466,7 @@ describe("curly quotes measure in the face that paints them", () => {
   })
 
   it("measures every quote, dash and dot a face carries at that face's own advance", () => {
-    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman" } as const
+    const families = { georgia: "Georgia", yahei: "Microsoft YaHei", "yahei-ui": "Microsoft YaHei UI", "simsun-kaiti": "SimSun", times: "Times New Roman", bahnschrift: "Bahnschrift" } as const
     for (const [face, weights] of Object.entries(LATIN_FACE_MARK_ADVANCES) as [keyof typeof families, (typeof LATIN_FACE_MARK_ADVANCES)["georgia"]][]) {
       for (const [weight, table] of Object.entries(weights) as ["regular" | "bold", Record<number, number>][]) {
         for (const [cp, w] of Object.entries(table)) {
