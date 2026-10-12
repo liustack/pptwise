@@ -364,16 +364,16 @@ window.__ModuleLoader__.load({
      * sent them looking for a retention setting that does not exist.
      *
      * It does not name a culprit either, and that is the same correction made
-     * twice. All the route observed is that nothing is at this id under the
-     * previews root this session is reading. Deletion is the usual reason and
-     * not the only one: `PPTWISE_HOME` decides that root, so a deck written
-     * under a different one is alive and out of reach, which is a fact about
-     * configuration and not about anything the user did wrong.
+     * twice. All the route observed is that nothing is at the place this id
+     * names, the `.pptwise/previews/` folder of the project it was rendered
+     * in. Deletion is the usual reason and not the only one: a project folder
+     * moved or renamed since leaves the deck alive and out of reach, which is
+     * a fact about the folder and not about anything the user did wrong.
      */
     var MISSING_HINT =
       'The rendered deck for this preview is no longer on disk where this session looks for it. ' +
-      'Previews are never removed on a timer, so it was either deleted or written under a different ' +
-      'PPTWISE_HOME. Run pptwise_preview again to rebuild it.'
+      "Previews are never removed on a timer, so it was either deleted or its project's .pptwise/previews/ " +
+      'folder has moved. Run pptwise_preview again to rebuild it.'
 
     /** What the card says when it could not reach the route at all. */
     var UNREACHABLE_HINT =
@@ -431,6 +431,15 @@ window.__ModuleLoader__.load({
         if (content[i] && typeof content[i].text === 'string') text += content[i].text
       }
       return text
+    }
+
+    /**
+     * A short tag that tells one card's SVG ids from another's on the same
+     * page. Taken from the end: an id starts with its project folder, which
+     * every card from one project shares, and ends with its own uuid.
+     */
+    function idStamp(id) {
+      return String(id).slice(-8)
     }
 
     /** The preview id the tool stamped into its own result text. */
@@ -1816,7 +1825,7 @@ window.__ModuleLoader__.load({
         }
 
         var slide = bundle.slide || { width: 1280, height: 720 }
-        var stamp = wallId.slice(0, 8)
+        var stamp = idStamp(wallId)
         function open() {
           if (!openInSidebar({ view: 'themes', id: wallId })) update({ open: true })
         }
@@ -2147,7 +2156,7 @@ window.__ModuleLoader__.load({
         }).length
         var diff = entry.priorId ? diffPages(bundle, prior.bundle) : { comparable: false, marks: {}, changed: [], removed: [] }
         var differs = diff.changed.length > 0 || diff.removed.length > 0
-        var stamp = entry.id.slice(0, 8)
+        var stamp = idStamp(entry.id)
         var layer = ui[0].layer
         return h(
           'div',
@@ -2503,7 +2512,7 @@ window.__ModuleLoader__.load({
         var bundle = got.bundle
         var themes = bundle && Array.isArray(bundle.themes) ? bundle.themes : []
         var slide = (bundle && bundle.slide) || { width: 1280, height: 720 }
-        var stamp = String(props.id).slice(0, 8)
+        var stamp = idStamp(props.id)
         return h(
           'div',
           { ref: ref, className: 'pw-pane', tabIndex: -1, 'data-pptwise-wall': props.id, onKeyDown: closeOnEscape(props.onClose) },

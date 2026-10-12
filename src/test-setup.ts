@@ -15,11 +15,10 @@ if (!runRoot || tmpdir() !== runRoot) {
   )
 }
 
-// pptwiseHome() / previewRoot() copy ~/.pptpress or ~/.pptfast into
-// ~/.pptwise when the new dir is missing. A test that unsets the env and
-// then touches either function would migrate the developer's real home.
-// Every worker gets a private home before any test file runs. Tests that
-// need "env unset" still delete the variable and pass an injectable homedir.
+// Every worker gets a private pptwise home before any test file runs, so a
+// test that reads or writes config, license or packs never reaches the
+// developer's real one. Tests that need "env unset" still delete the
+// variable and pass an injectable homedir.
 if (process.env.PPTWISE_HOME === undefined || process.env.PPTWISE_HOME === "") {
   process.env.PPTWISE_HOME = mkdtempSync(join(runRoot, "pptwise-vitest-home-"))
 }

@@ -14,7 +14,7 @@
 import { execFileSync } from "node:child_process"
 import { access, mkdir, mkdtemp, readFile, readdir, realpath, rm, stat, writeFile } from "node:fs/promises"
 import { homedir, tmpdir } from "node:os"
-import { dirname, join, resolve } from "node:path"
+import { dirname, join } from "node:path"
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
 
@@ -481,37 +481,14 @@ async function routeBundlePages(route: DshRouteRegistration, previewId: string):
   return pages
 }
 
-/** Where the plugin keeps previews. Requires the isolated `PPTWISE_HOME`
- *  `main()` sets, so a missing env cannot fall through to the real home. */
-function previewRootForGate(): string {
-  const home = process.env.PPTWISE_HOME
-  if (home === undefined || home === "") {
-    throw new Error("DSH e2e gate requires PPTWISE_HOME so it never touches the real user home")
-  }
-  return join(resolve(home), "previews")
+/** A DSH tool call made inside a session whose working directory is `cwd`. */
+function sessionAt(cwd: string): unknown {
+  return { agent: { session: { header: { cwd } } } }
 }
 
-/**
- * Delete a preview this gate produced, and refuse anything it did not.
- *
- * Deliberately not a one-line `rm -rf` of whatever the tool reported. The gate
- * exists to run a plugin that might be broken, the value is a string that
- * plugin chose, and the deletion is recursive and forced into the user's home
- * directory. A bug that made `execute` report `outDir: "/Users/leon"` should
- * fail this check, not empty a home directory.
- */
-async function removeGeneratedPreview(outDir: string): Promise<void> {
-  const root = previewRootForGate()
-  const resolved = resolve(outDir)
-  if (dirname(resolved) !== root) {
-    process.stderr.write(`Refusing to delete ${resolved}: not a direct child of ${root}\n`)
-    return
-  }
-  if (!(await access(join(resolved, ".pptwise-preview-owner")).then(() => true, () => false))) {
-    process.stderr.write(`Refusing to delete ${resolved}: no pptwise owner marker\n`)
-    return
-  }
-  await rm(resolved, { recursive: true, force: true }).catch(() => {})
+/** Where the plugin keeps a workspace's previews: `<workspace>/.pptwise/previews`. */
+function previewRootIn(workspace: string): string {
+  return join(workspace, ".pptwise", "previews")
 }
 
 /**
@@ -534,7 +511,7 @@ export async function verifyPreviewToolRun(
   tool: DshToolRegistration,
   route: DshRouteRegistration,
 ): Promise<PreviewToolRun> {
-  const workDir = await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-"))
+  const workDir = await realpath(await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-")))
   const target = join(workDir, "gate-deck.json")
   await writeFile(
     target,
@@ -551,7 +528,7 @@ export async function verifyPreviewToolRun(
 
   let outDir: string | undefined
   try {
-    const value = (await tool.execute?.({ target })) as {
+    const value = (await tool.execute?.({ target }, sessionAt(workDir))) as {
       previewId?: unknown
       outDir?: unknown
       pageCount?: unknown
@@ -563,6 +540,9 @@ export async function verifyPreviewToolRun(
       throw new Error(`${PREVIEW_TOOL_NAME}.execute returned no outDir`)
     }
     outDir = value.outDir
+    if (dirname(outDir) !== previewRootIn(workDir)) {
+      throw new Error(`${PREVIEW_TOOL_NAME}.execute wrote ${outDir}, expected it in ${previewRootIn(workDir)}`)
+    }
     if (value.pageCount !== 2) {
       throw new Error(
         `${PREVIEW_TOOL_NAME}.execute reported ${String(value.pageCount)} pages, expected 2 (one per slide in the gate deck)`,
@@ -619,19 +599,9 @@ export async function verifyPreviewToolRun(
       valueBytes: valueJson.length,
     }
   } finally {
+    // The preview landed in the throwaway workspace's .pptwise/, so this
+    // takes the gate's deck and its preview with it.
     await rm(workDir, { recursive: true, force: true }).catch(() => {})
-    // The gate's own deck, not the user's, and nothing deletes it on its own:
-    // previews live in `~/.pptwise/previews` until somebody removes them, so a
-    // release check that skipped this would leave a rendered deck plus a .pptx
-    // in the user's home every run.
-    //
-    // Proven before it is removed, rather than taken on the tool's word.
-    // `outDir` arrives as a string out of a plugin this script is here to test,
-    // it is handed to a recursive forced delete, and the directory it names now
-    // sits in the user's home rather than in a temp directory. Two proofs: the
-    // path resolves inside the preview root, and it carries the marker the
-    // plugin writes into directories it created.
-    if (outDir !== undefined) await removeGeneratedPreview(outDir)
   }
 }
 
@@ -664,9 +634,10 @@ export async function verifyThemesToolRun(
   route: DshRouteRegistration,
 ): Promise<ThemesToolRun> {
   const args = { title: "pptwise DSH preflight", themes: ["brief", "swiss"] }
+  const workDir = await realpath(await mkdtemp(join(tmpdir(), "pptwise-dsh-gate-themes-")))
   let wallId: string | undefined
   try {
-    const value = (await tool.execute?.(args)) as { wallId?: unknown; themeCount?: unknown }
+    const value = (await tool.execute?.(args, sessionAt(workDir))) as { wallId?: unknown; themeCount?: unknown }
     if (typeof value?.wallId !== "string" || value.wallId === "") {
       throw new Error(`${THEMES_TOOL_NAME}.execute returned no wallId — the card finds the wall by that id`)
     }
@@ -696,7 +667,7 @@ export async function verifyThemesToolRun(
     }
     return { wallId, themeCount: themes.length, pageCount: pages.length, valueBytes: valueJson.length }
   } finally {
-    if (wallId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), wallId))
+    await rm(workDir, { recursive: true, force: true }).catch(() => {})
   }
 }
 
@@ -726,8 +697,7 @@ export async function verifyOutlineToolRun(
     const deckDir = join(workDir, "weekly")
     await writeGateDeckProject(deckDir)
     const args = { target: "weekly" }
-    const session = { agent: { session: { header: { cwd: workDir } } } }
-    const value = (await tool.execute?.(args, session)) as { status?: unknown; outlineId?: unknown; pageCount?: unknown; errors?: unknown }
+    const value = (await tool.execute?.(args, sessionAt(workDir))) as { status?: unknown; outlineId?: unknown; pageCount?: unknown; errors?: unknown }
     if (typeof value?.outlineId === "string") outlineId = value.outlineId
     if (value?.status !== "ok" || outlineId === undefined) {
       throw new Error(`${OUTLINE_TOOL_NAME}.execute reported ${String(value?.status)}: ${JSON.stringify(value?.errors)}`)
@@ -743,7 +713,6 @@ export async function verifyOutlineToolRun(
     return { outlineId, pageCount: pages.length }
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => {})
-    if (outlineId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), outlineId))
   }
 }
 
@@ -805,8 +774,7 @@ export async function verifyBuildToolRun(
     const deckDir = join(workDir, "weekly")
     await writeGateDeckProject(deckDir)
     const args = { target: deckDir }
-    const session = { agent: { session: { header: { cwd: workDir } } } }
-    const value = (await tool.execute?.(args, session)) as {
+    const value = (await tool.execute?.(args, sessionAt(workDir))) as {
       status?: unknown
       pptx?: unknown
       previewId?: unknown
@@ -834,7 +802,6 @@ export async function verifyBuildToolRun(
     return { previewId, pageCount: pages.length, pptxPath: expectedPptx, modelText }
   } finally {
     await rm(workDir, { recursive: true, force: true }).catch(() => {})
-    if (previewId !== undefined) await removeGeneratedPreview(join(previewRootForGate(), previewId))
   }
 }
 
@@ -911,11 +878,7 @@ function parseCliOptions(argv: string[]): CliOptions {
 async function main(): Promise<void> {
   const isolatedHome = await mkdtemp(join(tmpdir(), "pptwise-dsh-e2e-home-"))
   const previousHome = process.env.PPTWISE_HOME
-  const previousPressHome = process.env.PPTPRESS_HOME
-  const previousLegacy = process.env.PPTFAST_HOME
   process.env.PPTWISE_HOME = isolatedHome
-  delete process.env.PPTPRESS_HOME
-  delete process.env.PPTFAST_HOME
   try {
     const options = parseCliOptions(process.argv.slice(2))
     const canonicalWorkspace = await canonicalWorkspacePath(options.workspace)
@@ -945,6 +908,12 @@ async function main(): Promise<void> {
       encoding: "utf8",
     })
     assertPptwiseMountedInDshConfig(dump)
+    // Making a deck writes nothing in the pptwise home: previews, walls and
+    // outlines all went into the throwaway workspaces above.
+    const homeWrites = await readdir(isolatedHome, { recursive: true })
+    if (homeWrites.length > 0) {
+      throw new Error(`The plugin wrote into the pptwise home: ${homeWrites.join(", ")}`)
+    }
 
     process.stdout.write(
       [
@@ -967,10 +936,6 @@ async function main(): Promise<void> {
   } finally {
     if (previousHome === undefined) delete process.env.PPTWISE_HOME
     else process.env.PPTWISE_HOME = previousHome
-    if (previousPressHome === undefined) delete process.env.PPTPRESS_HOME
-    else process.env.PPTPRESS_HOME = previousPressHome
-    if (previousLegacy === undefined) delete process.env.PPTFAST_HOME
-    else process.env.PPTFAST_HOME = previousLegacy
     await rm(isolatedHome, { recursive: true, force: true })
   }
 }

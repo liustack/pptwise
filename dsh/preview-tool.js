@@ -83,9 +83,8 @@
 //    and friends): still fetched or read per run. See `inlineLocalImages`.
 
 import { createHash, randomUUID } from 'node:crypto'
-import { accessSync, constants as fsConstants, cpSync, existsSync, realpathSync, renameSync, rmSync, statSync } from 'node:fs'
+import { accessSync, constants as fsConstants, existsSync, statSync } from 'node:fs'
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
 import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { runChild } from './spawnHidden.js'
@@ -161,18 +160,19 @@ function noticePage(title, heading, message, hint) {
 }
 
 /**
- * The deck is not under this root: a final answer, and usually one the user
- * caused. Usually, not always — the root follows `PPTWISE_HOME`, so a deck
- * written under a different one is alive and out of reach. That is why the
- * hint below prints the root it actually looked in rather than telling the
- * reader what they must have done.
+ * The deck is not where its id says: a final answer, and usually one the user
+ * caused. Usually, not always — the id names the project the preview was
+ * written in, so a project folder that was moved or renamed leaves the deck
+ * alive and out of reach. That is why the hint says where previews are kept
+ * rather than telling the reader what they must have done.
  */
 function missingPage(message) {
   return noticePage(
     'Preview not found',
     'This deck is no longer on disk',
     message,
-    `Rendered decks stay in <code>${escapeHtml(previewRoot())}</code> until you delete them. ` +
+    `Rendered decks stay in the project's <code>${WORKSPACE_DIRNAME}/${PREVIEW_DIR}/</code> folder until you delete them, ` +
+      'and are found again only while the project stays where it was. ' +
       'Run <code>pptwise_preview</code> again to rebuild this one.',
   )
 }
@@ -315,90 +315,119 @@ export const FAILURE_CODES = {
 // nothing, because recall serves files that were rendered once and starts no
 // renderer. What the fence actually bought was the bug.
 //
-// So: one fixed root, keyed by nothing. No version, no install path, no
-// process id, nothing that an upgrade can move. One directory per call, named
-// by the id itself, so a lookup is a path computed from the id rather than a
-// path followed out of a file — and published in a single `rename`, so the
-// route sees a whole preview or none of one. The three notes below (expiry,
-// `PARTIAL_SUFFIX`, `OWNER_MARKER`) are where each of those is argued.
+// So: one root per project, keyed by nothing else. No version, no install
+// path, no process id, nothing that an upgrade can move. It lives in the
+// project's own `.pptwise/` folder, beside the decks the CLI writes there,
+// because a sandboxed agent may not be able to write the home directory at
+// all, and because a deck's previews belong with the deck. One directory per
+// call, named by a fresh uuid, and the id handed to the card carries the
+// project folder with it, so a lookup is a path computed from the id rather
+// than a path followed out of a file, in any session and after any restart —
+// and published in a single `rename`, so the route sees a whole preview or
+// none of one. The three notes below (expiry, `PARTIAL_SUFFIX`,
+// `OWNER_MARKER`) are where each of those is argued.
 
-/** Directory under `$PPTWISE_HOME` that holds every preview this plugin has kept. */
+/** The project's artifact folder, the one the CLI writes (`src/cli/workspace.ts`). */
+const WORKSPACE_DIRNAME = '.pptwise'
+
+/** Directory under a project's `.pptwise/` that holds every preview this plugin has kept. */
 const PREVIEW_DIR = 'previews'
 
 /**
- * Root of everything this module writes.
- *
- * Must match `src/cli/home.ts` `pptwiseHome()`: `PPTWISE_HOME` wins,
- * then `PPTPRESS_HOME`, then `PPTFAST_HOME` (warn once when a legacy name
- * supplies the value), empty string is unset, default `~/.pptwise` with a
- * one-time copy from `~/.pptpress` or else `~/.pptfast` when the new dir is
- * missing. The plugin cannot import the TypeScript helper (this file is
- * dependency-free plain JS with no build step) so the two rules are
- * duplicated, deliberately and identically.
- *
- * Resolved to an absolute path: a relative root would make every path here
- * depend on where the harness happened to be started.
+ * The file that keeps `.pptwise/` out of git from the inside, and its one
+ * rule. Must match `src/cli/workspace.ts` (`SELF_IGNORE_FILENAME`,
+ * `SELF_IGNORE_RULES`): whichever of the two creates the folder first writes it.
  */
-const warnedLegacyHome = new Set()
+const SELF_IGNORE_FILENAME = '.gitignore'
+const SELF_IGNORE_RULES = '*\n'
 
-function nonemptyEnv(env, key) {
-  const value = env[key]
-  return value === undefined || value === '' ? undefined : value
+/** The files that mark a project root, newest name first. Must match `src/cli/config.ts`. */
+const PROJECT_CONFIG_NAMES = ['pptwise.config.json', 'pptpress.config.json', 'pptfast.config.json']
+
+/**
+ * The project a workspace folder belongs to: the nearest directory at or
+ * above it holding a project config, else the folder itself. The CLI anchors
+ * its `.pptwise/` by the same rule (`resolveWorkspaceRoot`,
+ * `src/cli/workspace.ts`), so a build's pages and the preview of them land in
+ * the same folder. Existence is all that is read here: a config the CLI finds
+ * broken still marks the root.
+ */
+function projectAnchor(start) {
+  const origin = resolve(start)
+  let dir = origin
+  for (;;) {
+    if (PROJECT_CONFIG_NAMES.some((name) => existsSync(join(dir, name)))) return dir
+    const parent = dirname(dir)
+    if (parent === dir) return origin
+    dir = parent
+  }
 }
 
-function warnLegacyHome(legacyKey) {
-  if (warnedLegacyHome.has(legacyKey)) return
-  warnedLegacyHome.add(legacyKey)
-  process.stderr.write(`${legacyKey} is deprecated. Use PPTWISE_HOME instead.\n`)
+/** Where a project keeps this plugin's previews: `<project>/.pptwise/previews`. */
+export function previewRoot(anchor) {
+  return join(resolve(anchor), WORKSPACE_DIRNAME, PREVIEW_DIR)
 }
 
-function migrateLegacyHome(legacyDir, nextDir) {
-  if (existsSync(nextDir) || !existsSync(legacyDir)) return
-  // Must match src/cli/home.ts: realpath so a directory symlink is copied
-  // as a real tree. Default cpSync would copy the link itself.
-  const source = realpathSync(legacyDir)
-  const tmpDir = `${nextDir}.migrating`
-  rmSync(tmpDir, { recursive: true, force: true })
+/**
+ * Make the project's `.pptwise/` exist, writing its `.gitignore` when this
+ * call is the one that creates the folder. Never over a file already there.
+ */
+async function ensureWorkspaceDir(anchor) {
+  const dir = join(anchor, WORKSPACE_DIRNAME)
+  if (existsSync(dir)) return
+  await mkdir(dir, { recursive: true })
   try {
-    cpSync(source, tmpDir, { recursive: true })
-    renameSync(tmpDir, nextDir)
+    await writeFile(join(dir, SELF_IGNORE_FILENAME), SELF_IGNORE_RULES, { flag: 'wx' })
   } catch (error) {
-    try {
-      rmSync(tmpDir, { recursive: true, force: true })
-    } catch {
-      // still throw the original copy/rename failure
-    }
-    throw error
+    if (!error || error.code !== 'EEXIST') throw error
   }
 }
 
-function resolvePluginHome(opts = {}) {
-  const env = opts.env ?? process.env
-  const homeFn = opts.homedir ?? homedir
-  const current = nonemptyEnv(env, 'PPTWISE_HOME')
-  if (current !== undefined) return current
-  for (const key of ['PPTPRESS_HOME', 'PPTFAST_HOME']) {
-    const legacy = nonemptyEnv(env, key)
-    if (legacy !== undefined) {
-      warnLegacyHome(key)
-      return legacy
-    }
-  }
-  const base = homeFn()
-  const next = join(base, '.pptwise')
-  for (const dirname of ['.pptpress', '.pptfast']) {
-    const legacy = join(base, dirname)
-    if (existsSync(legacy)) {
-      migrateLegacyHome(legacy, next)
-      break
-    }
-  }
-  return next
+/**
+ * What the card is handed, and all it ever has: the project folder, hex
+ * encoded, then a dash, then the uuid that names the preview's directory.
+ * Hex keeps the id to `[0-9a-f-]`, the class the card reads it out of a
+ * transcript with, and has no dash of its own, so the first dash is the split.
+ */
+function encodePreviewId(anchor, key) {
+  return `${Buffer.from(resolve(anchor), 'utf8').toString('hex')}-${key}`
 }
 
-export function previewRoot(opts = {}) {
-  return join(resolve(resolvePluginHome(opts)), PREVIEW_DIR)
+const PUBLIC_ID_PATTERN = /^((?:[0-9a-f]{2}){1,4096})-(.+)$/
+
+/**
+ * The preview root and directory key an id names, or nothing. The project
+ * part must decode to a normalized absolute path, and the key must pass
+ * `ID_PATTERN`, so the only directories an id can name are
+ * `<some project>/.pptwise/previews/<uuid>`.
+ */
+function decodePreviewId(id) {
+  if (typeof id !== 'string') return undefined
+  const m = PUBLIC_ID_PATTERN.exec(id)
+  if (!m || !ID_PATTERN.test(m[2])) return undefined
+  const anchor = Buffer.from(m[1], 'hex').toString('utf8')
+  if (Buffer.from(anchor, 'utf8').toString('hex') !== m[1]) return undefined
+  if (anchor.includes('\0') || !isAbsolute(anchor) || resolve(anchor) !== anchor) return undefined
+  return { root: previewRoot(anchor), key: m[2] }
 }
+
+/**
+ * The folder a call's previews belong to: the session's working directory.
+ * A call made without one (a host that does not say) falls back to the
+ * folder holding an absolute target, the deck's own project, so a preview
+ * still lands beside the deck. With neither, nothing is written and the call
+ * says why.
+ */
+function workspaceFor(exec, target) {
+  const cwd = sessionCwd(exec)
+  if (cwd !== undefined) return resolve(cwd)
+  if (typeof target === 'string' && target !== '' && isAbsolute(target)) return dirname(resolve(target))
+  throw new Error(NO_WORKSPACE_MESSAGE)
+}
+
+const NO_WORKSPACE_MESSAGE =
+  "pptwise keeps previews in the project's .pptwise/ folder, and this call has no project folder: " +
+  'open the project folder for this session, or pass the absolute path of the deck.'
 
 /**
  * The record, the snapshot, the pages, the viewer page and the .pptx all live
@@ -748,7 +777,7 @@ function partialDir(root, id) {
  * them. `EEXIST` is the right answer, and it is unreachable in practice
  * because the name carries a freshly generated uuid.
  *
- * 0o700 because a deck is the user's own work and this now lives in their home
+ * 0o700 because a deck is the user's own work and this now lives in their project
  * directory rather than in the per-user temp directory it used to. Ignored on
  * Windows, and applied only to directories the call actually creates.
  */
@@ -1733,24 +1762,22 @@ function modelSummary(value) {
  */
 export function createPreviewService(cliPath) {
   /**
-   * The shared preview root, deliberately shared.
+   * Previews are shared by every service that can see the project, on
+   * purpose.
    *
    * Two services on one machine — a reload, a second profile, two DSH windows,
-   * an old plugin version and a new one side by side — now read and write the
-   * same directory, which is the reverse of what this file used to do. It is
-   * also the point: an upgraded plugin has to find the previews the old one
-   * rendered, and "the same user's own decks" is not a boundary worth
-   * defending. Ids are UUIDs, so the only way to name a deck is to already
-   * have its transcript. Concurrent writers never share a file (one directory
-   * per id, records published by rename), and no service deletes anything
-   * another one could be reading.
+   * an old plugin version and a new one side by side — read and write the
+   * same project folder. That is the point: an upgraded plugin has to find
+   * the previews the old one rendered, and "the same user's own decks" is not
+   * a boundary worth defending. The only way to name a deck is to already
+   * have its id out of the transcript. Concurrent writers never share a file
+   * (one directory per id, records published by rename), and no service
+   * deletes anything another one could be reading.
    *
-   * Captured once here rather than re-read per call, so no lookup can relocate
-   * under its own route mid-session. The notice page and `locateDeckDir` still
-   * read the environment when they run, which only matters to a process that
-   * moves its own home while running.
+   * There is no root captured here: each call writes into the project it was
+   * made in (`workspaceFor`), and each lookup reads the project its id names
+   * (`decodePreviewId`).
    */
-  const root = previewRoot()
 
   // THE DISK IS THE SOURCE OF TRUTH. THERE IS NO READ CACHE.
   //
@@ -1786,11 +1813,13 @@ export function createPreviewService(cliPath) {
    * point at them, which is what the tests use it for.
    */
   async function remember(id, entry) {
-    const dir = requirePreviewDir(root, id)
+    const where = decodePreviewId(id)
+    if (!where) throw new Error(`refusing to write a preview record for an unsafe id: ${id}`)
+    const dir = requirePreviewDir(where.root, where.key)
     const record = recordFrom(entry)
     // Awaited, not fired and forgotten: returning before the record lands means
     // handing out an id the disk has never heard of.
-    await writeRecord(root, id, record)
+    await writeRecord(where.root, where.key, record)
     return { ...entryFromRecord(dir, record), bundle: entry.bundle }
   }
 
@@ -1847,10 +1876,12 @@ export function createPreviewService(cliPath) {
    * answer is a function of the disk alone.
    */
   async function recallAnywhere(id) {
-    const dir = previewDir(root, id)
+    const where = decodePreviewId(id)
+    if (!where) return undefined
+    const dir = previewDir(where.root, where.key)
     if (!dir) return undefined
 
-    const record = await readRecord(root, id)
+    const record = await readRecord(where.root, where.key)
     if (!record) {
       // Which of the two absences is this? "No such directory" and "a
       // directory that lost its record" are different facts about the user's
@@ -1979,7 +2010,7 @@ export function createPreviewService(cliPath) {
         }
         let entry
         try {
-          entry = ID_PATTERN.test(id) ? await recallAnywhere(id) : undefined
+          entry = decodePreviewId(id) ? await recallAnywhere(id) : undefined
         } catch (error) {
           if (error instanceof PreviewUnreadable) {
             // 503, and specifically not 404 or 410. The preview may be entirely
@@ -2235,19 +2266,26 @@ export function createPreviewService(cliPath) {
       },
     },
     async execute(args, exec) {
-      const target = String(args.target)
+      const workspace = workspaceFor(exec, String(args.target))
+      // Resolved against the session's folder, where the user and the model
+      // both see the deck, not wherever the host process happened to start.
+      const target = resolve(workspace, String(args.target))
+      const anchor = projectAnchor(workspace)
+      const root = previewRoot(anchor)
       // The id comes first, because it names the directory everything else is
       // written into. That inversion is what removes the half-dead state: there
       // is no moment where rendered pages exist under one name and the record
       // that finds them is being written under another.
-      const previewId = randomUUID()
-      const outDir = requirePreviewDir(root, previewId)
-      const stageDir = partialDir(root, previewId)
+      const key = randomUUID()
+      const previewId = encodePreviewId(anchor, key)
+      const outDir = requirePreviewDir(root, key)
+      const stageDir = partialDir(root, key)
       let rendered
       try {
         // Inside the try, not before it. `createOwnedDir` can fail after
         // creating the directory (see its own note), and a failure that lands
         // outside the cleanup is a directory nothing will ever collect.
+        await ensureWorkspaceDir(anchor)
         await createOwnedDir(root, stageDir)
         rendered = await render(stageDir, target, exec)
         // The publish, and the only moment this id means anything. A render
@@ -2264,7 +2302,7 @@ export function createPreviewService(cliPath) {
       } catch (error) {
         // Only ever the staging directory, and only when this call created it:
         // a failing target must not park hundreds of megabytes of half-rendered
-        // deck in the user's home, and must not touch anything published.
+        // deck in the project, and must not touch anything published.
         await discardOwnedDir(stageDir)
         throw error
       }
@@ -2291,12 +2329,16 @@ export function createPreviewService(cliPath) {
    * the staging directory it is handed. A failure removes that directory and
    * publishes nothing.
    */
-  async function publishNew(fill) {
-    const id = randomUUID()
-    const outDir = requirePreviewDir(root, id)
-    const stageDir = partialDir(root, id)
+  async function publishNew(workspace, fill) {
+    const anchor = projectAnchor(workspace)
+    const root = previewRoot(anchor)
+    const key = randomUUID()
+    const id = encodePreviewId(anchor, key)
+    const outDir = requirePreviewDir(root, key)
+    const stageDir = partialDir(root, key)
     let filled
     try {
+      await ensureWorkspaceDir(anchor)
       await createOwnedDir(root, stageDir)
       filled = await fill(stageDir)
       await rename(stageDir, outDir)
@@ -2400,7 +2442,9 @@ export function createPreviewService(cliPath) {
     async execute(args, exec) {
       const title = String(args.title)
       const named = Array.isArray(args.themes) && args.themes.length > 0 ? args.themes.map(String).join(',') : undefined
-      const { id, filled: manifest } = await publishNew(async (stageDir) => {
+      // A wall has no deck to fall back on, so it needs the session's folder.
+      const workspace = workspaceFor(exec, undefined)
+      const { id, filled: manifest } = await publishNew(workspace, async (stageDir) => {
         const cliArgs = ['theme', 'try', ...(named ? [named] : []), '--title', title, '--json', '-o', stageDir]
         if (typeof args.subtitle === 'string' && args.subtitle !== '') cliArgs.push('--subtitle', args.subtitle)
         if (typeof args.lang === 'string' && args.lang !== '') cliArgs.push('--lang', args.lang)
@@ -2410,7 +2454,7 @@ export function createPreviewService(cliPath) {
           await writeFile(pagePath, JSON.stringify(args.page))
           cliArgs.push('--page', pagePath)
         }
-        const wall = await runCliJson(cliPath, cliArgs, { signal: exec?.signal, cwd: sessionCwd(exec) })
+        const wall = await runCliJson(cliPath, cliArgs, { signal: exec?.signal, cwd: workspace })
         if (!wall || !Array.isArray(wall.themes)) throw new Error('pptwise theme try printed a report this plugin cannot read')
         await writeRecordInto(stageDir, recordFrom({ kind: 'themes', target: title, pptxError: 'a theme wall has no deck to download' }))
         return wall
@@ -2472,9 +2516,12 @@ export function createPreviewService(cliPath) {
     },
     async execute(args, exec) {
       const target = String(args.target)
+      // The CLI runs in the same folder the preview goes to, so the build's
+      // own `.pptwise/` and the card's copy sit in one project.
+      const workspace = workspaceFor(exec, target)
       const report = await runCliJson(cliPath, ['build', target, '--json'], {
         signal: exec?.signal,
-        cwd: sessionCwd(exec),
+        cwd: workspace,
         okCodes: [0, 1],
       })
       if (!report || (report.status !== 'ok' && report.status !== 'needs_revision') || !Array.isArray(report.errors)) {
@@ -2485,7 +2532,7 @@ export function createPreviewService(cliPath) {
       if (report.preview) {
         // The drawn pages are copied, not pointed at: the next build rewrites
         // the workspace folder, and this card has to keep showing this build.
-        const { id } = await publishNew(async (stageDir) => {
+        const { id } = await publishNew(workspace, async (stageDir) => {
           const manifestPath = String(report.preview.manifest)
           const manifest = parseManifest(await readFile(manifestPath, 'utf8'), manifestPath)
           const fromDir = dirname(manifestPath)
@@ -2583,12 +2630,12 @@ export function createPreviewService(cliPath) {
     },
     async execute(args, exec) {
       const target = String(args.target)
-      const cwd = sessionCwd(exec)
-      const absolute = resolve(cwd ?? process.cwd(), target)
+      const workspace = workspaceFor(exec, target)
+      const absolute = resolve(workspace, target)
       const specPath = (await directoryState(absolute)) === 'directory' ? join(absolute, 'deck.spec.json') : absolute
       const report = await runCliJson(cliPath, ['spec', 'validate', specPath, '--json'], {
         signal: exec?.signal,
-        cwd,
+        cwd: workspace,
         okCodes: [0, 1],
       })
       if (!report || typeof report.ok !== 'boolean') throw new Error('pptwise spec validate printed a report this plugin cannot read')
@@ -2605,7 +2652,7 @@ export function createPreviewService(cliPath) {
         heading: String(page.heading),
         ...(typeof page.summary === 'string' ? { summary: page.summary } : {}),
       }))
-      const { id } = await publishNew(async (stageDir) => {
+      const { id } = await publishNew(workspace, async (stageDir) => {
         await writeFile(join(stageDir, OUTLINE_FILE), JSON.stringify(report))
         await writeRecordInto(stageDir, recordFrom({ kind: 'outline', target, pptxError: 'an outline has no deck to download' }))
       })
@@ -2626,7 +2673,7 @@ export function createPreviewService(cliPath) {
   // No `recall` any more, and its absence is the point: there is no second,
   // faster way to ask this service about an id. Everything goes through
   // `recallAnywhere`, which goes to disk.
-  return { tool, themesTool, buildTool, outlineTool, registerRoute, remember, recallAnywhere, root }
+  return { tool, themesTool, buildTool, outlineTool, registerRoute, remember, recallAnywhere }
 }
 
 /**
@@ -2683,9 +2730,12 @@ export const __testing = {
   SNAPSHOT_FILE,
   PARTIAL_SUFFIX,
   OWNER_MARKER,
-  resetLegacyHomeWarnings() {
-    warnedLegacyHome.clear()
-  },
+  WORKSPACE_DIRNAME,
+  SELF_IGNORE_FILENAME,
+  projectAnchor,
+  encodePreviewId,
+  decodePreviewId,
+  workspaceFor,
   PreviewExpired,
   PreviewUnreadable,
   PreviewDamaged,

@@ -96,9 +96,8 @@ export interface WorkspaceLocation {
  * `<deck target> → <directory name>`: the deck's own place in the project,
  * so two decks never share a workspace. A deck project directory contributes
  * its path from the anchor (`decks/q3-review` → `decks-q3-review`, a deck at
- * the anchor's top level keeps its own name), a single IR file the same
- * without its extension, and a bare deck name resolves to one or the other
- * before it ever gets here (`resolveDeckTarget`, `./deck-dir.ts`).
+ * the anchor's top level keeps its own name), and a single IR file the same
+ * without its extension.
  *
  * Keyed by the directory name alone, two decks both called `zh/` under
  * different parents shared `.pptwise/zh/`, and one deck's pinned and
@@ -107,6 +106,10 @@ export interface WorkspaceLocation {
  * outside the anchor, whose path from it climbs out, take a short hash of
  * that path after the name, so they stay apart too.
  *
+ * Two names belong to pptwise itself (`previews/` for the DSH plugin's
+ * cards, `theme-try/` for `pptwise theme try`), so a deck that would land on
+ * one of them gets `-deck` after its name instead.
+ *
  * `slugify` strips every character that could mean anything to a path (it
  * keeps `[a-z0-9-]` and nothing else), which makes an escape impossible by
  * construction; {@link assertSafeFileSegment} runs anyway, as the same
@@ -114,6 +117,9 @@ export interface WorkspaceLocation {
  * into a write path — a future change to either function then fails loudly
  * here instead of quietly writing outside the workspace.
  */
+/** Folders under `.pptwise/` that pptwise writes for itself, not for one deck. */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set(["previews", "theme-try"])
+
 export function deckSlug(target: string, isDir: boolean, anchor?: string): string {
   const withoutExt = (p: string) => (isDir ? p : p.slice(0, p.length - extname(p).length))
   const name = withoutExt(basename(target))
@@ -129,7 +135,8 @@ export function deckSlug(target: string, isDir: boolean, anchor?: string): strin
   // A name slugify can only carry part of keeps the rest as a hash of the whole path.
   if (hashed === undefined && /[^A-Za-z0-9 ._-]/u.test(words.replace(/-/gu, ""))) hashed = key
   const base = slugify(hashed === undefined ? words : name, "deck")
-  const slug = hashed === undefined ? base : `${base}-${createHash("sha1").update(hashed.split(sep).join("/")).digest("hex").slice(0, 6)}`
+  const hashedSlug = hashed === undefined ? base : `${base}-${createHash("sha1").update(hashed.split(sep).join("/")).digest("hex").slice(0, 6)}`
+  const slug = anchor !== undefined && isAbsolute(target) && RESERVED_SLUGS.has(hashedSlug) ? `${hashedSlug}-deck` : hashedSlug
   assertSafeFileSegment(slug, "deck slug")
   return slug
 }

@@ -74,15 +74,18 @@ interface Service {
   buildTool: Tool<{ target: string }, BuildValue>
   outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
+  /** The test's own note of where the workspace keeps previews: `previewRoot(workspace)`. */
   root: string
 }
 
 interface HostModule {
   createPreviewService: (cliPath: string) => Service
+  previewRoot: (anchor: string) => string
   PREVIEW_ROUTE: string
   __testing: {
     sessionCwd: (exec: unknown) => string | undefined
     writeRecord: (root: string, id: string, record: Record<string, unknown>) => Promise<void>
+    encodePreviewId: (anchor: string, key: string) => string
   }
 }
 
@@ -175,7 +178,12 @@ if (argv[0] === "theme" && argv[1] === "try") {
 }
 `
 
-/** A fake CLI, a private preview root, a workspace and a service on top. */
+/** The directory a public id names inside its project's preview root: everything after the first dash. */
+function keyOf(id: string): string {
+  return id.slice(id.indexOf("-") + 1)
+}
+
+/** A fake CLI, a workspace with its preview root, and a service on top. */
 async function setup(tag: string): Promise<{ svc: Service; cliPath: string; workspace: string; route: string; handler: RouteRegistration["handler"] }> {
   const base = await mkdtemp(join(tmpdir(), `pptwise-dsh-tools-${tag}-`))
   const cliPath = join(base, "cli.mjs")
@@ -183,9 +191,8 @@ async function setup(tag: string): Promise<{ svc: Service; cliPath: string; work
   await writeFile(join(base, "cli.log"), "")
   const workspace = join(base, "workspace")
   await mkdir(workspace)
-  process.env.PPTWISE_HOME = join(base, "home")
-  const { createPreviewService, PREVIEW_ROUTE } = await host()
-  const svc = createPreviewService(cliPath)
+  const { createPreviewService, previewRoot, PREVIEW_ROUTE } = await host()
+  const svc = Object.assign(createPreviewService(cliPath), { root: previewRoot(workspace) })
   let captured: RouteRegistration | undefined
   svc.registerRoute({ webServer: { register: (r) => { captured = r } } })
   if (!captured) throw new Error("registerRoute registered nothing")
@@ -265,9 +272,11 @@ describe("pptwise_themes", () => {
       "--subtitle", "Board", "--lang", "en", "--page", join(stage, "sample-page.json"),
     ])
     // Published under the wall's own id, with the staging name gone.
-    expect(stage).toBe(join(svc.root, `${value.wallId}.partial`))
-    expect(await readdir(svc.root)).toEqual([value.wallId])
-    expect(JSON.parse(await readFile(join(svc.root, value.wallId, "sample-page.json"), "utf8"))).toEqual(page)
+    expect(stage).toBe(join(svc.root, `${keyOf(value.wallId)}.partial`))
+    expect(await readdir(svc.root)).toEqual([keyOf(value.wallId)])
+    expect(JSON.parse(await readFile(join(svc.root, keyOf(value.wallId), "sample-page.json"), "utf8"))).toEqual(page)
+    // The wall lives in the workspace's .pptwise/, which keeps itself out of git.
+    expect(await readFile(join(workspace, ".pptwise", ".gitignore"), "utf8")).toBe("*\n")
   })
 
   it("passes only the themes asked for", async () => {
@@ -331,6 +340,16 @@ describe("pptwise_themes", () => {
     const { svc, workspace } = await setup("themes-fail")
     await expect(svc.themesTool.execute({ title: "FAIL" }, inSession(workspace))).rejects.toThrow('unknown theme "nope"')
     expect(await readdir(svc.root)).toEqual([])
+  })
+
+  it("draws nothing, and says why, in a call that has no workspace", async () => {
+    // A theme wall belongs to no deck, so there is no target to fall back on:
+    // without the session's working directory there is nowhere to put it.
+    const { svc, cliPath } = await setup("themes-no-session")
+    await expect(svc.themesTool.execute({ title: "Q3" }, { signal: new AbortController().signal })).rejects.toThrow(
+      /no project folder/,
+    )
+    expect(await calls(cliPath)).toEqual([])
   })
 })
 
@@ -403,7 +422,7 @@ describe("pptwise_build", () => {
     expect(download.status).toBe(410)
     expect(JSON.parse(download.body.toString("utf8"))).toMatchObject({ error: "this build needs revision, so it wrote no .pptx" })
     // Nothing in the preview root but the one published build.
-    expect(await readdir(svc.root)).toEqual([value.previewId])
+    expect(await readdir(svc.root)).toEqual([keyOf(value.previewId!)])
   })
 
   it("publishes nothing when the build could not draw a page", async () => {
@@ -508,14 +527,14 @@ describe("pptwise_outline", () => {
 
 describe("records from the newer tools", () => {
   it("refuses a record kind this version does not know, as damage rather than an unknown id", async () => {
-    const { svc, route, handler } = await setup("record-kind")
+    const { svc, route, handler, workspace } = await setup("record-kind")
     const { __testing } = await host()
     const id = "00000000-0000-4000-8000-000000000123"
     await mkdir(join(svc.root, id), { recursive: true })
     await writeFile(join(svc.root, id, "manifest.json"), JSON.stringify({ pages: [] }))
     await __testing.writeRecord(svc.root, id, { kind: "slideshow", target: "x", created: Date.now() })
 
-    const answer = await request(handler, `${route}/${id}`)
+    const answer = await request(handler, `${route}/${__testing.encodePreviewId(workspace, id)}`)
     expect(answer.status).toBe(410)
     expect(JSON.parse(answer.body.toString("utf8"))).toMatchObject({ code: "preview_damaged" })
   })

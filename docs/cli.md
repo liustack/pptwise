@@ -361,3 +361,5 @@ pptwise self-update
 Omit a secret value from `config set` to enter it through a hidden prompt. `doctor` exits with code 1 only on a hard failure. Optional `sharp` and LibreOffice capabilities are reported separately.
 
 The first command that creates `.pptwise/` keeps it out of git two ways: it writes `.pptwise/.gitignore` holding `*`, and adds `.pptwise/` to the repository's local exclude file. Either alone is enough, so a `.git` that cannot be written (some agent sandboxes) only costs a note. `--no-git-ignore` skips both. Your shared `.gitignore` is never touched.
+
+The DSH plugin keeps its cards in the same folder: deck previews, theme walls and outlines go to `.pptwise/previews/<id>/` of the session's project, and stay there until you delete them. A card finds its preview again from any later session as long as the project has not moved. A call with no working directory puts the preview beside an absolute deck path, and refuses when it has neither. Two folder names belong to pptwise itself, `previews/` and `theme-try/`, so a deck that would land on one gets `-deck` after its name.

@@ -22,18 +22,13 @@ import * as plugin from "../dsh/index.js"
 
 const ROOT = process.cwd()
 
-// Capture first. `plugin.apply()` always `createPreviewService()` →
-// `previewRoot()` with no opts, which copies ~/.pptpress or ~/.pptfast into
-// ~/.pptwise when the new dir is missing. File-level isolation is the default
-// so skill-registration tests cannot see the real homedir. Per-test scratch
-// homes below still override this.
+// The plugin writes nothing under the pptwise home. It is pointed at an empty
+// scratch folder for the whole file anyway, so a regression lands there
+// rather than in the real one, and the test that checks it has a folder to
+// look in.
 const ORIGINAL_HOME = process.env.PPTWISE_HOME
-const ORIGINAL_PRESS_HOME = process.env.PPTPRESS_HOME
-const ORIGINAL_LEGACY_HOME = process.env.PPTFAST_HOME
 const FILE_HOME = mkdtempSync(join(tmpdir(), "pptwise-dsh-plugin-home-"))
 process.env.PPTWISE_HOME = FILE_HOME
-delete process.env.PPTPRESS_HOME
-delete process.env.PPTFAST_HOME
 
 /** DSH rc.6's skill-name grammar (dsh-skill/lib/index.js SKILL_NAME). */
 const DSH_SKILL_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -403,13 +398,23 @@ interface PreviewService {
   remember: (id: string, entry: Partial<PreviewEntry>) => Promise<PreviewEntry>
   recall: (id: string) => PreviewEntry | undefined
   recallAnywhere: (id: string) => Promise<PreviewEntry | undefined>
+}
+
+/**
+ * A service as these tests hold it: the project folder its calls run in
+ * (handed to `execute` as the session's working directory) and the preview
+ * root under that folder. Both are the test's bookkeeping, not the plugin's:
+ * the service itself keeps no root.
+ */
+interface TestService extends PreviewService {
+  project: string
   root: string
 }
 
 interface PreviewModule {
   createPreviewService: (cliPath: string) => PreviewService
   definePreviewTool: (cliPath: string) => PreviewService["tool"]
-  previewRoot: (opts?: { homedir?: () => string; env?: NodeJS.ProcessEnv }) => string
+  previewRoot: (anchor: string) => string
   PREVIEW_ROUTE: string
   TOOL_NAME: string
   BUILD_TOOL_NAME: string
@@ -464,7 +469,12 @@ interface PreviewModule {
     SNAPSHOT_FILE: string
     PARTIAL_SUFFIX: string
     OWNER_MARKER: string
-    resetLegacyHomeWarnings: () => void
+    WORKSPACE_DIRNAME: string
+    SELF_IGNORE_FILENAME: string
+    projectAnchor: (start: string) => string
+    encodePreviewId: (anchor: string, key: string) => string
+    decodePreviewId: (id: unknown) => { root: string; key: string } | undefined
+    workspaceFor: (exec: unknown, target: string | undefined) => string
     PreviewExpired: new (m?: string) => Error
     PreviewUnreadable: new (m?: string) => Error
     PreviewDamaged: new (m?: string) => Error
@@ -746,25 +756,38 @@ describe("preview payload channel", () => {
   })
 })
 
-/** A uuid-shaped id, since the route only accepts that shape. */
+/** A uuid-shaped directory key, since the route only accepts that shape. */
 function previewId(tag: string): string {
   return `00000000-0000-4000-8000-${tag.padStart(12, "0")}`
 }
 
 /**
- * Previews now live under `$PPTWISE_HOME/previews`, so every test below gets
- * its own `PPTWISE_HOME` and nothing here can reach the directory a real
- * installed plugin uses.
+ * The id the card is handed for `key` under `svc`'s project: the project
+ * folder in hex, a dash, then the key. Spelled out here rather than borrowed
+ * from the module so a change to the encoding has to change this too.
+ */
+function idIn(svc: TestService, key: string): string {
+  return `${Buffer.from(svc.project, "utf8").toString("hex")}-${key}`
+}
+
+/** The directory key inside a public id: everything after the first dash. */
+function keyOf(id: string): string {
+  return id.slice(id.indexOf("-") + 1)
+}
+
+/**
+ * Previews live in the project's `.pptwise/previews`, so every test below
+ * gets its own scratch project and nothing here can reach a real one.
  *
- * A home per test, not one per file: the root is shared by every service that
- * can see it, which is the whole point of the fix, so tests that must share a
- * root — a reload, an upgrade — say so by passing the same home, and tests that
- * must not, cannot.
+ * A project per test, not one per file: every service that runs in a project
+ * sees its previews, which is the whole point, so tests that must share
+ * previews (a reload, an upgrade) say so by passing the same project, and
+ * tests that must not, cannot.
  */
 const scratchDirs = new Set<string>()
 
-/** The CLI path and home each service was built with, so a reload can reuse them. */
-const builtWith = new WeakMap<PreviewService, { cliPath: string; home: string }>()
+/** The CLI path and project each service was built with, so a reload can reuse them. */
+const builtWith = new WeakMap<PreviewService, { cliPath: string; project: string }>()
 
 /** `mkdtemp`, with the result queued for removal when the file is done. */
 async function scratchTmp(prefix: string): Promise<string> {
@@ -776,38 +799,46 @@ async function scratchTmp(prefix: string): Promise<string> {
   return dir
 }
 
-/** A private `$PPTWISE_HOME` for one test. */
-async function scratchHome(tag: string): Promise<string> {
-  return scratchTmp(`pptwise-home-${tag}-`)
+/** A private project folder for one test. */
+async function scratchProject(tag: string): Promise<string> {
+  return scratchTmp(`pptwise-project-${tag}-`)
 }
 
-/** The preview root inside a fresh scratch home, with the env pointed at it. */
+/** The preview root inside a fresh scratch project. */
 async function scratchRoot(tag: string): Promise<string> {
   const { previewRoot } = await loadPreviewTool()
-  process.env.PPTWISE_HOME = await scratchHome(tag)
-  return previewRoot()
+  return previewRoot(await scratchProject(tag))
+}
+
+/** What DSH hands a tool call made in a session opened at `cwd`. */
+function sessionAt(cwd: string): unknown {
+  return { agent: { session: { header: { cwd } } } }
 }
 
 function uniqueCli(tag: string): string {
   return `/pptwise-test/${tag}/${Math.random().toString(36).slice(2)}/cli.js`
 }
 
+/**
+ * A service whose calls all run in one session opened at a scratch project:
+ * `execute` without an `exec` of its own gets that session.
+ */
 async function makeService(
   tag: string,
-  options: { cliPath?: string; home?: string } = {},
-): Promise<PreviewService> {
+  options: { cliPath?: string; project?: string } = {},
+): Promise<TestService> {
   const cliPath = options.cliPath ?? uniqueCli(tag)
-  const home = options.home ?? (await scratchHome(tag))
-  // Set before construction: the service reads its root once, at construction.
-  process.env.PPTWISE_HOME = home
-  const { createPreviewService } = await loadPreviewTool()
+  const project = options.project ?? (await scratchProject(tag))
+  const { createPreviewService, previewRoot } = await loadPreviewTool()
   const svc = createPreviewService(cliPath)
-  builtWith.set(svc, { cliPath, home })
-  scratchDirs.add(svc.root)
-  return svc
+  const execute = svc.tool.execute
+  svc.tool.execute = (args, exec) => execute(args, exec ?? sessionAt(project))
+  const held = Object.assign(svc, { project, root: previewRoot(project) })
+  builtWith.set(held, { cliPath, project })
+  return held
 }
 
-function originOf(svc: PreviewService): { cliPath: string; home: string } {
+function originOf(svc: PreviewService): { cliPath: string; project: string } {
   const origin = builtWith.get(svc)
   if (!origin) throw new Error("service was not built through makeService")
   return origin
@@ -817,18 +848,18 @@ function originOf(svc: PreviewService): { cliPath: string; home: string } {
  * A second service reading the same previews as an existing one — the shape a
  * plugin reload takes, where the process is new but the installed CLI is not.
  */
-async function reopen(svc: PreviewService): Promise<PreviewService> {
+async function reopen(svc: PreviewService): Promise<TestService> {
   return makeService("reload", originOf(svc))
 }
 
 /**
- * The same, after a version upgrade: same machine, same user, same home, and a
- * CLI path that has moved because npm puts the version number in it.
+ * The same, after a version upgrade: same machine, same project, and a CLI
+ * path that has moved because npm puts the version number in it.
  */
-async function upgrade(svc: PreviewService, version = "0.99.0"): Promise<PreviewService> {
-  const { home } = originOf(svc)
+async function upgrade(svc: PreviewService, version = "0.99.0"): Promise<TestService> {
+  const { project } = originOf(svc)
   return makeService("upgrade", {
-    home,
+    project,
     cliPath: `/pptwise-test/.pnpm/@liustack+pptwise@${version}/node_modules/@liustack/pptwise/dist/cli.js`,
   })
 }
@@ -859,10 +890,6 @@ afterAll(async () => {
   const { rm } = await import("node:fs/promises")
   if (ORIGINAL_HOME === undefined) delete process.env.PPTWISE_HOME
   else process.env.PPTWISE_HOME = ORIGINAL_HOME
-  if (ORIGINAL_PRESS_HOME === undefined) delete process.env.PPTPRESS_HOME
-  else process.env.PPTPRESS_HOME = ORIGINAL_PRESS_HOME
-  if (ORIGINAL_LEGACY_HOME === undefined) delete process.env.PPTFAST_HOME
-  else process.env.PPTFAST_HOME = ORIGINAL_LEGACY_HOME
   rmSync(FILE_HOME, { recursive: true, force: true })
   await Promise.all([...scratchDirs].map((d) => rm(d, { recursive: true, force: true }).catch(() => {})))
 })
@@ -885,7 +912,7 @@ describe("preview recall across restarts", () => {
     const dir = join(svc.root, id)
 
     await seedPreview(svc.root, id)
-    const entry = await svc.remember(id, {
+    const entry = await svc.remember(idIn(svc, id), {
       bundle: { title: "d", pages: [] },
       target: "deck.json",
       pptxPath: join(dir, "d.pptx"),
@@ -894,7 +921,7 @@ describe("preview recall across restarts", () => {
     // Read back through the only lookup this service has, which goes to disk.
     // There is deliberately no in-memory shortcut to ask instead — see the
     // note on the source of truth in preview-tool.js.
-    expect(await svc.recallAnywhere(id)).toMatchObject({ target: "deck.json", outDir: dir })
+    expect(await svc.recallAnywhere(idIn(svc, id))).toMatchObject({ target: "deck.json", outDir: dir })
 
     // Awaited by `remember`, not fired and forgotten: the tool must not be
     // able to return an id the disk has never heard of.
@@ -934,13 +961,16 @@ describe("preview recall across restarts", () => {
     const after = await upgrade(before)
     expect(originOf(after).cliPath).not.toBe(originOf(before).cliPath)
     expect(after.root).toBe(before.root)
-    expect(await after.recallAnywhere(id)).toMatchObject({ target: "deck.json", outDir: join(before.root, id) })
+    expect(await after.recallAnywhere(idIn(before, id))).toMatchObject({
+      target: "deck.json",
+      outDir: join(before.root, id),
+    })
     expect(await __testing.readRecord(after.root, id)).toMatchObject({ target: "deck.json" })
 
     // ...and the same after a second upgrade, because nothing accumulates a
     // per-version key anywhere along the way.
     const later = await upgrade(after, "1.4.0")
-    expect(await later.recallAnywhere(id)).toBeDefined()
+    expect(await later.recallAnywhere(idIn(before, id))).toBeDefined()
   })
 
   it("resolves an id rendered by one installed CLI through a service built on the next one", async () => {
@@ -959,7 +989,7 @@ describe("preview recall across restarts", () => {
     const { dirname: dirOf, join } = await import("node:path")
     const { PREVIEW_ROUTE } = await loadPreviewTool()
 
-    const home = await scratchHome("upgrade-e2e")
+    const project = await scratchProject("upgrade-e2e")
     const installs = await scratchTmp("pptwise-installs-")
     /** A CLI installed the way npm installs one: under a versioned directory. */
     const installAt = async (version: string, source: string) => {
@@ -972,12 +1002,12 @@ describe("preview recall across restarts", () => {
     }
 
     const template = await fakeCli()
-    const before = await makeService("upgrade-e2e-old", { home, cliPath: await installAt("0.19.2", template) })
+    const before = await makeService("upgrade-e2e-old", { project, cliPath: await installAt("0.19.2", template) })
     const { deck } = await deckFixture("LOGO-V1")
     const value = await before.tool.execute({ target: deck })
     expect((await request(routeHandlerOf(before), `${PREVIEW_ROUTE}/${value.previewId}`)).status).toBe(200)
 
-    const after = await makeService("upgrade-e2e-new", { home, cliPath: await installAt("0.99.0", template) })
+    const after = await makeService("upgrade-e2e-new", { project, cliPath: await installAt("0.99.0", template) })
     expect(originOf(after).cliPath).not.toBe(originOf(before).cliPath)
     expect(after.root).toBe(before.root)
 
@@ -994,64 +1024,44 @@ describe("preview recall across restarts", () => {
 
   it("puts nothing version-shaped or install-shaped in the path it writes to", async () => {
     // The property behind the test above, checked directly so it cannot be
-    // satisfied by luck. The root is a function of the user's home alone.
-    const { previewRoot, createPreviewService, __testing } = await loadPreviewTool()
+    // satisfied by luck. The root is a function of the project folder alone.
+    const { previewRoot, __testing } = await loadPreviewTool()
     const { join } = await import("node:path")
-
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-default-home-")
-    try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      // Follows the CLI's own `pptwiseHome()` convention (src/cli/home.ts),
-      // rather than inventing a second home for the plugin. Injectable
-      // homedir so this never copies a real ~/.pptfast.
-      expect(previewRoot({ homedir: () => fakeHome })).toBe(join(fakeHome, ".pptwise", __testing.PREVIEW_DIR))
-      process.env.PPTWISE_HOME = fakeHome
-      const a = createPreviewService("/opt/.pnpm/@liustack+pptwise@0.19.2/node_modules/x/dist/cli.js")
-      const b = createPreviewService("/somewhere/else/@liustack+pptwise@9.9.9/dist/cli.js")
-      expect(a.root).toBe(b.root)
-      expect(a.root).toBe(previewRoot())
-      expect(a.root).not.toMatch(/\d+\.\d+\.\d+/)
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
-    }
+    const project = await scratchProject("version-free")
+    expect(previewRoot(project)).toBe(join(project, __testing.WORKSPACE_DIRNAME, __testing.PREVIEW_DIR))
+    expect(previewRoot(project)).toBe(join(project, ".pptwise", "previews"))
+    const a = await makeService("version-a", {
+      project,
+      cliPath: "/opt/.pnpm/@liustack+pptwise@0.19.2/node_modules/x/dist/cli.js",
+    })
+    const b = await makeService("version-b", { project, cliPath: "/somewhere/else/@liustack+pptwise@9.9.9/dist/cli.js" })
+    const { deck: deckA } = await deckFixture("A")
+    const cli = await fakeCli()
+    const real = await makeService("version-real", { project, cliPath: cli })
+    const value = await real.tool.execute({ target: deckA })
+    expect(value.outDir).toBe(join(previewRoot(project), keyOf(value.previewId)))
+    expect(value.outDir).not.toMatch(/\d+\.\d+\.\d+/)
+    expect(await a.recallAnywhere(value.previewId)).toBeDefined()
+    expect(await b.recallAnywhere(value.previewId)).toBeDefined()
   })
 
-  it("stays out of the system temp directory, which is swept on a schedule nobody controls", async () => {
-    // The second half of the original defect, and the one that had nothing to
-    // do with upgrades: the decks themselves were `mkdtemp` directories in
-    // `$TMPDIR`, so macOS expired every card after a few days regardless.
-    const { previewRoot } = await loadPreviewTool()
+  it("keeps previews in the session's project, out of the system temp directory and the home folder", async () => {
+    // The temp directory is swept on a schedule nobody controls, which is how
+    // every card in the wild once went dead after a few days. The home folder
+    // is out too: making a deck writes nothing there, so a home the session
+    // cannot write to (a sandbox) is no obstacle.
+    const { readdir } = await import("node:fs/promises")
     const { tmpdir } = await import("node:os")
-    const { resolve } = await import("node:path")
+    const { join, resolve } = await import("node:path")
+    const { previewRoot } = await loadPreviewTool()
+    expect(previewRoot("/pptwise-not-a-real-project").startsWith(resolve(tmpdir()))).toBe(false)
 
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      // A path that is not under $TMPDIR and does not exist on disk, so the
-      // default-dir migration never copies a real ~/.pptfast.
-      expect(previewRoot({ homedir: () => "/pptwise-not-a-real-home" }).startsWith(resolve(tmpdir()))).toBe(false)
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
-    }
+    const svc = await makeService("no-home", { cliPath: await fakeCli() })
+    const { deck } = await deckFixture("HOME")
+    const home = await readdir(FILE_HOME, { recursive: true })
+    const value = await svc.tool.execute({ target: deck })
+    expect(value.outDir.startsWith(join(svc.project, ".pptwise", "previews"))).toBe(true)
+    expect(await readdir(FILE_HOME, { recursive: true })).toEqual(home)
   })
 
   it("does not lose a record to a preview that finished at the same moment", async () => {
@@ -1064,7 +1074,12 @@ describe("preview recall across restarts", () => {
     const ids = ["c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"].map(previewId)
     await Promise.all(
       ids.map((id) =>
-        svc.remember(id, { bundle: { pages: [] }, target: `${id}.json`, outDir: "/tmp/out", snapshot: "/s.json" }),
+        svc.remember(idIn(svc, id), {
+          bundle: { pages: [] },
+          target: `${id}.json`,
+          outDir: "/tmp/out",
+          snapshot: "/s.json",
+        }),
       ),
     )
     const records = await Promise.all(ids.map((id) => __testing.readRecord(svc.root, id)))
@@ -1214,15 +1229,15 @@ describe("preview recall across restarts", () => {
     // A second service on the same CLI path shares the previews but not the
     // memory, which is exactly what a plugin reload looks like.
     const reloaded = await reopen(svc)
-    await expect(reloaded.recallAnywhere(id)).rejects.toBeInstanceOf(__testing.PreviewExpired)
+    await expect(reloaded.recallAnywhere(idIn(svc, id))).rejects.toBeInstanceOf(__testing.PreviewExpired)
     // ...and it names the file, because "your deck is gone" with no noun in it
     // leaves the user nowhere to look.
-    await expect(reloaded.recallAnywhere(id)).rejects.toThrow(
+    await expect(reloaded.recallAnywhere(idIn(svc, id))).rejects.toThrow(
       new RegExp(`${__testing.MANIFEST_FILE}.*is missing`),
     )
     // An id nobody ever handed out is a different answer: not found, not
     // half-there. That difference is what the route turns into 404 vs 410.
-    expect(await reloaded.recallAnywhere(previewId("d2"))).toBeUndefined()
+    expect(await reloaded.recallAnywhere(idIn(svc, previewId("d2")))).toBeUndefined()
   })
 
   it("recalls a preview without writing anything, so reading history cannot change it", async () => {
@@ -1242,21 +1257,17 @@ describe("preview recall across restarts", () => {
     const stamp = (await stat(join(dir, __testing.RECORD_FILE))).mtimeMs
     // Fresh service, so the recall has to come off disk rather than out of the
     // in-memory map.
-    expect(await (await reopen(svc)).recallAnywhere(id)).toBeDefined()
+    expect(await (await reopen(svc)).recallAnywhere(idIn(svc, id))).toBeDefined()
     expect(await readdir(dir)).toEqual(before)
     expect((await stat(join(dir, __testing.RECORD_FILE))).mtimeMs).toBe(stamp)
   })
 })
 
 describe("who can see whose previews", () => {
-  it("shows one user's previews to every service that user runs, which is the fix", async () => {
-    // The reverse of what this file used to assert, and deliberately so. The
-    // old layout bucketed records by `sha256(cliPath)`, which made two services
-    // strangers — including the two that matter: the plugin before an upgrade
-    // and the plugin after it. Isolation there was a privacy claim about one
-    // person's own machine, paid for with every historical card going dead on
-    // `npm update`.
-    const { __testing } = await loadPreviewTool()
+  it("shows a project's previews to every service that runs in it, which is the fix", async () => {
+    // The old layout bucketed records by `sha256(cliPath)`, which made two
+    // services strangers, including the two that matter: the plugin before
+    // an upgrade and the plugin after it.
     const { join } = await import("node:path")
     const first = await makeService("share-a")
     const second = await makeService("share-b", originOf(first))
@@ -1264,189 +1275,141 @@ describe("who can see whose previews", () => {
 
     const id = previewId("b1")
     await seedPreview(first.root, id, { record: { target: "a.json" } })
-    expect(await second.recallAnywhere(id)).toMatchObject({ target: "a.json", outDir: join(first.root, id) })
+    expect(await second.recallAnywhere(idIn(first, id))).toMatchObject({
+      target: "a.json",
+      outDir: join(first.root, id),
+    })
   })
 
-  it("keeps a different $PPTWISE_HOME entirely separate, which is how the tests stay off each other", async () => {
-    const first = await makeService("home-a")
-    const second = await makeService("home-b")
-    expect(first.root).not.toBe(second.root)
-
-    const id = previewId("b2")
-    await seedPreview(first.root, id, { record: { target: "a.json" } })
-    expect(await second.recallAnywhere(id)).toBeUndefined()
-  })
-
-  it("reads $PPTWISE_HOME the way the CLI does, including the empty-string case", async () => {
-    // `PPTWISE_HOME=` in a shell profile sets the variable to the empty string
-    // rather than unsetting it, and `join("", "previews")` is a relative path —
-    // which would put a user's decks wherever the harness happened to be
-    // started from, and would make the root move when the cwd did.
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const { isAbsolute, join, resolve } = await import("node:path")
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-empty-home-")
-    try {
-      const fallback = join(fakeHome, ".pptwise", __testing.PREVIEW_DIR)
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
-      process.env.PPTWISE_HOME = ""
-      expect(previewRoot({ homedir: () => fakeHome })).toBe(fallback)
-      process.env.PPTWISE_HOME = "relative/home"
-      expect(isAbsolute(previewRoot())).toBe(true)
-      // Resolved first, so it is absolute on every platform: `/somewhere/else`
-      // alone has no drive on Windows.
-      const elsewhere = resolve("/somewhere/else")
-      process.env.PPTWISE_HOME = elsewhere
-      expect(previewRoot()).toBe(join(elsewhere, __testing.PREVIEW_DIR))
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
-    }
-  })
-
-  it("copies ~/.pptpress into ~/.pptwise once, matching src/cli/home.ts", async () => {
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
-    const { existsSync } = await import("node:fs")
+  it("finds a preview by its id from a session opened somewhere else entirely", async () => {
+    // A card lives in a transcript. The user opens it again next week, from a
+    // session whose working directory is another project, or none. The id
+    // alone carries the project, so the lookup never depends on where the
+    // reading session happens to be.
     const { join } = await import("node:path")
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-migrate-press-home-")
-    try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      __testing.resetLegacyHomeWarnings()
-      const legacy = join(fakeHome, ".pptpress")
-      await mkdir(join(legacy, "previews"), { recursive: true })
-      await writeFile(join(legacy, "config.json"), '{"ok":true}\n')
-      const root = previewRoot({ homedir: () => fakeHome })
-      expect(root).toBe(join(fakeHome, ".pptwise", __testing.PREVIEW_DIR))
-      expect(existsSync(legacy)).toBe(true)
-      expect(await readFile(join(fakeHome, ".pptwise", "config.json"), "utf8")).toBe('{"ok":true}\n')
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
+    const writer = await makeService("cross-writer")
+    const reader = await makeService("cross-reader")
+    expect(reader.root).not.toBe(writer.root)
+
+    const id = previewId("b3")
+    await seedPreview(writer.root, id, { record: { target: "a.json" } })
+    expect(await reader.recallAnywhere(idIn(writer, id))).toMatchObject({
+      target: "a.json",
+      outDir: join(writer.root, id),
+    })
+    // The bare key names nothing: without its project it is not an id.
+    expect(await reader.recallAnywhere(id)).toBeUndefined()
+    // The same key under the reader's own project is a different preview.
+    expect(await reader.recallAnywhere(idIn(reader, id))).toBeUndefined()
+  })
+
+  it("names exactly one directory per id, and only under a project's .pptwise/previews", async () => {
+    const { __testing } = await loadPreviewTool()
+    const { join, resolve } = await import("node:path")
+    const project = resolve("/work/some project/季度")
+    const key = previewId("e1")
+    const id = __testing.encodePreviewId(project, key)
+    expect(id).toMatch(/^[0-9a-f-]+$/)
+    expect(__testing.decodePreviewId(id)).toEqual({ root: join(project, ".pptwise", "previews"), key })
+
+    const hex = (text: string) => Buffer.from(text, "utf8").toString("hex")
+    for (const bad of [
+      key,
+      `${hex("relative/path")}-${key}`,
+      `${hex(`${project}/../elsewhere`)}-${key}`,
+      `${hex(`${project}\0`)}-${key}`,
+      `${hex(project)}-../../etc`,
+      `${hex(project)}-`,
+      `${hex(project).toUpperCase()}-${key}`,
+      `abc-${key}`,
+      "",
+    ]) {
+      expect(__testing.decodePreviewId(bad), bad).toBeUndefined()
     }
   })
 
-  it("copies ~/.pptpress, not ~/.pptfast, when both old dirs exist", async () => {
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
-    const { existsSync } = await import("node:fs")
+  it("never reads or removes the previews an older plugin kept in the home folder", async () => {
+    // Previews used to live in `~/.pptwise/previews`. A card from back then
+    // carries a bare uuid, which is not an id any more, so it answers as
+    // unknown, and the files stay exactly where they were for the user to
+    // keep or delete.
+    const { mkdir, readdir, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-migrate-both-homes-")
+    const { PREVIEW_ROUTE } = await loadPreviewTool()
+    const old = join(FILE_HOME, "previews", previewId("f9"))
+    await mkdir(old, { recursive: true })
+    await writeFile(join(old, "record.json"), JSON.stringify({ target: "old.json", created: 1 }))
     try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      __testing.resetLegacyHomeWarnings()
-      const press = join(fakeHome, ".pptpress")
-      const fast = join(fakeHome, ".pptfast")
-      await mkdir(press, { recursive: true })
-      await mkdir(fast, { recursive: true })
-      await writeFile(join(press, "config.json"), '{"from":"press"}\n')
-      await writeFile(join(fast, "config.json"), '{"from":"fast"}\n')
-      const root = previewRoot({ homedir: () => fakeHome })
-      expect(root).toBe(join(fakeHome, ".pptwise", __testing.PREVIEW_DIR))
-      expect(existsSync(press)).toBe(true)
-      expect(existsSync(fast)).toBe(true)
-      expect(await readFile(join(fakeHome, ".pptwise", "config.json"), "utf8")).toBe('{"from":"press"}\n')
+      const svc = await makeService("old-home")
+      expect(await svc.recallAnywhere(previewId("f9"))).toBeUndefined()
+      expect((await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${previewId("f9")}`)).status).toBe(404)
+      expect(await readdir(old)).toEqual(["record.json"])
     } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
+      const { rm } = await import("node:fs/promises")
+      await rm(join(FILE_HOME, "previews"), { recursive: true, force: true })
     }
   })
+})
 
-  it("copies ~/.pptfast into ~/.pptwise once, matching src/cli/home.ts", async () => {
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
-    const { existsSync } = await import("node:fs")
+describe("where a call's previews go", () => {
+  it("writes into the session's project, anchored the way the CLI anchors .pptwise", async () => {
+    const { mkdir, readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-migrate-home-")
-    try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      __testing.resetLegacyHomeWarnings()
-      const legacy = join(fakeHome, ".pptfast")
-      await mkdir(join(legacy, "previews"), { recursive: true })
-      await writeFile(join(legacy, "config.json"), '{"ok":true}\n')
-      const root = previewRoot({ homedir: () => fakeHome })
-      expect(root).toBe(join(fakeHome, ".pptwise", __testing.PREVIEW_DIR))
-      expect(existsSync(legacy)).toBe(true)
-      expect(await readFile(join(fakeHome, ".pptwise", "config.json"), "utf8")).toBe('{"ok":true}\n')
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
-    }
+    const { __testing } = await loadPreviewTool()
+    const project = await scratchProject("anchor")
+    const nested = join(project, "decks", "q3")
+    await mkdir(nested, { recursive: true })
+    // No config: the session folder itself is the project.
+    expect(__testing.projectAnchor(nested)).toBe(nested)
+    // A config above it moves the anchor up, as `pptwise.config.json` does for the CLI.
+    await writeFile(join(project, "pptwise.config.json"), "{}\n")
+    expect(__testing.projectAnchor(nested)).toBe(project)
+
+    const svc = await makeService("anchor-svc", { project: nested, cliPath: await fakeCli() })
+    const { deck } = await deckFixture("ANCHOR")
+    const value = await svc.tool.execute({ target: deck })
+    expect(value.outDir).toBe(join(project, ".pptwise", "previews", keyOf(value.previewId)))
+    expect(value.previewId).toBe(__testing.encodePreviewId(project, keyOf(value.previewId)))
+    // The folder keeps itself out of git the same way the CLI's does.
+    expect(await readFile(join(project, ".pptwise", __testing.SELF_IGNORE_FILENAME), "utf8")).toBe("*\n")
   })
 
-  it("copies a symlink ~/.pptfast as a real directory, matching src/cli/home.ts", async () => {
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const { mkdir, writeFile, readFile } = await import("node:fs/promises")
-    const { lstatSync, symlinkSync } = await import("node:fs")
+  it("leaves a .gitignore the user already has in .pptwise alone", async () => {
+    const { mkdir, readFile, writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
-    const original = process.env.PPTWISE_HOME
-    const originalPress = process.env.PPTPRESS_HOME
-    const originalLegacy = process.env.PPTFAST_HOME
-    const fakeHome = await scratchTmp("preview-migrate-symlink-")
-    try {
-      delete process.env.PPTWISE_HOME
-      delete process.env.PPTPRESS_HOME
-      delete process.env.PPTFAST_HOME
-      __testing.resetLegacyHomeWarnings()
-      const payload = join(fakeHome, "legacy-payload")
-      const legacy = join(fakeHome, ".pptfast")
-      await mkdir(join(payload, "previews"), { recursive: true })
-      await writeFile(join(payload, "config.json"), '{"ok":true}\n')
-      try {
-        symlinkSync(payload, legacy, "dir")
-      } catch {
-        return
-      }
-      const root = previewRoot({ homedir: () => fakeHome })
-      expect(root).toBe(join(fakeHome, ".pptwise", __testing.PREVIEW_DIR))
-      expect(lstatSync(join(fakeHome, ".pptwise")).isSymbolicLink()).toBe(false)
-      expect(lstatSync(join(fakeHome, ".pptwise")).isDirectory()).toBe(true)
-      expect(lstatSync(legacy).isSymbolicLink()).toBe(true)
-      expect(await readFile(join(fakeHome, ".pptwise", "config.json"), "utf8")).toBe('{"ok":true}\n')
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-      if (originalPress === undefined) delete process.env.PPTPRESS_HOME
-      else process.env.PPTPRESS_HOME = originalPress
-      if (originalLegacy === undefined) delete process.env.PPTFAST_HOME
-      else process.env.PPTFAST_HOME = originalLegacy
-    }
+    const project = await scratchProject("keep-ignore")
+    await mkdir(join(project, ".pptwise"), { recursive: true })
+    await writeFile(join(project, ".pptwise", ".gitignore"), "mine\n")
+    const svc = await makeService("keep-ignore-svc", { project, cliPath: await fakeCli() })
+    const { deck } = await deckFixture("KEEP")
+    await svc.tool.execute({ target: deck })
+    expect(await readFile(join(project, ".pptwise", ".gitignore"), "utf8")).toBe("mine\n")
+  })
+
+  it("falls back to the deck's own folder when the host gives no working directory", async () => {
+    // A tool call outside a session has no working directory. An absolute
+    // target still names a folder the user chose, so the preview lands
+    // beside the deck rather than nowhere.
+    const { dirname, join } = await import("node:path")
+    const { createPreviewService } = await loadPreviewTool()
+    const svc = createPreviewService(await fakeCli())
+    const { deck } = await deckFixture("NO-SESSION")
+    const value = await svc.tool.execute({ target: deck }, {})
+    expect(value.outDir).toBe(join(dirname(deck), ".pptwise", "previews", keyOf(value.previewId)))
+    expect(await svc.recallAnywhere(value.previewId)).toBeDefined()
+  })
+
+  it("refuses, writing nothing, when there is neither a working directory nor an absolute target", async () => {
+    const { readdir } = await import("node:fs/promises")
+    const { __testing, createPreviewService } = await loadPreviewTool()
+    expect(() => __testing.workspaceFor({}, "deck.json")).toThrow(/no project folder/)
+    expect(() => __testing.workspaceFor(undefined, undefined)).toThrow(/no project folder/)
+    const cli = await fakeCli()
+    const svc = createPreviewService(cli)
+    const home = await readdir(FILE_HOME, { recursive: true })
+    await expect(svc.tool.execute({ target: "deck.json" }, {})).rejects.toThrow(/open the project folder/)
+    expect(await cliInvocations(cli)).toEqual([])
+    expect(await readdir(FILE_HOME, { recursive: true })).toEqual(home)
   })
 })
 
@@ -1722,7 +1685,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     const { __testing } = await loadPreviewTool()
     const { svc, value } = await servedPreview("route-layout")
 
-    expect(value.outDir).toBe(join(svc.root, value.previewId))
+    expect(value.outDir).toBe(join(svc.root, keyOf(value.previewId)))
     const produced = await readdir(value.outDir)
     expect(produced).toEqual(
       expect.arrayContaining([
@@ -1735,7 +1698,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       ]),
     )
     // Nothing half-named survives a successful call.
-    expect(await readdir(svc.root)).toEqual([value.previewId])
+    expect(await readdir(svc.root)).toEqual([keyOf(value.previewId)])
   })
 
   it("gives two previews of the same target two directories that cannot overwrite each other", async () => {
@@ -1868,20 +1831,13 @@ describe("preview route (the handler DSH actually calls)", () => {
     // sweep, so a missing deck was deleted. A user who reads "expired" goes
     // looking for a retention setting; a user who reads this goes looking in
     // the directory that is named for them.
-    const { previewRoot, __testing } = await loadPreviewTool()
-    const original = process.env.PPTWISE_HOME
-    try {
-      process.env.PPTWISE_HOME = "/tmp/pptwise-copy-check"
-      const page = __testing.missingPage("the rendered deck for this preview is gone")
-      expect(page).not.toMatch(/expired/i)
-      expect(page).not.toMatch(/temporary|temp directory/i)
-      expect(page).toContain(previewRoot())
-      expect(page).toContain("until you delete them")
-      expect(page).toContain("pptwise_preview")
-    } finally {
-      if (original === undefined) delete process.env.PPTWISE_HOME
-      else process.env.PPTWISE_HOME = original
-    }
+    const { __testing } = await loadPreviewTool()
+    const page = __testing.missingPage("the rendered deck for this preview is gone")
+    expect(page).not.toMatch(/expired/i)
+    expect(page).not.toMatch(/temporary|temp directory/i)
+    expect(page).toContain(".pptwise/previews/")
+    expect(page).toContain("until you delete them")
+    expect(page).toContain("pptwise_preview")
   })
 
   it("escapes the path it names, so a message can never become markup", async () => {
@@ -2344,7 +2300,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       await seedPreview(svc.root, id)
       const restore = await breakIt(dir)
       try {
-        const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+        const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
         expect(res.status, what).toBe(status)
         if (code !== "") {
           expect(JSON.parse(res.body.toString("utf8")).code, what).toBe(code)
@@ -2380,8 +2336,8 @@ describe("preview route (the handler DSH actually calls)", () => {
     await writeFile(join(svc.root, id), "not a directory")
 
     expect(await __testing.directoryState(join(svc.root, id))).toBe("other")
-    expect(await svc.recallAnywhere(id)).toBeUndefined()
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+    expect(await svc.recallAnywhere(idIn(svc, id))).toBeUndefined()
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
     expect(res.status).toBe(404)
     expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.unknown)
   })
@@ -2421,7 +2377,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       )
       expect(DENIED_READ_CODES, "the preview root was not denied to this process").toContain(denied)
 
-      const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+      const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
       expect(res.status).toBe(503)
       expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.unreadable)
     } finally {
@@ -2526,7 +2482,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       join(svc.root, id, __testing.MANIFEST_FILE),
       JSON.stringify({ title: "x", pages: [{ page: 1, id: "p1", file: " .svg" }] }),
     )
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
     expect(res.status).toBe(410)
     expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.damaged)
   })
@@ -2546,7 +2502,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       await rm(join(svc.root, id, file))
       await mkdir(join(svc.root, id, file))
 
-      const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+      const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
       expect(res.status, file).toBe(410)
       expect(JSON.parse(res.body.toString("utf8")).code, file).toBe(FAILURE_CODES.damaged)
     }
@@ -2615,12 +2571,12 @@ describe("preview route (the handler DSH actually calls)", () => {
     await seedPreview(svc.root, id, { record: { target: "old.json", created: Date.now() } })
 
     const handler = routeHandlerOf(await reopen(svc))
-    const res = await request(handler, `${PREVIEW_ROUTE}/${id}/pptx`)
+    const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}/pptx`)
     expect(res.status).toBe(410)
     expect(res.headers["content-type"]).toBe("application/json")
     expect(JSON.parse(res.body.toString("utf8")).error).toMatch(/no exported deck/)
     // ...while the strip it can still draw is drawn.
-    expect((await request(handler, `${PREVIEW_ROUTE}/${id}`)).status).toBe(200)
+    expect((await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)).status).toBe(200)
   })
 
   it("shadows the absolute paths an old-format record carried, instead of following them", async () => {
@@ -2645,13 +2601,13 @@ describe("preview route (the handler DSH actually calls)", () => {
       },
     })
 
-    const entry = await (await reopen(svc)).recallAnywhere(id)
+    const entry = await (await reopen(svc)).recallAnywhere(idIn(svc, id))
     expect(entry!.outDir).toBe(join(svc.root, id))
     expect(entry!.snapshot).toBe(join(svc.root, id, __testing.SNAPSHOT_FILE))
     // `pptxFile` is a name, never a path: a record naming its way out of its
     // own directory names nothing at all.
     expect(entry!.pptxPath).toBeUndefined()
-    const res = await request(routeHandlerOf(await reopen(svc)), `${PREVIEW_ROUTE}/${id}/pptx`)
+    const res = await request(routeHandlerOf(await reopen(svc)), `${PREVIEW_ROUTE}/${idIn(svc, id)}/pptx`)
     expect(res.status).toBe(410)
     expect(res.body.toString("utf8")).not.toContain("root:")
   })
@@ -2680,8 +2636,8 @@ describe("preview route (the handler DSH actually calls)", () => {
       await mkdir(join(svc.root, id), { recursive: true })
       await writeFile(join(svc.root, id, __testing.RECORD_FILE), body)
 
-      await expect(svc.recallAnywhere(id), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-      const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+      await expect(svc.recallAnywhere(idIn(svc, id)), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
       expect(res.status, body).toBe(410)
       const message = JSON.parse(res.body.toString("utf8")).error as string
       expect(message, body).toContain(join(svc.root, id, __testing.RECORD_FILE))
@@ -2709,8 +2665,8 @@ describe("preview route (the handler DSH actually calls)", () => {
       await seedPreview(svc.root, id)
       await writeFile(join(svc.root, id, __testing.MANIFEST_FILE), body)
 
-      await expect(svc.recallAnywhere(id), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-      const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+      await expect(svc.recallAnywhere(idIn(svc, id)), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
       expect(res.status, body).toBe(410)
       const message = JSON.parse(res.body.toString("utf8")).error as string
       expect(message, body).toContain(join(svc.root, id, __testing.MANIFEST_FILE))
@@ -2744,8 +2700,8 @@ describe("preview route (the handler DSH actually calls)", () => {
       await seedPreview(svc.root, id)
       await writeFile(join(svc.root, id, __testing.MANIFEST_FILE), body)
 
-      await expect(svc.recallAnywhere(id), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-      const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+      await expect(svc.recallAnywhere(idIn(svc, id)), body).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
       expect(res.status, body).toBe(410)
       const parsed = JSON.parse(res.body.toString("utf8")) as { code: string; error: string }
       expect(parsed.code, body).toBe(FAILURE_CODES.damaged)
@@ -2766,7 +2722,7 @@ describe("preview route (the handler DSH actually calls)", () => {
     await seedPreview(svc.root, id)
     await writeFile(join(svc.root, id, __testing.RECORD_FILE), '{"target":')
 
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}/html`)
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}/html`)
     expect(res.status).toBe(410)
     expect(res.headers["content-type"]).toBe("text/html; charset=utf-8")
     const page = res.body.toString("utf8")
@@ -2820,10 +2776,10 @@ describe("preview route (the handler DSH actually calls)", () => {
     await writeFile(join(svc.root, id, __testing.MANIFEST_FILE), JSON.stringify({ title: "x", pages }))
 
     // The unit that used to accept it.
-    await expect(svc.recallAnywhere(id)).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-    await expect(svc.recallAnywhere(id)).rejects.toThrow(/page 13 file this version will not open/)
+    await expect(svc.recallAnywhere(idIn(svc, id))).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+    await expect(svc.recallAnywhere(idIn(svc, id))).rejects.toThrow(/page 13 file this version will not open/)
 
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
     expect(res.status).toBe(410)
     const parsed = JSON.parse(res.body.toString("utf8")) as { code: string; error: string }
     expect(parsed.code).toBe(FAILURE_CODES.damaged)
@@ -2853,7 +2809,7 @@ describe("preview route (the handler DSH actually calls)", () => {
         }))
         await writeFile(join(svc.root, id, __testing.MANIFEST_FILE), JSON.stringify({ title: "x", pages }))
 
-        const res = await request(handler, `${PREVIEW_ROUTE}/${id}`)
+        const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
         const label = `${String(name)} at ${position}`
         expect(res.status, label).toBe(410)
         expect(JSON.parse(res.body.toString("utf8")).code, label).toBe(FAILURE_CODES.damaged)
@@ -2879,7 +2835,7 @@ describe("preview route (the handler DSH actually calls)", () => {
       JSON.stringify({ title: "x", pages: [{ page: 1, id: "p1", file: "../../../etc/passwd" }] }),
     )
 
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
     expect(res.status).toBe(410)
     expect(res.body.toString("utf8")).not.toContain("root:")
     // Asserted on the message, not just the status. Resolve the name instead of
@@ -2954,7 +2910,7 @@ describe("publishing a preview", () => {
     tag: string,
     at: string,
     options: { killBeforePublish?: boolean } = {},
-  ): Promise<{ root: string; cliPath: string }> {
+  ): Promise<{ root: string; project: string; cliPath: string }> {
     const { spawn } = await import("node:child_process")
     const { writeFile } = await import("node:fs/promises")
     const { join } = await import("node:path")
@@ -2962,7 +2918,7 @@ describe("publishing a preview", () => {
 
     const cliPath = await fakeCli()
     if (!options.killBeforePublish) await writeFile(join(dirname(cliPath), "kill-parent-at"), at)
-    const home = await scratchHome(tag)
+    const project = await scratchProject(tag)
     const { deck } = await deckFixture("LOGO-V1")
     const modulePath = options.killBeforePublish
       ? await fsHookModule()
@@ -2976,12 +2932,11 @@ describe("publishing a preview", () => {
         // driver died on its import before it rendered anything.
         `import { createPreviewService } from ${JSON.stringify(pathToFileURL(modulePath).href)}`,
         `const svc = createPreviewService(${JSON.stringify(cliPath)})`,
-        `await svc.tool.execute({ target: ${JSON.stringify(deck)} })`,
+        `await svc.tool.execute({ target: ${JSON.stringify(deck)} }, { agent: { session: { header: { cwd: ${JSON.stringify(project)} } } } })`,
       ].join("\n"),
     )
 
     const child = spawn(process.execPath, [driver], {
-      env: { ...process.env, PPTWISE_HOME: home },
       stdio: "ignore",
     })
     // `error` as well as `exit`: a spawn that never starts — `EAGAIN` when the
@@ -3002,13 +2957,7 @@ describe("publishing a preview", () => {
     const killed = process.platform === "win32" ? { code: 1, signal: null } : { code: null, signal: "SIGKILL" }
     expect(exit, `the driver was supposed to be killed at ${at}`).toEqual(killed)
     const { previewRoot } = await loadPreviewTool()
-    const original = process.env.PPTWISE_HOME
-    process.env.PPTWISE_HOME = home
-    const root = previewRoot()
-    if (original === undefined) delete process.env.PPTWISE_HOME
-    else process.env.PPTWISE_HOME = original
-    scratchDirs.add(root)
-    return { root, cliPath }
+    return { root: previewRoot(project), project, cliPath }
   }
 
   /**
@@ -3039,7 +2988,7 @@ describe("publishing a preview", () => {
     it(`leaves nothing the route will serve when the machine dies ${when}`, { timeout: 60_000 }, async () => {
       const { readdir } = await import("node:fs/promises")
       const { PREVIEW_ROUTE, __testing } = await loadPreviewTool()
-      const { root, cliPath } = await crashDuringExecute(`crash-${at}`, at, options)
+      const { root, project, cliPath } = await crashDuringExecute(`crash-${at}`, at, options)
 
       // Whatever the render got through is still on disk under the staging
       // name — nothing swept it, and nothing needs to.
@@ -3058,16 +3007,16 @@ describe("publishing a preview", () => {
       // The id that directory would have been published under. This is the
       // value a card would have been given, so this is the value the route has
       // to disown.
-      const id = staged.slice(0, -__testing.PARTIAL_SUFFIX.length)
-      const svc = await makeService(`crash-reader-${at}`, { cliPath, home: dirname(root) })
+      const svc = await makeService(`crash-reader-${at}`, { cliPath, project })
       expect(svc.root).toBe(root)
+      const id = idIn(svc, staged.slice(0, -__testing.PARTIAL_SUFFIX.length))
       const handler = routeHandlerOf(svc)
       for (const path of ["", "/pptx", "/html"]) {
         expect((await request(handler, `${PREVIEW_ROUTE}/${id}${path}`)).status, `${at}${path}`).toBe(404)
       }
       // ...and asking for the staging directory by its own name gets the same
       // answer, because that name is not an id.
-      expect((await request(handler, `${PREVIEW_ROUTE}/${staged}`)).status).toBe(404)
+      expect((await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, staged)}`)).status).toBe(404)
       expect(await svc.recallAnywhere(id)).toBeUndefined()
     })
   }
@@ -3110,7 +3059,7 @@ describe("publishing a preview", () => {
 
     expect(observations).toBeGreaterThan(0)
     expect(sawIncomplete).toBeNull()
-    expect(await readdir(svc.root)).toEqual([value.previewId])
+    expect(await readdir(svc.root)).toEqual([keyOf(value.previewId)])
     expect(await readdir(value.outDir)).toContain(__testing.RECORD_FILE)
   })
 
@@ -3163,7 +3112,7 @@ describe("publishing a preview", () => {
         )
       }
 
-      const id = staged.slice(0, -__testing.PARTIAL_SUFFIX.length)
+      const id = idIn(svc, staged.slice(0, -__testing.PARTIAL_SUFFIX.length))
       const handler = routeHandlerOf(svc)
       for (const path of ["", "/pptx", "/html"]) {
         expect((await request(handler, `${PREVIEW_ROUTE}/${id}${path}`)).status, path).toBe(404)
@@ -3295,7 +3244,7 @@ describe("publishing a preview", () => {
     for (let i = 0; i < 250; i += 1) {
       const id = previewId(`9${i}`)
       await seedPreview(svc.root, id)
-      seeded.push(id)
+      seeded.push(idIn(svc, id))
     }
 
     expect((await readdir(svc.root)).length).toBe(rendered.length + seeded.length)
@@ -3603,9 +3552,11 @@ describe("preview service — adversarial acceptance follow-ups", () => {
     await expect(svc.remember("../../victim", entry)).rejects.toThrow(/unsafe id/)
     await expect(svc.remember("..%2f..%2fvictim", entry)).rejects.toThrow(/unsafe id/)
     await expect(svc.remember("", entry)).rejects.toThrow(/unsafe id/)
+    // A bare uuid names no project, so it is no id either.
+    await expect(svc.remember("4a00e929-4e67-40a0-9292-1e2e72e4377f", entry)).rejects.toThrow(/unsafe id/)
     // A real id still goes through, or the guard would be a denial of service.
     await expect(
-      svc.remember("4a00e929-4e67-40a0-9292-1e2e72e4377f", entry),
+      svc.remember(idIn(svc, "4a00e929-4e67-40a0-9292-1e2e72e4377f"), entry),
     ).resolves.not.toThrow()
   })
 })
@@ -3685,7 +3636,7 @@ describe("what the card does with a bad answer", () => {
     await seedPreview(svc.root, id)
     await writeFile(join(svc.root, id, __testing.RECORD_FILE), '{"target":')
 
-    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${id}`)
+    const res = await request(routeHandlerOf(svc), `${PREVIEW_ROUTE}/${idIn(svc, id)}`)
     expect(res.status).toBe(410)
     expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.damaged)
     expect(await client.__testing.verdictOf(asResponse(res))).toBe("damaged")
@@ -3714,7 +3665,7 @@ describe("what the card does with a bad answer", () => {
     await writeFile(join(svc.root, damaged, __testing.MANIFEST_FILE), "{ not json")
 
     const codeOf = async (id: string) =>
-      JSON.parse((await request(handler, `${PREVIEW_ROUTE}/${id}`)).body.toString("utf8")).code as string
+      JSON.parse((await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)).body.toString("utf8")).code as string
 
     expect(await codeOf(previewId("c9"))).toBe(FAILURE_CODES.unknown)
     expect(await codeOf(missing)).toBe(FAILURE_CODES.missing)
@@ -3883,8 +3834,8 @@ describe("preview record — fields, not just shape", () => {
       await seedPreview(svc.root, id)
       await writeFile(join(svc.root, id, __testing.RECORD_FILE), JSON.stringify(record))
 
-      await expect(svc.recallAnywhere(id), JSON.stringify(record)).rejects.toBeInstanceOf(__testing.PreviewDamaged)
-      const res = await request(handler, `${PREVIEW_ROUTE}/${id}/pptx`)
+      await expect(svc.recallAnywhere(idIn(svc, id)), JSON.stringify(record)).rejects.toBeInstanceOf(__testing.PreviewDamaged)
+      const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}/pptx`)
       expect(res.status, JSON.stringify(record)).toBe(410)
       const parsed = JSON.parse(res.body.toString("utf8")) as { code: string; error: string }
       expect(parsed.code, JSON.stringify(record)).toBe(FAILURE_CODES.damaged)
@@ -3903,10 +3854,10 @@ describe("preview record — fields, not just shape", () => {
     await seedPreview(svc.root, id, { record: { target: "old.json", created: Date.now() } })
 
     const handler = routeHandlerOf(svc)
-    const res = await request(handler, `${PREVIEW_ROUTE}/${id}/pptx`)
+    const res = await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}/pptx`)
     expect(res.status).toBe(410)
     expect(JSON.parse(res.body.toString("utf8")).code).toBe(FAILURE_CODES.missing)
-    expect((await request(handler, `${PREVIEW_ROUTE}/${id}`)).status).toBe(200)
+    expect((await request(handler, `${PREVIEW_ROUTE}/${idIn(svc, id)}`)).status).toBe(200)
   })
 })
 
