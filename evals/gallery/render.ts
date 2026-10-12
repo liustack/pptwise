@@ -26,12 +26,12 @@ import { getLayout } from "@/layouts/registry"
 import { getThemeDefinition } from "@/themes/definitions"
 import { CANVAS_H_PX, CANVAS_W_PX } from "@/constants"
 import { auditDeck } from "@/audit/deck-audit"
-import { BAND_IDS, menuFaces, UNSERVED_SECTION, type BandId, type Job } from "./matrix"
+import { BAND_IDS, menuFaces, type BandId, type Job } from "./matrix"
 import { pruneGalleryDir } from "./prune"
 
 export interface ManifestPage {
   readonly id: string
-  /** Theme id, or `"unserved"` for the appendix section. */
+  /** Theme id. */
   readonly section: string
   readonly sectionLabel: string
   readonly band: BandId
@@ -90,7 +90,7 @@ export interface ManifestPage {
   readonly fingerprint: PageFingerprint
 }
 
-/** One theme's whole review, or the appendix. The gallery's top-level unit. */
+/** One theme's whole review. The gallery's top-level unit. */
 export interface ManifestSection {
   readonly id: string
   readonly label: string
@@ -102,10 +102,9 @@ export interface ManifestSection {
    * page prints it as the section's skeleton strip.
    *
    * Read from the theme rather than from the pages this run happened to
-   * render, so `--only=deck` still shows the menu it drew from. Absent on the
-   * appendix, which is a pile of faces no menu offers, not a theme.
+   * render, so `--only=deck` still shows the menu it drew from.
    */
-  readonly menu?: Readonly<Record<string, string>>
+  readonly menu: Readonly<Record<string, string>>
 }
 
 /** A stripe inside every section: sample deck, menu faces, component skins. */
@@ -135,7 +134,7 @@ export interface Manifest {
   readonly pptwiseVersion: string
   readonly generatedAt: string
   readonly slide: { readonly width: number; readonly height: number }
-  /** Themes in registry order, appendix last. */
+  /** Themes in registry order. */
   readonly sections: readonly ManifestSection[]
   /** Always in `BAND_IDS` order. */
   readonly bands: readonly ManifestBand[]
@@ -183,10 +182,7 @@ const BAND_META: Record<BandId, { label: string; question: string }> = {
  * than hand-written per theme: 24 hand-written blurbs would go stale the
  * first time a menu changed, and a stale blurb is worse than a count.
  */
-function sectionBlurb(id: string, pages: readonly ManifestPage[]): string {
-  if (id === UNSERVED_SECTION) {
-    return `没有任何主题菜单点过的 ${pages.length} 张注册版式，统一穿 ${pages[0]?.theme ?? "brief"} 的皮各渲一页——它们还站不站得住？`
-  }
+function sectionBlurb(pages: readonly ManifestPage[]): string {
   const counts = BAND_IDS.map((band) => ({ band, n: pages.filter((p) => p.band === band).length })).filter((b) => b.n > 0)
   return counts.map(({ band, n }) => `${BAND_META[band].label} ${n} 页`).join(" · ")
 }
@@ -419,7 +415,7 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
   }
 
   // Sections in first-appearance order, which is the job order: themes as the
-  // registry sorts them, appendix last.
+  // registry sorts them.
   const sectionIds: string[] = []
   for (const p of pages) if (!sectionIds.includes(p.section)) sectionIds.push(p.section)
   const sections: ManifestSection[] = sectionIds.map((id) => {
@@ -427,9 +423,9 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
     return {
       id,
       label: own[0]!.sectionLabel,
-      blurb: sectionBlurb(id, own),
+      blurb: sectionBlurb(own),
       pages: own.map((p) => p.id),
-      ...(id === UNSERVED_SECTION ? {} : { menu: menuFaces(id) }),
+      menu: menuFaces(id),
     }
   })
   const bands: ManifestBand[] = BAND_IDS.filter((id) => pages.some((p) => p.band === id)).map((id) => ({
@@ -440,7 +436,6 @@ export function renderMatrix(jobs: readonly Job[], outDir: string, pptwiseVersio
 
   const stories: Record<string, DesignStory> = {}
   for (const section of sections) {
-    if (section.id === UNSERVED_SECTION) continue
     const story = getThemeDefinition(section.id).story
     if (story) stories[`theme:${section.id}`] = story
   }

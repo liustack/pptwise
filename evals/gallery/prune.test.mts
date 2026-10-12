@@ -68,14 +68,14 @@ describe("renderMatrix page prune", () => {
     // truth — `--only=component` into a dir that already has theme or
     // layout pages is supposed to drop the other tables' files.
     writeFileSync(join(pagesDir, "brief--comp--logo-wall--zh.svg"), "<svg />\n")
-    writeFileSync(join(pagesDir, "unserved--face--side-highlight.svg"), "<svg />\n")
+    writeFileSync(join(pagesDir, "brief--face--two-column.svg"), "<svg />\n")
     writeFileSync(join(pagesDir, "junk.txt"), "leftover\n")
     writeFileSync(join(outDir, "_dx-fake.png"), "png")
 
     renderMatrix([job], outDir, "test")
 
     expect(existsSync(join(pagesDir, "brief--comp--logo-wall--zh.svg"))).toBe(false)
-    expect(existsSync(join(pagesDir, "unserved--face--side-highlight.svg"))).toBe(false)
+    expect(existsSync(join(pagesDir, "brief--face--two-column.svg"))).toBe(false)
     expect(existsSync(join(pagesDir, "junk.txt"))).toBe(false)
     expect(existsSync(realPage)).toBe(true)
     expect(existsSync(manifest)).toBe(true)

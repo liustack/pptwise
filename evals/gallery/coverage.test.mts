@@ -14,7 +14,7 @@ import {
   galleryCoverageGaps,
   mapJobSubject,
 } from "./coverage"
-import { buildMatrix, servedLayoutIds, unservedLayoutIds, UNSERVED_SECTION, type Job } from "./matrix"
+import { buildMatrix, type Job } from "./matrix"
 
 const emptyAssets = { images: {} } as CorpusAssets
 const assets = { zh: emptyAssets, en: emptyAssets, mixed: emptyAssets }
@@ -105,20 +105,6 @@ describe("gallery inventory coverage", () => {
       gaps.missingSectionComponents,
       `missing per-section components: ${gaps.missingSectionComponents.slice(0, 10).join(", ")}`,
     ).toEqual([])
-  })
-
-  it("puts exactly the layouts no menu serves into the appendix section", () => {
-    const matrix = jobs()
-    const gaps = galleryCoverageGaps(matrix)
-    expect(gaps.missingUnserved, `unserved but absent: ${gaps.missingUnserved.join(", ")}`).toEqual([])
-    expect(gaps.misfiledUnserved, `served but filed as unserved: ${gaps.misfiledUnserved.join(", ")}`).toEqual([])
-
-    const served = servedLayoutIds(CANONICAL_THEME_IDS)
-    const appendix = matrix.filter((job) => job.section === UNSERVED_SECTION)
-    expect(appendix.every((job) => job.band === "face")).toBe(true)
-    expect(appendix.every((job) => job.theme === "brief")).toBe(true)
-    expect([...new Set(appendix.map((job) => job.subject))].sort()).toEqual(unservedLayoutIds(CANONICAL_THEME_IDS))
-    expect(appendix.some((job) => served.has(job.subject))).toBe(false)
   })
 
   it("gives every registered layout a face-band page somewhere", () => {

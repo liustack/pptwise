@@ -5,8 +5,7 @@
 // Six files used to each call listThemes → corpusAssets → buildMatrix →
 // renderMatrix, each writing the matrix to its own temp dir. Vitest gives
 // each file a worker, so a full gate paid for six copies of the same
-// ~2450-page paint. Each section of the matrix (a theme, or the appendix of
-// faces no menu offers) is painted once, the first time a scan asks for it,
+// ~2450-page paint. Each section of the matrix (a theme) is painted once, the first time a scan asks for it,
 // and every scan runs once per section under a timeout of its own. A
 // `beforeAll` used to paint the whole matrix under one fixed 300 seconds,
 // which a slow machine came within reach of and every new theme pushed

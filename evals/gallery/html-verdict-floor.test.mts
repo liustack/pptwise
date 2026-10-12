@@ -64,7 +64,7 @@ function manifest(): Manifest {
     pptwiseVersion: "0.31.0",
     generatedAt: "2026-09-04T00:00:00Z",
     slide: { width: 1280, height: 720 },
-    sections: [{ id: "brief", label: "brief", blurb: "", pages: pages.length }],
+    sections: [{ id: "brief", label: "brief", blurb: "", pages: pages.length, menu: {} }],
     bands: [{ id: "component", label: "组件皮肤", question: "" }],
     pages,
     stories: {},

@@ -699,9 +699,8 @@ const CONTENT_FACE_KINDS: Record<string, PageKind> = {
 
 /**
  * Which menu slot a layout would occupy: the boundary slide type it draws,
- * or, for a content face, the page kind it is authored against. The gallery
- * needs this for faces no menu offers — they still have to be filed under a
- * slot so the cross-cut view can put them in the right row.
+ * or, for a content face, the page kind it is authored against. Tests that
+ * render one face on its own file it under a slot with this.
  */
 export function layoutFaceSlot(layoutId: string): string {
   const def = LAYOUT_REGISTRY[layoutId]

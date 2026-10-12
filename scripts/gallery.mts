@@ -6,12 +6,11 @@
  * offers its users.
  *
  * One section per theme, three bands inside each (sample deck, menu faces,
- * component skins), plus an appendix section for registered faces no menu
- * offers.
+ * component skins).
  *
  *   pnpm gallery                        # everything, into .gallery/
  *   pnpm gallery --only=face            # one band
- *   pnpm gallery --theme=swiss          # one section (--theme=unserved for the appendix)
+ *   pnpm gallery --theme=swiss          # one section
  *   pnpm gallery --languages=zh,en      # narrow the baseline component band's language axis
  *   pnpm gallery --out=/tmp/g           # somewhere else
  *   pnpm gallery --bbox                 # + a real-browser geometry pass
@@ -35,7 +34,6 @@ import {
   assertFullCoverage,
   BAND_IDS,
   buildMatrix,
-  UNSERVED_SECTION,
   type BandId,
 } from "../evals/gallery/matrix"
 import { pruneGalleryDir } from "../evals/gallery/prune"
@@ -110,8 +108,8 @@ const assets = Object.fromEntries(
   await Promise.all(usedLanguages.map(async (id) => [id, await corpusAssets(LEXICONS[id])] as const)),
 ) as Record<LanguageId, CorpusAssets>
 
-if (section !== undefined && section !== UNSERVED_SECTION && !themeIds.includes(section)) {
-  fail(`unknown --theme "${section}" — expected one of ${[...themeIds, UNSERVED_SECTION].join(", ")}`)
+if (section !== undefined && !themeIds.includes(section)) {
+  fail(`unknown --theme "${section}" — expected one of ${themeIds.join(", ")}`)
 }
 
 const jobs = buildMatrix(themeIds, assets, { languages, themeLanguage, only, section })

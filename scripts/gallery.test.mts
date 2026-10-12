@@ -34,10 +34,8 @@ import {
   buildMatrix,
   FACE_SLOTS,
   menuFaces,
-  unservedLayoutIds,
   COMPOSITION_PAGES,
   STEP_ASIDE_PAGES,
-  UNSERVED_SECTION,
 } from "../evals/gallery/matrix"
 import { installNodePlatform } from "@/platform/node"
 
@@ -50,9 +48,6 @@ await installNodePlatform()
 const themeIds = listThemes()
   .map((t) => t.id)
   .sort()
-// The appendix exists only while some registered face is on no menu. Every
-// face is on one today, so the matrix carries no appendix section at all.
-const appendixSections = unservedLayoutIds(themeIds).length > 0 ? [UNSERVED_SECTION] : []
 
 /** Built once — loading the committed JPEG fixtures is the slow part. */
 let cached: Record<LanguageId, CorpusAssets> | undefined
@@ -103,21 +98,19 @@ describe("gallery coverage", () => {
   it("face band reaches every registered layout, each on the skin it is filed under", async () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     expect([...new Set(jobs.map((job) => job.subject))].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
-    // A face in a theme section is rendered on that theme; the appendix holds
-    // what no menu serves and renders it on the baseline.
+    // Every face is on some menu, so each is rendered in a theme section on
+    // that theme.
     for (const job of jobs) {
-      expect(job.theme, job.id).toBe(job.section === UNSERVED_SECTION ? BASELINE_THEME : job.section)
+      expect(job.theme, job.id).toBe(job.section)
       expect(job.slot, job.id).toBeTruthy()
     }
-    const appendix = jobs.filter((job) => job.section === UNSERVED_SECTION)
-    expect(appendix.map((job) => job.subject)).toEqual(unservedLayoutIds(themeIds))
   })
 
-  it("emits one section per theme plus the appendix, each theme section carrying the three universal bands", async () => {
+  it("emits one section per theme, each carrying the three universal bands", async () => {
     const jobs = buildMatrix(themeIds, await assets())
     expect([...new Set(jobs.map((j) => j.band))].sort()).toEqual(["aside", "component", "compose", "deck", "face"])
     const sections = [...new Set(jobs.map((j) => j.section))]
-    expect(sections).toEqual([...themeIds, ...appendixSections])
+    expect(sections).toEqual(themeIds)
     for (const themeId of themeIds) {
       const bands = new Set(jobs.filter((j) => j.section === themeId).map((j) => j.band))
       // `aside` is not owed by every section: the step-aside sheet is the
@@ -131,9 +124,6 @@ describe("gallery coverage", () => {
     expect([...asideSections].sort()).toEqual([...new Set(STEP_ASIDE_PAGES.map((p) => p.theme))].sort())
     const composeSections = new Set(jobs.filter((j) => j.band === "compose").map((j) => j.section))
     expect([...composeSections].sort()).toEqual([...new Set(COMPOSITION_PAGES.map((p) => p.theme))].sort())
-    // The appendix is faces only — it exists to close the layout gap, not to
-    // be a 25th theme.
-    expect(jobs.filter((j) => j.section === UNSERVED_SECTION).every((j) => j.band === "face")).toBe(true)
   })
 
   it("dresses every component in every theme's own skin, and only the baseline in three scripts", async () => {
@@ -200,14 +190,12 @@ describe("gallery face axis", () => {
     }
   })
 
-  it("puts every registered face on the axis, appendix included", async () => {
+  it("puts every registered face on the axis", async () => {
     const jobs = buildMatrix(themeIds, await assets(), { only: "face" })
     for (const job of jobs) {
       expect(job.face, job.id).toBe(job.subject)
       expect(job.faceSlot, job.id).toBe(job.slot)
     }
-    // A face no menu offers still gets its own tile, or the axis would review
-    // only what the menus already chose.
     expect([...new Set(jobs.map((j) => j.face))].sort()).toEqual(Object.keys(LAYOUT_REGISTRY).sort())
   })
 
@@ -271,7 +259,7 @@ describe("gallery theme menu strip", () => {
     }
   })
 
-  it("gives every theme section a menu to draw its strip from, and the appendix none", async () => {
+  it("gives every theme section a menu to draw its strip from", async () => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")
     const { tmpdir } = await import("node:os")
@@ -287,11 +275,6 @@ describe("gallery theme menu strip", () => {
     for (const section of manifest.sections) {
       expect(section.menu, section.id).toEqual(menuFaces(section.id))
     }
-
-    const appendix = buildMatrix(themeIds, await assets(), { only: "face", section: UNSERVED_SECTION })
-    const { manifest: other } = renderMatrix(appendix, mkdtempSync(join(tmpdir(), "pptwise-gallery-app-")), "test")
-    expect(other.sections.map((s) => s.id)).toEqual(appendixSections)
-    for (const section of other.sections) expect(section.menu, section.id).toBeUndefined()
   }, 120_000)
 })
 
@@ -443,7 +426,7 @@ describe("gallery corpus", () => {
   // on the Windows CI runner, and the failure did not say which theme was
   // slow. A section takes seconds, so the default limit holds as themes are
   // added, and a failure names the section it happened in.
-  const sections = [...themeIds, ...appendixSections]
+  const sections = themeIds
 
   it("splits into sections that hold every page of the matrix exactly once", async () => {
     const whole = buildMatrix(themeIds, await assets()).map((j) => j.id)
@@ -682,8 +665,8 @@ describe("gallery page", () => {
     const { tmpdir } = await import("node:os")
     const { join } = await import("node:path")
 
-    // The face band of one theme plus the appendix: enough pages to have an
-    // axis, few enough to build in a second.
+    // The face band of one theme: enough pages to have an axis, few enough to
+    // build in a second.
     const jobs = buildMatrix(themeIds, await assets(), { only: "face", section: BASELINE_THEME })
     const outDir = mkdtempSync(join(tmpdir(), "pptwise-gallery-face-"))
     const { manifest, svgs } = renderMatrix(jobs, outDir, "test")

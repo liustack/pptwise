@@ -13,10 +13,9 @@
  *
  * The review is cut theme first, so the promise is per section as well as
  * global: every theme section carries all three bands, and its component
- * band carries all 44 component types. A layout no menu offers still needs
- * a page, and it must be in the appendix rather than missing — the appendix
- * is asserted to be exactly the complement of what the menus serve, in both
- * directions, so a face cannot hide by being in neither place.
+ * band carries all 44 component types. Every layout needs a face-band page
+ * in some theme section, which holds because every registered face is on a
+ * built-in menu (`menus.test.ts`).
  *
  * Adding a band later is a new key on BAND_SUBJECT_MAPPERS. Unknown bands
  * (and subjects that match nothing) stay unmapped, which fails the coverage
@@ -28,7 +27,7 @@ import { COMPOSITION_IDS } from "@/layouts/compositions"
 import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { CANONICAL_THEME_IDS } from "@/themes"
 import { CHART_VARIANTS, DEVICE_VARIANTS } from "./corpus/components"
-import { UNIVERSAL_BAND_IDS, UNSERVED_SECTION, servedLayoutIds, type BandId, type Job } from "./matrix"
+import { UNIVERSAL_BAND_IDS, type BandId, type Job } from "./matrix"
 
 export type InventoryKind = "theme" | "layout" | "component" | "composition"
 
@@ -96,10 +95,6 @@ export interface CoverageGaps {
   readonly missingBands: readonly string[]
   /** `<theme>: <component>` pairs a theme section's component band never drew. */
   readonly missingSectionComponents: readonly string[]
-  /** Faces in the appendix that a menu does serve. */
-  readonly misfiledUnserved: readonly string[]
-  /** Faces no menu serves that never reached the appendix. */
-  readonly missingUnserved: readonly string[]
   readonly unmapped: readonly string[]
 }
 
@@ -112,14 +107,11 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
   /** section → component types its component band drew. */
   const perSection = new Map<string, Set<string>>()
   const bandsBySection = new Map<string, Set<BandId>>()
-  const appendix = new Set<string>()
 
   for (const job of jobs) {
-    if (job.section !== UNSERVED_SECTION) {
-      const seen = bandsBySection.get(job.section) ?? new Set<BandId>()
-      seen.add(job.band)
-      bandsBySection.set(job.section, seen)
-    }
+    const seen = bandsBySection.get(job.section) ?? new Set<BandId>()
+    seen.add(job.band)
+    bandsBySection.set(job.section, seen)
     const mapped = mapJobSubject(job)
     if (!mapped) {
       unmapped.push(job.id)
@@ -127,10 +119,7 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     }
     if (mapped.inventory === "theme") themes.add(mapped.id)
     if (mapped.inventory === "composition") compositions.add(mapped.id)
-    if (mapped.inventory === "layout") {
-      layouts.add(mapped.id)
-      if (job.section === UNSERVED_SECTION) appendix.add(mapped.id)
-    }
+    if (mapped.inventory === "layout") layouts.add(mapped.id)
     if (job.band === "component") {
       if (mapped.inventory === "component") {
         components.add(mapped.id)
@@ -157,15 +146,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     }
   }
 
-  // The appendix is the complement of the menus, checked both ways: a served
-  // face filed there wastes a page on a duplicate, and an unserved face
-  // missing from it is a layout nobody in the review ever sees.
-  const served = servedLayoutIds(themeSections)
-  const misfiledUnserved = [...appendix].filter((id) => served.has(id)).sort()
-  const missingUnserved = Object.keys(LAYOUT_REGISTRY)
-    .filter((id) => !served.has(id) && !appendix.has(id))
-    .sort()
-
   const missingThemes = CANONICAL_THEME_IDS.filter((id) => !themes.has(id))
   const missingLayouts = Object.keys(LAYOUT_REGISTRY)
     .sort()
@@ -180,8 +160,6 @@ export function galleryCoverageGaps(jobs: readonly Job[]): CoverageGaps {
     missingCompositions,
     missingBands,
     missingSectionComponents,
-    misfiledUnserved,
-    missingUnserved,
     unmapped,
   }
 }
@@ -205,19 +183,7 @@ export function assertInventoryCoverage(jobs: readonly Job[]): void {
   if (gaps.missingLayouts.length > 0) {
     problems.push(
       `no gallery page for layout(s): ${sample(gaps.missingLayouts)} — ` +
-        `every registered face needs a face-band page, in a theme section or in the appendix`,
-    )
-  }
-  if (gaps.missingUnserved.length > 0) {
-    problems.push(
-      `layout(s) no menu serves and the appendix does not carry: ${sample(gaps.missingUnserved)} — ` +
-        `buildMatrix must render the whole complement into the "${UNSERVED_SECTION}" section`,
-    )
-  }
-  if (gaps.misfiledUnserved.length > 0) {
-    problems.push(
-      `layout(s) in the appendix that a theme menu does serve: ${sample(gaps.misfiledUnserved)} — ` +
-        `the appendix is the complement, not a second copy`,
+        `every registered face needs a face-band page in a theme section`,
     )
   }
   if (gaps.missingComponents.length > 0) {

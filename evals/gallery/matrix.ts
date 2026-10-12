@@ -6,9 +6,8 @@
  * that theme's skin. A reviewer therefore judges one theme at a time on
  * everything it can draw, instead of hopping between four cross-cut tables.
  *
- * Layouts no theme menu ever asks for still need a page — otherwise the
- * coverage promise quietly shrinks to "whatever the menus happen to use" —
- * so they land in one appendix section rendered on the baseline skin.
+ * Every registered face is on some built-in menu (`menus.test.ts` holds
+ * that), so the theme sections' face bands reach every face between them.
  *
  * Also the place the coverage promise is enforced: if the IR grows a
  * component type or the registry grows a layout and nobody teaches this
@@ -20,7 +19,6 @@
 
 import { COMPONENT_TYPES, type PageKind, type PptxIR } from "@/ir"
 import type { CompositionId } from "@/layouts/compositions"
-import { LAYOUT_REGISTRY } from "@/layouts/registry"
 import { resolveEffectiveFace } from "@/render/layout-selection"
 import { getThemeDefinition } from "@/themes/definitions"
 import { CHART_VARIANTS, COMPONENT_BUILDERS, DEVICE_VARIANTS } from "./corpus/components"
@@ -29,7 +27,6 @@ import {
   componentPage,
   compositionPage,
   type CompositionVariant,
-  layoutFaceSlot,
   layoutPage,
   themeDeck,
   stepAsidePage,
@@ -50,11 +47,6 @@ export const BAND_IDS = ["deck", "face", "compose", "aside", "component"] as con
  */
 export const UNIVERSAL_BAND_IDS = ["deck", "face", "component"] as const
 export type BandId = (typeof BAND_IDS)[number]
-
-/** The appendix section's id. It is not a theme. */
-export const UNSERVED_SECTION = "unserved"
-
-export const UNSERVED_SECTION_LABEL = "未上菜版式"
 
 /**
  * Face slots in reading order: the two openings, the eleven content kinds a
@@ -84,7 +76,7 @@ export const BOUNDARY_SLOTS: readonly string[] = ["cover", "chapter", "ending"]
 export interface Job {
   /** Stable, filename-safe page id — also the key verdicts are recorded against. */
   readonly id: string
-  /** Theme id, or `"unserved"` for the appendix section. */
+  /** Theme id. */
   readonly section: string
   readonly sectionLabel: string
   readonly band: BandId
@@ -116,8 +108,7 @@ export interface Job {
   /** Human-readable language name, for the gallery's own shell. */
   readonly languageLabel: string
   /**
-   * The skin actually under review — the section's theme, or the baseline
-   * for the appendix. Not the temporary bound theme the IR may carry: a face
+   * The skin actually under review, the section's theme. Not the temporary bound theme the IR may carry: a face
    * the section's own menu does not offer is reached through a derived theme
    * that keeps the section theme's colors, and the reviewer is judging those.
    */
@@ -151,28 +142,13 @@ export interface MatrixOptions {
   readonly themeLanguage?: LanguageId
   /** Restrict to one band — for a quick pass over just what changed. */
   readonly only?: BandId
-  /** Restrict to one section (a theme id, or `"unserved"`). */
+  /** Restrict to one section (a theme id). */
   readonly section?: string
 }
 
 /** Themes the gallery renders, in registry order. */
 export function galleryThemes(listThemeIds: readonly string[]): readonly string[] {
   return [...listThemeIds].sort()
-}
-
-/** Layout ids reachable from at least one theme menu, i.e. what the product can actually pick. */
-export function servedLayoutIds(themeIds: readonly string[]): Set<string> {
-  const served = new Set<string>()
-  for (const themeId of themeIds) {
-    const menu = getThemeDefinition(themeId).menu
-    served.add(menu.cover.face)
-    served.add(menu.chapter.face)
-    served.add(menu.ending.face)
-    for (const entry of Object.values(menu.content)) {
-      if (entry !== undefined) served.add(entry.face)
-    }
-  }
-  return served
 }
 
 /**
@@ -195,14 +171,6 @@ export function menuFaces(themeId: string): Record<string, string> {
     if (entry !== undefined) faces[slot] = entry.face
   }
   return faces
-}
-
-/** Registered layouts no menu offers. They get the appendix section. */
-export function unservedLayoutIds(themeIds: readonly string[]): string[] {
-  const served = servedLayoutIds(themeIds)
-  return Object.keys(LAYOUT_REGISTRY)
-    .filter((id) => !served.has(id))
-    .sort()
 }
 
 /**
@@ -634,7 +602,6 @@ export function buildMatrix(
 ): Job[] {
   const languages = opts.languages ?? LANGUAGE_IDS
   const themeLanguage = opts.themeLanguage ?? "zh"
-  const lex = LEXICONS[themeLanguage]
   const jobs: Job[] = []
 
   const push = (job: Omit<Job, "languageLabel">) => {
@@ -828,33 +795,6 @@ export function buildMatrix(
           })
         }
       }
-    }
-  }
-
-  // ── appendix: registered faces no menu offers ──────────────────────────
-  if (wantsSection(UNSERVED_SECTION) && wantsBand("face")) {
-    for (const layoutId of unservedLayoutIds(themeIds)) {
-      const slot = layoutFaceSlot(layoutId)
-      const kind = LAYOUT_REGISTRY[layoutId]!.slideTypes[0] === "content" ? (slot as PageKind) : undefined
-      const ir = layoutPage(layoutId, lex, assets[themeLanguage], BASELINE_THEME, kind)
-      push({
-        id: `${UNSERVED_SECTION}--face--${safe(layoutId)}`,
-        section: UNSERVED_SECTION,
-        sectionLabel: UNSERVED_SECTION_LABEL,
-        band: "face",
-        subject: layoutId,
-        slot,
-        face: layoutId,
-        faceSlot: slot,
-        language: themeLanguage,
-        theme: BASELINE_THEME,
-        page: 1,
-        pageCount: 1,
-        slideType: ir.slides[0]!.type ?? "content",
-        heading: ir.slides[0]!.heading ?? "",
-        ir,
-        slideIndex: 0,
-      })
     }
   }
 

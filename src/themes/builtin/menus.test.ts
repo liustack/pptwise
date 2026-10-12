@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { KIND_VALUES } from "@/ir"
-import { getLayout } from "../../layouts/registry"
+import { getLayout, LAYOUT_REGISTRY } from "../../layouts/registry"
 import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS } from "../index"
 import type { Menu, MenuEntry } from "../schema"
 
@@ -29,6 +29,17 @@ function repeatedFixedFaces(content: Menu["content"]): string[] {
 }
 
 describe("built-in menus", () => {
+  // A face reaches a page only through a theme menu, so a registered face no
+  // built-in menu names is code nothing renders. A redesign that replaces a
+  // face deletes the old one in the same change instead of leaving it behind.
+  it("name every registered face at least once", () => {
+    const named = new Set(CANONICAL_THEME_IDS.flatMap((id) => entries(BUILTIN_THEME_FILES[id].menu).map(({ entry }) => entry.face)))
+    const unused = Object.keys(LAYOUT_REGISTRY)
+      .filter((face) => !named.has(face))
+      .sort()
+    expect(unused, `registered faces no built-in menu names: ${unused.join(", ")}`).toEqual([])
+  })
+
   it.each(CANONICAL_THEME_IDS)("%s names a registered face valid for each page type", (id) => {
     for (const { path, slideType, entry } of entries(BUILTIN_THEME_FILES[id].menu)) {
       const layout = getLayout(entry.face)

@@ -754,10 +754,6 @@ kbd {
   const FACE_FAMILIES = ${jsonScript(FACE_FAMILIES)};
   const COMPONENT_FAMILIES = ${jsonScript(COMPONENT_FAMILIES)};
   const SECTION_ORDER = new Map(MANIFEST.sections.map((s, i) => [s.id, i]));
-  // A section carrying a menu is a theme. The appendix is a pile of faces no
-  // menu offers, so it has none — which is how the face identity card knows
-  // to say "nobody serves this" instead of naming the appendix as a theme.
-  const THEME_SECTIONS = new Set(MANIFEST.sections.filter((s) => s.menu).map((s) => s.id));
 
   /**
    * The pages 按版式 is allowed to show: exactly one per theme-and-face pair.
@@ -786,8 +782,6 @@ kbd {
     const chosen = new Map();
     for (const p of MANIFEST.pages) {
       if (p.face === undefined) continue;
-      // Section rather than theme so the appendix — whose pages are drawn on
-      // the baseline skin but belong to no theme — keeps its own specimens.
       const key = p.section + " " + p.face;
       const held = chosen.get(key);
       if (!held || (held.band !== "face" && p.band === "face")) chosen.set(key, p);
@@ -1417,9 +1411,7 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       head.append(h2, blurb);
       const story = designCard("theme:" + section.id);
       if (story) head.appendChild(story);
-      // The appendix has no menu — it is what no menu asked for — so it gets
-      // no strip rather than a row of em-dashes pretending to be one.
-      if (section.menu) head.appendChild(skeletonStrip(section));
+      head.appendChild(skeletonStrip(section));
       main.appendChild(head);
 
       for (const band of MANIFEST.bands) {
@@ -1603,14 +1595,9 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
     const box = document.createElement("div");
     box.className = "identity";
 
-    const served = [...bySlot].filter(([, secs]) => [...secs].some((s) => THEME_SECTIONS.has(s)));
-    if (served.length === 0) {
-      box.appendChild(headText("div", "idnote", "没有任何主题菜单点过这张脸，它只在未上菜版式那一节里露过面。"));
-      return box;
-    }
-
+    const served = [...bySlot];
     const themes = new Set();
-    for (const [, secs] of served) for (const s of secs) if (THEME_SECTIONS.has(s)) themes.add(s);
+    for (const [, secs] of served) for (const s of secs) themes.add(s);
     box.appendChild(
       headText("h4", "", "这张脸的来路 · " + themes.size + " 套主题 · " + served.length + " 种讲法"),
     );
@@ -1623,7 +1610,7 @@ ${inlineRule("verdictFreshness", verdictFreshness)}
       name.className = "idslot";
       if (SLOT_LABELS[slot]) name.appendChild(headText("b", "", SLOT_LABELS[slot]));
       name.appendChild(headText("code", "", slot));
-      const list = [...secs].filter((s) => THEME_SECTIONS.has(s)).sort((a, b) => SECTION_ORDER.get(a) - SECTION_ORDER.get(b));
+      const list = [...secs].sort((a, b) => SECTION_ORDER.get(a) - SECTION_ORDER.get(b));
       const who = document.createElement("span");
       who.className = "idthemes";
       who.textContent = list.join(" ");
