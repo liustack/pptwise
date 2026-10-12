@@ -529,6 +529,13 @@ const RECORD_KINDS = new Set(['themes', 'build', 'outline'])
 /** What an outline record keeps: the report `spec validate --json` printed. */
 const OUTLINE_FILE = 'outline.json'
 
+/**
+ * What a build record keeps of the deck's own pages drawn in other themes
+ * (`build`'s `alternatives`): the themes in the CLI's order, each with its
+ * page files, copied beside the deck's pages under an `alt-` prefix.
+ */
+const ALTERNATIVES_FILE = 'alternatives.json'
+
 /** The contact sheet `theme try --title` writes beside its manifest. */
 const THEME_SHEET_FILE = 'contact-sheet.html'
 
@@ -1633,6 +1640,69 @@ async function readThemesBundle(dir) {
 }
 
 /**
+ * The other themes a build drew, with each page's markup, or undefined when
+ * the build drew none. Checked like every manifest here: every file name is
+ * a plain name inside the directory before it is read.
+ */
+async function readAlternatives(dir) {
+  const path = join(dir, ALTERNATIVES_FILE)
+  let raw
+  try {
+    raw = await readFile(path, 'utf8')
+  } catch (error) {
+    if (isAbsent(error)) return undefined
+    throw error
+  }
+  let value
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    throw new PreviewDamaged(`${path} is present but unreadable`)
+  }
+  if (!value || typeof value !== 'object' || !Array.isArray(value.themes)) {
+    throw new PreviewDamaged(`${path} is not in a shape this version understands`)
+  }
+  const themes = []
+  for (const theme of value.themes) {
+    if (!theme || typeof theme !== 'object' || typeof theme.id !== 'string' || !Array.isArray(theme.pages)) {
+      throw new PreviewDamaged(`${path} has a theme this version cannot read`)
+    }
+    for (const page of theme.pages) {
+      if (!page || typeof page !== 'object' || !isSafeFileName(page.file)) {
+        throw new PreviewDamaged(`${path} names a ${theme.id} page this version will not open`)
+      }
+    }
+    const pages = []
+    for (const page of theme.pages) pages.push({ ...page, svg: await readFile(join(dir, page.file), 'utf8') })
+    themes.push({ ...theme, pages })
+  }
+  return themes
+}
+
+/**
+ * Copy the pages a build drew in other themes into the record being built,
+ * and write the list the card reads. Returns what the model is told: each
+ * theme's id and display name, in the CLI's order.
+ */
+async function copyAlternatives(alternatives, stageDir) {
+  if (!alternatives || !Array.isArray(alternatives.themes) || alternatives.themes.length === 0) return undefined
+  const themes = []
+  for (const theme of alternatives.themes) {
+    const pages = []
+    for (const page of Array.isArray(theme.pages) ? theme.pages : []) {
+      const name = `alt-${basename(String(page.file))}`
+      if (!isSafeFileName(name)) continue
+      await copyFile(String(page.file), join(stageDir, name))
+      pages.push({ page: Number(page.page), type: String(page.type), file: name })
+    }
+    if (pages.length > 0) themes.push({ id: String(theme.theme), label: String(theme.name), pages })
+  }
+  if (themes.length === 0) return undefined
+  await writeFile(join(stageDir, ALTERNATIVES_FILE), JSON.stringify({ themes }))
+  return themes.map((theme) => ({ id: theme.id, name: theme.label }))
+}
+
+/**
  * What the outline card draws: the page rows `spec validate --json` printed.
  * Checked the way every other file here is, since it sits on disk between runs.
  */
@@ -1714,6 +1784,12 @@ function buildSummary(value) {
   }
   for (const issue of value.warnings) lines.push(`warning: ${buildIssueLine(issue)}`)
   if (value.previewId) lines.push('The user can page through the drawn pages in this card. Do not tell them to open a URL.')
+  if (Array.isArray(value.alternatives) && value.alternatives.length > 0) {
+    lines.push(
+      `Under the pages, the card also shows this deck in other themes, numbered: ${value.alternatives.map((theme, i) => `${i + 1} ${theme.id} (${theme.name})`).join(', ')}. ` +
+        'Do not stop to ask about them. If the user asks for one, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+    )
+  }
   return lines.join('\n')
 }
 
@@ -1962,7 +2038,10 @@ export function createPreviewService(cliPath) {
         // A build's pages are worth showing whether or not it passed, and its
         // export exists only when it did. The card hides its download button
         // on this, rather than offering one the route would refuse.
-        if (record.kind === 'build') bundle = { ...bundle, exportable: typeof record.pptxFile === 'string' }
+        if (record.kind === 'build') {
+          const alternatives = await readAlternatives(dir)
+          bundle = { ...bundle, exportable: typeof record.pptxFile === 'string', ...(alternatives ? { alternatives } : {}) }
+        }
       }
     } catch (error) {
       // Three outcomes, from the one classifier. A page that is not there is
@@ -2562,6 +2641,15 @@ export function createPreviewService(cliPath) {
           pageCount: { type: 'number' },
           errors: { type: 'array', items: ISSUE_SCHEMA },
           warnings: { type: 'array', items: ISSUE_SCHEMA },
+          alternatives: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: { id: { type: 'string' }, name: { type: 'string' } },
+              required: ['id', 'name'],
+              additionalProperties: false,
+            },
+          },
         },
         required: ['status', 'errors', 'warnings'],
         additionalProperties: false,
@@ -2588,6 +2676,7 @@ export function createPreviewService(cliPath) {
       }
       const ok = report.status === 'ok'
       let previewId
+      let alternatives
       if (report.preview) {
         // The drawn pages are copied, not pointed at: the next build rewrites
         // the workspace folder, and this card has to keep showing this build.
@@ -2598,6 +2687,7 @@ export function createPreviewService(cliPath) {
           await copyFile(manifestPath, join(stageDir, MANIFEST_FILE))
           await copyFile(String(report.preview.html), join(stageDir, PREVIEW_HTML_FILE))
           for (const page of manifest.pages) await copyFile(join(fromDir, page.file), join(stageDir, page.file))
+          alternatives = await copyAlternatives(report.alternatives, stageDir)
           let pptxFile
           if (ok && typeof report.pptx === 'string' && isSafeFileName(basename(report.pptx))) {
             pptxFile = basename(report.pptx)
@@ -2620,6 +2710,7 @@ export function createPreviewService(cliPath) {
         ...(typeof report.pageCount === 'number' ? { pageCount: report.pageCount } : {}),
         errors: report.errors.map(buildIssueValue),
         warnings: Array.isArray(report.warnings) ? report.warnings.map(buildIssueValue) : [],
+        ...(alternatives ? { alternatives } : {}),
       }
     },
     timeoutMs: 180_000,

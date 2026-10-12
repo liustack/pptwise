@@ -6,7 +6,7 @@
 // tool hands the model, what it writes under the preview root, and what the
 // route serves the card from it. The commands themselves have their own
 // suites (src/cli/theme-cmd.test.ts, src/cli/build.test.ts).
-import { mkdir, mkdtemp, readFile, readdir, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
@@ -47,6 +47,7 @@ interface BuildValue {
   pageCount?: number
   errors: Issue[]
   warnings: Issue[]
+  alternatives?: { id: string; name: string }[]
 }
 
 interface Tool<A, V> {
@@ -160,7 +161,17 @@ if (argv[0] === "theme" && argv[1] === "try") {
       ? [{ stage: "audit", page: 2, pageId: "why", file: "pages/why.json", code: "monotony", message: "three bullet pages in a row", detail: { componentType: "bullets" } }]
       : []
   if (errors.length === 0) writeFileSync(pptx, "PK-" + name)
-  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }], preview, pptx: errors.length === 0 ? pptx : null, notes: [] }
+  let alternatives
+  if (!unassembled && existsSync(join(target, "alternatives"))) {
+    const dir = join(out, "alternatives")
+    mkdirSync(dir, { recursive: true })
+    alternatives = { dir, ms: 42, themes: ["memo", "swiss"].map((id) => {
+      writeFileSync(join(dir, id + "-01.svg"), "<svg>" + id + " cover</svg>")
+      writeFileSync(join(dir, id + "-02.svg"), "<svg>" + id + " why</svg>")
+      return { theme: id, name: id[0].toUpperCase() + id.slice(1), pages: [{ page: 1, id: "cover", type: "cover", file: join(dir, id + "-01.svg") }, { page: 2, id: "why", type: "content", file: join(dir, id + "-02.svg") }] }
+    }) }
+  }
+  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }], preview, pptx: errors.length === 0 ? pptx : null, ...(alternatives ? { alternatives } : {}), notes: [] }
   process.stdout.write(JSON.stringify(report, null, 2) + "\\n")
   if (errors.length > 0) process.exitCode = 1
 } else if (argv[0] === "spec" && argv[1] === "validate") {
@@ -439,6 +450,42 @@ describe("pptwise_build", () => {
     expect(text).not.toContain("pptwise-preview:")
     expect(text.split("\n")[0]).toBe("needs revision: 1 problem, no .pptx written")
     expect(await readdir(svc.root).catch(() => [])).toEqual([])
+  })
+
+  it("keeps the deck's pages in other themes with the card, and tells the model not to stop for them", async () => {
+    const { svc, workspace, route, handler } = await setup("build-alternatives")
+    const target = await deck(workspace, ["alternatives"])
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    expect(value.alternatives).toEqual([
+      { id: "memo", name: "Memo" },
+      { id: "swiss", name: "Swiss" },
+    ])
+    matchesSchema(value, svc.buildTool.output.schema)
+    const text = svc.buildTool.output.render({}, value)[0]!.text
+    expect(text).toContain(
+      'Under the pages, the card also shows this deck in other themes, numbered: 1 memo (Memo), 2 swiss (Swiss). Do not stop to ask about them. If the user asks for one, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+    )
+    // Copied, not pointed at: the next build may redraw the CLI's own folder.
+    await rm(join(workspace, ".pptwise", "weekly", "alternatives"), { recursive: true })
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as {
+      pages: { svg: string }[]
+      alternatives: { id: string; label: string; pages: { page: number; type: string; svg: string }[] }[]
+    }
+    expect(bundle.pages.map((p) => p.svg)).toEqual(["<svg>cover</svg>", "<svg>why</svg>"])
+    expect(bundle.alternatives.map((t) => [t.id, t.label, t.pages.map((p) => [p.page, p.type, p.svg])])).toEqual([
+      ["memo", "Memo", [[1, "cover", "<svg>memo cover</svg>"], [2, "content", "<svg>memo why</svg>"]]],
+      ["swiss", "Swiss", [[1, "cover", "<svg>swiss cover</svg>"], [2, "content", "<svg>swiss why</svg>"]]],
+    ])
+  })
+
+  it("says nothing about other themes when the build drew none", async () => {
+    const { svc, workspace, route, handler } = await setup("build-no-alternatives")
+    const target = await deck(workspace)
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    expect(value).not.toHaveProperty("alternatives")
+    expect(svc.buildTool.output.render({}, value)[0]!.text).not.toContain("other themes")
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as Record<string, unknown>
+    expect(bundle).not.toHaveProperty("alternatives")
   })
 
   it("throws when the command fails outright rather than reporting a revision", async () => {

@@ -2705,3 +2705,88 @@ describe("dsh cards — DSH's own look", () => {
     expect(warn.mock.calls.some(([line]) => String(line).includes("DSH primitives unavailable"))).toBe(true)
   })
 })
+
+describe("the build card's other themes", () => {
+  const alternatives = [
+    { id: "memo", label: "Memo", pages: [page(1, "cover"), page(2)] },
+    { id: "swiss", label: "Swiss", pages: [page(1, "cover"), page(3)] },
+  ]
+  const built = () => ({ ...bundleOf([page(1, "cover"), page(2), page(3)], "weekly"), alternatives })
+
+  function composer() {
+    const calls: string[] = []
+    let draft = ""
+    const input = {
+      state: { getSnapshot: () => ({ draft }) },
+      setDraft: (text: string) => {
+        calls.push("set:" + text)
+        draft = text
+      },
+      focus: () => calls.push("focus"),
+    }
+    return { calls, conversation: { input: { for: () => input } } }
+  }
+
+  it("draws each theme as a numbered column under the deck, and a click starts the message that asks for it", async () => {
+    const { calls, conversation } = composer()
+    const kit = makeTail({ sidebar: true, conversation })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: built() }))
+    const Card = kit.seats.get("pptwise_build")!
+    const { container } = render(<Card block={blockWith(built() as Bundle, "new-0001")} />)
+    await waitFor(() => expect(container.querySelector("[data-pptwise-alternatives]")).not.toBeNull())
+    const strip = container.querySelector("[data-pptwise-alternatives]") as HTMLElement
+    expect(within(strip).getByText("Other themes")).toBeInTheDocument()
+    const columns = [...strip.querySelectorAll("[data-alt-theme]")]
+    expect(columns.map((c) => c.getAttribute("data-alt-theme"))).toEqual(["memo", "swiss"])
+    expect(columns.map((c) => c.querySelector("[data-theme-number]")!.textContent)).toEqual(["1", "2"])
+    expect(columns[1]!.querySelectorAll(".pw-thumb")).toHaveLength(2)
+    // The deck's own strip is unchanged: three pages, outside the other themes.
+    expect(thumbnails(container).filter((t) => !strip.contains(t))).toHaveLength(3)
+
+    fireEvent.click(columns[1]!.querySelector(".pw-thumb")!)
+    expect(calls).toEqual(["set:Switch to Swiss", "focus"])
+    // Asking twice leaves one line, not two.
+    fireEvent.click(columns[1]!.querySelectorAll(".pw-thumb")[1]!)
+    expect(calls.slice(2)).toEqual(["focus"])
+    // Nothing opened the viewer.
+    expect(kit.opened).toEqual([])
+  })
+
+  it("asks in the harness's language", async () => {
+    const { calls, conversation } = composer()
+    const kit = makeTail({ sidebar: true, conversation })
+    const before = document.documentElement.lang
+    document.documentElement.lang = "zh-CN"
+    try {
+      fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: built() }))
+      const Card = kit.seats.get("pptwise_build")!
+      const { container } = render(<Card block={blockWith(built() as Bundle, "new-0001")} />)
+      await waitFor(() => expect(container.querySelector("[data-pptwise-alternatives]")).not.toBeNull())
+      expect(within(container.querySelector("[data-pptwise-alternatives]") as HTMLElement).getByText("其他主题")).toBeInTheDocument()
+      fireEvent.click(container.querySelector('[data-alt-theme="memo"] .pw-thumb')!)
+      expect(calls[0]).toBe("set:换成 Memo")
+    } finally {
+      document.documentElement.lang = before
+    }
+  })
+
+  it("draws them inert in a shell with no composer to write in", async () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: built() }))
+    const { container } = render(<Card block={blockWith(built() as Bundle, "new-0001")} />)
+    await waitFor(() => expect(container.querySelector("[data-pptwise-alternatives]")).not.toBeNull())
+    const thumbs = container.querySelectorAll("[data-pptwise-alternatives] .pw-thumb")
+    expect(thumbs).toHaveLength(4)
+    for (const thumb of thumbs) expect(thumb).not.toHaveAttribute("role")
+  })
+
+  it("draws nothing extra for a deck without them", async () => {
+    const kit = makeTail({ sidebar: true })
+    const plain = bundleOf([page(1, "cover"), page(2)], "weekly")
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: plain }))
+    const Card = kit.seats.get("pptwise_build")!
+    const { container } = render(<Card block={blockWith(plain, "new-0001")} />)
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(2))
+    expect(container.querySelector("[data-pptwise-alternatives]")).toBeNull()
+  })
+})

@@ -129,6 +129,8 @@ window.__ModuleLoader__.load({
         'compare.none': '没有这一页',
         'compare.removed': '这一版删掉了',
         'edit.prefix': '第 {n} 页：',
+        'alt.title': '其他主题',
+        'alt.switch': '换成 {name}',
       },
       en: {
         'outline.title': 'Outline',
@@ -181,6 +183,8 @@ window.__ModuleLoader__.load({
         'compare.none': 'Not in this version',
         'compare.removed': 'Removed in this version',
         'edit.prefix': 'Page {n}: ',
+        'alt.title': 'Other themes',
+        'alt.switch': 'Switch to {name}',
       },
     }
     var localeT = null
@@ -796,6 +800,11 @@ window.__ModuleLoader__.load({
       return viewerHost !== null && viewerHost.open(target)
     }
 
+    /** Whether a card can start a message in the composer of the session on screen. */
+    function canDraft() {
+      return viewerHost !== null && typeof viewerHost.draft === 'function'
+    }
+
     function PreviewCard(react, reactDom, ui) {
       var h = react.createElement
       var useState = react.useState
@@ -833,6 +842,10 @@ window.__ModuleLoader__.load({
         '.pw-strip{display:flex;gap:10px;overflow-x:auto;padding:10px;border-top:0.5px solid var(--dsw-alias-border-l1)}',
         '.pw-tile{display:flex;flex:0 0 auto;flex-direction:column;gap:4px;width:132px;min-width:0}',
         '.pw-tile-desk{width:160px}',
+        '.pw-alts{border-top:0.5px solid var(--dsw-alias-border-l1)}',
+        '.pw-alts-head{padding:8px 10px 0;font-size:11px;line-height:18px;color:var(--dsw-alias-label-tertiary)}',
+        '.pw-alts .pw-strip{border-top:0;padding-top:6px}',
+        '.pw-alts .pw-thumb[role=button]{cursor:pointer}',
         '.pw-shot{position:relative}',
         '.pw-thumb{position:relative;box-sizing:border-box;width:100%;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l1);border-radius:var(--dsw-radius-md);background:var(--pw-fill);transition:border-color 120ms ease}',
         '.pw-thumb[role=button]{cursor:zoom-in}',
@@ -1703,6 +1716,7 @@ window.__ModuleLoader__.load({
               )
             }),
           ),
+          h(Alternatives, { themes: bundle.alternatives, slide: slide }),
           settled ? h(VerdictNote, { verdict: verdict }) : null,
           // No id comparison here, and none needed: `deck` is this preview's own
           // entry or the unasked state, so a viewer left open on another deck
@@ -1749,6 +1763,53 @@ window.__ModuleLoader__.load({
           h('span', { className: 'pw-num', 'data-theme-number': props.n }, String(props.n)),
           h('span', { className: 'pw-theme-id' }, theme.id),
           theme.label && theme.label !== theme.id ? h('span', null, theme.label) : null,
+        )
+      }
+
+      /**
+       * The deck's own pages in other themes, under a build's strip: one
+       * numbered column per theme, the way the theme wall draws them. A click
+       * starts the message that asks for that theme ("Switch to Clinic"), for
+       * the user to send or change. Nothing without a composer to write in.
+       */
+      function Alternatives(props) {
+        var themes = Array.isArray(props.themes) ? props.themes : []
+        if (themes.length === 0) return null
+        var slide = props.slide
+        var drafting = canDraft()
+        return h(
+          'div',
+          { className: 'pw-alts', 'data-pptwise-alternatives': '' },
+          h('div', { className: 'pw-alts-head' }, t('alt.title')),
+          h(
+            'div',
+            { className: 'pw-strip' },
+            themes.map(function (theme, i) {
+              var pages = Array.isArray(theme.pages) ? theme.pages.filter(hasMarkup) : []
+              var ask = t('alt.switch', { name: theme.label || theme.id })
+              var onClick = drafting
+                ? function () {
+                    viewerHost.draft(ask)
+                  }
+                : undefined
+              return h(
+                'div',
+                { key: theme.id || i, className: 'pw-tile', 'data-alt-theme': theme.id },
+                pages.map(function (page, j) {
+                  return h(Frame, {
+                    key: page.file || j,
+                    page: page,
+                    prefix: 'pfa' + i + '-' + j + '-',
+                    width: slide.width,
+                    height: slide.height,
+                    title: drafting ? ask : theme.label || theme.id,
+                    onClick: onClick,
+                  })
+                }),
+                h(ThemeLabel, { theme: theme, n: i + 1 }),
+              )
+            }),
+          ),
         )
       }
 
@@ -2668,6 +2729,14 @@ window.__ModuleLoader__.load({
      * typed stays, with the prefix on a new line after it.
      */
     function editPageIn(sessions, sessionId, n) {
+      draftIn(sessions, sessionId, t('edit.prefix', { n: n }))
+    }
+
+    /**
+     * Put `prefix` on a line of its own at the end of the composer's draft,
+     * once, and give it the keyboard: what the user had typed stays.
+     */
+    function draftIn(sessions, sessionId, prefix) {
       var binding = sessions.binding(sessionId)
       var conversation = binding && binding.ctx && typeof binding.ctx.get === 'function' ? binding.ctx.get('conversation') : undefined
       if (!conversation || !conversation.input || typeof conversation.input.for !== 'function') {
@@ -2675,7 +2744,6 @@ window.__ModuleLoader__.load({
         return
       }
       var input = conversation.input.for(binding.ctx)
-      var prefix = t('edit.prefix', { n: n })
       var current = ''
       try {
         var snapshot = input.state && typeof input.state.getSnapshot === 'function' ? input.state.getSnapshot() : undefined
@@ -2790,6 +2858,15 @@ window.__ModuleLoader__.load({
                 }
                 editPageIn(scope.sessions, sessionId, n)
               },
+              draft: function (text) {
+                var mounted = scope.sidebarRight.mounted
+                var sessionId = mounted && typeof mounted.getSnapshot === 'function' ? mounted.getSnapshot() : undefined
+                if (sessionId === undefined) {
+                  console.warn('[pptwise] no session on screen to write in')
+                  return
+                }
+                draftIn(scope.sessions, sessionId, text)
+              },
             }
             return function () {
               viewerHost = null
@@ -2854,6 +2931,7 @@ window.__ModuleLoader__.load({
       artifactDefinition: artifactDefinition,
       deckKey: deckKey,
       editPageIn: editPageIn,
+      draftIn: draftIn,
       t: t,
       STRINGS: STRINGS,
       pageCountOf: pageCountOf,
