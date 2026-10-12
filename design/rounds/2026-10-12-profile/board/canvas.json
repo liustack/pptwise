@@ -1,0 +1,37 @@
+{
+  "v": 3,
+  "createdOnFiles": {"v": 1, "at": "2026-10-12T13:20:00Z"},
+  "title": "profile 主题设计稿（重画）",
+  "launch": {"view": "canvas"},
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {"x": 0, "y": 0, "w": 1280, "h": 720, "title": "01 封面"},
+    "p02-who.dc.html": {"x": 1360, "y": 0, "w": 1280, "h": 720, "title": "02 我是谁"},
+    "p03-path.dc.html": {"x": 2720, "y": 0, "w": 1280, "h": 720, "title": "03 四个岗位"},
+    "p04-fit.dc.html": {"x": 0, "y": 840, "w": 1280, "h": 720, "title": "04 岗位对照"},
+    "p05-birthday.dc.html": {"x": 1360, "y": 840, "w": 1280, "h": 720, "title": "05 生日券"},
+    "p06-stored.dc.html": {"x": 2720, "y": 840, "w": 1280, "h": 720, "title": "06 储值卡"},
+    "p07-winback.dc.html": {"x": 0, "y": 1680, "w": 1280, "h": 720, "title": "07 唤回"},
+    "p08-skills.dc.html": {"x": 1360, "y": 1680, "w": 1280, "h": 720, "title": "08 能力自评"},
+    "p09-gaps.dc.html": {"x": 2720, "y": 1680, "w": 1280, "h": 720, "title": "09 短板"},
+    "p10-plan.dc.html": {"x": 0, "y": 2520, "w": 1280, "h": 720, "title": "10 上任 90 天"},
+    "p11-why.dc.html": {"x": 1360, "y": 2520, "w": 1280, "h": 720, "title": "11 为什么是我"},
+    "p12-close.dc.html": {"x": 2720, "y": 2520, "w": 1280, "h": 720, "title": "12 结尾"}
+  },
+  "order": [
+    "Main.dc.html",
+    "p02-who.dc.html",
+    "p03-path.dc.html",
+    "p04-fit.dc.html",
+    "p05-birthday.dc.html",
+    "p06-stored.dc.html",
+    "p07-winback.dc.html",
+    "p08-skills.dc.html",
+    "p09-gaps.dc.html",
+    "p10-plan.dc.html",
+    "p11-why.dc.html",
+    "p12-close.dc.html"
+  ],
+  "notes": {},
+  "designSystems": []
+}

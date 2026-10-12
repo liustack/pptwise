@@ -1527,6 +1527,67 @@ No field was added to the IR. The board's marks reuse fields that existed.
 | A face may let a `paragraph` stand beside a full-body component | `chalkboard-sheet` declares `fullBodyCompanions: ["paragraph"]`, so a `waterfall` closes on the line that explains it | [content-chalkboard-sheet.tsx](../src/layouts/content-chalkboard-sheet.tsx) | [design/compositions/cascade](../design/compositions/cascade/README.md) |
 | lecture's heading leads with Times New Roman over SimSun | an English title and its curly quotes are set in Times New Roman rather than full width in SimSun | [lecture.ts](../src/themes/builtin/lecture.ts) | [design/rounds/2026-10-08-lecture](../design/rounds/2026-10-08-lecture/README.md) |
 
+## profile membership product manager candidacy sample, 2026-10
+
+The round drew profile, the 23rd built-in theme, to a twelve-page Chinese and English candidacy in which a membership operations lead at a restaurant chain asks an internal panel for the membership product manager's post: who the speaker is, four posts with one result each, what the role asks against what they have done, three pieces of work told as cases, a self-assessment, the two gaps and how they close, the first 90 days, why this person, and the close. The person and every figure are invented, and every page says so in its footer. Its decisions, the design system every profile page follows, and every place the engine departs from the board are in [`design/rounds/2026-10-12-profile/`](../design/rounds/2026-10-12-profile/README.md). The rules are restated for the next design session in [Designing for profile](./design-profile.md).
+
+### Compositions
+
+The compositions take a twenty-third `setting`, `portrait` (`CompositionSetting` in [shared.tsx](../src/layouts/compositions/shared.tsx)): a magazine profile of one person before a panel. White paper, open columns under hairlines, claims, names and figures bold in the heading serif, the speaker's photograph bled off one side, and the accent on the one result, row or block a page is about. The composition is handed the whole page and places the page's section line (`kicker`), claim (`claim`) and source (`source`, new: `footer` sets a photograph's credit in the footer row after the deck's label) itself.
+
+New:
+
+| composition | what it draws | takes | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+| `aside` | a photograph bled from the left edge, and in the column beside it the cards as open rows with their icons in the accent | an `image` and an `icon_cards` of two to four with titles. The portrait setting only | [aside.tsx](../src/layouts/compositions/aside.tsx) | profile | [design/compositions/aside](../design/compositions/aside/README.md) |
+| `stations` | a photograph across the top, posts in equal columns each with its date, title and one result as a figure, the post held now under a rule of the accent | an `image` and a horizontal `timeline` of two to five whose words hold a number. The portrait setting only | [stations.tsx](../src/layouts/compositions/stations.tsx) | profile | [design/compositions/stations](../design/compositions/stations/README.md) |
+| `verdicts` | an open table of what a role asks against what was done, a verdict a row after a symbol for its kind of news, the row the page is about on the accent's tint | a `comparison` of one or two columns and two to six tagged rows. The portrait setting only | [verdicts.tsx](../src/layouts/compositions/verdicts.tsx) | profile | [design/compositions/verdicts](../design/compositions/verdicts/README.md) |
+| `casework` | a case in three numbered columns: the problem, what was changed, and the result at 120px in the accent with where it started | a `callout` with a title and a `from_to` with a label column and one marked row. The portrait setting only | [casework.tsx](../src/layouts/compositions/casework.tsx) | profile | [design/compositions/casework](../design/compositions/casework/README.md) |
+| `results` | a photograph bled from the right, and beside it figures as open rows with their labels and notes, a marked figure in the accent | an `image` and a `kpi_cards` of two to four. The portrait setting only | [results.tsx](../src/layouts/compositions/results.tsx) | profile | [design/compositions/results](../design/compositions/results/README.md) |
+| `uplift` | bars on their side with values in one column and a dashed control line, beside the result at 104px under a rule of the accent | a horizontal `bar` chart of one series and a `kpi_cards` of one or two. The portrait setting only | [uplift.tsx](../src/layouts/compositions/uplift.tsx) | profile | [design/compositions/uplift](../design/compositions/uplift/README.md) |
+| `appraisal` | a radar of the role, the speaker now and a target, beside a table of four dots a criterion with the verdict worked out in levels | a `harvey_balls` of three to five criteria and two or three options, optionally a `paragraph`. The portrait setting only | [appraisal.tsx](../src/layouts/compositions/appraisal.tsx) | profile | [design/compositions/appraisal](../design/compositions/appraisal/README.md) |
+| `shortfalls` | an open table of gaps, how each closes and when the proof is due as a figure, the check on a warm band under it | a `comparison` of two columns whose labels and last cells break at a colon, optionally a `callout`. The portrait setting only | [shortfalls.tsx](../src/layouts/compositions/shortfalls.tsx) | profile | [design/compositions/shortfalls](../design/compositions/shortfalls/README.md) |
+| `tenure` | a ruler of days with phases as blocks under it, each title huge in the serif, the phase the plan dwells on filled with the accent | a `roadmap` of two to four phases with durations and one row each, optionally a one-line `callout`. The portrait setting only | [tenure.tsx](../src/layouts/compositions/tenure.tsx) | profile | [design/compositions/tenure](../design/compositions/tenure/README.md) |
+| `credo` | the portrait bled from the right, a huge quotation mark, one sentence in the serif at 38px, and the figure it rests on | an `image`, a `paragraph` and a `kpi_cards` of one. The portrait setting only | [credo.tsx](../src/layouts/compositions/credo.tsx) | profile | [design/compositions/credo](../design/compositions/credo/README.md) |
+
+The shared pieces are in [portrait.tsx](../src/layouts/compositions/portrait.tsx): `portraitInks` for the inks, `portraitText`, `portraitMeta` and `portraitMark` for words and marks that read on what they sit on, `portraitBlock` for a block filled whole with the accent and the ink its words take, `fitPortrait`, `fitPortraitLines`, `portraitWidth`, `portraitTrackedWidth`, `portraitBaseline`, `paintPortrait`, `paintPortraitLine` and `paintPortraitTracked` for text at its exact size, `splitFigure`, `portraitFigureWidth` and `paintPortraitFigure` for a serif figure with its unit, `PortraitSection` for the section line, `paintPortraitPhoto` (with `focusCrop`, and `round` for an avatar) and `paintPortraitIcon`, `placePortraitHead`, `placePortraitKicker`, `placePortraitClaim`, `placePortraitSource` and `portraitBodyBottom` for the frame in the column a composition gives it, `wholePage`, and `PORTRAIT_SPEC` and `PORTRAIT_META` for the small type's exemption and the 3:1 meta tier. The section line's words, the claim, the source and the footer row are in [portrait-shared.tsx](../src/layouts/portrait-shared.tsx). Any face can call them.
+
+The tests draw every board page on profile and on stage and crayon, a dark theme and a light one that share nothing with it ([portrait-pages.test.tsx](../src/layouts/compositions/portrait-pages.test.tsx)), and check that each page is drawn whole, inside the page, legible, and prints every word the author wrote. The gallery's 构图 band has a profile page for every new composition.
+
+### Faces
+
+| face | what it is | code | used by | board |
+| :-- | :-- | :-- | :-- | :-- |
+| `portrait-sheet` | the ordinary content page: the section line from the deck's `course` and the page's `stage`, the serif claim at 34px across the measure, the body handed to the compositions in the portrait setting | [content-portrait-sheet.tsx](../src/layouts/content-portrait-sheet.tsx), [portrait-shared.tsx](../src/layouts/portrait-shared.tsx) | profile (every content kind) | [design/faces/portrait-sheet](../design/faces/portrait-sheet/README.md) |
+| `portrait-cover` | the speaker's portrait down the right half, the occasion and the date, the name at 112px in the serif, the claim, the post held and the post wanted, three figures | [cover-portrait-cover.tsx](../src/layouts/cover-portrait-cover.tsx) | profile | [design/faces/portrait-cover](../design/faces/portrait-cover/README.md) |
+| `portrait-chapter` | the section line and the title large in the serif on white paper, a photograph down the right half when there is one | [chapter-portrait-chapter.tsx](../src/layouts/chapter-portrait-chapter.tsx) | profile | [design/faces/portrait-chapter](../design/faces/portrait-chapter/README.md) |
+| `portrait-ending` | a photograph down the left, the closing promise, the invitation to ask, and the speaker's card with a round avatar drawn as a native ellipse crop | [ending-portrait-ending.tsx](../src/layouts/ending-portrait-ending.tsx) | profile | [design/faces/portrait-ending](../design/faces/portrait-ending/README.md) |
+
+### Motif
+
+`profile-motif` prints the footer row on content pages at y685: the deck's label at the left, the speaker's name (the deck's first author) and the page number at the right, PowerPoint's slide-number field. It paints the footer row itself, keeps to the column a bled photograph leaves (`data-frame-left`, new `data-frame-right`) and moves the label to the right when the face puts its own key at the bottom left (new `data-footer-pack`). Board: [design/motifs/profile-motif](../design/motifs/profile-motif/README.md).
+
+### Page and component fields
+
+No field was added to the IR. The board's marks reuse fields that existed.
+
+| field | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| `course.stages` on the deck and `stage` on a page | the section line, numbered in the deck's language (「一　我是谁」, "1 Who") | [portrait-shared.tsx](../src/layouts/portrait-shared.tsx) | [design/faces/portrait-sheet](../design/faces/portrait-sheet/README.md) |
+| `meta.authors[0]` | the speaker's name on the cover, the card and every footer, the `role` as the post held | [cover-portrait-cover.tsx](../src/layouts/cover-portrait-cover.tsx) | [design/faces/portrait-cover](../design/faces/portrait-cover/README.md) |
+| a number in a milestone's `desc` | the post's result as a figure, its unit the word after it | [stations.tsx](../src/layouts/compositions/stations.tsx) | [design/compositions/stations](../design/compositions/stations/README.md) |
+| `harvey_balls` scores | levels a quarter each, drawn as a radar and four dots, the verdict against the first option worked out | [appraisal.tsx](../src/layouts/compositions/appraisal.tsx) | [design/compositions/appraisal](../design/compositions/appraisal/README.md) |
+| a comparison row's label and last cell written `what：detail` | the gap and the due date set large, the rest under them | [shortfalls.tsx](../src/layouts/compositions/shortfalls.tsx) | [design/compositions/shortfalls](../design/compositions/shortfalls/README.md) |
+
+### Engine behaviour
+
+| behaviour | what it does | code | board |
+| :-- | :-- | :-- | :-- |
+| A block filled with a brand colour stays readable | `readableBlock` keeps the colour when white or the ink reads on it, and otherwise moves it toward the side that reads better until one does | [ink.ts](../src/render/ink.ts) | [design/compositions/tenure](../design/compositions/tenure/README.md) |
+| A face may keep the footer to one side | a face writes `data-frame-right` or `data-footer-pack="end"` on its body, and the page renderer hands it to the motif | [frame-left.ts](../src/render/frame-left.ts), [full-slide-svg.tsx](../src/render/full-slide-svg.tsx) | [design/motifs/profile-motif](../design/motifs/profile-motif/README.md) |
+| A face may let a `paragraph` stand beside a full-body component | `portrait-sheet` declares `fullBodyCompanions: ["paragraph"]`, so the self-assessment closes on its line | [content-portrait-sheet.tsx](../src/layouts/content-portrait-sheet.tsx) | [design/compositions/appraisal](../design/compositions/appraisal/README.md) |
+| profile's heading leads with Times New Roman over SimSun | an English title and its curly quotes are set in Times New Roman rather than full width in SimSun | [profile.ts](../src/themes/builtin/profile.ts) | [design/rounds/2026-10-12-profile](../design/rounds/2026-10-12-profile/README.md) |
+
 ## bulletin statement, fact and evidence pages, 2026-10
 
 The round gave bulletin the three content kinds its menu refused, drawn to a nine-page board on the NEV sample's own data: two statements, two facts and two evidence pages in Chinese, one of each in English. Its decisions, and every place the engine departs from the board, are in [`design/rounds/2026-10-09-bulletin-kinds/`](../design/rounds/2026-10-09-bulletin-kinds/README.md). The rules are added to [Designing for bulletin](./design-bulletin.md#statement-fact-and-evidence-pages).

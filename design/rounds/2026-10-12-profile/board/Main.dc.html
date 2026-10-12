@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>封面</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <img src="/_blob/6025192984d9bf271fcec98689c10b19" alt="陈立行的职业照" style="position: absolute; left: 640px; top: 0; width: 640px; height: 720px; object-fit: cover; object-position: 50% 20%">
+
+  <div style="position: absolute; left: 80px; top: 64px; width: 500px; display: flex; justify-content: space-between; align-items: baseline">
+    <div style="font-size: 15px; letter-spacing: 0.2em; color: {{accent}}; font-weight: 500">会员产品经理岗位竞聘</div>
+    <div style="font-size: 14px; color: #6B655E">2026 年 10 月</div>
+  </div>
+  <div style="position: absolute; left: 80px; top: 96px; width: 500px; height: 1px; background: #1D1B1A"></div>
+
+  <div style="position: absolute; left: 80px; top: 176px; width: 520px; display: flex; flex-direction: column; gap: 20px">
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 112px; line-height: 1; font-weight: 900; letter-spacing: 0.04em">陈立行</div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 34px; line-height: 1.4; font-weight: 500">把留住会员的办法，做进产品里</div>
+    <div style="display: flex; align-items: center; gap: 14px; font-size: 18px; color: #6B655E">
+      <span>会员运营主管</span>
+      <svg width="28" height="12" viewBox="0 0 28 12" aria-hidden="true"><path d="M0 6h26M21 1l5 5-5 5" fill="none" stroke="#6B655E" stroke-width="1.5"></path></svg>
+      <span style="color: #1D1B1A; font-weight: 500">竞聘会员产品经理</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 500px; width: 500px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #DCD6CE">
+    <div style="padding: 20px 16px 0 0; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 40px; line-height: 1; font-weight: 700">9<span style="font-size: 18px; font-weight: 500; margin-left: 4px">年</span></div>
+      <div style="font-size: 14px; color: #6B655E; line-height: 1.5">在会员一线<br>客服到会员运营</div>
+    </div>
+    <div style="padding: 20px 16px 0 20px; border-left: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 40px; line-height: 1; font-weight: 700">3<span style="font-size: 18px; font-weight: 500; margin-left: 4px">次</span></div>
+      <div style="font-size: 14px; color: #6B655E; line-height: 1.5">主导会员规则改版<br>生日券、储值卡、唤回</div>
+    </div>
+    <div style="padding: 20px 0 0 20px; border-left: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 6px">
+      <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 40px; line-height: 1; font-weight: 700; color: {{accent}}">13.4<span style="font-size: 18px; font-weight: 500; margin-left: 4px">万</span></div>
+      <div style="font-size: 14px; color: #6B655E; line-height: 1.5">请回来的沉睡会员<br>2025 年全量</div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; bottom: 32px; font-size: 12px; color: #6B655E">示例人物，姓名和数据均为虚构</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>能力自评</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 64px; width: 1120px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.1em; color: {{accent}}">
+      <span style="display: block; width: 28px; height: 2px; background: {{accent}}"></span>
+      <span>三　差距</span>
+    </div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 34px; line-height: 1.4; font-weight: 700">五项能力里，会员业务最强，产品规划差得最远</div>
+  </div>
+
+  <svg style="position: absolute; left: 60px; top: 176px" width="600" height="470" viewBox="0 0 600 470" role="img" aria-label="五项能力雷达图：岗位要求、我现在、一年后目标">
+    <g fill="none" stroke="#DCD6CE" stroke-width="1">
+      <polygon points="300,60 480.7,191.3 411.7,403.7 188.3,403.7 119.3,191.3"></polygon>
+      <polygon points="300,155 390.3,220.6 355.9,326.9 244.1,326.9 209.7,220.6"></polygon>
+      <polygon points="300,202.5 345.2,235.3 327.9,288.4 272.1,288.4 254.8,235.3"></polygon>
+      <line x1="300" y1="250" x2="300" y2="60"></line>
+      <line x1="300" y1="250" x2="480.7" y2="191.3"></line>
+      <line x1="300" y1="250" x2="411.7" y2="403.7"></line>
+      <line x1="300" y1="250" x2="188.3" y2="403.7"></line>
+      <line x1="300" y1="250" x2="119.3" y2="191.3"></line>
+    </g>
+    <polygon points="300,107.5 435.5,206 383.8,365.3 216.2,365.3 164.5,206" fill="none" stroke="#1D1B1A" stroke-width="1.5"></polygon>
+    <polygon points="300,60 435.5,206 411.7,403.7 216.2,365.3 164.5,206" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-dasharray="6 5"></polygon>
+    <polygon points="300,60 435.5,206 383.8,365.3 244.1,326.9 254.8,235.3" fill="{{accent}}" fill-opacity="0.18" stroke="{{accent}}" stroke-width="2.2"></polygon>
+    <g font-family="'Noto Sans SC', 'PingFang SC', sans-serif" font-size="16" fill="#1D1B1A">
+      <text x="300" y="40" text-anchor="middle">会员业务</text>
+      <text x="498" y="186" text-anchor="start">数据与实验</text>
+      <text x="420" y="432" text-anchor="start">跨部门推动</text>
+      <text x="180" y="432" text-anchor="end">需求与研发协作</text>
+      <text x="102" y="186" text-anchor="end">产品规划</text>
+    </g>
+  </svg>
+
+  <div style="position: absolute; left: 120px; top: 646px; display: flex; gap: 28px; font-size: 13px; color: #4A4540">
+    <span style="display: flex; align-items: center; gap: 8px"><span style="display: block; width: 24px; height: 0; border-top: 1.5px solid #1D1B1A"></span>岗位要求</span>
+    <span style="display: flex; align-items: center; gap: 8px"><span style="display: block; width: 24px; height: 12px; background: {{accent}}; opacity: 0.35; border-top: 2px solid {{accent}}"></span>我现在</span>
+    <span style="display: flex; align-items: center; gap: 8px"><span style="display: block; width: 24px; height: 0; border-top: 2px dashed {{accent}}"></span>一年后目标</span>
+  </div>
+
+  <div style="position: absolute; left: 720px; top: 210px; width: 480px; display: flex; flex-direction: column">
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; padding-bottom: 10px; border-bottom: 2px solid #1D1B1A; font-size: 13px; letter-spacing: 0.12em; color: #6B655E">
+      <span>能力</span><span>我现在</span><span>对岗位要求</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; align-items: center; height: 62px; border-bottom: 1px solid #DCD6CE">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">会员业务</span>
+      <span style="display: flex; gap: 10px"><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span></span>
+      <span style="font-size: 15px">高一档</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; align-items: center; height: 62px; border-bottom: 1px solid #DCD6CE">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">数据与实验</span>
+      <span style="display: flex; gap: 10px"><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span></span>
+      <span style="font-size: 15px">达标</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; align-items: center; height: 62px; border-bottom: 1px solid #DCD6CE">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">跨部门推动</span>
+      <span style="display: flex; gap: 10px"><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span></span>
+      <span style="font-size: 15px">达标</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; align-items: center; height: 62px; border-bottom: 1px solid #DCD6CE">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">需求与研发协作</span>
+      <span style="display: flex; gap: 10px"><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span></span>
+      <span style="font-size: 15px">差一档</span>
+    </div>
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 130px 90px; column-gap: 16px; align-items: center; height: 62px; border-bottom: 1px solid #DCD6CE">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">产品规划</span>
+      <span style="display: flex; gap: 10px"><span style="display: block; width: 14px; height: 14px; border-radius: 50%; background: #1D1B1A"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span><span style="display: block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #B9B0A6"></span></span>
+      <span style="font-size: 15px; font-weight: 700; color: {{accent}}">差两档</span>
+    </div>
+
+    <div style="margin-top: 22px; font-size: 15px; line-height: 1.7; color: #4A4540">现在达标 3 项。一年后目标：5 项全部达标，跨部门推动再上一档。</div>
+  </div>
+
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 32px; display: flex; justify-content: flex-end; align-items: baseline; font-size: 12px; color: #6B655E; gap: 24px">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>陈立行　<span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 14px; color: #1D1B1A">08</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>

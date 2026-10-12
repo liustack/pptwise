@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>生日券</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 64px; width: 1120px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.1em; color: {{accent}}">
+      <span style="display: block; width: 28px; height: 2px; background: {{accent}}"></span>
+      <span>二　做成过</span>
+    </div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 34px; line-height: 1.4; font-weight: 700">生日券提前一周发，核销率从 12% 涨到 27%</div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 200px; width: 1120px; display: grid; grid-template-columns: 290px 400px minmax(0, 1fr); column-gap: 40px">
+    <div style="border-top: 1px solid #1D1B1A; padding-top: 14px; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; align-items: baseline; gap: 10px; font-size: 14px; letter-spacing: 0.12em; color: #6B655E"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; color: #1D1B1A">01</span>问题</div>
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1D1B1A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"></path><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"></path><path d="M2 21h20"></path><path d="M7 8v3"></path><path d="M12 8v3"></path><path d="M17 8v3"></path><path d="M7 4h.01"></path><path d="M12 4h.01"></path><path d="M17 4h.01"></path></svg>
+      <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; line-height: 1.6; font-weight: 500">生日券只在生日当天能用，很多会员那天根本不在门店附近，券白白过期</div>
+    </div>
+
+    <div style="border-top: 1px solid #1D1B1A; padding-top: 14px; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; align-items: baseline; gap: 10px; font-size: 14px; letter-spacing: 0.12em; color: #6B655E"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; color: #1D1B1A">02</span>做法</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 20px; border-bottom: 1px solid #DCD6CE">
+        <div style="font-size: 14px; color: #6B655E">发券时间</div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'Noto Serif SC', 'Songti SC', serif">
+          <span style="font-size: 24px; color: #6B655E">生日当天</span>
+          <svg width="32" height="12" viewBox="0 0 32 12" aria-hidden="true"><path d="M0 6h30M25 1l5 5-5 5" fill="none" stroke="#1D1B1A" stroke-width="1.5"></path></svg>
+          <span style="font-size: 30px; font-weight: 700">提前 7 天</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 14px; color: #6B655E">有效期</div>
+        <div style="display: flex; align-items: center; gap: 16px; font-family: 'Noto Serif SC', 'Songti SC', serif">
+          <span style="font-size: 24px; color: #6B655E">1 天</span>
+          <svg width="32" height="12" viewBox="0 0 32 12" aria-hidden="true"><path d="M0 6h30M25 1l5 5-5 5" fill="none" stroke="#1D1B1A" stroke-width="1.5"></path></svg>
+          <span style="font-size: 30px; font-weight: 700">14 天</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top: 3px solid {{accent}}; padding-top: 12px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; gap: 10px; font-size: 14px; letter-spacing: 0.12em; color: #6B655E"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; color: #1D1B1A">03</span>结果</div>
+      <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 120px; line-height: 1; font-weight: 900; color: {{accent}}; margin-top: 8px">27%</div>
+      <div style="font-size: 16px; line-height: 1.6">核销率，改版前 12%，<span style="font-weight: 700">提高 15 个百分点</span></div>
+      <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 4px">
+        <div style="font-size: 14px; color: #6B655E">一年核销张数</div>
+        <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 28px; font-weight: 700">28.8 → 64.8<span style="font-size: 16px; font-weight: 500; margin-left: 6px">万张</span></div>
+        <div style="font-size: 14px; color: #4A4540">每年发券约 240 万张，多出 36 万桌</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 640px; font-size: 13px; color: #6B655E">多出的 36 万桌按生日桌单均 186 元算，约 6,700 万元营业额</div>
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 32px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6B655E">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>陈立行　<span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 14px; color: #1D1B1A">05</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>我是谁</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <img src="/_blob/783a4f57c9f1b27e6530a1faf2a14009" alt="门店前厅" style="position: absolute; left: 0; top: 0; width: 560px; height: 720px; object-fit: cover; object-position: 38% 50%">
+
+  <div style="position: absolute; left: 640px; top: 64px; width: 560px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.1em; color: {{accent}}">
+      <span style="display: block; width: 28px; height: 2px; background: {{accent}}"></span>
+      <span>一　我是谁</span>
+    </div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 34px; line-height: 1.4; font-weight: 700">九年都在会员身边，从接投诉做到改规则</div>
+  </div>
+
+  <div style="position: absolute; left: 640px; top: 290px; width: 560px; display: flex; flex-direction: column">
+    <div style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 22px 0; border-top: 1px solid #1D1B1A">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5Zm0 0a9 9 0 1 1 18 0m0 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3Z"></path><path d="M21 16v2a4 4 0 0 1-4 4h-5"></path></svg>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; font-weight: 700">客服出身</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #4A4540">接过上千通会员电话，听得出抱怨背后是哪条规则</div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 22px 0; border-top: 1px solid #DCD6CE">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; font-weight: 700">看数据说话</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #4A4540">每周看会员看板，改规则之前先做 A/B 小测</div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 22px 0; border-top: 1px solid #DCD6CE; border-bottom: 1px solid #DCD6CE">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; font-weight: 700">能把事推下去</div>
+        <div style="font-size: 16px; line-height: 1.6; color: #4A4540">储值卡改版牵头门店、财务、IT、市场四个部门</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 640px; right: 80px; bottom: 32px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6B655E">
+    <span>示例人物，姓名和数据均为虚构　图为 AI 生成的示意图</span>
+    <span>陈立行　<span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 14px; color: #1D1B1A">02</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>

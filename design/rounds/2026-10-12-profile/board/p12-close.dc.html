@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>结尾</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <img src="/_blob/25446346173be580f11358396d59a89d" alt="会员在手机上收到菜品券" style="position: absolute; left: 0; top: 0; width: 600px; height: 720px; object-fit: cover; object-position: 50% 50%">
+
+  <div style="position: absolute; left: 680px; top: 150px; width: 520px; display: flex; flex-direction: column; gap: 28px">
+    <span style="display: block; width: 28px; height: 2px; background: {{accent}}"></span>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 42px; line-height: 1.45; font-weight: 700">谢谢各位，90 天后我用唤回率和路线图交账</div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; color: {{accent}}; font-weight: 500">请各位评委提问指教</div>
+  </div>
+
+  <div style="position: absolute; left: 680px; top: 520px; width: 520px; padding-top: 22px; border-top: 1px solid #1D1B1A; display: flex; align-items: center; gap: 18px">
+    <img src="/_blob/6025192984d9bf271fcec98689c10b19" alt="陈立行" style="width: 68px; height: 68px; border-radius: 50%; object-fit: cover; object-position: 50% 18%">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 22px; font-weight: 700">陈立行</span>
+      <span style="font-size: 14px; color: #6B655E">会员运营主管，竞聘会员产品经理</span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 680px; width: 520px; bottom: 32px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6B655E">
+    <span>示例人物，姓名和数据均为虚构　图为 AI 生成的示意图</span>
+    <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 14px; color: #1D1B1A">12</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>

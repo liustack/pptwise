@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>上任 90 天</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&amp;family=Noto+Serif+SC:wght@500;700;900&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#6B2D55}a:hover{color:#1D1B1A}
+</style>
+</helmet>
+<div style="width: 1280px; height: 720px; position: relative; overflow: hidden; background: #FFFFFF; color: #1D1B1A; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif">
+  <div style="position: absolute; left: 80px; top: 64px; width: 1120px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px; font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 16px; font-weight: 700; letter-spacing: 0.1em; color: {{accent}}">
+      <span style="display: block; width: 28px; height: 2px; background: {{accent}}"></span>
+      <span>四　上任后</span>
+    </div>
+    <div style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 34px; line-height: 1.4; font-weight: 700">上任 90 天：先听，再定，第 90 天交第一个上线版本</div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 196px; width: 1120px; height: 30px">
+    <div style="position: absolute; left: 0; right: 0; top: 22px; height: 1px; background: #1D1B1A"></div>
+    <div style="position: absolute; left: 0; top: 16px; width: 1px; height: 13px; background: #1D1B1A"></div>
+    <div style="position: absolute; left: 369px; top: 16px; width: 1px; height: 13px; background: #1D1B1A"></div>
+    <div style="position: absolute; left: 738px; top: 16px; width: 1px; height: 13px; background: #1D1B1A"></div>
+    <div style="position: absolute; right: 0; top: 16px; width: 1px; height: 13px; background: #1D1B1A"></div>
+    <span style="position: absolute; left: 0; top: -4px; font-size: 13px; color: #6B655E">第 1 天</span>
+    <span style="position: absolute; left: 378px; top: -4px; font-size: 13px; color: #6B655E">第 31 天</span>
+    <span style="position: absolute; left: 747px; top: -4px; font-size: 13px; color: #6B655E">第 61 天</span>
+    <span style="position: absolute; right: 8px; top: -4px; font-size: 13px; font-weight: 700; color: {{accent}}">第 90 天</span>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 244px; width: 1120px; height: 350px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px">
+    <div style="box-sizing: border-box; padding: 24px 24px 22px; border: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; gap: 14px"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 72px; line-height: 1; font-weight: 900">听</span><span style="font-size: 14px; color: #6B655E">第 1 至 30 天</span></div>
+      <div style="font-size: 16px; line-height: 1.8; margin-top: 6px">走访 20 家门店、访谈 50 位会员<br>会员数据口径对成一张看板</div>
+      <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 13px; color: #6B655E">交付</span>
+        <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">会员问题清单前 10 条</span>
+      </div>
+    </div>
+    <div style="box-sizing: border-box; padding: 24px 24px 22px; border: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; gap: 14px"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 72px; line-height: 1; font-weight: 900">定</span><span style="font-size: 14px; color: #6B655E">第 31 至 60 天</span></div>
+      <div style="font-size: 16px; line-height: 1.8; margin-top: 6px">从清单里挑两件做成需求<br>唤回券自动发、储值余额提醒</div>
+      <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid #DCD6CE; display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 13px; color: #6B655E">交付</span>
+        <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">两份需求文档评审通过</span>
+      </div>
+    </div>
+    <div style="box-sizing: border-box; padding: 24px 24px 22px; background: {{accent}}; color: #FFFFFF; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; gap: 14px"><span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 72px; line-height: 1; font-weight: 900">交</span><span style="font-size: 14px">第 61 至 90 天</span></div>
+      <div style="font-size: 16px; line-height: 1.8; margin-top: 6px">唤回券自动发上线，唤回率不低于 9%<br>人工发券每周 3 人天降到 0.5<br>交下半年路线图初稿</div>
+      <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.45); display: flex; flex-direction: column; gap: 2px">
+        <span style="font-size: 13px">交付</span>
+        <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 18px; font-weight: 700">上线并交路线图</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 616px; width: 1120px; display: flex; align-items: center; gap: 12px; font-size: 15px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1D1B1A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg>
+    <span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-weight: 700">每 30 天交一次账</span>
+    <span style="color: #4A4540">每段结束向部门负责人交书面小结：做了什么、数字到哪、下一段改什么</span>
+  </div>
+
+  <div style="position: absolute; left: 80px; right: 80px; bottom: 32px; display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #6B655E">
+    <span>示例人物，姓名和数据均为虚构</span>
+    <span>陈立行　<span style="font-family: 'Noto Serif SC', 'Songti SC', serif; font-size: 14px; color: #1D1B1A">10</span></span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#6B2D55","options":["#6B2D55","#1F5FD1","#D0312D","#1E8A4C"]},"$preview":{"width":1280,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#6B2D55' };
+  }
+}
+</script>
+</body>
+</html>
