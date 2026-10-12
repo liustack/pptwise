@@ -50,6 +50,12 @@ pnpm e2e
 
 The E2E script builds the package, drives `dist/cli.js`, renders real examples and a deck project, exercises validation, audit, preview, placeholders, brand extraction, workspace theme lookup, image formats, package invariants, and native PPTX output. It converts representative output with LibreOffice when `soffice` is installed. Color changes go through `pptwise theme fork`, not a render-time overlay.
 
+On macOS the E2E also runs the skill's deck sequence (`schema`, `narratives`, `themes`, `theme try`, `spec validate`, `inspect`, `validate`, `preview`, `images list`, `build`) on a Chinese showcase deck inside `sandbox-exec`, with only the project folder and a temp folder writable: once with a writable `.git`, which may gain only the exclude line, and once with a read-only `.git`, which must not change. The fake home folder must come out unchanged and `git status` clean. Elsewhere it prints that it skipped. To keep its logs, run it on its own:
+
+```bash
+pnpm build && pnpm exec tsx scripts/e2e-sandbox.mts --root <empty dir>
+```
+
 Run E2E when changing themes, menus, faces, components, motifs, render code, audit, CLI target loading, assets, or PPTX export. It is intentionally separate from `pnpm check` because it builds the package and may use external local applications.
 
 For the installed DSH plugin path:

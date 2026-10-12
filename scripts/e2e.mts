@@ -7,6 +7,7 @@ import { dirname, join, resolve } from "node:path"
 import JSZip from "jszip"
 import type * as Sharp from "sharp"
 import { openRunRoot } from "../src/test-run-root"
+import { runSandboxLeg, sandboxAvailable } from "./e2e-sandbox.mts"
 
 const OUT = ".e2e-out"
 mkdirSync(OUT, { recursive: true })
@@ -1352,6 +1353,21 @@ console.log("--- theme menu, theme wall and build leg ---")
     rmSync(buildWork, { recursive: true, force: true })
   }
   console.log("build leg OK (pass writes the one .pptx, a broken page exits 1, names its file and removes the .pptx)")
+}
+
+// The skill's deck sequence in a sandbox whose home folder is read-only, once
+// with a writable .git and once with a read-only one (scripts/e2e-sandbox.mts).
+console.log("--- sandbox leg ---")
+if (!sandboxAvailable()) {
+  console.log("sandbox leg skipped (needs macOS sandbox-exec)")
+} else {
+  const sandboxRoot = mkdtempSync(join(tmpdir(), "pptwise-sandbox-"))
+  try {
+    await runSandboxLeg({ root: sandboxRoot, cli: resolve("dist/cli.js"), deck: resolve("showcase/lecture/zh") })
+  } finally {
+    rmSync(sandboxRoot, { recursive: true, force: true })
+  }
+  console.log("sandbox leg OK (read-only home untouched, .pptx in .pptwise/<deck>/, .git gains only the exclude line or nothing, git status clean)")
 }
 
 // A temp directory the CLI does not remove stays on the user's machine until
