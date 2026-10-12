@@ -1,0 +1,33 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "whiteboard"
+  },
+  "notes": "接下来三件事，每件我都会分开讲：哪一步是我做的，哪一步是团队做的。",
+  "stage": "今年做的事",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "连锁卖场进了 120 家店",
+          "text": "3,100 万元",
+          "sub": "我牵头",
+          "highlight": true
+        },
+        {
+          "title": "运营商渠道做到 210 个营业厅",
+          "text": "1,850 万元",
+          "sub": "我牵头",
+          "highlight": true
+        },
+        {
+          "title": "周度补货看板压低渠道库存",
+          "text": "52 → 34 天",
+          "sub": "我牵头",
+          "highlight": true
+        }
+      ]
+    }
+  ]
+}

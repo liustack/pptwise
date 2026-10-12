@@ -1,0 +1,57 @@
+{
+  "components": [
+    {
+      "type": "timeline",
+      "lanes": [
+        "Me",
+        "Team"
+      ],
+      "milestones": [
+        {
+          "date": "Feb",
+          "title": "Wrote the proposal",
+          "desc": "Contract phones and trade-ins",
+          "lane": "Me"
+        },
+        {
+          "date": "Mar",
+          "title": "Won carrier pricing",
+          "desc": "A separate price list from HQ",
+          "lane": "Me",
+          "highlight": true
+        },
+        {
+          "date": "Apr",
+          "title": "First 60 stores",
+          "desc": "He Jiawen led setup and training",
+          "lane": "Team"
+        },
+        {
+          "date": "Jul",
+          "title": "Up to 150",
+          "desc": "Weekly staff incentives",
+          "lane": "Team"
+        },
+        {
+          "date": "Sep",
+          "title": "All 210",
+          "desc": "Three cities covered",
+          "lane": "Team"
+        },
+        {
+          "date": "Dec",
+          "title": "RMB 18.5m",
+          "desc": "RMB 88k per store",
+          "lane": "Me"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "My part was the proposal and the pricing. Setup, training and upkeep were the team's."
+    }
+  ],
+  "notes": "We started the year with no carrier business at all. I did two things: wrote the proposal, and got HQ to give the carrier channel its own price list, which took more than a month. Once we had it, He Jiawen and the team did the setup, the store staff training and the weekly incentive payouts.",
+  "stage": "What I got done"
+}

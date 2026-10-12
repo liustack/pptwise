@@ -1,0 +1,58 @@
+{
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "150 → 64",
+          "label": "Before: stores covered",
+          "note": "Old dealer against new"
+        },
+        {
+          "value": "−38%",
+          "label": "Jan to Apr, year on year",
+          "note": "Taken back only in May",
+          "tone": "danger"
+        },
+        {
+          "value": "**+6%**",
+          "label": "H2, year on year",
+          "note": "Two city distributors and key stores"
+        },
+        {
+          "value": "81.3%",
+          "label": "The north, of target",
+          "note": "RMB 9m short"
+        }
+      ]
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "What happened",
+          "text": "I moved three cities in northern Jiangsu to a new distributor. Jan to Apr shipments fell 38%, and the area hit 81.3% of target."
+        },
+        {
+          "title": "Where I went wrong",
+          "text": "I checked their money, not their reach: 64 stores against the old dealer's 150.",
+          "sub": "My mistake",
+          "tone": "danger"
+        },
+        {
+          "title": "Why it took till May",
+          "text": "I waited two months to see if they would catch up, instead of cutting losses."
+        },
+        {
+          "title": "What I changed",
+          "text": "Took it back in May: two city distributors plus direct supply to key stores. H2 was up 6%.",
+          "highlight": true,
+          "sub": "Done",
+          "tone": "success"
+        }
+      ]
+    }
+  ],
+  "notes": "This was my misjudgment, not the market. I switched because the old dealer paid slowly and the new distributor had more capital, but I never checked their store coverage one by one: 64 stores against 150. Shipments fell 38% from January to April, and I waited two more months before acting. Since taking it back in May with two city distributors and direct supply to key stores, the second half was up 6% on last year. From now on I check store coverage before anything else when changing a distributor.",
+  "stage": "What I got done"
+}

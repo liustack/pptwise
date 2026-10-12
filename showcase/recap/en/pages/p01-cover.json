@@ -1,0 +1,47 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "city"
+  },
+  "notes": "Good morning. I'm Zhou Qihang, channel sales manager for East China. In fifteen minutes I'll cover three things: this year's result and which parts of it were mine, one thing I got wrong, and next year's target with the support I need to hit it.",
+  "fields": [
+    {
+      "label": "Presenter",
+      "value": "Zhou Qihang"
+    },
+    {
+      "label": "Role",
+      "value": "Channel Sales Manager, East China"
+    },
+    {
+      "label": "Team",
+      "value": "East China channel sales"
+    },
+    {
+      "label": "For",
+      "value": "The regional director and HR"
+    }
+  ],
+  "components": [
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "441m",
+          "label": "RMB shipped this year"
+        },
+        {
+          "value": "105.0%",
+          "label": "Of target"
+        },
+        {
+          "value": "**49.5m**",
+          "label": "RMB from two new channels",
+          "tag": {
+            "text": "My lead"
+          }
+        }
+      ]
+    }
+  ]
+}

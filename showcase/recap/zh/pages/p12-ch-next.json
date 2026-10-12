@@ -1,0 +1,29 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "warehouse"
+  },
+  "notes": "下面讲明年。",
+  "stage": "明年",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "目标",
+          "text": "5.0 亿元，增量 5,900 万元"
+        },
+        {
+          "title": "打法",
+          "text": "先稳苏北，下半年卖场和营业厅一起扩"
+        },
+        {
+          "title": "支持",
+          "text": "人、钱、政策三项",
+          "sub": "待批",
+          "tone": "warning"
+        }
+      ]
+    }
+  ]
+}

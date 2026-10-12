@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "type": "paragraph",
+      "text": "Shipments reached RMB 441m, 105% of target. About two thirds of the RMB 73m growth came from the electronics chain and carrier channels I opened this year. The RMB 4m we lost in northern Jiangsu came from my decision to switch distributors."
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "105.0%",
+          "label": "Of the year's target",
+          "tag": {
+            "text": "Met",
+            "tone": "success",
+            "quiet": true
+          }
+        },
+        {
+          "value": "**49.5m**",
+          "label": "RMB from the two new channels",
+          "tag": {
+            "text": "My lead"
+          }
+        },
+        {
+          "value": "−4m",
+          "label": "RMB, the north on last year",
+          "tone": "danger",
+          "tag": {
+            "text": "My mistake",
+            "tone": "danger"
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "If you remember one sentence, make it this one. Next come three pages on results, three on what I got done, then the team, northern Jiangsu, and next year.",
+  "stage": "This year's numbers"
+}

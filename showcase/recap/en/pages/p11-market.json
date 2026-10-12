@@ -1,0 +1,85 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "m",
+          "label": "Average store on the board"
+        },
+        {
+          "key": "a",
+          "label": "2025",
+          "align": "right"
+        },
+        {
+          "key": "b",
+          "label": "2026",
+          "align": "right"
+        },
+        {
+          "key": "c",
+          "label": "Change",
+          "align": "right"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "m": "Shoppers a day",
+            "a": "186",
+            "b": "172",
+            "c": "−7.5%"
+          },
+          "icon": "footprints"
+        },
+        {
+          "cells": {
+            "m": "Conversion rate",
+            "a": "11.2%",
+            "b": "13.6%",
+            "c": "+2.4 pts"
+          },
+          "icon": "percent"
+        },
+        {
+          "cells": {
+            "m": "Average ticket",
+            "a": "RMB 1,280",
+            "b": "RMB 1,420",
+            "c": "+10.9%"
+          },
+          "icon": "receipt"
+        },
+        {
+          "cells": {
+            "m": "Sales a day",
+            "a": "RMB 26,700",
+            "b": "RMB 33,200",
+            "c": "+24.6%"
+          },
+          "icon": "coins",
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "m": "Trade-in share of orders",
+            "a": "18%",
+            "b": "31%",
+            "c": "+13 pts"
+          },
+          "icon": "repeat"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "Fewer people come in, but they buy more and spend more. Next year's money goes into converting shoppers in store, not into traffic.",
+      "icon": "lightbulb"
+    }
+  ],
+  "footnote": "Basis: average across the 380 stores on the weekly restock board, full year",
+  "notes": "The clearest change on the customer side: footfall fell 7.5%, but conversion rose from 11.2% to 13.6% and the average ticket from RMB 1,280 to 1,420, so daily sales per store rose by about a quarter. Trade-ins went from 18% to 31% of orders and drove most of the higher ticket. That's why I want next year's spend on in-store promoters and trade-ins rather than on traffic.",
+  "stage": "What I got done"
+}

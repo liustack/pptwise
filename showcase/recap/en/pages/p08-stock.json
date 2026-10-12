@@ -1,0 +1,52 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "direction": "horizontal",
+      "axes": {
+        "y_unit": "days"
+      },
+      "series": [
+        {
+          "name": "Channel stock cover in 2026",
+          "data": [
+            {
+              "x": "2025",
+              "y": 52
+            },
+            {
+              "x": "2026",
+              "y": 34,
+              "emphasis": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "34",
+          "unit": "days",
+          "label": "Channel stock cover in 2026",
+          "tag": {
+            "text": "My lead"
+          }
+        },
+        {
+          "value": "27 → 6",
+          "label": "Cross-region selling complaints"
+        },
+        {
+          "value": "380",
+          "label": "Stores on the weekly board"
+        }
+      ]
+    }
+  ],
+  "footnote": "Basis: channel stock divided by average daily shipments at stores on the board, monthly average",
+  "notes": "This one was mostly mine. Restocking used to run on monthly reports, dealers sat on more than 50 days of stock, and the surplus leaked out cheap into other regions. I built a weekly restock board covering the chain stores, carrier stores and 50 key stores, with suggestions based on actual sell-through. Stock cover fell from 52 days to 34, and complaints about cross-region selling from 27 to 6. The channel reps keep the board's data up to date each week.",
+  "stage": "What I got done"
+}

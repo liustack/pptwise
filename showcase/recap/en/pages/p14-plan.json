@@ -1,0 +1,64 @@
+{
+  "components": [
+    {
+      "type": "roadmap",
+      "items": [
+        {
+          "title": "Steady the north",
+          "period": "Q1",
+          "points": [
+            "A full quarter on the new setup"
+          ],
+          "rows": [
+            {
+              "label": "Quarter target",
+              "value": "RMB 110m"
+            }
+          ],
+          "emphasis": true
+        },
+        {
+          "title": "160 chain stores",
+          "period": "Q2",
+          "points": [
+            "40 more stores"
+          ],
+          "rows": [
+            {
+              "label": "Quarter target",
+              "value": "RMB 120m"
+            }
+          ]
+        },
+        {
+          "title": "Grow both",
+          "period": "Q3",
+          "points": [
+            "200 stores, 350 carriers"
+          ],
+          "rows": [
+            {
+              "label": "Quarter target",
+              "value": "RMB 122m"
+            }
+          ]
+        },
+        {
+          "title": "Push",
+          "period": "Q4",
+          "points": [
+            "Peak season and trade-ins"
+          ],
+          "rows": [
+            {
+              "label": "Quarter target",
+              "value": "RMB 148m"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "notes": "Steady first, then grow. In Q1 the two city distributors in northern Jiangsu run a full quarter to prove the new setup holds. In Q2 we add 40 chain stores, in Q3 another 40 to reach 200, and carrier stores go to 350. Q4 is peak season, with a trade-in push. The four quarters add up to RMB 500m.",
+  "stage": "Next year"
+}

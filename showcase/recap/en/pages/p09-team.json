@@ -1,0 +1,50 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "team",
+      "fit": "cover"
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "8",
+          "label": "In January"
+        },
+        {
+          "value": "−2",
+          "label": "Left",
+          "note": "One resigned\nOne moved south"
+        },
+        {
+          "value": "+2",
+          "label": "Joined",
+          "note": "One in April\nOne in June"
+        },
+        {
+          "value": "8",
+          "label": "At year end",
+          "note": "Same as January"
+        }
+      ]
+    },
+    {
+      "type": "people_cards",
+      "people": [
+        {
+          "name": "He Jiawen",
+          "role": "Rep → carrier team lead",
+          "org": "Leads two people"
+        },
+        {
+          "name": "Gu Xiaofeng",
+          "role": "Own 40 stores after 3 months"
+        }
+      ]
+    }
+  ],
+  "footnote": "Illustrative image",
+  "notes": "We started and ended the year with eight people. Two left and two joined. I spoke with the one who resigned twice and couldn't keep her, which is something I need to look at. The person I most want to mention is He Jiawen: she built the carrier channel on the ground, was promoted to team lead mid-year, and now has two reports. Gu Xiaofeng joined in April, shadowed the chain stores for three months, and has run 40 stores on his own since July.",
+  "stage": "What I got done"
+}

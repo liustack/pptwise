@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "waterfall",
+      "unit": "RMB m",
+      "items": [
+        {
+          "label": "2025",
+          "value": 368,
+          "kind": "total"
+        },
+        {
+          "label": "Chain stores",
+          "value": 31,
+          "emphasis": true,
+          "note": "My lead"
+        },
+        {
+          "label": "Carriers",
+          "value": 18.5,
+          "emphasis": true,
+          "note": "My lead"
+        },
+        {
+          "label": "Existing",
+          "value": 27.5,
+          "note": "Team"
+        },
+        {
+          "label": "North",
+          "value": -4,
+          "note": "My mistake"
+        },
+        {
+          "label": "2026",
+          "value": 441,
+          "kind": "total"
+        }
+      ],
+      "title": "Who the growth came from",
+      "emphasis_label": "The two channels I opened"
+    }
+  ],
+  "footnote": "Basis: East China channel shipments including VAT, RMB millions",
+  "notes": "I'd like you to read this page in two parts. The electronics chain and the carrier channel are new this year, and I led both from negotiation to pricing: RMB 49.5m between them. The RMB 27.5m from existing channels is the team's work, not mine. Northern Jiangsu lost RMB 4m, and I'll come back to that.",
+  "stage": "This year's numbers"
+}

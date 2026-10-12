@@ -1,0 +1,71 @@
+{
+  "components": [
+    {
+      "type": "data_table",
+      "columns": [
+        {
+          "key": "k",
+          "label": "Ask"
+        },
+        {
+          "key": "w",
+          "label": "What exactly"
+        },
+        {
+          "key": "c",
+          "label": "Cost",
+          "align": "right"
+        },
+        {
+          "key": "g",
+          "label": "What it buys"
+        }
+      ],
+      "rows": [
+        {
+          "cells": {
+            "k": "People",
+            "w": "2 hires: carriers, the north",
+            "c": "RMB 360k a year",
+            "g": "Carriers +17m, north +6m"
+          },
+          "icon": "user-plus"
+        },
+        {
+          "cells": {
+            "k": "Budget",
+            "w": "Chain spend 6.2m → 8.8m",
+            "c": "+RMB 2.6m",
+            "g": "Chain +26m, 10% cost ratio"
+          },
+          "icon": "banknote",
+          "emphasis": "highlight"
+        },
+        {
+          "cells": {
+            "k": "Terms",
+            "w": "North payment terms 30 → 45 days",
+            "c": "≈ RMB 1.85m tied up",
+            "g": "Dealers stock up, north +6m"
+          },
+          "icon": "calendar-clock"
+        }
+      ]
+    },
+    {
+      "type": "callout",
+      "variant": "info",
+      "text": "People and budget come to RMB **2.96**m a year, against RMB **49**m of next year's growth",
+      "icon": "scale"
+    }
+  ],
+  "footnote": "Figures in the last column are RMB millions of shipments",
+  "notes": "Three asks, each with what it buys. The biggest is chain store spend: RMB 2.6m more to ship RMB 26m more, a 10% cost ratio, the same as this year. Two hires cost RMB 360k a year, one for carriers and one based in northern Jiangsu. Moving the two northern distributors from 30 to 45 days ties up about RMB 1.85m on RMB 45m of shipments, and in return they'll hold stock. Without these three, I can't commit to that RMB 49m.",
+  "stage": "Next year",
+  "ballot": {
+    "choices": [
+      "Yes",
+      "No"
+    ]
+  }
+}

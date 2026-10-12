@@ -1,0 +1,47 @@
+{
+  "components": [
+    {
+      "type": "image",
+      "asset_id": "shelves",
+      "fit": "cover"
+    },
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Before",
+          "text": "Not one store in this chain"
+        },
+        {
+          "title": "Me",
+          "text": "Four months of talks, tiered rebates",
+          "highlight": true
+        },
+        {
+          "title": "Team",
+          "text": "Two account reps ran setup"
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**31**",
+          "label": "Added, RMB m"
+        },
+        {
+          "value": "120",
+          "label": "Stores"
+        },
+        {
+          "value": "258",
+          "label": "Per store a year, RMB k"
+        }
+      ]
+    }
+  ],
+  "footnote": "Illustrative image",
+  "notes": "Last year we were in none of this East China electronics chain's stores. I started talks in January and they took four months. The key was a tiered rebate: once annual shipments pass RMB 20m, the rebate goes from 2% to 3%, which got us counter space. After signing, the work was the team's. Two account reps opened the first 40 stores in May and all 120 by September.",
+  "stage": "What I got done"
+}

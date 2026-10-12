@@ -1,0 +1,69 @@
+{
+  "components": [
+    {
+      "type": "chart",
+      "chart_type": "bar",
+      "axes": {
+        "y_unit": "RMB m"
+      },
+      "series": [
+        {
+          "name": "2026 actual",
+          "data": [
+            {
+              "x": "Chain stores",
+              "y": 31
+            },
+            {
+              "x": "Carriers",
+              "y": 18.5
+            },
+            {
+              "x": "North Jiangsu",
+              "y": 39
+            }
+          ]
+        },
+        {
+          "name": "2027 target",
+          "emphasis": true,
+          "data": [
+            {
+              "x": "Chain stores",
+              "y": 57,
+              "status": "target"
+            },
+            {
+              "x": "Carriers",
+              "y": 35.5,
+              "status": "target"
+            },
+            {
+              "x": "North Jiangsu",
+              "y": 45,
+              "status": "target"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "kpi_cards",
+      "items": [
+        {
+          "value": "**RMB 500m**",
+          "label": "2027 full-year target",
+          "note": "+13.4%, RMB 59m of growth"
+        },
+        {
+          "value": "RMB 49m",
+          "label": "Growth from these three",
+          "note": "Existing channels add RMB 10m"
+        }
+      ]
+    }
+  ],
+  "footnote": "Basis: East China channel shipments including VAT, RMB millions",
+  "notes": "Next year's target is RMB 500m, RMB 59m more than this year. The chain goes from 120 stores to 200, adding RMB 26m. Carrier stores go from 210 to 350, adding RMB 17m. Northern Jiangsu returns to RMB 45m, a little above the RMB 43m before the switch, adding RMB 6m. Those three come to RMB 49m, and existing channels cover the other RMB 10m.",
+  "stage": "Next year"
+}

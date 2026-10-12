@@ -1,0 +1,29 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "warehouse"
+  },
+  "notes": "Now for next year.",
+  "stage": "Next year",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "Target",
+          "text": "RMB 500m, up RMB 59m"
+        },
+        {
+          "title": "Plan",
+          "text": "Steady the north, then grow both channels"
+        },
+        {
+          "title": "Support",
+          "text": "People, budget and terms",
+          "sub": "To approve",
+          "tone": "warning"
+        }
+      ]
+    }
+  ]
+}

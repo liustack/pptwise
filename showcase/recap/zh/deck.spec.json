@@ -1,0 +1,135 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "recap",
+  "filename": "annual-review-2026-zh",
+  "meta": {
+    "date": "2027 年 1 月",
+    "authors": [
+      {
+        "name": "周启航",
+        "role": "华东区渠道销售经理",
+        "org": "某消费电子品牌华东区渠道部"
+      }
+    ]
+  },
+  "footer": {
+    "page_number": true,
+    "label": "示例人物，姓名和数据均为虚构"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "完成 105%，增量来自我开的两条新渠道",
+      "kicker": "2026 年度述职"
+    },
+    {
+      "id": "p02-oneline",
+      "type": "content",
+      "kind": "statement",
+      "heading": "今年超额 5%，靠的是两条新渠道，**苏北换总代**是我最大的失误"
+    },
+    {
+      "id": "p03-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "全年 4.41 亿元，完成 105%，一季度欠的账三季度补回来了"
+    },
+    {
+      "id": "p04-bridge",
+      "type": "content",
+      "kind": "data",
+      "heading": "净增 7,300 万元，约三分之二来自两条新渠道"
+    },
+    {
+      "id": "p05-ch-wins",
+      "type": "chapter",
+      "heading": "三件我做成的事",
+      "summary": "每件分清哪些是我做的，哪些是团队做的"
+    },
+    {
+      "id": "p06-mall",
+      "type": "content",
+      "kind": "photo",
+      "heading": "连锁卖场进了 120 家店，新增出货 3,100 万元"
+    },
+    {
+      "id": "p07-carrier",
+      "type": "content",
+      "kind": "process",
+      "heading": "运营商渠道从零做到 210 个营业厅：政策我去要，铺货团队在跑"
+    },
+    {
+      "id": "p08-stock",
+      "type": "content",
+      "kind": "fact",
+      "heading": "我搭的周度补货看板，把渠道库存从 52 天压到 34 天"
+    },
+    {
+      "id": "p09-team",
+      "type": "content",
+      "kind": "photo",
+      "heading": "团队 8 人，走了 2 个、补了 2 个，带出一位主管"
+    },
+    {
+      "id": "p10-miss",
+      "type": "content",
+      "kind": "points",
+      "heading": "苏北换总代是我判断错了，全年比目标少 900 万元"
+    },
+    {
+      "id": "p11-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "进店的人少了 7.5%，但成交多了 12%，客单价高了 11%"
+    },
+    {
+      "id": "p12-ch-next",
+      "type": "chapter",
+      "heading": "2027 年：5 亿元怎么拿",
+      "summary": "目标、打法和我需要的支持"
+    },
+    {
+      "id": "p13-next-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "明年目标 5.0 亿元，增量 5,900 万元有 83% 落在三条线上"
+    },
+    {
+      "id": "p14-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "上半年先把苏北稳住，下半年卖场和营业厅一起扩"
+    },
+    {
+      "id": "p15-asks",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "我需要三项支持，每一项都对得上明年的一块增量"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "5 亿元的目标我接下，三项支持请今天定",
+      "summary": "需要评审小组确认"
+    }
+  ],
+  "course": {
+    "stages": [
+      {
+        "label": "今年的账"
+      },
+      {
+        "label": "今年做的事"
+      },
+      {
+        "label": "明年"
+      }
+    ]
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "version": "1",
+  "narrative": {
+    "strategy": "pyramid",
+    "pacing": "balanced",
+    "audience": "executive"
+  },
+  "theme": "recap",
+  "filename": "annual-review-2026-en",
+  "meta": {
+    "date": "January 2027",
+    "authors": [
+      {
+        "name": "Zhou Qihang",
+        "role": "Channel Sales Manager, East China",
+        "org": "Consumer electronics brand"
+      }
+    ]
+  },
+  "footer": {
+    "page_number": true,
+    "label": "Fictional example: the person and figures are invented"
+  },
+  "pages": [
+    {
+      "id": "p01-cover",
+      "type": "cover",
+      "heading": "105% of target, on two new channels",
+      "kicker": "2026 review"
+    },
+    {
+      "id": "p02-oneline",
+      "type": "content",
+      "kind": "statement",
+      "heading": "New channels carried us. I got **the north** wrong"
+    },
+    {
+      "id": "p03-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "RMB 441m, 105% of target: Q1's gap closed by Q3"
+    },
+    {
+      "id": "p04-bridge",
+      "type": "content",
+      "kind": "data",
+      "heading": "Up RMB 73m, two thirds from two new channels"
+    },
+    {
+      "id": "p05-ch-wins",
+      "type": "chapter",
+      "heading": "Three things I got done",
+      "summary": "What I did, and what the team did"
+    },
+    {
+      "id": "p06-mall",
+      "type": "content",
+      "kind": "photo",
+      "heading": "120 stores in a new chain, adding RMB 31m"
+    },
+    {
+      "id": "p07-carrier",
+      "type": "content",
+      "kind": "process",
+      "heading": "0 to 210 carrier stores: my deal, team's rollout"
+    },
+    {
+      "id": "p08-stock",
+      "type": "content",
+      "kind": "fact",
+      "heading": "My restock board cut channel stock to 34 days"
+    },
+    {
+      "id": "p09-team",
+      "type": "content",
+      "kind": "photo",
+      "heading": "Two left, two joined, one became a team lead"
+    },
+    {
+      "id": "p10-miss",
+      "type": "content",
+      "kind": "points",
+      "heading": "Changing distributor up north was my wrong call"
+    },
+    {
+      "id": "p11-market",
+      "type": "content",
+      "kind": "data",
+      "heading": "Fewer shoppers, but sales per store up a quarter"
+    },
+    {
+      "id": "p12-ch-next",
+      "type": "chapter",
+      "heading": "2027: how we get to RMB 500m",
+      "summary": "The target, the plan, and the support I need"
+    },
+    {
+      "id": "p13-next-target",
+      "type": "content",
+      "kind": "data",
+      "heading": "RMB 500m next year, 83% of growth on three lines"
+    },
+    {
+      "id": "p14-plan",
+      "type": "content",
+      "kind": "process",
+      "heading": "Steady the north first, then grow both channels"
+    },
+    {
+      "id": "p15-asks",
+      "type": "content",
+      "kind": "comparison",
+      "heading": "Three asks, each tied to a slice of growth"
+    },
+    {
+      "id": "p16-ending",
+      "type": "ending",
+      "heading": "I'll take RMB 500m. Please approve these three",
+      "summary": "For the review panel to approve"
+    }
+  ],
+  "course": {
+    "stages": [
+      {
+        "label": "This year's numbers"
+      },
+      {
+        "label": "What I got done"
+      },
+      {
+        "label": "Next year"
+      }
+    ]
+  }
+}

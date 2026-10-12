@@ -1,0 +1,33 @@
+{
+  "background": {
+    "kind": "asset",
+    "asset_id": "whiteboard"
+  },
+  "notes": "For each of the next three, I'll split out which step was mine and which was the team's.",
+  "stage": "What I got done",
+  "components": [
+    {
+      "type": "row_cards",
+      "items": [
+        {
+          "title": "120 stores in a new chain",
+          "text": "RMB 31m",
+          "sub": "My lead",
+          "highlight": true
+        },
+        {
+          "title": "210 carrier stores from zero",
+          "text": "RMB 18.5m",
+          "sub": "My lead",
+          "highlight": true
+        },
+        {
+          "title": "Weekly restock board cut stock",
+          "text": "52 → 34 days",
+          "sub": "My lead",
+          "highlight": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "type": "scorecard",
+      "labels": {
+        "metric": "Quarter",
+        "target": "Target",
+        "actual": "Actual",
+        "gap": "Gap",
+        "status": "Verdict"
+      },
+      "rows": [
+        {
+          "label": "Q1",
+          "target": "96",
+          "actual": "87",
+          "gap": "−9",
+          "status": "off_track",
+          "status_label": "Missed"
+        },
+        {
+          "label": "Q2",
+          "target": "105",
+          "actual": "109",
+          "gap": "+4",
+          "status": "on_track",
+          "status_label": "Met"
+        },
+        {
+          "label": "Q3",
+          "target": "99",
+          "actual": "112",
+          "gap": "+13",
+          "status": "on_track",
+          "status_label": "Beat"
+        },
+        {
+          "label": "Q4",
+          "target": "120",
+          "actual": "133",
+          "gap": "+13",
+          "status": "on_track",
+          "status_label": "Beat"
+        },
+        {
+          "label": "Year",
+          "target": "420",
+          "actual": "441",
+          "gap": "+21",
+          "status": "on_track",
+          "status_label": "105.0%"
+        }
+      ],
+      "note": "Up +19.8% on last year, which was RMB 368m"
+    }
+  ],
+  "footnote": "Basis: East China channel shipments including VAT, RMB millions",
+  "notes": "Q1 came in at 90.6%, RMB 9m short, mostly in northern Jiangsu. From Q2 the chain stores and carrier stores started to ramp, Q3 alone beat target by RMB 13m, and by the end of Q3 we were RMB 8m ahead year to date. Q4 beat target by another RMB 13m. For the year we finished RMB 21m over.",
+  "stage": "This year's numbers"
+}

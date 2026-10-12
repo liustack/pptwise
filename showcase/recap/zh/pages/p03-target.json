@@ -1,0 +1,60 @@
+{
+  "components": [
+    {
+      "type": "scorecard",
+      "labels": {
+        "metric": "季度",
+        "target": "年初目标",
+        "actual": "实际",
+        "gap": "差额",
+        "status": "判定"
+      },
+      "rows": [
+        {
+          "label": "一季度",
+          "target": "9,600",
+          "actual": "8,700",
+          "gap": "−900",
+          "status": "off_track",
+          "status_label": "未达"
+        },
+        {
+          "label": "二季度",
+          "target": "10,500",
+          "actual": "10,900",
+          "gap": "+400",
+          "status": "on_track",
+          "status_label": "达成"
+        },
+        {
+          "label": "三季度",
+          "target": "9,900",
+          "actual": "11,200",
+          "gap": "+1,300",
+          "status": "on_track",
+          "status_label": "超额"
+        },
+        {
+          "label": "四季度",
+          "target": "12,000",
+          "actual": "13,300",
+          "gap": "+1,300",
+          "status": "on_track",
+          "status_label": "超额"
+        },
+        {
+          "label": "全年",
+          "target": "42,000",
+          "actual": "44,100",
+          "gap": "+2,100",
+          "status": "on_track",
+          "status_label": "105.0%"
+        }
+      ],
+      "note": "同比增长 +19.8%，2025 年为 3.68 亿元"
+    }
+  ],
+  "footnote": "口径：华东区渠道出货额（含税），单位万元",
+  "notes": "一季度只完成 90.6%，欠了 900 万元，主要欠在苏北。二季度开始卖场和营业厅陆续上量，三季度单季超 1,300 万元，到三季度末累计已经比目标多 800 万元。四季度又超了 1,300 万元。全年比目标多 2,100 万元。",
+  "stage": "今年的账"
+}
