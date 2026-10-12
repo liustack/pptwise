@@ -666,10 +666,8 @@ describe("runSchema / runThemes", () => {
       themes: Record<string, { face: string; drawnAs?: string[] }>
     }
     expect(fact.kind).toBe("fact")
-    // brief's fact face takes a figure and its note, and a fact page holding
-    // anything else lands on the nearest kind whose face takes it.
-    expect(fact.themes.brief).toMatchObject({ face: "gauge-figure", drawnAs: ["fact", "data", "statement", "points", "list"] })
-    expect(fact.components).toContain("chart")
+    expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
+    expect(fact.themes.brief).toEqual({ face: "gauge-figure", components: fact.components })
     const anyTheme = JSON.parse(await runSchema({ kind: "quote" })) as { themes: Record<string, unknown> }
     expect(Object.keys(anyTheme.themes)).toContain("thesis")
   })

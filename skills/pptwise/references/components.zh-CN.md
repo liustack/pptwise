@@ -17,7 +17,7 @@ pptwise inspect deck-dir/ --page <id> --component <type>
 pptwise icons
 ```
 
-页面查询列出绑定主题的脸在这一页能画的组件，以及 `validate` 对这一页的计数要求，列表之外的组件会被 `validate` 拒绝。组件查询打印一个组件的设计说明、它在这一页的上限和它的字段。图标字段的名字来自 `pptwise icons`。
+页面查询列出绑定主题的脸在这一页能画的组件，以及 `validate` 对这一页的计数要求，列表之外的组件要么被 `validate` 拒绝，要么让这一页按别的讲法来画，并给出警告。组件查询打印一个组件的设计说明、它在这一页的上限和它的字段。图标字段的名字来自 `pptwise icons`。
 
 没有 deck 项目时，比如直接写一个 IR 文件，按 kind 或按组件切出同一份契约：
 

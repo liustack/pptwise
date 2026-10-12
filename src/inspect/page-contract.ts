@@ -97,10 +97,9 @@ export interface PageIssue {
 
 export interface PageComponents {
   /**
-   * Every component type this page may hold, in vocabulary order: on a
-   * content page, what its kind's face draws and what the faces of the
-   * kinds it lands on draw (`../render/kind-landing.ts`), on a cover,
-   * chapter or ending, what the bound face draws.
+   * Every component type this page may hold, in vocabulary order: what the
+   * face of its kind draws, or on a content page whose kind the theme lacks,
+   * what the faces of the kinds it lands on draw (`../render/kind-landing.ts`).
    */
   legal: string[]
   /** The legal types that must be the page's only component. */
@@ -232,14 +231,15 @@ function pageFields(full: JsonSchemaDocument, slide: Slide): Record<string, unkn
 }
 
 /**
- * Every component type a content page of this kind may hold under `theme`:
- * what its own kind's face draws and what each stand-in's face draws
- * (`../render/kind-landing.ts`), since a page holding a type its own face
- * does not take is drawn by the nearest face that does.
+ * Every component type a content page of this kind may hold under `theme`.
+ * When the menu offers the kind, what its face draws: a page holding
+ * anything else is drawn as a stand-in, and validate warns. When it lacks
+ * the kind, what each stand-in's face draws (`../render/kind-landing.ts`).
  */
 function landingLegal(slide: Extract<Slide, { type: "content" }>, theme: ThemeDefinition): string[] {
   const accepted = new Set<string>()
-  for (const kind of landingCandidates(slide.kind, theme.menu)) {
+  const offered = theme.menu.content[slide.kind] !== undefined
+  for (const kind of offered ? [slide.kind] : landingCandidates(slide.kind, theme.menu)) {
     const layout = getLayout(theme.menu.content[kind]!.face)
     if (layout !== undefined) for (const type of faceAcceptedComponentTypes(layout)) accepted.add(type)
   }

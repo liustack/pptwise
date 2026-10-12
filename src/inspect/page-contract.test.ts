@@ -73,10 +73,12 @@ function contractOf(theme: string, page: PageShape, components: Component[] = []
 }
 
 /** Whether validate rejects the probe page for holding a component its face does not draw. */
+/** Whether validate refuses the component on this page, or draws the page as another kind for it, with a warning. */
 function validateRefusesComponent(theme: string, page: PageShape, type: string, extra: Record<string, unknown> = {}): boolean {
   const result = validateIr(probeDeck(theme, page, [sample(type)], extra), { theme: getThemeDefinition(theme) })
-  return result.errors.some(
-    (e) => e.page === 2 && /does not render|do not render components/.test(e.message),
+  return (
+    result.errors.some((e) => e.page === 2 && /does not render|do not render components/.test(e.message)) ||
+    (result.warnings ?? []).some((w) => w.page === 2 && new RegExp(`does not take ${type}\\b.*so this page is drawn as`).test(w.message))
   )
 }
 

@@ -115,7 +115,7 @@ spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字
 
 选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
 
-写一页之前先读这一页的契约。`inspect` 打印 spec 锁定的内容、页面文件可以填的字段、绑定主题的脸在这一页能画的组件、`validate` 对这一页的计数要求，以及 `validate` 此刻对它的结论。组件列表之外的组件过不了 `validate`。写某个组件前先展开它。计数不能证明内容放得下：页面内容偏长时，`--fit` 会真的画这一页，告诉你渲染会不会丢内容。图标字段的名字来自 `pptwise icons`。
+写一页之前先读这一页的契约。`inspect` 打印 spec 锁定的内容、页面文件可以填的字段、绑定主题的脸在这一页能画的组件、`validate` 对这一页的计数要求，以及 `validate` 此刻对它的结论。组件列表之外的组件要么过不了 `validate`，要么让这一页按别的讲法来画，并给出警告。写某个组件前先展开它。计数不能证明内容放得下：页面内容偏长时，`--fit` 会真的画这一页，告诉你渲染会不会丢内容。图标字段的名字来自 `pptwise icons`。
 
 ```bash
 pptwise inspect deck-dir/ --page <id>

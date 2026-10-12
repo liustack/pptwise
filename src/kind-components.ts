@@ -3,10 +3,10 @@
  *
  * There is no kind-to-component table of its own. A kind reaches a face
  * through the bound theme's menu, and the face's slots say what it draws
- * (`docs/menu-lookup.md`). A page holding a type its own kind's face does
- * not take is drawn by the nearest stand-in whose face does
- * (`./render/kind-landing.ts`). This module walks that same route, so the
- * list it prints is the list validate accepts: nothing more, nothing less. A caller that resolved a deck or workspace theme file passes that
+ * (`docs/menu-lookup.md`). This module walks that same route, so the list
+ * it prints is what validate draws as that kind without a warning. A kind
+ * the menu lacks lands on its nearest stand-ins (`./render/kind-landing.ts`),
+ * and its list is theirs. A caller that resolved a deck or workspace theme file passes that
  * definition by value, the way validate and render take theirs. A bare id
  * reads the built-in shelf and the SDK registry. Without a theme it unions
  * every installed theme's answer and shows each theme's own face beside it.
@@ -25,13 +25,10 @@ export interface KindThemeOffer {
   /** Component types that face draws, in vocabulary order. */
   components: readonly string[]
   /**
-   * The offered kinds a page of this kind may be drawn as, nearest first
-   * and its own kind first when the menu offers it
-   * (`./render/kind-landing.ts`). Present when a page of the kind can land
-   * elsewhere: the menu lacks the kind, or its face does not take something
-   * a stand-in's face does. `face` is then the first one's face, and `components`
-   * covers every one of them, since a page takes the first whose face takes
-   * what it carries.
+   * Present when the menu lacks the kind: the offered kinds a page of it is
+   * drawn as, nearest first (`./render/kind-landing.ts`). `face` is then the
+   * first one's face, and `components` covers every one of them, since a
+   * page takes the first whose face takes what it carries.
    */
   drawnAs?: readonly PageKind[]
 }
@@ -74,21 +71,20 @@ function faceOffer(theme: ThemeDefinition, kind: PageKind): KindThemeOffer {
 }
 
 /**
- * What a page of `kind` may hold under one theme: what its own kind's face
- * draws, and what the face of every kind it lands on draws
- * (`./render/kind-landing.ts`), since a page holding a type its own face
- * does not take is drawn by the nearest face that does. Undefined when the
- * menu offers neither the kind nor any stand-in.
+ * What a page of `kind` may hold under one theme. When the menu offers the
+ * kind, what its face draws: what keeps the page that kind. A page holding
+ * something else is drawn by the nearest stand-in whose face takes it, and
+ * validate warns. When the menu lacks the kind, what the faces of the kinds
+ * it lands on draw (`./render/kind-landing.ts`). Undefined when the menu
+ * offers neither the kind nor any stand-in.
  */
 function offerFor(theme: ThemeDefinition, kind: PageKind): KindThemeOffer | undefined {
+  if (theme.menu.content[kind] !== undefined) return faceOffer(theme, kind)
   const candidates = landingCandidates(kind, theme.menu)
   if (candidates.length === 0) return undefined
-  const offers = candidates.map((candidate) => faceOffer(theme, candidate))
   const union = new Set<string>()
-  for (const offer of offers) for (const type of offer.components) union.add(type)
-  // The kind's own face takes everything its stand-ins would: nothing lands.
-  if (candidates[0] === kind && offers[0]!.components.length === union.size) return offers[0]
-  return { face: offers[0]!.face, components: COMPONENT_TYPES.filter((type) => union.has(type)), drawnAs: candidates }
+  for (const candidate of candidates) for (const type of faceOffer(theme, candidate).components) union.add(type)
+  return { face: faceOffer(theme, candidates[0]!).face, components: COMPONENT_TYPES.filter((type) => union.has(type)), drawnAs: candidates }
 }
 
 /** The components a kind may hold, per theme and as a union. */

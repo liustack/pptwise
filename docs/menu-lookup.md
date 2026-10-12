@@ -49,7 +49,7 @@ When the menu does not offer the kind, or offers it on a face that cannot take t
 
 The lookup tries the kind itself, then its stand-ins as the menu offers them, and takes the first whose face takes every component on the page: each one accepted by a slot, every required slot filled, a full-body component alone or beside the companions the face declares. How many blocks fit is not part of the choice, since density advice and the face's step-aside answer that the same way on any face. A page with no components yet takes the first offered candidate. When no candidate's face takes the page, it stays on the first one and validation says what that face cannot draw. Every built-in menu offers `points` and `list`, so a page always has somewhere to land. Validation fails only when a trimmed custom menu offers none of the candidates.
 
-A landed page is not an error. `spec validate` prints a note, `build` reports it under `drawnAs`, and `inspect` shows the kind it was drawn as. Binding a theme that offers the kind draws the page on that kind's own face again.
+A landed page is not an error. `spec validate` prints a note, `build` reports it under `drawnAs`, and `inspect` shows the kind it was drawn as. Binding a theme that offers the kind draws the page on that kind's own face again. When the menu does offer the kind and only its face cannot take the page, validate also warns and names what that face takes, since a page being written as that kind usually means to stay one. `schema --kind` and `inspect` list what the kind's own face takes when the menu offers it, and what its stand-ins' faces take when it does not.
 
 The entry identifies one face and may supply:
 

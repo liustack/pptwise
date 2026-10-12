@@ -37,7 +37,7 @@ import { footerFitIssues } from "./render/footer-marks"
 import { courseStageIssues } from "./render/course-marks"
 import { deckFonts, resolveFontStack } from "./render/fonts"
 import { deckWritesChinese } from "./lib/conf-labels"
-import { componentFace, resolveEffectiveFace } from "./render/layout-selection"
+import { componentFace, faceAcceptedComponentTypes, resolveEffectiveFace } from "./render/layout-selection"
 import { resolvePageRenderContext } from "./render/page-context"
 import { MOTIFS_THAT_SET_THE_KICKER } from "./motifs/kicker-roles"
 import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } from "./layouts/boundary-content"
@@ -53,7 +53,7 @@ import { parseSvgRoot } from "./render/serialize"
 import { IMAGE_COVER_HEADING } from "./render/image-pages"
 import { deckFigureStyle } from "./lib/figure-style"
 import { stripEmphasis } from "./render/emphasis"
-import type { LayoutDefinition } from "./layouts/registry"
+import { getLayout, type LayoutDefinition } from "./layouts/registry"
 import { CANONICAL_THEME_IDS, THEME_LABELS, THEME_STYLES } from "./themes"
 import { foldedThemeTarget, foldedThemeWarning, retiredThemeHint } from "./themes/retired-ids"
 import type { ThemeDefinition } from "./themes/definitions"
@@ -500,6 +500,47 @@ function motifSetsKicker(ir: PptxIR, slide: PptxIR["slides"][number], theme: The
  * changing the name its spec binds. The label stays in the source and is
  * drawn again under any theme with a place for it.
  */
+/**
+ * A content page whose own kind the theme offers, on a face that does not
+ * take what the page holds, is drawn by the nearest stand-in whose face
+ * does (`./render/kind-landing.ts`). That keeps a deck moved from another
+ * theme drawable, and it is a warning rather than silence: while a deck is
+ * being written, the author usually meant the page as its own kind, and
+ * the face that draws it as that kind names what it takes.
+ */
+function checkOwnKindLanding(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
+  const warnings: ValidationIssue[] = []
+  ir.slides.forEach((slide, index) => {
+    if (slide.type !== "content") return
+    const entry = theme.menu.content[slide.kind]
+    if (entry === undefined) return
+    const served = resolveEffectiveFace(ir, slide, theme).servedKind
+    if (served === undefined || served === slide.kind) return
+    const own = getLayout(entry.face)
+    if (own === undefined) return
+    const takes = faceAcceptedComponentTypes(own)
+    const refused = [...new Set(slide.components.map((c) => c.type).filter((type) => !takes.includes(type)))]
+    const missing = own.slots.find(
+      (slot) => slot.required === true && slot.accepts !== "any" && !slide.components.some((c) => (slot.accepts as readonly string[]).includes(c.type)),
+    )
+    const why =
+      refused.length > 0
+        ? `does not take ${refused.join(", ")}`
+        : missing !== undefined && missing.accepts !== "any"
+          ? `needs one of ${missing.accepts.join(", ")}`
+          : "does not set these components together"
+    warnings.push({
+      path: `slides.${index}.components`,
+      message:
+        `theme "${theme.id}" draws "${slide.kind}" pages on face "${entry.face}", which ${why}, so this page is drawn as "${served}". ` +
+        `To keep it a "${slide.kind}" page, use what that face takes: ${takes.join(", ")}`,
+      page: index + 1,
+      ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+    })
+  })
+  return warnings
+}
+
 function checkKickerDrawn(ir: PptxIR, theme: ThemeDefinition): { errors: ValidationIssue[]; givenWay: ValidationIssue[] } {
   const errors: ValidationIssue[] = []
   const givenWay: ValidationIssue[] = []
@@ -1453,7 +1494,7 @@ export function validateIr(
   const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
   const pageFields = checkKickerDrawn(r.data, theme)
-  givenWay = pageFields.givenWay
+  givenWay = [...checkOwnKindLanding(r.data, theme), ...pageFields.givenWay]
   const kickerErrors = [...pageFields.errors, ...checkSubheadingDrawn(r.data, theme)]
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
   // The body face these two measure in is the one the deck renders in,

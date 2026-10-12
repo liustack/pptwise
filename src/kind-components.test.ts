@@ -49,9 +49,16 @@ function dataOnly(id: string): ThemeDefinition {
 }
 
 /** Whether the face bound to this page draws the component at all: the slot gate validate applies. */
+/**
+ * Whether validate draws a page holding this component as its own kind: the
+ * face gate passes, and the page is not handed to a stand-in, which
+ * validate warns about (`./render/kind-landing.ts`).
+ */
 function faceDrawsComponent(theme: string, kind: string, type: string): boolean {
   const result = validateIr(probeDeck(theme, kind, type))
-  return !result.errors.some((e) => e.path === "slides.0.components" && /does not render/.test(e.message))
+  const refused = result.errors.some((e) => e.path === "slides.0.components" && /does not render/.test(e.message))
+  const landed = (result.warnings ?? []).some((w) => w.path === "slides.0.components" && new RegExp(`does not take ${type}\\b.*so this page is drawn as`).test(w.message))
+  return !refused && !landed
 }
 
 describe("componentsForKind", () => {
@@ -75,15 +82,22 @@ describe("componentsForKind", () => {
     // A kind whose face is the only one that can draw it lists that face alone.
     const points = componentsForKind("points", { theme: "brief" })
     expect(points.themes).toEqual({ brief: { face: "gauge-sheet", components: points.components } })
-    // brief's fact face takes a figure and its note. A page with anything
-    // else lands on the nearest kind whose face takes it, so those count too.
+    // brief's fact face takes a figure and its note: what keeps a page a
+    // fact page. Anything else is still drawn, as the nearest kind whose
+    // face takes it, with a warning that names what the fact face takes.
     const fact = componentsForKind("fact", { theme: "brief" })
     expect(fact.kind).toBe("fact")
-    expect(fact.themes.brief).toEqual({ face: "gauge-figure", components: fact.components, drawnAs: ["fact", "data", "statement", "points", "list"] })
-    expect(fact.components).toEqual([...COMPONENT_TYPES])
-    for (const type of ["kpi_cards", "paragraph", "chart", "bullets"]) {
-      expect(validateIr(probeDeck("brief", "fact", type)).ok, type).toBe(true)
-    }
+    expect([...fact.components].sort()).toEqual(["kpi_cards", "paragraph"])
+    expect(fact.themes).toEqual({ brief: { face: "gauge-figure", components: fact.components } })
+    for (const type of fact.components) expect(validateIr(probeDeck("brief", "fact", type)).warnings ?? [], type).toEqual([])
+    const chart = validateIr(probeDeck("brief", "fact", "chart"))
+    expect(chart.ok).toBe(true)
+    expect(chart.warnings).toContainEqual(
+      expect.objectContaining({
+        path: "slides.0.components",
+        message: expect.stringMatching(/^theme "brief" draws "fact" pages on face "gauge-figure", which does not take chart, so this page is drawn as "data"\. To keep it a "fact" page, use what that face takes: /),
+      }),
+    )
   })
 
   it("takes a theme definition by value and reports it under the definition's own id", () => {

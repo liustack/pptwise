@@ -12,7 +12,7 @@ pptwise inspect deck-dir/ --page <id> --component <type>
 pptwise icons
 ```
 
-The page query lists the components the bound theme's face draws on that page, with the counts `validate` holds it to, and `validate` rejects a component outside that list. The component query prints one component's story, its limits on that page, and its fields. Icon fields take a name from `pptwise icons`.
+The page query lists the components the bound theme's face draws on that page, with the counts `validate` holds it to, and `validate` either rejects a component outside that list or draws the page as another kind with a warning. The component query prints one component's story, its limits on that page, and its fields. Icon fields take a name from `pptwise icons`.
 
 Without a deck project, for example on a bare IR file, cut the same contract by kind or by component:
 

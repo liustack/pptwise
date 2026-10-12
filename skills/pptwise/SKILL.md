@@ -113,7 +113,7 @@ Write `pages/<id>.json` in batches of at most four. A page file may contain `com
 
 Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
 
-Read one page's contract before writing it. `inspect` prints what the spec locked, the fields the page file may carry, the components the bound theme's face draws there, the counts `validate` holds the page to, and `validate`'s current findings on it. Anything outside its component list fails `validate`. Expand a component before writing it. The counts do not prove the content fits: when a page runs long, `--fit` draws it and says whether render would drop anything. Icon fields take a name from `pptwise icons`.
+Read one page's contract before writing it. `inspect` prints what the spec locked, the fields the page file may carry, the components the bound theme's face draws there, the counts `validate` holds the page to, and `validate`'s current findings on it. Anything outside its component list fails `validate` or draws the page as another kind, with a warning. Expand a component before writing it. The counts do not prove the content fits: when a page runs long, `--fit` draws it and says whether render would drop anything. Icon fields take a name from `pptwise icons`.
 
 ```bash
 pptwise inspect deck-dir/ --page <id>
