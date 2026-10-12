@@ -41,7 +41,7 @@ export const BAND_IDS = ["deck", "face", "compose", "aside", "component"] as con
  * them. `compose` shows the shared compositions (`src/layouts/compositions/`)
  * on the themes whose faces hand pages to them, see `COMPOSITION_PAGES`.
  * `aside` exists to show the shared step-aside (`src/render/step-aside.tsx`)
- * to a reviewer, and three pages cover that rendering for all 26 skins
+ * to a reviewer, and three pages cover that rendering for all 27 skins
  * because the sheet is the same sheet on every one of them. See
  * `STEP_ASIDE_PAGES`.
  */
@@ -462,6 +462,20 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "profile", kind: "list", composition: "shortfalls" },
   { theme: "profile", kind: "process", composition: "tenure" },
   { theme: "profile", kind: "points", composition: "credo" },
+  // recap's account sheet sets the shapes as one person accounting for their
+  // year, and draws the twelve its own board added.
+  { theme: "recap", kind: "statement", composition: "gist" },
+  { theme: "recap", kind: "data", composition: "reckoning" },
+  { theme: "recap", kind: "data", composition: "credit" },
+  { theme: "recap", kind: "photo", composition: "casefile" },
+  { theme: "recap", kind: "process", composition: "relay" },
+  { theme: "recap", kind: "fact", composition: "drawdown" },
+  { theme: "recap", kind: "photo", composition: "headcount" },
+  { theme: "recap", kind: "points", composition: "postmortem" },
+  { theme: "recap", kind: "data", composition: "deltas" },
+  { theme: "recap", kind: "data", composition: "stretch" },
+  { theme: "recap", kind: "process", composition: "sequence" },
+  { theme: "recap", kind: "comparison", composition: "requests" },
   // thesis's manuscript sheet sets the shapes as a thesis proposal sets its
   // evidence, and draws the fifteen its own board added.
   { theme: "thesis", kind: "photo", composition: "inquiry" },

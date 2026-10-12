@@ -196,22 +196,22 @@ describe("pptwise themes with installed packs", () => {
   it("lists pack themes after the presets, each marked with its source", async () => {
     await installSample(["sample-brief", "sample-memo"])
     const rows = JSON.parse(await runThemes(true)) as Array<Record<string, unknown>>
-    expect(rows).toHaveLength(25)
-    expect(rows.slice(0, 23).every((row) => row.source === "builtin" && row.pack === undefined)).toBe(true)
-    expect(rows.slice(23)).toEqual([
+    expect(rows).toHaveLength(26)
+    expect(rows.slice(0, 24).every((row) => row.source === "builtin" && row.pack === undefined)).toBe(true)
+    expect(rows.slice(24)).toEqual([
       expect.objectContaining({ id: "sample-brief", label: "Pack sample-brief", source: "pack", pack: "sample", occasions: expect.any(Array) }),
       expect.objectContaining({ id: "sample-memo", source: "pack", pack: "sample" }),
     ])
-    expect(rows[23]).toHaveProperty("colors.primary")
-    expect(rows[23]).toHaveProperty("identity")
+    expect(rows[24]).toHaveProperty("colors.primary")
+    expect(rows[24]).toHaveProperty("identity")
     // A pack theme's menu comes from its own compiled file, not a preset's.
     const packMenu = (await resolveThemeByName("sample-brief", { startDir: cwd })).definition.menu
-    expect(rows[23]!.menu).toMatchObject({ cover: packMenu.cover.face, ending: packMenu.ending.face })
-    expect(Object.keys(rows[23]!.menu as { content: object }).length).toBe(4)
-    expect(Object.keys((rows[23]!.menu as { content: object }).content)).toEqual(offeredContentKinds(packMenu))
+    expect(rows[24]!.menu).toMatchObject({ cover: packMenu.cover.face, ending: packMenu.ending.face })
+    expect(Object.keys(rows[24]!.menu as { content: object }).length).toBe(4)
+    expect(Object.keys((rows[24]!.menu as { content: object }).content)).toEqual(offeredContentKinds(packMenu))
     const text = (await runThemes(false)).split("\n")
-    expect(text).toHaveLength(25)
-    expect(text[23]).toMatch(/^sample-brief\s+Pack sample-brief\s+\(pack sample\)$/)
+    expect(text).toHaveLength(26)
+    expect(text[24]).toMatch(/^sample-brief\s+Pack sample-brief\s+\(pack sample\)$/)
   })
 
   it("lists what it can read and reports each unreadable pack as an error entry", async () => {
@@ -224,16 +224,16 @@ describe("pptwise themes with installed packs", () => {
       JSON.stringify({ pack: 1, id: "odd", version: "1", title: "Odd", engine: "*", themes: ["themes/odd-one.theme.json"] }),
     )
     const rows = JSON.parse(await runThemes(true)) as Array<Record<string, unknown>>
-    expect(rows.slice(0, 23).every((row) => row.source === "builtin")).toBe(true)
-    expect(rows.slice(23)).toEqual([
+    expect(rows.slice(0, 24).every((row) => row.source === "builtin")).toBe(true)
+    expect(rows.slice(24)).toEqual([
       { source: "pack", pack: "broken", error: expect.stringMatching(/broken.*pptwise packs sync/s) },
       { source: "pack", pack: "odd", error: expect.stringMatching(/odd-one\.theme\.json.*pptwise packs sync/s) },
       expect.objectContaining({ id: "sample-brief", source: "pack", pack: "sample" }),
     ])
     const text = (await runThemes(false)).split("\n")
-    expect(text).toHaveLength(26)
-    expect(text[23]).toMatch(/^\(pack broken\) installed pack .*broken cannot be read: /)
-    expect(text[25]).toMatch(/^sample-brief\s/)
+    expect(text).toHaveLength(27)
+    expect(text[24]).toMatch(/^\(pack broken\) installed pack .*broken cannot be read: /)
+    expect(text[26]).toMatch(/^sample-brief\s/)
   })
 })
 

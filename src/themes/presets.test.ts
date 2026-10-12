@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import { PptwiseError } from "../errors"
 import { CANONICAL_THEME_IDS } from "./index"
-import { THEME_PRESETS, copyThemePreset, getThemePreset, isThemePresetId } from "./presets"
+import { THEME_PRESETS, copyThemePreset, getThemePreset, isThemePresetId, themeFileFromPreset } from "./presets"
 import { THEME_OCCASIONS } from "./occasions"
 
 describe("the factory preset shelf", () => {
@@ -44,6 +44,13 @@ describe("the factory preset shelf", () => {
     expect(copyThemePreset("brief", "acme-pad").emphasis).toBe("pad")
     expect(copyThemePreset("lecture", "acme-underline").emphasis).toBe("underline")
     expect(copyThemePreset("thesis", "acme-tint").emphasis).toBeUndefined()
+  })
+
+  it("carries the preset's figure face into the theme file it writes", () => {
+    // A theme file without it measured and set recap's figures in the heading
+    // font, so a forked recap cover could not fit its own facts.
+    expect(themeFileFromPreset("recap", { id: "acme-recap" }).style.fonts.figure).toEqual(["DIN Alternate", "Bahnschrift", "Arial"])
+    expect(themeFileFromPreset("brief", { id: "acme-brief" }).style.fonts.figure).toBeUndefined()
   })
 
   it("shares no mutable state with the preset it copied", () => {

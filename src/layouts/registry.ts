@@ -63,9 +63,9 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
 import type { ComponentCtx } from "../components/types"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 109 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 113 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 2 uniquely named takeover
-// exports, 111 bindings total. The original migration covered 33 layout
+// exports, 115 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, and the faces no built-in theme menu used were deleted.
 // Grouped by family, each group in the exact
@@ -96,6 +96,7 @@ import { layoutDef as coverPlacardCover } from "./cover-placard-cover"
 import { layoutDef as coverKeynoteCover } from "./cover-keynote-cover"
 import { layoutDef as coverChalkboardCover } from "./cover-chalkboard-cover"
 import { layoutDef as coverPortraitCover } from "./cover-portrait-cover"
+import { layoutDef as coverAccountCover } from "./cover-account-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
 
 import { layoutDef as chapterBlockNumeralChapter } from "./chapter-block-numeral-chapter"
@@ -116,6 +117,7 @@ import { layoutDef as chapterPlacardChapter } from "./chapter-placard-chapter"
 import { layoutDef as chapterKeynoteChapter } from "./chapter-keynote-chapter"
 import { layoutDef as chapterChalkboardChapter } from "./chapter-chalkboard-chapter"
 import { layoutDef as chapterPortraitChapter } from "./chapter-portrait-chapter"
+import { layoutDef as chapterAccountChapter } from "./chapter-account-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterDecimalIndexChapter } from "./chapter-decimal-index-chapter"
@@ -143,6 +145,7 @@ import { layoutDef as endingPlacardEnding } from "./ending-placard-ending"
 import { layoutDef as endingKeynoteEnding } from "./ending-keynote-ending"
 import { layoutDef as endingChalkboardEnding } from "./ending-chalkboard-ending"
 import { layoutDef as endingPortraitEnding } from "./ending-portrait-ending"
+import { layoutDef as endingAccountEnding } from "./ending-account-ending"
 import { layoutDef as endingResolutionEnding } from "./ending-resolution-ending"
 import { layoutDef as endingGaugeNext } from "./ending-gauge-next"
 
@@ -185,6 +188,7 @@ import { layoutDef as contentNoticeStatement } from "./content-notice-statement"
 import { layoutDef as contentNoticeFigure } from "./content-notice-figure"
 import { layoutDef as contentNoticeExhibit } from "./content-notice-exhibit"
 import { layoutDef as contentPortraitSheet } from "./content-portrait-sheet"
+import { layoutDef as contentAccountSheet } from "./content-account-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -631,6 +635,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverChalkboardCover.id]: coverChalkboardCover,
   // profile theme (2026-10-12).
   [coverPortraitCover.id]: coverPortraitCover,
+  // recap theme (2026-10-13).
+  [coverAccountCover.id]: coverAccountCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -677,6 +683,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterChalkboardChapter.id]: chapterChalkboardChapter,
   // profile theme (2026-10-12): the next part of the talk on white paper.
   [chapterPortraitChapter.id]: chapterPortraitChapter,
+  // recap theme (2026-10-13): the part's number, title and what it covers.
+  [chapterAccountChapter.id]: chapterAccountChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -726,6 +734,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingChalkboardEnding.id]: endingChalkboardEnding,
   // profile theme (2026-10-12): the closing promise and the speaker's card.
   [endingPortraitEnding.id]: endingPortraitEnding,
+  // recap theme (2026-10-13): the commitment and the decisions to tick.
+  [endingAccountEnding.id]: endingAccountEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -843,11 +853,14 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   // profile theme (2026-10-12): the board's ordinary content page,
   // theme-locked.
   [contentPortraitSheet.id]: contentPortraitSheet,
+  // recap theme (2026-10-13): the board's ordinary content page,
+  // theme-locked.
+  [contentAccountSheet.id]: contentAccountSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (2). With the 40 standard content layouts above,
-// the content page type has 42 registered entries. These are `slide.layout`
+// Image takeover layouts (2). With the 41 standard content layouts above,
+// the content page type has 43 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -866,7 +879,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageTopLayoutDef.id]: imageTopLayoutDef,
 }
 
-/** All 109 standard layouts and 2 takeover layouts, 111 entries keyed by id.
+/** All 113 standard layouts and 2 takeover layouts, 115 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

@@ -78,6 +78,8 @@ export type CoverLayoutId =
   | "chalkboard-cover"
   // profile theme (2026-10-12): a magazine profile's opening spread beside the speaker's portrait.
   | "portrait-cover"
+  // recap theme (2026-10-13): the front sheet of a year's account.
+  | "account-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -122,6 +124,8 @@ export type ChapterLayoutId =
   | "chalkboard-chapter"
   // profile theme (2026-10-12): the next part of the talk on white paper.
   | "portrait-chapter"
+  // recap theme (2026-10-13): the part's number, title and what it covers.
+  | "account-chapter"
 export type EndingLayoutId =
   // Wave 8 batch 1 pinOnly ending faces.
   | "signoff-ending"
@@ -167,6 +171,8 @@ export type EndingLayoutId =
   | "chalkboard-ending"
   // profile theme (2026-10-12): the closing promise and the speaker's card.
   | "portrait-ending"
+  // recap theme (2026-10-13): the commitment and the decisions to tick.
+  | "account-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -241,3 +247,5 @@ export type ContentLayoutId =
   | "notice-exhibit"
   // profile theme (2026-10-12): the board's ordinary content page. Theme-locked.
   | "portrait-sheet"
+  // recap theme (2026-10-13): the board's ordinary content page. Theme-locked.
+  | "account-sheet"

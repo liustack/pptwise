@@ -127,6 +127,9 @@ function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["st
     body: [...style.fonts.body],
   }
   if (style.fonts.mono !== undefined) fonts.mono = [...style.fonts.mono]
+  // The figure face is the theme's own as much as its heading: a copy that
+  // lost it would measure every figure in the heading font instead.
+  if (style.fonts.figure !== undefined) fonts.figure = [...style.fonts.figure]
   const out: ThemeFile["style"] = {
     id,
     colors,

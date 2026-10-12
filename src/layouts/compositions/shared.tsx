@@ -295,6 +295,18 @@ export type CompositionId =
   | "shortfalls"
   | "tenure"
   | "credo"
+  | "gist"
+  | "reckoning"
+  | "credit"
+  | "casefile"
+  | "relay"
+  | "drawdown"
+  | "headcount"
+  | "postmortem"
+  | "deltas"
+  | "stretch"
+  | "sequence"
+  | "requests"
 
 /**
  * The type a composition sets its page in.
@@ -627,10 +639,31 @@ export type CompositionId =
  *   close, the first days in phases on a ruler, and one sentence in the
  *   speaker's own words beside their portrait. See `./portrait.tsx`.
  *
+ * - `account`: recap's 2026-10 board. One person accounting for their year
+ *   to the people who review it: white paper, a heavy claim in the body
+ *   sans, figures in the theme's figure face, columns opened by a 2px rule
+ *   of the ink, the accent on what the speaker led and the one figure a page
+ *   is about, the danger red on what went wrong beside a cross, and a small
+ *   legend of squares that tells the speaker's part from the team's. A
+ *   composition offered this setting is handed the whole page and places
+ *   the page's section line (`kicker`), claim (`claim`) and source
+ *   (`source`, in the footer row when it credits a photograph) itself, and
+ *   draws the shapes that board drew and no other did: the year in one
+ *   sentence over three figures, a target against what came in quarter by
+ *   quarter beside the ledger that judges each, a bridge from last year to
+ *   this with each step's owner and the speaker's share summed, a case told
+ *   as background, the speaker's part, the team's part and the result beside
+ *   a photograph, the speaker's and the team's steps on two lanes of one
+ *   year, one figure brought down against last year's, a team's headcount
+ *   as a flow with the people it grew, a miss told in four figures and four
+ *   answers, a market's change year on year, next year's target against this
+ *   year's actuals, the order of next year's work over its quarters, and the
+ *   asks with boxes for the reviewers to tick. See `./account.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote" | "chalkboard" | "portrait"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote" | "chalkboard" | "portrait" | "account"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */

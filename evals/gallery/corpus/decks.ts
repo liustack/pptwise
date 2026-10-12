@@ -35,6 +35,7 @@ import { PLACARD_BODIES } from "./placard-bodies"
 import { KEYNOTE_BODIES } from "./keynote-bodies"
 import { CHALKBOARD_BODIES } from "./chalkboard-bodies"
 import { PORTRAIT_BODIES } from "./portrait-bodies"
+import { ACCOUNT_BODIES } from "./account-bodies"
 import { NOTICE_BODIES, NOTICE_PROOF_TABLE } from "./notice-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
@@ -560,6 +561,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "chalkboard-sheet") return COMPOSITION_BODIES.solutions(lex).components
   // profile's portrait sheet: the board's first ninety days on a ruler.
   if (def.id === "portrait-sheet") return COMPOSITION_BODIES.tenure(lex).components
+  // recap's account sheet: the board's target against what came in.
+  if (def.id === "account-sheet") return COMPOSITION_BODIES.reckoning(lex).components
   // bulletin's statement, fact and evidence faces: the board's own pages.
   if (def.id === "notice-statement") return COMPOSITION_BODIES.sentence(lex).components
   if (def.id === "notice-figure") return COMPOSITION_BODIES.billboard(lex).components
@@ -1134,6 +1137,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // self-assessment, the gaps and how they close, the first ninety days and
   // one line in the speaker's own words.
   ...PORTRAIT_BODIES,
+  // recap's account sheet: the year in one sentence over its figures, the
+  // target against what came in, the bridge with whose each step was, a case
+  // beside a photograph, two lanes of one year, one figure brought down, a
+  // team's headcount, a miss owned, the market's change, next year's target,
+  // the order of next year's work and the asks with boxes to tick.
+  ...ACCOUNT_BODIES,
   // bulletin's statement, fact and evidence faces: one sentence as the page,
   // one figure as large as the page allows, and one exhibit with its proof
   // ringed and read beside it.

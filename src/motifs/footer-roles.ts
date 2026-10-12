@@ -58,6 +58,8 @@ import type { MotifId } from "./types"
  *   profile-motif is profile's footer: the organization, the deck's
  *   `label`, the notice and the draft and confidentiality marks at the
  *   left, the speaker's name and the page number at the right.
+ *   recap-motif is recap's footer: the same marks at the left, the
+ *   speaker's name, the occasion and the page number at the right.
  * - `"organization"`: the motif prints the organization somewhere of its
  *   own, and the shared row carries everything else.
  *
@@ -86,6 +88,7 @@ export const MOTIF_FOOTER_ROLES: Partial<Record<MotifId, MotifFooterRole>> = {
   "museum-motif": "row",
   "stage-motif": "row",
   "profile-motif": "row",
+  "recap-motif": "row",
   "lecture-motif": "row",
   "poster-motif": "organization",
 }

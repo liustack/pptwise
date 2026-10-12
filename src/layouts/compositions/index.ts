@@ -258,6 +258,18 @@ import { appraisalComposition } from "./appraisal"
 import { shortfallsComposition } from "./shortfalls"
 import { tenureComposition } from "./tenure"
 import { credoComposition } from "./credo"
+import { gistComposition } from "./gist"
+import { reckoningComposition } from "./reckoning"
+import { creditComposition } from "./credit"
+import { casefileComposition } from "./casefile"
+import { relayComposition } from "./relay"
+import { drawdownComposition } from "./drawdown"
+import { headcountComposition } from "./headcount"
+import { postmortemComposition } from "./postmortem"
+import { deltasComposition } from "./deltas"
+import { stretchComposition } from "./stretch"
+import { sequenceComposition } from "./sequence"
+import { requestsComposition } from "./requests"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -529,6 +541,18 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   shortfalls: shortfallsComposition,
   tenure: tenureComposition,
   credo: credoComposition,
+  gist: gistComposition,
+  reckoning: reckoningComposition,
+  credit: creditComposition,
+  casefile: casefileComposition,
+  relay: relayComposition,
+  drawdown: drawdownComposition,
+  headcount: headcountComposition,
+  postmortem: postmortemComposition,
+  deltas: deltasComposition,
+  stretch: stretchComposition,
+  sequence: sequenceComposition,
+  requests: requestsComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -612,7 +636,7 @@ function asksForCalloutDetail(components: readonly CompositionProps["components"
  * to these alone; the ordinary waterfall sets every note in a line of its own
  * under the bars' names.
  */
-const WATERFALL_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["formula"])
+const WATERFALL_NOTE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["formula", "credit"])
 
 function asksForWaterfallNote(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "waterfall" && component.items.some((item) => item.note !== undefined))
@@ -683,7 +707,7 @@ const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<Compositi
  * the length to the period line, the points under the title and the
  * checkpoint as a tag under them.
  */
-const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway", "floorplan", "tenure"])
+const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway", "floorplan", "tenure", "sequence"])
 
 function asksForRoadmapPhases(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -841,7 +865,7 @@ function asksForGanttMoments(components: readonly CompositionProps["components"]
  * over the bridge. A page whose waterfall carries one is offered to these
  * alone; the ordinary waterfall sets the title over it as a table does.
  */
-const WATERFALL_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["waiver"])
+const WATERFALL_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["waiver", "credit"])
 
 function asksForWaterfallTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "waterfall" && Boolean(component.title?.trim()))
@@ -865,7 +889,7 @@ function asksForChartEstimate(components: readonly CompositionProps["components"
  * each choice beside every question. A page with one is offered to these
  * alone; the face declares the ballot dropped when none takes the page.
  */
-const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["quiz", "asks"])
+const BALLOT_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["quiz", "asks", "requests"])
 
 /**
  * The compositions that set the page's stamp (`Slide.stamp`) where their
@@ -880,7 +904,7 @@ const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower", "confluence", "givens", "exercises", "aside", "stations", "results", "credo"])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower", "confluence", "givens", "exercises", "aside", "stations", "results", "credo", "casefile", "headcount"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))

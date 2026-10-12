@@ -56,6 +56,7 @@ const BOARD: Record<string, { cover: string; chapter: string; ending: string }> 
   memo: { cover: "memo-cover", chapter: "issue-line-chapter", ending: "memo-ending" },
   proposal: { cover: "binder-cover", chapter: "binder-chapter", ending: "binder-ending" },
   profile: { cover: "portrait-cover", chapter: "portrait-chapter", ending: "portrait-ending" },
+  recap: { cover: "account-cover", chapter: "account-chapter", ending: "account-ending" },
 }
 
 describe("THEME_DEFINITIONS", () => {
@@ -162,6 +163,7 @@ describe("THEME_DEFINITIONS", () => {
       "lineup-sheet": "runway",
       "binder-sheet": "proposal",
       "portrait-sheet": "profile",
+      "account-sheet": "recap",
     }
     for (const [face, owner] of Object.entries(exclusive)) {
       for (const id of CANONICAL_THEME_IDS) {

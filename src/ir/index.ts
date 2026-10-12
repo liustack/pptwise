@@ -131,6 +131,7 @@ export const BUILTIN_THEME_IDS = [
   "memo",
   "proposal",
   "profile",
+  "recap",
 ] as const
 
 // ── Background（slide 级受限覆写）──

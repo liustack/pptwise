@@ -158,9 +158,9 @@ describe.sequential("the registry scan and what it covers", () => {
     // The copies held 1,776 (74 faces on 24 themes). Nine of those faces and
     // three themes were deleted with the 2026-10 fold and 49 more with the
     // unused faces, so the floor is what the copies would hold today: 16
-    // faces on 22 themes. Profile, added after, is the 23rd.
+    // faces on 22 themes. Profile and recap, added after, are the 23rd and 24th.
     it("covers at least the 352 face x theme combinations the deleted copies would hold today", () => {
-      expect(CANONICAL_THEME_IDS.length).toBe(23)
+      expect(CANONICAL_THEME_IDS.length).toBe(24)
       expect(LEGACY_COMBINATIONS.size).toBeGreaterThanOrEqual(352)
       expect(SCANNED_COMBINATIONS.size).toBeGreaterThanOrEqual(2310)
     })

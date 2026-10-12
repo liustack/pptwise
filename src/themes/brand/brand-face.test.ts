@@ -36,7 +36,8 @@ const FACES: Record<(typeof CANONICAL_THEME_IDS)[number], "primary" | "accent"> 
   swiss: "accent", // signal red; the primary is black
   memo: "accent", // stamp red; the primary is typewriter black
   proposal: "primary", // deep petrol chapter page and headings
-  profile: "accent", // plum section lines, figures and the filled phase; the primary is ink
+  profile: "accent",
+  recap: "accent", // the teal of what the speaker led and the figure a page is about; the primary is ink
 }
 
 describe("measureBrandFace", () => {

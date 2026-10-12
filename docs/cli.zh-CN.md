@@ -44,7 +44,7 @@ pptwise preview deck-dir/ --html
 | `spec validate <file>` | 验证主题形状的 deck spec。 |
 | `assemble <dir|name>` | 把 deck 项目合并成派生 IR v5。 |
 | `disassemble <ir.json>` | 把 IR v5 拆成 spec、页面文件与资产。 |
-| `themes` | 列出 23 个出厂预设与已装内容包的主题，附元数据。 |
+| `themes` | 列出 24 个出厂预设与已装内容包的主题，附元数据。 |
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，围绕一个品牌色或几个指定锚色重新上色。 |
 | `theme try` | 用两到四个主题渲染固定试衣样稿，或用任意多个主题渲染调用方自己的封面和一页正文。 |

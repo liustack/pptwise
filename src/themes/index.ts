@@ -25,6 +25,7 @@ import { SWISS_THEME } from "./builtin/swiss";
 import { MEMO_THEME } from "./builtin/memo";
 import { PROPOSAL_THEME } from "./builtin/proposal";
 import { PROFILE_THEME } from "./builtin/profile";
+import { RECAP_THEME } from "./builtin/recap";
 import type { BuiltinThemeDeclaration } from "./schema";
 
 /**
@@ -48,7 +49,8 @@ import type { BuiltinThemeDeclaration } from "./schema";
  * 大学/成人课程夜校板 / swiss Swiss Institutional——冷白制度，机构年报 / 政策汇报 /
  * 审计交付，2026-08-21 wave7 / memo Decision Memo——打字机决定，备忘录 /
  * proposal Proposal——递到客户管理层手里的提案书 / profile Profile——
- * 一个人向评委介绍自己的人物专访）。
+ * 一个人向评委介绍自己的人物专访 / recap Recap——一个人向评审交代自己这一年
+ * 的述职账本）。
  * 2026-10 合并退役三家：arena、playbill 并入 rally，heritage 并入 luxe。
  * 旧 id 不在本表，validate 与查名把它读成并入的主题并给警告，见
  * `retired-ids.ts` 的 `FOLDED_THEME_IDS`。resolveThemeId 本身对未知 id
@@ -78,6 +80,7 @@ export const CANONICAL_THEME_IDS = [
   "memo",
   "proposal",
   "profile",
+  "recap",
 ] as const;
 
 export type CanonicalThemeId = (typeof CANONICAL_THEME_IDS)[number];
@@ -107,6 +110,7 @@ export const BUILTIN_THEME_FILES = {
   memo: MEMO_THEME,
   proposal: PROPOSAL_THEME,
   profile: PROFILE_THEME,
+  recap: RECAP_THEME,
 } satisfies Record<CanonicalThemeId, BuiltinThemeDeclaration>;
 
 /** 场景 id → 英文场景名（plan 卡片徽章等对用户展示处用，接口统一英文）。 */

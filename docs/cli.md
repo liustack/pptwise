@@ -44,7 +44,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `spec validate <file>` | Validate a theme-shaped deck spec. |
 | `assemble <dir|name>` | Merge a deck project into derived IR v5. |
 | `disassemble <ir.json>` | Split IR v5 into a spec, page files, and assets. |
-| `themes` | List the 23 factory presets and installed pack themes, with metadata. |
+| `themes` | List the 24 factory presets and installed pack themes, with metadata. |
 | `theme new` | Copy a named theme into a self-contained v2 file. |
 | `theme fork` | Copy a theme and repaint it around one brand color, or around exact anchor colors. |
 | `theme try` | Render the fixed fitting-room sample across two to four themes, or the caller's own cover and one content page across any number of themes. |

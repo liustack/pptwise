@@ -113,8 +113,8 @@ describe("no footer by default", () => {
 })
 
 describe("the footer row, when the deck asks for it", () => {
-  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway, museum, stage, lecture and profile set their folios rather than printing the shared row: their own cases below.
-  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum", "stage", "lecture", "profile"])
+  // memo, clinic, almanac, homeroom, ember, rally, proposal, thesis, journal, ink, crayon, luxe, runway, museum, stage, lecture, profile and recap set their folios rather than printing the shared row: their own cases below.
+  const OWN_FOLIO_THEMES = new Set(["memo", "clinic", "almanac", "homeroom", "ember", "rally", "proposal", "thesis", "journal", "ink", "crayon", "luxe", "runway", "museum", "stage", "lecture", "profile", "recap"])
   const SHARED_ROW_THEMES = CANONICAL_THEME_IDS.filter((theme) => !OWN_FOLIO_THEMES.has(theme))
 
   it.each(SHARED_ROW_THEMES)("%s: every mark in its place, on content pages only", (theme) => {
@@ -338,6 +338,33 @@ describe("the footer row, when the deck asks for it", () => {
       expect(number.textContent).toBe(String(index + 1))
       expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1200", "end"])
       for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("portrait-spec")
+      expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
+    })
+  })
+
+  it("recap: every mark at the left, the speaker and the page number at the right, the cover bare", () => {
+    const ir = zhDeck("recap", { footer: ALL_MARKS })
+    ir.slides.forEach((slide, index) => {
+      const root = page(ir, index)
+      // The chapter and the close set the same row themselves, as the board's close does.
+      if (slide.type === "chapter" || slide.type === "ending") {
+        expect(root.querySelector("[data-account-footer] [data-field='slidenum']")!.textContent, `recap ${slide.type}: page number`).toBe(String(index + 1))
+        return
+      }
+      if (slide.type !== "content") {
+        expect(root.querySelectorAll('[data-field="slidenum"]'), `recap ${slide.type}: page number`).toHaveLength(0)
+        expect(root.querySelector("[data-footer]"), `recap ${slide.type}: footer row`).toBeNull()
+        return
+      }
+      const row = root.querySelector('[data-footer="row"]')!
+      const label = row.querySelector("[data-account-label]")!
+      expect(label.textContent).toBe(`${ORG} · 2026 年中期业绩 | 2026.08 · 讨论稿 · 内部资料，请勿外传`)
+      expect(label.getAttribute("x")).toBe("80")
+      expect(row.querySelector("[data-account-speaker]")!.textContent).toBe("王晓明")
+      const number = row.querySelector('[data-field="slidenum"]')!
+      expect(number.textContent).toBe(String(index + 1))
+      expect([number.getAttribute("x"), number.getAttribute("text-anchor")]).toEqual(["1200", "end"])
+      for (const t of Array.from(row.querySelectorAll("text"))) expect(t.getAttribute("data-font-floor-exempt")).toBe("account-spec")
       expect(texts(root).filter((t) => t.includes(ORG))).toHaveLength(1)
     })
   })

@@ -164,6 +164,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],
   proposal: [slot("kpi_cards"), slot("comparison"), slot("data_table"), slot("timeline"), slot("from_to"), slot("icon_cards"), slot("pros_cons")],
   profile: [slot("timeline"), slot("comparison"), slot("from_to"), slot("kpi_cards"), slot("harvey_balls"), slot("roadmap"), chart("bar", "horizontal")],
+  recap: [slot("scorecard"), slot("waterfall"), slot("kpi_cards"), slot("data_table"), slot("timeline"), slot("roadmap"), chart("bar")],
 }
 
 /** Build the lead component for one theme-table content slot. */

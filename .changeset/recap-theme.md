@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+A new built-in theme, `recap`, sets a year-end review, a probation review or a promotion defence as the ledger one person keeps on their own year: white paper, heavy claims, figures in DIN, columns opened by a black rule, the accent on what the speaker led and the one figure a page is about, and red beside a cross for what went wrong. Each content page opens on a numbered line naming the part of the review, from the deck's `course.stages` and the page's `stage`. Its cover sets a photograph across the top, the occasion and the date, the year's conclusion, the speaker's particulars as `fields` and three figures. Its chapter sets the part's number large with its name beside it, the title, and what the part covers with a figure or a state each. Its ending sets the commitment on a block of the accent beside the asks, each with an empty box, and the speaker's signature. Every content page's footer carries the deck's label, the speaker and the occasion, and the page number. `pptwise themes` now lists 24 presets, and `review` joins the occasions a theme can serve.

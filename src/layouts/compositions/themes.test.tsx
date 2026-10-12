@@ -71,6 +71,8 @@ const KEYNOTE_ONLY = ["hush", "giant", "contour", "faceoff", "tilt", "podiums", 
 const PORTRAIT_ONLY = ["aside", "stations", "verdicts", "casework", "results", "uplift", "appraisal", "shortfalls", "tenure", "credo"] as const
 /** The notice setting's own (bulletin's statement, fact and evidence pages): `notice-kinds.test.tsx` puts them on these themes. */
 const NOTICE_ONLY = ["sentence", "billboard", "proof"] as const
+/** The same for the account setting's own: `account-pages.test.tsx` puts them on these themes. */
+const ACCOUNT_ONLY = ["gist", "reckoning", "credit", "casefile", "relay", "drawdown", "headcount", "postmortem", "deltas", "stretch", "sequence", "requests"] as const
 const CHALKBOARD_ONLY = ["agenda", "confluence", "braces", "boughs", "factors", "subtractions", "flashcards", "risers", "givens", "derivation", "cascade", "exercises", "solutions", "pitfalls", "strikeout", "chronology"] as const
 type BoardId = Exclude<
   CompositionId,
@@ -95,8 +97,9 @@ type BoardId = Exclude<
   | (typeof CHALKBOARD_ONLY)[number]
   | (typeof PORTRAIT_ONLY)[number]
   | (typeof NOTICE_ONLY)[number]
+  | (typeof ACCOUNT_ONLY)[number]
 >
-const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY, ...PLACARD_ONLY, ...KEYNOTE_ONLY, ...CHALKBOARD_ONLY, ...PORTRAIT_ONLY, ...NOTICE_ONLY]
+const SETTING_ONLY: readonly string[] = [...PANEL_ONLY, ...SEAL_ONLY, ...CONSOLE_ONLY, ...MEMO_ONLY, ...DOSSIER_ONLY, ...YEARBOOK_ONLY, ...LESSON_ONLY, ...PITCH_ONLY, ...MARQUEE_ONLY, ...BINDER_ONLY, ...MANUSCRIPT_ONLY, ...PERIODICAL_ONLY, ...SCROLL_ONLY, ...CRAYONBOX_ONLY, ...INVITATION_ONLY, ...LINEUP_ONLY, ...PLACARD_ONLY, ...KEYNOTE_ONLY, ...CHALKBOARD_ONLY, ...PORTRAIT_ONLY, ...NOTICE_ONLY, ...ACCOUNT_ONLY]
 const BOARD_IDS = COMPOSITION_IDS.filter((id): id is BoardId => !SETTING_ONLY.includes(id))
 
 /** One page per composition, in the shape each one takes. */

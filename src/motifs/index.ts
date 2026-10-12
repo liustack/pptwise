@@ -26,6 +26,7 @@ import { RunwayMotif } from "./motif-runway-motif"
 import { MuseumMotif } from "./motif-museum-motif"
 import { StageMotif } from "./motif-stage-motif"
 import { ProfileMotif } from "./motif-profile-motif"
+import { RecapMotif } from "./motif-recap-motif"
 
 export type { Motif, MotifId } from "./types"
 
@@ -61,4 +62,5 @@ export const MOTIFS: Record<MotifId, Motif> = {
   "museum-motif": MuseumMotif,
   "stage-motif": StageMotif,
   "profile-motif": ProfileMotif,
+  "recap-motif": RecapMotif,
 }

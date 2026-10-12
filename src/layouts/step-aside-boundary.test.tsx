@@ -59,6 +59,7 @@ import { PlacardSheetContent } from "./content-placard-sheet"
 import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { ChalkboardSheetContent } from "./content-chalkboard-sheet"
 import { PortraitSheetContent } from "./content-portrait-sheet"
+import { AccountSheetContent } from "./content-account-sheet"
 import { NoticeStatementContent } from "./content-notice-statement"
 import { NoticeFigureContent } from "./content-notice-figure"
 import { NoticeExhibitContent } from "./content-notice-exhibit"
@@ -230,6 +231,9 @@ const CASES: FaceCase[] = [
   // profile's portrait sheet: the same, in its band x80 to x1200 under the
   // section line and the claim, down to y650 or 20px over the source line.
   { face: "portrait-sheet", Face: PortraitSheetContent, themeId: "profile", regions: ["face", "declined"] },
+  // recap's account sheet: the same, in its band x80 to x1200 under the
+  // section line and the claim, down to the footer or over the source line.
+  { face: "account-sheet", Face: AccountSheetContent, themeId: "recap", regions: ["face", "declined"] },
   // bulletin's statement, fact and evidence faces: a line chart is no page
   // their compositions set, so it goes to the notice sheet, in the face's
   // name, and on as the sheet does.

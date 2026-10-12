@@ -20,6 +20,7 @@ import { PlacardEnding } from "./ending-placard-ending"
 import { KeynoteEnding } from "./ending-keynote-ending"
 import { ChalkboardEnding } from "./ending-chalkboard-ending"
 import { PortraitEnding } from "./ending-portrait-ending"
+import { AccountEnding } from "./ending-account-ending"
 import { ResolutionEnding } from "./ending-resolution-ending"
 import { GaugeNextEnding } from "./ending-gauge-next"
 
@@ -51,4 +52,5 @@ export const ENDING_LAYOUTS: Record<EndingLayoutId, EndingLayout> = {
   "keynote-ending": KeynoteEnding,
   "chalkboard-ending": ChalkboardEnding,
   "portrait-ending": PortraitEnding,
+  "account-ending": AccountEnding,
 }
