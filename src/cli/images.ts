@@ -418,7 +418,6 @@ async function resolveDeckWorkspace(
   const location = resolveWorkspaceLocation({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     target,
     isDir,
   })

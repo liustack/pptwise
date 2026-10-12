@@ -1954,19 +1954,12 @@ describe("workspace artifacts (default -o)", () => {
     await expect(stat(join(nested, ".pptwise"))).rejects.toThrow()
   })
 
-  it("resolves project outDir against the config file, and skips git ignore", async () => {
+  it("refuses a project config that still sets outDir", async () => {
     const root = await freshCwd()
     await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
     await writeFile(join(root, "hello.json"), JSON.stringify(VALID_IR))
-    const msg = await runRender(join(root, "hello.json"), {
-      cwd: root,
-      runGit: async () => {
-        throw new Error("git should not run when outDir is configured")
-      },
-    })
-    const expected = join(root, "artifacts", "hello", "hello.pptx")
-    expect(msg).toContain(expected)
-    await expect(stat(expected)).resolves.toBeDefined()
+    await expect(runRender(join(root, "hello.json"), { cwd: root, gitIgnore: false })).rejects.toThrow(/Unrecognized key: "outDir"/)
+    await expect(stat(join(root, "artifacts"))).rejects.toThrow()
   })
 
   it("an explicit -o never creates .pptwise and never prunes that directory", async () => {

@@ -788,7 +788,6 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
       resolveWorkspaceLocation({
         cwd,
         projectConfigPath: projectHit?.path,
-        outDir: projectHit?.config.outDir,
         target: resolvedTarget,
         isDir,
       }).dir,

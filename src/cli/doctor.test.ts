@@ -563,11 +563,10 @@ describe("runDoctor: workspace artifacts line", () => {
         runGit: async () => null,
       })
       const parsed = JSON.parse(output) as {
-        workspace: { anchor: string; root: string; configured: boolean; ignore: string }
+        workspace: { anchor: string; root: string; ignore: string }
       }
       expect(parsed.workspace.anchor).toBe(cwd)
       expect(parsed.workspace.root).toBe(join(cwd, ".pptwise"))
-      expect(parsed.workspace.configured).toBe(false)
       expect(parsed.workspace.ignore).toBe("not-a-repo")
 
       const human = await runDoctor({ home, env: { PATH: "" }, version: CURRENT, cwd, runGit: async () => null })
@@ -581,30 +580,20 @@ describe("runDoctor: workspace artifacts line", () => {
     }
   })
 
-  it("names a configured outDir and skips the git probe", async () => {
+  it("reports .pptwise under the project root a nested cwd belongs to", async () => {
     const home = await makeHome()
-    const cwd = await mkdtemp(join(tmpdir(), "pptwise-doctor-ws-"))
+    const root = await mkdtemp(join(tmpdir(), "pptwise-doctor-ws-"))
     try {
-      await writeFile(join(cwd, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
-      const json = await runDoctor({
-        home,
-        env: { PATH: "" },
-        version: CURRENT,
-        cwd,
-        json: true,
-        runGit: async () => {
-          throw new Error("git should not run when outDir is configured")
-        },
-      })
-      const parsed = JSON.parse(json.output) as {
-        workspace: { root: string; configured: boolean; ignore: string }
-      }
-      expect(parsed.workspace.root).toBe(join(cwd, "artifacts"))
-      expect(parsed.workspace.configured).toBe(true)
-      expect(parsed.workspace.ignore).toBe("skipped")
+      await writeFile(join(root, "pptwise.config.json"), "{}\n")
+      const cwd = join(root, "decks")
+      await mkdir(cwd)
+      const json = await runDoctor({ home, env: { PATH: "" }, version: CURRENT, cwd, json: true, runGit: async () => null })
+      const parsed = JSON.parse(json.output) as { workspace: { anchor: string; root: string } }
+      expect(parsed.workspace.anchor).toBe(root)
+      expect(parsed.workspace.root).toBe(join(root, ".pptwise"))
     } finally {
       await rm(home, { recursive: true, force: true })
-      await rm(cwd, { recursive: true, force: true })
+      await rm(root, { recursive: true, force: true })
     }
   })
 })

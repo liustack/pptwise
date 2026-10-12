@@ -183,7 +183,6 @@ export interface DoctorSelfTest {
 export interface DoctorWorkspace {
   anchor: string
   root: string
-  configured: boolean
   ignore: GitIgnoreStatus
 }
 
@@ -570,7 +569,6 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   const workspace = await inspectWorkspace({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     runGit: input.runGit,
   })
 
@@ -763,17 +761,11 @@ export function renderDoctorReport(report: DoctorReport): string {
 
   lines.push("Workspace artifacts (where render/preview write when -o is omitted)")
   lines.push(`  ${mark("ok")} anchor ${report.workspace.anchor}`)
-  lines.push(
-    report.workspace.configured
-      ? `  ${mark("ok")} output ${report.workspace.root} (from pptwise.config.json outDir)`
-      : `  ${mark("ok")} output ${report.workspace.root}`,
-  )
+  lines.push(`  ${mark("ok")} output ${report.workspace.root}`)
   if (report.workspace.ignore === "ignored") {
     lines.push(`  ${mark("ok")} git-ignored`)
   } else if (report.workspace.ignore === "not-ignored") {
     lines.push(`  ${mark("n/a")} not git-ignored — the first render will add a local exclude line`)
-  } else if (report.workspace.ignore === "skipped") {
-    lines.push(`  ${mark("n/a")} git-ignore skipped (outDir is set in pptwise.config.json)`)
   } else {
     lines.push(`  ${mark("n/a")} not a git repository`)
   }

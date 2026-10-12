@@ -227,7 +227,6 @@ async function loadWorkspaceStock(
   const location = resolveWorkspaceLocation({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     target: resolvedTarget,
     isDir,
   })
@@ -437,7 +436,6 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
     const location = resolveWorkspaceLocation({
       cwd,
       projectConfigPath: projectHit?.path,
-      outDir: projectHit?.config.outDir,
       target: resolvedTarget,
       isDir,
     })
@@ -1595,7 +1593,6 @@ async function themeTryOutDir(cwd: string, opts: ThemeTryOptions): Promise<{ res
   const location = resolveWorkspaceLocation({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     target: "theme-try",
     isDir: true,
   })
@@ -1991,7 +1988,6 @@ async function resolvePreviewOutDir(
   const location = resolveWorkspaceLocation({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     target: resolvedTarget,
     isDir,
   })
@@ -2181,7 +2177,6 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   const workspace = resolveWorkspaceLocation({
     cwd,
     projectConfigPath: projectHit?.path,
-    outDir: projectHit?.config.outDir,
     target: resolvedTarget,
     isDir,
   })

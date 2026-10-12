@@ -42,7 +42,6 @@
  * (AGENTS.md's layout rule: Node-only code never enters `src/index.ts`'s
  * dependency closure).
  */
-import { existsSync } from "node:fs"
 import { appendFile, mkdir, readFile, readdir, stat, unlink } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path"
@@ -51,29 +50,15 @@ import { slugify } from "../themes/extract/brand-extract"
 import { runChild } from "./child"
 import { ASSETS_DIRNAME, assertSafeFileSegment } from "./deck-dir"
 
-/** The default artifact root's directory name, relative to the anchor. A
- *  project config's `outDir` (`./config.ts`) replaces it wholesale. */
+/** The artifact root's directory name, relative to the anchor. Fixed: every
+ *  writer (the CLI and the DSH plugin) finds the project's artifacts here. */
 export const WORKSPACE_DIRNAME = ".pptwise"
-export const LEGACY_WORKSPACE_DIRNAMES = [".pptpress", ".pptfast"] as const
 
 /** The line appended to the local exclude file — a trailing slash so it only
  *  ever matches a directory, and no leading slash so it matches at whatever
  *  depth below the repository root the anchor happens to sit (a monorepo's
- *  per-package project root is not the repository root). Fresh projects
- *  write `.pptwise/`. A leftover `.pptpress/` or `.pptfast/` keeps that name. */
+ *  per-package project root is not the repository root). */
 export const WORKSPACE_IGNORE_ENTRY = `${WORKSPACE_DIRNAME}/`
-
-function defaultWorkspaceDirname(anchor: string): string {
-  if (existsSync(join(anchor, WORKSPACE_DIRNAME))) return WORKSPACE_DIRNAME
-  for (const name of LEGACY_WORKSPACE_DIRNAMES) {
-    if (existsSync(join(anchor, name))) return name
-  }
-  return WORKSPACE_DIRNAME
-}
-
-function ignoreEntryFor(dirname: string): string {
-  return `${dirname}/`
-}
 
 /**
  * `preview`'s own per-slide SVG filenames: `NNN-<slide type>.svg`
@@ -94,8 +79,7 @@ export interface WorkspaceLocation {
   /** The project root the artifact root hangs off: the nearest
    *  `pptwise.config.json`'s directory, else cwd. */
   anchor: string
-  /** `<anchor>/.pptwise`, or the project config's `outDir` resolved against
-   *  the config file's own directory. */
+  /** `<anchor>/.pptwise`. */
   root: string
   /** `<root>/<slug>` — this deck's own subdirectory. */
   dir: string
@@ -103,10 +87,6 @@ export interface WorkspaceLocation {
   slug: string
   /** The deck's own directory or file name, slugified: what its pptx is called. */
   name: string
-  /** True when {@link root} came from a project config's `outDir`. An
-   *  explicit `outDir` is the user having already said where artifacts go,
-   *  so the git-ignore step stays out of it (see {@link prepareWorkspaceDir}). */
-  configured: boolean
 }
 
 /**
@@ -158,29 +138,21 @@ export function resolveWorkspaceRoot(opts: {
   cwd: string
   /** The nearest `pptwise.config.json`'s path (`findConfig`'s hit), or null. */
   projectConfigPath?: string | null
-  /** That config's `outDir`, if it set one. Relative values resolve against
-   *  the config file's own directory — the same base `decksDir` already uses
-   *  (`./config.ts`), never the CLI's cwd. */
-  outDir?: string
-}): Pick<WorkspaceLocation, "anchor" | "root" | "configured"> {
+}): Pick<WorkspaceLocation, "anchor" | "root"> {
   const anchor = opts.projectConfigPath ? dirname(resolve(opts.projectConfigPath)) : resolve(opts.cwd)
-  const configured = opts.outDir !== undefined
-  const root =
-    opts.outDir !== undefined ? resolve(anchor, opts.outDir) : join(anchor, defaultWorkspaceDirname(anchor))
-  return { anchor, root, configured }
+  return { anchor, root: join(anchor, WORKSPACE_DIRNAME) }
 }
 
 export function resolveWorkspaceLocation(opts: {
   cwd: string
   projectConfigPath?: string | null
-  outDir?: string
   /** The deck's resolved path (`loadDeckTarget`'s `resolvedTarget`). */
   target: string
   isDir: boolean
 }): WorkspaceLocation {
-  const { anchor, root, configured } = resolveWorkspaceRoot(opts)
+  const { anchor, root } = resolveWorkspaceRoot(opts)
   const slug = deckSlug(opts.target, opts.isDir, anchor)
-  return { anchor, root, dir: join(root, slug), slug, name: deckSlug(opts.target, opts.isDir), configured }
+  return { anchor, root, dir: join(root, slug), slug, name: deckSlug(opts.target, opts.isDir) }
 }
 
 // ── git ignore ──────────────────────────────────────────────────────────
@@ -221,15 +193,14 @@ export type IgnoreOutcome =
   | { kind: "failed"; path: string; reason: string }
 
 /** What `git check-ignore` said, collapsed into the three outcomes doctor
- *  and the exclude writer both need. `"skipped"` is doctor-only: a project
- *  that set `outDir` opted out of this whole path, so we do not even ask. */
-export type GitIgnoreStatus = "ignored" | "not-ignored" | "not-a-repo" | "skipped"
+ *  and the exclude writer both need. */
+export type GitIgnoreStatus = "ignored" | "not-ignored" | "not-a-repo"
 
 export async function gitIgnoreStatus(
   dir: string,
   entry: string,
   runGit: GitRunner = runGitDefault,
-): Promise<Exclude<GitIgnoreStatus, "skipped">> {
+): Promise<GitIgnoreStatus> {
   // Keep a trailing slash if the caller passed one. A directory-only
   // gitignore rule (`.pptwise/`) does not match a *non-existent* path
   // without the slash — git cannot know that name would be a directory —
@@ -250,19 +221,16 @@ export async function inspectWorkspace(
   opts: {
     cwd: string
     projectConfigPath?: string | null
-    outDir?: string
     runGit?: GitRunner
   },
 ): Promise<{
   anchor: string
   root: string
-  configured: boolean
   ignore: GitIgnoreStatus
 }> {
-  const { anchor, root, configured } = resolveWorkspaceRoot(opts)
-  if (configured) return { anchor, root, configured, ignore: "skipped" }
-  const ignore = await gitIgnoreStatus(anchor, ignoreEntryFor(basename(root)), opts.runGit)
-  return { anchor, root, configured, ignore }
+  const { anchor, root } = resolveWorkspaceRoot(opts)
+  const ignore = await gitIgnoreStatus(anchor, WORKSPACE_IGNORE_ENTRY, opts.runGit)
+  return { anchor, root, ignore }
 }
 
 /**
@@ -339,13 +307,11 @@ async function exists(path: string): Promise<boolean> {
  * the command should print after its summary; an empty array is the normal,
  * quiet case (the root already existed, or it was already ignored).
  *
- * The ignore step is skipped entirely when the root came from a project
- * config's `outDir` ({@link WorkspaceLocation.configured}) or when the caller
- * passed `--no-git-ignore`: both are the user having already stated where
- * artifacts go and who manages them.
+ * The ignore step is skipped when the caller passed `--no-git-ignore`: the
+ * user having already stated who manages that directory.
  *
  * A root that cannot be created (a read-only checkout, a container mount)
- * throws a {@link PptwiseError} naming all three ways out instead of quietly
+ * throws a {@link PptwiseError} naming both ways out instead of quietly
  * relocating to a temp directory — output the caller cannot find is worse
  * than output that refused to be written.
  */
@@ -359,12 +325,12 @@ export async function prepareWorkspaceDir(
   } catch (e) {
     throw new PptwiseError(
       `cannot create the output directory ${location.dir}: ${(e as Error).message}\n` +
-        `  pass -o <path> to write somewhere writable, set "outDir" in pptwise.config.json, or run from a writable workspace`,
+        `  pass -o <path> to write somewhere writable, or run from a writable project`,
     )
   }
-  if (rootExisted || location.configured || opts.gitIgnore === false) return []
+  if (rootExisted || opts.gitIgnore === false) return []
 
-  const ignoreEntry = ignoreEntryFor(basename(location.root))
+  const ignoreEntry = WORKSPACE_IGNORE_ENTRY
   const outcome = await ensureGitIgnored(location.anchor, ignoreEntry, opts.runGit)
   if (outcome.kind === "appended") {
     return [

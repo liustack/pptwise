@@ -10,31 +10,20 @@ import { ImagesConfigSchema } from "./image-config"
  * nearest `pptwise.config.json` above the cwd is where `.pptwise/` and
  * `themes/` go (`../cli/workspace.ts`).
  *
- * `outDir` (workspace-artifacts wave): where `render`/`preview` write when
- * the caller passes no `-o`. Default `.pptwise` under this config file's own
- * directory (`../cli/workspace.ts`'s `WORKSPACE_DIRNAME`); a relative value
- * here resolves against that same directory, an absolute one passes through.
- * Setting it at all is also the opt-out from the automatic git-exclude line
- * — a project that names its own artifact directory has already decided how
- * that directory is tracked (`prepareWorkspaceDir`). Project layer only, on
- * purpose: an artifact root is a property of *this project's* working tree,
- * not of the user's identity, so it deliberately has no counterpart in
- * {@link UserConfigSchema} below — a user-level `outDir` would collapse every
- * project's artifacts into one directory.
+ * It takes no settings of its own any more: artifacts always go to
+ * `.pptwise/` under the project root, where the CLI and the DSH plugin both
+ * look for them. Unknown keys are still rejected, so a leftover `outDir` or
+ * `decksDir` says so instead of being silently ignored.
  */
 const ConfigSchema = z
-  .object({
-    outDir: z.string().optional(),
-  })
+  .object({})
   .strict()
 
 export type PptwiseConfig = z.infer<typeof ConfigSchema>
 
 /**
  * User-level config schema: optional `images` (Pexels/Pixabay keys and
- * Openverse OAuth for stock-photo search, image generators). `outDir` is
- * deliberately absent — an artifact root belongs to this working tree, not
- * to the user's identity (see {@link ConfigSchema}'s own `outDir` comment).
+ * Openverse OAuth for stock-photo search, image generators).
  * `images` is user-layer only: project {@link ConfigSchema} rejects it so a
  * repo file cannot carry API keys. Decks live in the project, never under
  * the user's home, so there is no deck root setting on either layer.

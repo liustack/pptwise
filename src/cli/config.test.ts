@@ -94,46 +94,46 @@ describe("findConfig", () => {
     await expect(findConfig(root)).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "decksDir"`))
   })
 
-  it("reads outDir from a project pptwise.config.json (workspace-artifacts wave)", async () => {
+  it("rejects a leftover outDir: artifacts always go to .pptwise under the project root", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
-    const hit = await findConfig(root)
-    expect(hit?.config.outDir).toBe("artifacts")
+    const configPath = join(root, "pptwise.config.json")
+    await writeFile(configPath, JSON.stringify({ outDir: "artifacts" }))
+    await expect(findConfig(root)).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "outDir"`))
   })
 
   it("reads pptpress.config.json when pptwise.config.json is absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
+    await writeFile(join(root, "pptpress.config.json"), "{}")
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptpress.config.json"))
-    expect(hit?.config.outDir).toBe("press-out")
+    expect(hit?.config).toEqual({})
   })
 
   it("reads pptfast.config.json when both newer filenames are absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "fast-out" }))
+    await writeFile(join(root, "pptfast.config.json"), "{}")
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptfast.config.json"))
-    expect(hit?.config.outDir).toBe("fast-out")
+    expect(hit?.config).toEqual({})
   })
 
   it("prefers pptpress.config.json over pptfast.config.json when pptwise.config.json is absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "legacy-out" }))
+    await writeFile(join(root, "pptpress.config.json"), "{}")
+    await writeFile(join(root, "pptfast.config.json"), "not json")
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptpress.config.json"))
-    expect(hit?.config).toEqual({ outDir: "press-out" })
+    expect(hit?.config).toEqual({})
   })
 
   it("prefers pptwise.config.json when every filename exists (does not merge)", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "legacy-out" }))
+    await writeFile(join(root, "pptwise.config.json"), "{}")
+    await writeFile(join(root, "pptpress.config.json"), "not json")
+    await writeFile(join(root, "pptfast.config.json"), "not json")
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptwise.config.json"))
-    expect(hit?.config).toEqual({ outDir: "artifacts" })
+    expect(hit?.config).toEqual({})
   })
 })
 
