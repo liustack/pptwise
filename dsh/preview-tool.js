@@ -2507,7 +2507,7 @@ export function createPreviewService(cliPath) {
     description:
       "Draw the user's own deck title as a cover, plus one content page, in four to six pptwise themes, " +
       'and show them to the user side by side in this conversation, numbered in the order the result lists them. ' +
-      'Call it whenever a theme is being chosen, before writing deck.spec.json. ' +
+      'Call it when the user asks to see looks before a theme is chosen. Otherwise pick the theme yourself: the first pptwise_build shows the deck in other themes. ' +
       'Without `themes` it draws a shortlist for `occasion`. The pages reach the user, not you: the result lists the themes in card order.',
     parameters: {
       type: 'object',

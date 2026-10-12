@@ -173,14 +173,35 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text).not.toMatch(/^pptwise render deck-dir\/$/m)
       expect(text).not.toMatch(/^pptwise audit deck-dir\/$/m)
     }
-    expect(en).toContain("Two decisions belong to the user: the theme and the outline.")
+    expect(en).toContain("One decision stops for the user: the outline, which also names the theme you picked and why.")
     expect(en).toContain("Never convert pages to PNG or read page images to judge them")
     expect(en).toContain("Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`.")
-    expect(zh).toContain("主题和大纲两个决定归用户。")
+    expect(zh).toContain("只有一处停下来等用户：大纲，大纲里同时写明你选的主题和理由。")
     expect(zh).toContain("不要把页面转成 PNG 或读页面图片来判断")
     expect(zh).toContain("只交付这一份文件。")
     for (const rel of [REF("validate.md"), REF("validate.zh-CN.md")]) {
       expect(read(rel)).toContain("pptwise build deck-dir/ --json")
+    }
+  })
+
+  it("picks the theme by occasion, draws a wall only on request, and switches theme by its name", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("Pick the theme yourself.")
+    expect(en).toContain("Draw a theme wall only when the user asks to see looks before choosing")
+    expect(en).toContain("To switch later, change only `theme` in `deck.spec.json` and build again.")
+    expect(en).toContain("Name them in one line and keep going: do not stop to ask.")
+    expect(en).toContain("When the user asks for other colors without naming one, fork two or three fitting colors")
+    expect(zh).toContain("主题由你来挑。")
+    expect(zh).toContain("只有用户想先看看有哪些样子再选")
+    expect(zh).toContain("之后要换主题，只改 `deck.spec.json` 里的 `theme`，再 build 一次。")
+    expect(zh).toContain("用一句话提一下就继续，不要停下来问。")
+    expect(zh).toContain("用户想换个颜色又没说哪种时，先 fork 两三个合适的配色")
+    for (const text of [en, zh]) {
+      expect(text).toContain("`alternatives`")
+      expect(text).toContain("`drawnAs`")
+      // A kind the menu lacks is no longer a reason to rewrite the spec.
+      expect(text).not.toMatch(/hard error that lists what the menu offers|会硬报错，并列出菜单提供的词/)
     }
   })
 

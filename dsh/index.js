@@ -124,7 +124,7 @@ export function dshRuntimePreamble(cliPath, launcher = cliLauncher(), platform =
  */
 export function dshToolRouting() {
   return [
-    `This plugin also gives you tools, and the user sees the pages only through them. Draw the theme wall with \`${THEMES_TOOL_NAME}\`, show the outline with \`${OUTLINE_TOOL_NAME}\` once the spec validates, build after each batch with \`${BUILD_TOOL_NAME}\`, and show a deck with \`${TOOL_NAME}\`. Never run \`build\` or \`theme try\` in the terminal here. Inside \`run_code\` call them like any other tool, for example \`await tools.${BUILD_TOOL_NAME}({ target: "deck-dir/" })\`. Every other command (\`themes\`, \`init\`, \`validate\`, \`schema\`, \`inspect\`) runs through the line above.`,
+    `This plugin also gives you tools, and the user sees the pages only through them. Draw a theme wall with \`${THEMES_TOOL_NAME}\` only when the user asks to see looks before choosing, show the outline with \`${OUTLINE_TOOL_NAME}\` once the spec validates, build after each batch with \`${BUILD_TOOL_NAME}\`, and show a deck with \`${TOOL_NAME}\`. Never run \`build\` or \`theme try\` in the terminal here. Inside \`run_code\` call them like any other tool, for example \`await tools.${BUILD_TOOL_NAME}({ target: "deck-dir/" })\`. Every other command (\`themes\`, \`init\`, \`validate\`, \`schema\`, \`inspect\`) runs through the line above.`,
   ].join('\n')
 }
 

@@ -49,7 +49,7 @@ Scan the workspace before asking questions. An existing `deck.spec.json` already
 
 ## Show the user before you check it yourself
 
-Write every message to the user in the language they wrote in, from the first status line to the final answer. Two decisions belong to the user: the theme and the outline. At each, show it in the conversation and ask before going on. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the theme wall and the outline, say what you picked, and continue.
+Write every message to the user in the language they wrote in, from the first status line to the final answer. One decision stops for the user: the outline, which also names the theme you picked and why. Show it in the conversation and ask before writing pages. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the outline and continue. The theme is not a second stop: the user can change it at the outline or after any build.
 
 Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
 
@@ -63,11 +63,11 @@ Record four facts before choosing how to tell the story: audience, desired outco
 
 Choose the narrative before the theme. The narrative decides argument strategy, pacing, and tone. Use a named preset when it matches, or write explicit `strategy`, `pacing`, and `audience` axes. Pacing controls editorial budgets and the body-text baseline. Narrative never chooses a page face.
 
-Say the narrative you chose in one line when you show the theme wall, so one answer from the user settles both. See `references/spec.md` for the compact interview and spec example.
+Say the narrative you chose in one line with the outline, so one answer from the user settles it. See `references/spec.md` for the compact interview and spec example.
 
 ### 3. Bind a theme
 
-A theme is one complete, self-contained file containing style, a page menu, optional brand rules, and occasion metadata. Its content menu serves a subset of the 11 global `kind` words. Missing words are intentional.
+A theme is one complete, self-contained file containing style, a page menu, optional brand rules, and occasion metadata. Its content menu serves a subset of the 11 global `kind` words. A page whose kind the menu lacks is drawn as the nearest kind it offers, so any theme can carry any spec.
 
 Resolve theme names in this order:
 
@@ -76,19 +76,17 @@ Resolve theme names in this order:
 3. Installed content packs (`pptwise packs list`).
 4. The 24 factory presets.
 
-Show the user their own cover title in four to six themes. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and `occasion`: the occasion words from `themes --json` or the narrative preset that fit the request. It picks the shortlist and draws each theme's cover and one content page in the conversation, numbered, and returns the theme ids in that order. Pass `themes` only when the user named themes. Leave `page` out unless it is a page of this deck you already validated. Otherwise draw the same wall from the CLI:
+Pick the theme yourself. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit the request and the narrative best, and write one line on why with the outline. Draw a theme wall only when the user asks to see looks before choosing ("show me some styles"). Then call the `pptwise_themes` tool with the deck's cover title, subtitle, and `occasion`: the occasion words that fit. It draws each shortlisted theme's cover and one content page in the conversation, numbered. Pass `themes` only when the user named themes. Without the tool, draw the same wall:
 
 ```bash
 pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
 ```
 
-It prints a manifest naming one cover and one content SVG per theme, plus `contact-sheet.html`. Show the user those SVGs where the host can display images, or hand over the contact sheet's path. Then ask which theme they want, one option per theme in the wall's order, or name your pick when they left it to you.
+Show its SVGs or `contact-sheet.html`, and ask which one they want.
 
-Pick from the factory themes on the wall by default. Create a theme only when the user names brand colors or hands over a company template or deck. A wish for a look ("cool", "techy", "premium") is a reason to put fitting themes on the wall, not to create one. Create means copy: copy the closest preset into the workspace, extract a brand from an Office file, or fork for a color change. The commands are in `references/spec.md`.
+Create a theme only when the user names brand colors or hands over a company template or deck. A wish for a look ("cool", "techy", "premium") picks among existing themes. Create means copy: copy the closest preset, extract a brand from an Office file, or fork for a color change. When the user asks for other colors without naming one, fork two or three fitting colors, draw them with `theme try`, and let the user choose before binding. The commands are in `references/spec.md`.
 
-Write the selected theme name into `deck.spec.json` before writing page content. Bound deck commands use that name. There is no render-time theme switch.
-
-A same-menu color fork may replace the bound theme during the workflow. A different menu means a different theme. Return to this step, keep the intent, narrative, facts, data, images, and useful copy, then rewrite the spec and fill against the new menu.
+Write the theme name into `deck.spec.json` before writing page content. There is no render-time theme switch. To switch later, change only `theme` in `deck.spec.json` and build again. Pages keep their kinds and files: the build lists pages drawn as another kind under `drawnAs`, warns about furniture the new faces leave off, and names any page that still needs a change.
 
 ### 4. Write the spec with `kind`
 
@@ -103,9 +101,9 @@ A deck prints no page number, organization, date, or confidentiality line unless
 
 When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
 
-Run `pptwise spec validate deck.spec.json` until it prints `OK`. A content `kind` outside the bound theme menu is a hard error that lists what the menu offers. Do not relabel the page merely to silence the error. Change the page's intent only when that is semantically honest, or return to the theme step.
+Run `pptwise spec validate deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page.
 
-The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
+The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. Put the theme and its one-line reason above the pages. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
 
 The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
 
@@ -131,6 +129,8 @@ pptwise build deck-dir/ --json
 ```
 
 Each entry in `errors` names its `page`, the `file` and `field` to edit, and the check's own fix. Fix every error and build again. Restructure content instead of deleting what a check caught. Pages not written yet are reported as such, which is expected until the last batch.
+
+The first build also draws the deck's cover and a content page or two in up to three other themes, listed under `alternatives` (the `pptwise_build` card shows them numbered under the pages). Name them in one line and keep going: do not stop to ask. When the user picks one ("switch to the second"), set `theme` to its id and build again.
 
 ### 6. Build, review, and deliver
 

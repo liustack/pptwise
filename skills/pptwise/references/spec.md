@@ -18,7 +18,7 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
-Each theme row in `themes --json` carries its `menu`. The keys of `menu.content` are the content kinds the theme offers, so read them there to learn whether a theme serves a kind. A kind missing from `menu.content` fails `spec validate` for that theme. Never search the installed package's files for menus.
+Each theme row in `themes --json` carries its `menu`. The keys of `menu.content` are the content kinds the theme offers, so read them there to learn whether a theme serves a kind. A kind missing from `menu.content` is drawn there as its nearest offered kind, see [Kinds a theme lacks](#kinds-a-theme-lacks). Never search the installed package's files for menus.
 
 The IR component contract is read per page during fill with `pptwise inspect deck-dir/ --page <id>`. See `components.md`.
 
@@ -35,13 +35,13 @@ When essential facts are missing and a user is present, ask one compact round:
 3. Should the argument lead with a conclusion, unfold as a story, teach a sequence, showcase an image or number, or read as a compact briefing?
 4. Should pages be dense, balanced, or spacious?
 
-Use `pptwise narratives --json` to map the answer to a named preset or to explicit `strategy`, `pacing`, and `audience`. Do not infer the narrative from brand colors. Say this package in one line when you show the user the theme wall, so one answer settles both.
+Use `pptwise narratives --json` to map the answer to a named preset or to explicit `strategy`, `pacing`, and `audience`. Do not infer the narrative from brand colors. Say this package in one line with the outline, so one answer settles it.
 
 ## Choose, create, and bind a theme
 
 Theme is the second decision and must be settled before the spec. A theme is one complete file with style, a page menu, optional brand rules, `occasions`, and `identity`. The menu serves a deliberate subset of the 11 content kinds.
 
-Shortlist four to six candidates by occasion first, identity strength second, and `menu` third. The user chooses from the candidates drawn with their own cover title. Use a `pptwise_themes` tool when the host has one. Otherwise draw the wall with the CLI:
+Pick one theme by occasion first and identity strength second, and say why in one line with the outline. Draw candidates with the user's own cover title only when the user asks to see looks before choosing: with a `pptwise_themes` tool when the host has one, otherwise with the CLI:
 
 ```bash
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
@@ -168,20 +168,18 @@ pptwise spec validate deck.spec.json
 
 Fix hard errors until the command prints `OK`. A page count outside the range the pacing usually spans is a warning, not an error. When the user asked for a page count, keep it. Three or more consecutive content pages with the same `kind` produce an editorial warning.
 
-## Menu mismatch handling
+## Kinds a theme lacks
 
-If the spec requests a `kind` that the bound theme does not offer, validation fails and lists the available kinds. Handle it in this order:
+A spec may ask for a `kind` the bound theme does not offer. `spec validate` prints a note, and the page is drawn as the nearest kind the menu offers whose face takes its components. A `fact` page is drawn as `data`, then `statement`. A `quote` is drawn as `statement`. An `evidence` page is drawn as `data` or `photo`, by its exhibit. A `hierarchy` is drawn as `points`. Every menu ends at `points` or `list`. The page keeps its kind, so a theme that offers it draws it on its own face again. Write the kind that is true to the page. Never relabel a page to steer its face.
 
-1. Recheck the page's semantic posture. Change `kind` only when another offered word is genuinely correct.
-2. If the page intent is fixed, choose or create a theme whose menu serves it.
-3. If content was already filled, return to the theme layer. Keep useful facts, data, images, and copy fragments, then rewrite the spec and page files for the new menu.
+## Switching theme
 
-Do not force a nearby word merely to pass validation. A menu gap is a theme decision, not missing geometry.
+Switching theme is a name change: set `theme` in `deck.spec.json` and build again. Do not rewrite the spec or page files first. The build reports what the new theme handles differently:
 
-## Rebinding after work starts
+- `drawnAs` lists the pages drawn as another kind.
+- A warning names furniture (`kicker`, `stamp`, `tag`, `years`, `stage`) a face has no place for. It is left off and stays in the page file.
+- An error names what the new faces cannot take at all, such as `fields`, `ballot`, a cover's components or footnote, or components one face sets together and another does not. Fix that page and build again.
 
-A color fork with the same menu may replace the bound theme. Update the bound name, rerun spec validation, then build again.
-
-A theme with a different menu is not a repaint. It requires restarting at the theme layer and rewriting the spec. The CLI compares normalized menus directly and refuses an in-place different-menu rebind.
+A deck that froze its theme as its own `theme.json` keeps it: delete or replace that file to switch to a theme with another menu. A color fork of the same menu needs neither. When the user asks for other colors without naming one, fork two or three and draw them with `theme try` before binding one.
 
 A very small deck may use one IR file instead of a deck project. It still follows the same chain. Its top-level `theme.id` is the binding, and every content slide still requires explicit `kind`.

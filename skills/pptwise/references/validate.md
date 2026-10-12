@@ -21,7 +21,7 @@ pptwise assemble deck-dir/
 pptwise validate deck-dir/
 ```
 
-`assemble` merges the locked semantics and page content into IR v5. It does not write face choices or any other rendering decision into the project. A missing page file remains an accepted placeholder. An orphan page file, a locked-field conflict, an unknown theme, or a kind absent from the bound theme menu is a hard error.
+`assemble` merges the locked semantics and page content into IR v5. It does not write face choices or any other rendering decision into the project. A missing page file remains an accepted placeholder. An orphan page file, a locked-field conflict, or an unknown theme is a hard error. A kind absent from the bound theme menu is drawn as its nearest offered kind.
 
 `validate` applies schema, component, asset, narrative, physical capacity, and editorial checks. Authored leftover-count phrasing and ellipsis substitutes are rejected here, before a page is painted. Fix errors until it prints `OK`. Warnings do not block output, but long headings, excessive density, dangling assets, and repetitive choices should normally be tightened before delivery.
 
@@ -43,7 +43,7 @@ pptwise render deck-dir/
 
 An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`, which also lets the deck past validate's drawing of its content pages. Prefer fixing or splitting the page.
 
-When changing themes, show the candidates with `pptwise_themes` or `pptwise theme try --title`. A same-menu fork can replace the binding and build again. A different menu requires returning to theme selection, then revising the spec and affected page fills before those checks.
+The first build of a deck also draws its cover and a content page or two in up to three other themes, listed under `alternatives` with each theme's id. To change themes, set `theme` in `deck.spec.json` and build again. The report lists pages drawn as another kind under `drawnAs`, warns about furniture a new face leaves off, and names in `errors` any page that needs a change. `themeSource` says whether the bound theme is `builtin`, a `file`, or from a `pack`.
 
 ## Audit geometry
 

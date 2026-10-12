@@ -6,7 +6,7 @@ Read this when deciding what a content page is saying and which `kind` names tha
 
 Boundary pages use only `cover`, `chapter`, or `ending`. Every content page carries exactly one of the eleven `kind` values below. Authors choose the semantic move. The bound theme menu chooses the visual face.
 
-Do not encode geometry in the spec or page file. If the requested kind is absent from the theme menu, validation stops with a hard error and lists the kinds that theme offers. Resolve the mismatch by choosing an offered kind that still tells the truth, binding a theme that offers the intended kind, or creating a complete theme whose menu does.
+Do not encode geometry in the spec or page file. If the requested kind is absent from the theme menu, the page is drawn as the nearest kind the menu offers, and `spec validate` prints a note. Keep the kind that tells the truth. The stand-ins are in `spec.md`.
 
 ## Close calls
 
@@ -18,7 +18,7 @@ Do not encode geometry in the spec or page file. If the requested kind is absent
 
 ## Menu consequences
 
-A theme menu binds each boundary page and each offered content kind to one face. The same choice also fixes that face's capacity, motif posture, and branding permissions. Write to that physical capacity after binding the theme. A different color fork with the same menu can be rebound without rewriting the story. A theme with a different menu requires a return to the theme step, followed by spec and page-fill revision.
+A theme menu binds each boundary page and each offered content kind to one face. The same choice also fixes that face's capacity, motif posture, and branding permissions. Write to that physical capacity after binding the theme. Another theme, with the same menu or a different one, is bound by changing its name in the spec and building again. The build names any page the new faces need changed.
 
 <!-- generated:begin kinds -->
 ### Complete kind vocabulary

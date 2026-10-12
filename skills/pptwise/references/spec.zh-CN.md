@@ -23,7 +23,7 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
-`themes --json` 的每个主题行都带 `menu`。`menu.content` 的键就是这个主题提供的内容 kind，想知道某个主题支不支持某种 kind，就读这里。`menu.content` 里没有的 kind，用这个主题时 `spec validate` 会报错。不要去翻已安装包的文件找菜单。
+`themes --json` 的每个主题行都带 `menu`。`menu.content` 的键就是这个主题提供的内容 kind，想知道某个主题支不支持某种 kind，就读这里。`menu.content` 里没有的 kind，用这个主题时按它最近的替身 kind 来画，见[主题缺少的讲法](#主题缺少的讲法)。不要去翻已安装包的文件找菜单。
 
 IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读取。见 `components.md`。
 
@@ -40,13 +40,13 @@ IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读
 3. 论证应该结论先行、按故事展开、分步教学、突出一个画面或数字，还是写成紧凑简报？
 4. 页面应该密、均衡，还是留白？
 
-用 `pptwise narratives --json` 把答案映射成具名预设，或显式的 `strategy`、`pacing`、`audience`。不要从品牌配色推导叙事。给用户看主题墙时用一句话说出这份叙事包，让用户一次回答同时定下两者。
+用 `pptwise narratives --json` 把答案映射成具名预设，或显式的 `strategy`、`pacing`、`audience`。不要从品牌配色推导叙事。随大纲用一句话说出这份叙事包，让用户一次回答就能定下。
 
 ## 选择、创建并绑定主题
 
 主题是第二个决定，必须早于 spec。主题是一个完整文件，包含样式、页面菜单、可选品牌规则、`occasions` 与 `identity`。菜单只服务 11 种内容页讲法中的一个明确子集。
 
-先按场合，再按视觉个性强度，最后按 `menu` 筛出四到六个候选。让用户看着用自己封面标题画出的候选来选。宿主有 `pptwise_themes` 工具时用它，否则用 CLI 出主题墙：
+先按场合，再按视觉个性强度挑出一个主题，随大纲用一句话说明理由。只有用户想先看看有哪些样子再选，才用他自己的封面标题画出候选：宿主有 `pptwise_themes` 工具时用它，否则用 CLI 出主题墙：
 
 ```bash
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
@@ -173,20 +173,18 @@ pptwise spec validate deck.spec.json
 
 修完硬错误，直到命令打印 `OK`。页数超出 `pacing` 通常的范围只是提示，不是错误。用户给了页数就保持那个页数。连续三张或更多内容页使用同一个 `kind` 时，会产生编辑提示。
 
-## 菜单不匹配怎么处理
+## 主题缺少的讲法
 
-spec 请求了绑定主题没有提供的 `kind` 时，校验会失败并列出可用词。按这个顺序处理：
+spec 可以请求绑定主题没有提供的 `kind`。`spec validate` 只给一条提示，那一页按菜单里最近、且它的脸接得住这页组件的讲法来画。`fact` 先按 `data`，再按 `statement`。`quote` 按 `statement`。`evidence` 看展品是图表还是图片，按 `data` 或 `photo`。`hierarchy` 按 `points`。每条替身链都以 `points` 或 `list` 收尾。页面保留自己的 kind，换到提供这种 kind 的主题时又回到它自己的脸。`kind` 写页面真实的讲法，不要为了换一张脸改词。
 
-1. 重查页面的语义姿势。只有另一个可用词确实正确时才改 `kind`。
-2. 页面意图不能变时，选择或创建菜单能服务它的主题。
-3. 已经填过内容时，回到主题层。保留有用的事实、数据、图片与文案片段，再按新菜单重写 spec 与页面文件。
+## 换主题
 
-不要为了通过校验硬套一个相近词。菜单缺口是主题决策，不是几何缺口。
+换主题就是改名字：把 `deck.spec.json` 里的 `theme` 改掉，再 build 一次。不要先去改 spec 或页面文件。build 会报告新主题处理得不一样的地方：
 
-## 开工后的换绑
+- `drawnAs` 列出按别的讲法画的页面。
+- 警告点名脸上没有位置的装饰字段（`kicker`、`stamp`、`tag`、`years`、`stage`）。它们不画出来，但留在页面文件里。
+- 错误点名新脸完全接不住的内容，比如 `fields`、`ballot`、封面上的组件或脚注，或者一张脸能放在一起、另一张脸不能的组件组合。改好那一页再 build。
 
-菜单相同的配色 fork 可以替换绑定主题。更新绑定名称，重跑 spec validate，再 build 一次。
-
-菜单不同的主题不是换色，必须回到主题层重写 spec。CLI 会直接比较规范化后的菜单，并拒绝流程内换绑到不同菜单。
+把主题冻结成自己的 `theme.json` 的 deck 会一直用它：要换到菜单不同的主题，先删掉或替换这个文件。菜单相同的配色 fork 两样都不需要。用户想换个颜色又没说哪种时，先 fork 两三个，用 `theme try` 画出来，挑了再绑定。
 
 很小的 deck 可以使用单个 IR 文件而不是 deck 项目。它仍遵循同一条链。顶层 `theme.id` 是绑定，每张内容页仍必须显式写 `kind`。
