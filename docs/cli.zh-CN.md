@@ -358,6 +358,8 @@ pptwise check-update
 pptwise self-update
 ```
 
+只有 `config set`、`license set`、`license clear` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`packs sync` 在安装时跑，不按 deck 跑。
+
 设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。
 
 第一次创建 `.pptwise/` 的命令用两种办法让它不进 git：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。

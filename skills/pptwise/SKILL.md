@@ -31,7 +31,7 @@ If scripts are unavailable, use the first available route:
 3. `bunx --bun @liustack/pptwise@0.44.0 <args>`.
 4. Otherwise ask the user to install Node 22.19+ or Bun.
 
-Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing.
+Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing. Content packs are installed at setup, not per deck. When the user has a license, `pptwise license set <key>` and `pptwise packs sync` are installation steps, and `packs sync` runs again only when the user asks to update packs or changes the license. These are the only commands that write the pptwise home folder (`~/.pptwise`), with `config set`. Making a deck writes nothing there, so it works in a sandbox whose home folder is read-only. Never run `license set` or `packs sync` as part of a deck task.
 
 ## Read live truth first
 
@@ -40,11 +40,10 @@ Never write IR or a spec from memory. Run these at the start of each deck task:
 ```bash
 pptwise schema --spec
 pptwise narratives --json
-pptwise packs sync
 pptwise themes --json
 ```
 
-`packs sync` installs or updates the user's content packs when a license is configured, so `themes --json` lists their themes with `"source": "pack"`. Without a license it prints one line and exits 0. If it fails, relay its message and continue with what is installed. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while filling, never whole. See step 5.
+`themes --json` lists installed content pack themes with `"source": "pack"`. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while filling, never whole. See step 5.
 
 Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 

@@ -26,9 +26,9 @@ pptwise packs list [--json]
 
 `license set` checks the key's shape and writes it to `$PPTWISE_HOME/license.json` as `{"key": "ptw_..."}`, readable by the owner only (mode 0600). A key is `ptw_` followed by 32 characters from `a-z` and `2-7`, 36 characters in all. Whether a key is valid is the server's answer, not the CLI's. `license status` says whether a key is configured and shows its first eight characters, never more. `license clear` deletes the file. Installed packs stay installed.
 
-`packs sync` reads the license, asks the server for its catalog, and brings every listed pack up to date:
+`packs sync` is an installation step: run it once after `license set`, and again when the license changes or to pick up newer packs. With `config set` and `license set` and `clear`, it is one of the only commands that write `$PPTWISE_HOME`. Making a deck only reads the installed packs, so it works where the home folder is read-only. It reads the license, asks the server for its catalog, and brings every listed pack up to date:
 
-- Without a license it prints one line and exits 0, so a script or skill can run it unconditionally.
+- Without a license it prints one line and exits 0, so an install script can run it unconditionally.
 - A pack already installed at the catalog's version is left alone. Nothing is downloaded.
 - A pack missing locally or at another version is downloaded, checked, and installed (see [Before install](#before-install)).
 - A pack whose `engine` range does not include the running pptwise is skipped with a note to update pptwise. An installed older version stays.

@@ -205,14 +205,16 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
   })
 
-  it("syncs content packs before the theme list is read, and resolves names in four levels", () => {
+  it("installs content packs at setup, never per deck, and resolves names in four levels", () => {
     for (const rel of [EN_REL, ZH_REL]) {
       const text = read(rel)
-      // `packs sync` exits 0 without a license, so the playbook runs it
-      // unconditionally, and before `themes --json` so pack themes are listed.
-      expect(text).toMatch(/^pptwise packs sync$/m)
-      expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("pptwise themes --json"))
-      expect(text.indexOf("pptwise packs sync")).toBeLessThan(text.indexOf("### 3."))
+      // `packs sync` writes the pptwise home folder, and making a deck must
+      // not, so it is an installation step: named before the per-deck
+      // commands, and never one of them.
+      expect(text).not.toMatch(/^pptwise packs sync$/m)
+      expect(text.indexOf("`pptwise packs sync`")).toBeGreaterThan(-1)
+      expect(text.indexOf("`pptwise packs sync`")).toBeLessThan(text.indexOf("pptwise schema --spec"))
+      expect(text).toMatch(/(Never run `license set` or `packs sync` as part of a deck task|不要在 deck 任务里运行 `license set` 或 `packs sync`)/)
     }
     expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
     expect(read(ZH_REL)).toMatch(/2\. 从当前目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)

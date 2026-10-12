@@ -358,6 +358,8 @@ pptwise check-update
 pptwise self-update
 ```
 
+Only `config set`, `license set`, `license clear`, and `packs sync` write the pptwise home folder (`$PPTWISE_HOME`, default `~/.pptwise`). Every command that makes or checks a deck at most reads it, and takes the defaults when its config cannot be read, so decks build where the home folder is read-only or missing. Run `packs sync` at installation, not per deck.
+
 Omit a secret value from `config set` to enter it through a hidden prompt. `doctor` exits with code 1 only on a hard failure. Optional `sharp` and LibreOffice capabilities are reported separately.
 
 The first command that creates `.pptwise/` keeps it out of git two ways: it writes `.pptwise/.gitignore` holding `*`, and adds `.pptwise/` to the repository's local exclude file. Either alone is enough, so a `.git` that cannot be written (some agent sandboxes) only costs a note. `--no-git-ignore` skips both. Your shared `.gitignore` is never touched.

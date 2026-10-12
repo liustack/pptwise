@@ -33,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 3. `bunx --bun @liustack/pptwise@0.44.0 <args>`。
 4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
 
-安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。
+安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。内容包在安装时装好，不按 deck 装。用户有 license 时，`pptwise license set <key>` 和 `pptwise packs sync` 属于安装步骤，之后只在用户要求更新内容包或换了 license 时再跑 `packs sync`。除了 `config set`，只有这几条命令会写 pptwise 主目录（`~/.pptwise`）。做 deck 的过程一次都不写那里，所以主目录只读的沙箱里也能做。不要在 deck 任务里运行 `license set` 或 `packs sync`。
 
 ## 先读取现场真相
 
@@ -42,11 +42,10 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 ```bash
 pptwise schema --spec
 pptwise narratives --json
-pptwise packs sync
 pptwise themes --json
 ```
 
-配置了 license 时，`packs sync` 会安装或更新用户的内容包，`themes --json` 随后会列出包内主题，并标 `"source": "pack"`。没有 license 时它只打印一行并以 0 退出。失败时转告它的信息，用已装的内容继续。每个主题行都带 `menu`：`menu.content` 的键就是它提供的内容讲法。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
+`themes --json` 会列出已装内容包的主题，并标 `"source": "pack"`。每个主题行都带 `menu`：`menu.content` 的键就是它提供的内容讲法。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
 提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
 

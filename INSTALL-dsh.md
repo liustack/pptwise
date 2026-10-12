@@ -107,6 +107,21 @@ The byte count is exact on the current release: rendering is deterministic, so
 the same IR produces the same bytes. A nearby number on another release is
 fine, a wildly different one is not.
 
+## Step 4: Content packs, only when the user has a license
+
+If the user gave you a pptwise license key, save it and install the packs it
+covers now, in the dsh terminal:
+
+```sh
+node <path>/dist/cli.js license set <key>
+node <path>/dist/cli.js packs sync
+```
+
+These write into the pptwise home folder (`~/.pptwise`), which is why they
+belong to installation: making a deck writes nothing there. Run `packs sync`
+again when the license changes or to pick up newer packs. Without a license,
+skip this step.
+
 ## If it fails
 
 - **`dsh` warns `declares no dsh.bundle`** — the release-age gate installed an

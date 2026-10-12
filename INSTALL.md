@@ -178,6 +178,20 @@ On dsh, run the same two checks in the dsh terminal, with the packaged-CLI
 command from the registered skill's opening note in place of the launcher.
 The expected output is identical.
 
+**3. Content packs, only when the user has a license.** If the user gave you
+a pptwise license key, save it and install the packs it covers now:
+
+```bash
+bash ~/.claude/skills/pptwise/scripts/run.sh license set <key>
+bash ~/.claude/skills/pptwise/scripts/run.sh packs sync
+```
+
+These write into the pptwise home folder (`~/.pptwise`), which is why they
+belong to installation: making a deck writes nothing there, so it also works
+in an agent sandbox whose home folder is read-only. Run `packs sync` again
+when the license changes or to pick up newer packs. Without a license, skip
+this.
+
 **If it fails:**
 - The launcher printed a JSON diagnosis and exited 78 -> no runtime could run
   pptwise: no compatible `pptwise` on `PATH`, no `npx`, and no `bunx`. Read the

@@ -71,7 +71,7 @@ Theme names resolve in four levels:
 
 1. The deck directory, including `theme.json` and named theme JSON files.
 2. A workspace `themes/` directory while walking upward from the deck.
-3. Installed content packs under `$PPTWISE_HOME/packs/`, kept current by `pptwise packs sync`.
+3. Installed content packs under `$PPTWISE_HOME/packs/`, installed by `pptwise packs sync` at setup.
 4. Factory presets.
 
 A workspace file of the same name shadows a pack theme. A pack theme never shares an id with a factory preset.

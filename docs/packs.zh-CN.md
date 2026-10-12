@@ -26,9 +26,9 @@ pptwise packs list [--json]
 
 `license set` 校验 key 的形状，写入 `$PPTWISE_HOME/license.json`，内容是 `{"key": "ptw_..."}`，只有本人可读（权限 0600）。key 的形状是 `ptw_` 加 32 个 `a-z` 与 `2-7` 之间的字符，共 36 个字符。key 是否有效由服务器回答，不由 CLI 判断。`license status` 说明是否已配置 key，只显示前 8 个字符。`license clear` 删除这个文件，已装的包保留。
 
-`packs sync` 读取 license，向服务器要目录，把目录里的每个包更新到位：
+`packs sync` 是安装步骤：`license set` 之后跑一次，换了 license 或想装新版内容包时再跑。它和 `config set`、`license set`、`license clear` 是仅有的会写 `$PPTWISE_HOME` 的命令。做 deck 只读已装的包，所以主目录只读时也能做。它读取 license，向服务器要目录，把目录里的每个包更新到位：
 
-- 没有 license 时只打印一行并以 0 退出，所以脚本或 skill 可以无条件调用它。
+- 没有 license 时只打印一行并以 0 退出，所以安装脚本可以无条件调用它。
 - 本地已装且版本与目录一致的包不动，不下载任何东西。
 - 本地缺失或版本不同的包，下载、校验后安装（见[安装前的检查](#安装前的检查)）。
 - `engine` 范围不包含当前 pptwise 版本的包会跳过，并提示更新 pptwise。已装的旧版本保留。
