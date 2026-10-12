@@ -1,10 +1,8 @@
-import { cpSync, existsSync, realpathSync, renameSync, rmSync } from "node:fs"
 import { homedir as osHomedir } from "node:os"
 import { join, resolve } from "node:path"
 import { resolveProductEnv } from "./product-env"
 
 export const HOME_DIRNAME = ".pptwise"
-export const LEGACY_HOME_DIRNAMES = [".pptpress", ".pptfast"] as const
 
 export interface PptwiseHomeOpts {
   /** Injectable so tests never touch the real `~/.pptwise` or leftover homes. */
@@ -29,51 +27,17 @@ export interface PptwiseHomeOpts {
  * Read fresh on every call (never cached) — `PPTWISE_HOME` is meant to be
  * redirectable per-process (tests set it via `process.env` before calling).
  *
- * When no env is set, the default is `~/.pptwise`. If that directory does
- * not exist, copy from `~/.pptpress` when present, otherwise `~/.pptfast`,
- * via a temp sibling then `rename`, and leave the old directory in place.
- * The DSH plugin resolves its own preview root by the same rules
- * (`previewRoot`, dsh/preview-tool.js). Keep those copies in sync.
+ * When no env is set, the default is `~/.pptwise`. Resolving it never
+ * touches the disk: many agent sandboxes leave the home directory read-only,
+ * and every deck command reads this path, so finding it must not write.
+ * Only the commands a user runs to install or set something up (`config
+ * set`, `license set/clear`, `packs sync`) write under it.
  */
 export function pptwiseHome(opts: PptwiseHomeOpts = {}): string {
   const env = opts.env ?? process.env
   const fromEnv = resolveProductEnv("HOME", env)
   if (fromEnv !== undefined) return fromEnv
-  const home = (opts.homedir ?? osHomedir)()
-  const next = join(home, HOME_DIRNAME)
-  migrateLegacyHomes(home, next)
-  return next
-}
-
-function migrateLegacyHomes(home: string, nextDir: string): void {
-  if (existsSync(nextDir)) return
-  for (const dirname of LEGACY_HOME_DIRNAMES) {
-    const legacy = join(home, dirname)
-    if (existsSync(legacy)) {
-      copyLegacyHome(legacy, nextDir)
-      return
-    }
-  }
-}
-
-function copyLegacyHome(legacyDir: string, nextDir: string): void {
-  // realpath so a directory symlink is copied as a real tree. Default
-  // `cpSync` would copy the link itself, and the two homes would share one
-  // payload. Leave the old path (symlink or dir) in place.
-  const source = realpathSync(legacyDir)
-  const tmpDir = `${nextDir}.migrating`
-  rmSync(tmpDir, { recursive: true, force: true })
-  try {
-    cpSync(source, tmpDir, { recursive: true })
-    renameSync(tmpDir, nextDir)
-  } catch (error) {
-    try {
-      rmSync(tmpDir, { recursive: true, force: true })
-    } catch {
-      // still throw the original copy/rename failure
-    }
-    throw error
-  }
+  return join((opts.homedir ?? osHomedir)(), HOME_DIRNAME)
 }
 
 /**

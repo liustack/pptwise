@@ -52,9 +52,8 @@ function shCapture(cmd: string, args: string[]): { status: number; stdout: strin
 // in one root that goes away when the run ends, a failed leg included.
 const runRoot = openRunRoot(tmpdir())
 
-// Child CLI processes inherit this env. pptwiseHome() copies ~/.pptpress or
-// ~/.pptfast into ~/.pptwise when the new dir is missing, so this gate must
-// never run against the developer's real home.
+// Child CLI processes inherit this env, so nothing this gate runs reads the
+// developer's real config, licence or packs, or writes beside them.
 const e2eHome = mkdtempSync(join(tmpdir(), "pptwise-e2e-home-"))
 delete process.env.PPTPRESS_HOME
 delete process.env.PPTFAST_HOME

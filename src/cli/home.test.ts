@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { existsSync, lstatSync, symlinkSync } from "node:fs"
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises"
+import { existsSync } from "node:fs"
+import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
@@ -137,97 +137,27 @@ describe("pptwiseHome", () => {
     expect(pptwiseHome()).toBe("/tmp/other-home")
   })
 
-  it("copies ~/.pptpress into ~/.pptwise when only that old dir exists, and leaves it in place", async () => {
+  it("leaves a leftover ~/.pptpress or ~/.pptfast alone and creates nothing", async () => {
     unsetProductHomes()
     const home = await fakeHomedir()
-    const legacy = join(home, ".pptpress")
-    const next = join(home, ".pptwise")
-    await mkdir(join(legacy, "decks", "x"), { recursive: true })
-    await writeFile(join(legacy, "config.json"), '{"theme":"terminal"}\n')
-    await writeFile(join(legacy, "decks", "x", "deck.json"), '{"ok":true}\n')
-    expect(pptwiseHome({ homedir: () => home })).toBe(next)
-    expect(existsSync(legacy)).toBe(true)
-    expect(await readFile(join(next, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-    expect(await readFile(join(next, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
-    expect(await readFile(join(legacy, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-  })
-
-  it("copies ~/.pptfast into ~/.pptwise when only that old dir exists, and leaves it in place", async () => {
-    unsetProductHomes()
-    const home = await fakeHomedir()
-    const legacy = join(home, ".pptfast")
-    const next = join(home, ".pptwise")
-    await mkdir(join(legacy, "decks", "x"), { recursive: true })
-    await writeFile(join(legacy, "config.json"), '{"theme":"terminal"}\n')
-    await writeFile(join(legacy, "decks", "x", "deck.json"), '{"ok":true}\n')
-    expect(pptwiseHome({ homedir: () => home })).toBe(next)
-    expect(existsSync(legacy)).toBe(true)
-    expect(await readFile(join(next, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-    expect(await readFile(join(next, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
-    expect(await readFile(join(legacy, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-    expect(await readFile(join(legacy, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
-  })
-
-  it("copies ~/.pptpress, not ~/.pptfast, when both old dirs exist", async () => {
-    unsetProductHomes()
-    const home = await fakeHomedir()
-    const press = join(home, ".pptpress")
-    const fast = join(home, ".pptfast")
-    const next = join(home, ".pptwise")
-    await mkdir(press, { recursive: true })
-    await mkdir(fast, { recursive: true })
-    await writeFile(join(press, "config.json"), '{"from":"press"}\n')
-    await writeFile(join(fast, "config.json"), '{"from":"fast"}\n')
-    expect(pptwiseHome({ homedir: () => home })).toBe(next)
-    expect(existsSync(press)).toBe(true)
-    expect(existsSync(fast)).toBe(true)
-    expect(await readFile(join(next, "config.json"), "utf8")).toBe('{"from":"press"}\n')
-    expect(await readFile(join(press, "config.json"), "utf8")).toBe('{"from":"press"}\n')
-    expect(await readFile(join(fast, "config.json"), "utf8")).toBe('{"from":"fast"}\n')
-  })
-
-  it("copies a symlink ~/.pptfast as a real directory and leaves the link in place", async () => {
-    unsetProductHomes()
-    const home = await fakeHomedir()
-    const payload = join(home, "legacy-payload")
-    const legacy = join(home, ".pptfast")
-    const next = join(home, ".pptwise")
-    await mkdir(join(payload, "decks", "x"), { recursive: true })
-    await writeFile(join(payload, "config.json"), '{"theme":"terminal"}\n')
-    await writeFile(join(payload, "decks", "x", "deck.json"), '{"ok":true}\n')
-    try {
-      symlinkSync(payload, legacy, "dir")
-    } catch {
-      return
-    }
-    expect(pptwiseHome({ homedir: () => home })).toBe(next)
-    expect(lstatSync(next).isSymbolicLink()).toBe(false)
-    expect(lstatSync(next).isDirectory()).toBe(true)
-    expect(lstatSync(legacy).isSymbolicLink()).toBe(true)
-    expect(await readFile(join(next, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-    expect(await readFile(join(next, "decks", "x", "deck.json"), "utf8")).toBe('{"ok":true}\n')
-    expect(await readFile(join(legacy, "config.json"), "utf8")).toBe('{"theme":"terminal"}\n')
-  })
-
-  it("does not migrate when the new dir already exists", async () => {
-    unsetProductHomes()
-    const home = await fakeHomedir()
-    await mkdir(join(home, ".pptwise"), { recursive: true })
+    await mkdir(join(home, ".pptpress"), { recursive: true })
     await mkdir(join(home, ".pptfast"), { recursive: true })
-    await writeFile(join(home, ".pptwise", "config.json"), '{"from":"new"}\n')
-    await writeFile(join(home, ".pptfast", "config.json"), '{"from":"old"}\n')
+    await writeFile(join(home, ".pptpress", "config.json"), '{"from":"press"}\n')
     expect(pptwiseHome({ homedir: () => home })).toBe(join(home, ".pptwise"))
-    expect(await readFile(join(home, ".pptwise", "config.json"), "utf8")).toBe('{"from":"new"}\n')
-    expect(await readFile(join(home, ".pptfast", "config.json"), "utf8")).toBe('{"from":"old"}\n')
+    expect(existsSync(join(home, ".pptwise"))).toBe(false)
+    expect(existsSync(join(home, ".pptwise.migrating"))).toBe(false)
   })
 
-  it("does not migrate the default dir when an env override is set", async () => {
+  it("resolves a home under a read-only home directory without writing", async () => {
+    unsetProductHomes()
     const home = await fakeHomedir()
-    await mkdir(join(home, ".pptfast"), { recursive: true })
-    await writeFile(join(home, ".pptfast", "config.json"), '{"from":"old"}\n')
-    process.env.PPTWISE_HOME = "/tmp/env-override-home"
-    expect(pptwiseHome({ homedir: () => home })).toBe("/tmp/env-override-home")
-    expect(existsSync(join(home, ".pptwise"))).toBe(false)
+    await mkdir(join(home, ".pptpress"), { recursive: true })
+    await chmod(home, 0o500)
+    try {
+      expect(pptwiseHome({ homedir: () => home })).toBe(join(home, ".pptwise"))
+    } finally {
+      await chmod(home, 0o700)
+    }
   })
 
   it("warns once across two reads of the legacy env", () => {
