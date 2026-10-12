@@ -34,6 +34,7 @@ import { LINEUP_BODIES } from "./lineup-bodies"
 import { PLACARD_BODIES } from "./placard-bodies"
 import { KEYNOTE_BODIES } from "./keynote-bodies"
 import { CHALKBOARD_BODIES } from "./chalkboard-bodies"
+import { PORTRAIT_BODIES } from "./portrait-bodies"
 import { NOTICE_BODIES, NOTICE_PROOF_TABLE } from "./notice-bodies"
 
 const FIXTURE_DIR = join(dirname(fileURLToPath(import.meta.url)), "../fixtures/images")
@@ -557,6 +558,8 @@ function bodyFor(def: LayoutDefinition, lex: Lexicon): Component[] {
   if (def.id === "keynote-sheet") return COMPOSITION_BODIES.slate(lex).components
   // lecture's chalkboard sheet: the board's answers worked in columns.
   if (def.id === "chalkboard-sheet") return COMPOSITION_BODIES.solutions(lex).components
+  // profile's portrait sheet: the board's first ninety days on a ruler.
+  if (def.id === "portrait-sheet") return COMPOSITION_BODIES.tenure(lex).components
   // bulletin's statement, fact and evidence faces: the board's own pages.
   if (def.id === "notice-statement") return COMPOSITION_BODIES.sentence(lex).components
   if (def.id === "notice-figure") return COMPOSITION_BODIES.billboard(lex).components
@@ -1125,6 +1128,12 @@ const COMPOSITION_BODIES: Record<CompositionId, (lex: Lexicon) => CompositionBod
   // cards, a staircase of rates, an example's givens, a derivation, a bridge,
   // exercises, answers, pitfalls, a struck figure and a timeline to scale.
   ...CHALKBOARD_BODIES,
+  // profile's portrait sheet: who the speaker is beside a photograph, posts
+  // with their results, the role against the record, one case worked
+  // through, results beside a photograph, bars against a control, a
+  // self-assessment, the gaps and how they close, the first ninety days and
+  // one line in the speaker's own words.
+  ...PORTRAIT_BODIES,
   // bulletin's statement, fact and evidence faces: one sentence as the page,
   // one figure as large as the page allows, and one exhibit with its proof
   // ringed and read beside it.

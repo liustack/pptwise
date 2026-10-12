@@ -37,16 +37,16 @@ describe("generated SKILL reference data", () => {
       ).length
       const enRow = generated.kindsEn.split("\n").find((line) => line.startsWith(`| \`${kind}\` |`))
       const zhRow = generated.kindsZh.split("\n").find((line) => line.startsWith(`| \`${kind}\` |`))
-      expect(enRow).toMatch(new RegExp(`\\| ${offeredBy}/22 \\|$`))
-      expect(zhRow).toMatch(new RegExp(`\\| ${offeredBy}/22 \\|$`))
+      expect(enRow).toMatch(new RegExp(`\\| ${offeredBy}/23 \\|$`))
+      expect(zhRow).toMatch(new RegExp(`\\| ${offeredBy}/23 \\|$`))
     }
   })
 
   it("covers every preset with its occasion, identity, and menu word count", () => {
     const generated = generatedReferenceFiles()
-    expect(THEME_PRESETS).toHaveLength(22)
-    expect(generated.themesEn.match(/^\| `[^`]+` \|/gm)).toHaveLength(22)
-    expect(generated.themesZh.match(/^\| `[^`]+` \|/gm)).toHaveLength(22)
+    expect(THEME_PRESETS).toHaveLength(23)
+    expect(generated.themesEn.match(/^\| `[^`]+` \|/gm)).toHaveLength(23)
+    expect(generated.themesZh.match(/^\| `[^`]+` \|/gm)).toHaveLength(23)
     for (const preset of THEME_PRESETS) {
       const menu: Menu["content"] = BUILTIN_THEME_FILES[preset.id].menu.content
       const kinds = KIND_VALUES.filter(

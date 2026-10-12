@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { accessibleInk, accessibleOpacity, contrastRatio, graphicInk, groupValueInks, liftedInk, metaInk, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
+import { accessibleInk, accessibleOpacity, contrastRatio, graphicInk, groupValueInks, liftedInk, metaInk, readableBlock, readableOn, requiredContrastRatio, resolveSemanticColor } from "./ink"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 
 // `readableOn`'s own behavior is unchanged by the W4 fix-round extraction
@@ -348,5 +348,21 @@ describe("resolveSemanticColor", () => {
       expect(resolveSemanticColor("warning", colors), id).not.toBe(LEGACY_DANGER)
       expect(resolveSemanticColor("success", colors), id).not.toBe(LEGACY_SUCCESS)
     }
+  })
+})
+
+describe("readableBlock", () => {
+  it("keeps a fill white or the ink already reads on", () => {
+    expect(readableBlock("#6B2D5C", 16)).toBe("#6B2D5C")
+    expect(readableBlock("#FFFFFF", 16)).toBe("#FFFFFF")
+  })
+
+  it("moves a middling fill only as far as its words need, keeping its hue", () => {
+    for (const brand of ["#E87722", "#00A86B", "#2F80ED"]) {
+      const fill = readableBlock(brand, 16)
+      expect(Math.max(contrastRatio("#FFFFFF", fill), contrastRatio("#0A0E14", fill)), brand).toBeGreaterThanOrEqual(requiredContrastRatio(16))
+    }
+    // Large words need less, so the same orange moves less or not at all.
+    expect(contrastRatio("#E87722", readableBlock("#E87722", 40))).toBeLessThanOrEqual(contrastRatio("#E87722", readableBlock("#E87722", 16)))
   })
 })

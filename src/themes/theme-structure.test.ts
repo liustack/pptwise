@@ -2,8 +2,8 @@
 //
 // Theme structure, S1-B (menu model). A theme's structure is its menu: one
 // face per boundary page type, one face per content kind it serves. This
-// file is the acceptance suite for what that buys — that the 22 built-ins
-// really are 22 distinct structures, that every face a menu names is one the
+// file is the acceptance suite for what that buys — that the 23 built-ins
+// really are 23 distinct structures, that every face a menu names is one the
 // renderer can draw, that rendering is deterministic, that a bound theme
 // never reaches outside its own menu, and that each theme's three boundary
 // faces survive pathological content.
@@ -94,7 +94,7 @@ describe("absent motifs are identity values, not holes", () => {
   })
 })
 
-describe("22 themes, 22 structures", () => {
+describe("23 themes, 23 structures", () => {
   it("no two themes share a structural signature", () => {
     const seen = new Map<string, CanonicalThemeId>()
     for (const id of CANONICAL_THEME_IDS) {
@@ -103,7 +103,7 @@ describe("22 themes, 22 structures", () => {
       expect(twin, `${id} and ${twin} declare the identical menu`).toBeUndefined()
       seen.set(signature, id)
     }
-    expect(seen.size).toBe(22)
+    expect(seen.size).toBe(23)
   })
 
   it("no two themes share the same three boundary faces", () => {
@@ -111,7 +111,7 @@ describe("22 themes, 22 structures", () => {
       const menu = BUILTIN_THEME_FILES[id].menu
       return [menu.cover.face, menu.chapter.face, menu.ending.face].join("|")
     })
-    expect(new Set(boundaries).size).toBe(22)
+    expect(new Set(boundaries).size).toBe(23)
   })
 
   it("the served kind vocabulary genuinely differs across themes — this is a design axis, not a formality", () => {
@@ -220,8 +220,8 @@ describe("boundary faces under pathological content", () => {
     })),
   )
 
-  it("sanity: 66 theme×boundary-face combinations exist to audit — 22 themes, three locked faces each", () => {
-    expect(combos).toHaveLength(66)
+  it("sanity: 69 theme×boundary-face combinations exist to audit — 23 themes, three locked faces each", () => {
+    expect(combos).toHaveLength(69)
   })
 
   for (const { themeId, slideType, face } of combos) {

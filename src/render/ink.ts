@@ -136,6 +136,27 @@ export function readableOn(bgHex: string): "#FFFFFF" | "#0A0E14" | "#000000" {
 }
 
 /**
+ * A fill a block of words sits on, moved only as far as it must for white or
+ * the ink to read on it at `fontSizePx`. A theme's accent filled whole under
+ * its words keeps its colour whenever `readableOn` finds an ink that clears
+ * the size's floor. A brand colour of middling lightness (an orange, a
+ * green) where neither does is pushed toward the side the better of the two
+ * already favours, darker under white, lighter under the ink, in twentieths,
+ * until it does: still the brand's hue, now a block its words read on.
+ */
+export function readableBlock(fill: string, fontSizePx: number): string {
+  const need = requiredContrastRatio(fontSizePx)
+  const reads = (ground: string) => Math.max(contrastRatio(DARK_INK, ground), contrastRatio(LIGHT_INK, ground)) >= need
+  if (reads(fill)) return fill
+  const toward = contrastRatio(LIGHT_INK, fill) >= contrastRatio(DARK_INK, fill) ? BLACK_INK : LIGHT_INK
+  for (let step = 1; step < 20; step++) {
+    const ground = blendOver(toward, fill, step / 20)
+    if (reads(ground)) return ground
+  }
+  return toward
+}
+
+/**
  * The fill that singles one card out from its siblings.
  *
  * The house rule for emphasis is a whole card filled in the theme primary

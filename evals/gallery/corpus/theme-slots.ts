@@ -163,6 +163,7 @@ export const THEME_CONTENT_SLOTS: Record<string, readonly ThemeContentSlot[]> = 
   almanac: [slot("icon_cards"), slot("iceberg"), slot("timeline"), slot("pest"), slot("image_compare"), slot("rings"), slot("pictogram")],
   vermilion: [slot("comparison"), slot("kpi_cards"), slot("gantt"), slot("from_to"), slot("people_cards"), slot("code"), slot("architecture")],
   proposal: [slot("kpi_cards"), slot("comparison"), slot("data_table"), slot("timeline"), slot("from_to"), slot("icon_cards"), slot("pros_cons")],
+  profile: [slot("timeline"), slot("comparison"), slot("from_to"), slot("kpi_cards"), slot("harvey_balls"), slot("roadmap"), chart("bar", "horizontal")],
 }
 
 /** Build the lead component for one theme-table content slot. */

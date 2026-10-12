@@ -75,7 +75,7 @@ Resolve theme names in this order:
 1. The deck directory.
 2. A workspace `themes/` directory while walking upward.
 3. Installed content packs (`pptwise packs list`).
-4. The 22 factory presets.
+4. The 23 factory presets.
 
 Show the user their own cover title in four to six themes. When a `pptwise_themes` tool exists, call it with the deck's cover title, subtitle, and `occasion`: the occasion words from `themes --json` or the narrative preset that fit the request. It picks the shortlist and draws each theme's cover and one content page in the conversation, numbered, and returns the theme ids in that order. Pass `themes` only when the user named themes. Leave `page` out unless it is a page of this deck you already validated. Otherwise draw the same wall from the CLI:
 

@@ -374,7 +374,7 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     const { dir: _dir, ...rest } = printed
     expect(rest).toEqual(manifest)
     expect(manifest).toMatchObject({ generator: "pptwise theme try", lang: "zh", subtitle: "新品发布会", slide: { width: 1280, height: 720 } })
-    expect(manifest.themes).toHaveLength(22)
+    expect(manifest.themes).toHaveLength(23)
     for (const theme of manifest.themes) {
       expect(theme.source).toBe("builtin")
       expect(theme.skipped).toBeUndefined()
@@ -389,7 +389,7 @@ describe("runThemeTry --title (the caller's own pages)", () => {
       }
     }
     const sheet = await readFile(join(out, manifest.contactSheet), "utf8")
-    expect((sheet.match(/<svg\b/g) ?? []).length).toBe(44)
+    expect((sheet.match(/<svg\b/g) ?? []).length).toBe(46)
     expect(sheet).toContain("账小满")
   })
 

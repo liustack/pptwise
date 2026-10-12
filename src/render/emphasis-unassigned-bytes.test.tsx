@@ -148,18 +148,22 @@ function consultingPadDeck(): PptxIR {
 // gauge-sheet, grid-sheet, notice-sheet and panel-sheet. All 80 content keys
 // (`*|2` to `*|5`) move. The twenty cover keys stay byte-identical, and every
 // content page still paints its runs as tspans with no literal marker.
+//
+// Recaptured (profile theme, 2026-10-12). profile joins the unassigned
+// matrix: 21 themes × five paths = 105 hashes. Only the five `profile|*`
+// keys are new. The other 100 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
 
 describe("unassigned emphasis forms stay pinned to the depth-contract fixture", () => {
   const pages = auditEmphasisUnassignedPages()
-  it("covers 20 themes across five real render paths", () => {
+  it("covers 21 themes across five real render paths", () => {
     expect(UNASSIGNED).not.toContain("lecture")
     expect(UNASSIGNED).not.toContain("brief")
-    expect(UNASSIGNED).toHaveLength(20)
-    expect(Object.keys(pages)).toHaveLength(100)
-    expect(Object.keys(fixture.pages)).toHaveLength(100)
+    expect(UNASSIGNED).toHaveLength(21)
+    expect(Object.keys(pages)).toHaveLength(105)
+    expect(Object.keys(fixture.pages)).toHaveLength(105)
   })
 
   it.each(Object.keys(fixture.pages))("%s", (key) => {

@@ -25,6 +25,19 @@ export interface DecorProps {
    * by the page renderer. Only a motif that frames the page reads it.
    */
   frameLeft?: number
+  /**
+   * Where the page's own frame ends, when the face runs a photograph to the
+   * page's right edge or keeps its words to a column short of it: the
+   * `data-frame-right` a face's drawing carries. Only a motif that frames the
+   * page reads it.
+   */
+  frameRight?: number
+  /**
+   * `"end"` when the face keeps the bottom left for something of its own (a
+   * chart's legend) and asks the footer's words packed to the right: the
+   * `data-footer-pack` a face's drawing carries.
+   */
+  footerPack?: "end"
 }
 
 /** Motif（原 per-theme Decor）：签名对齐 templates/types.ts 的 DecorProps，可为 null。 */
@@ -54,3 +67,4 @@ export type MotifId =
   | "runway-motif" // 2026-10-08：runway 秀场出场单报头（左 deck 标签、右分区与页码字段、y54 黑细线）
   | "museum-motif" // 2026-10-08：museum 展厅墙面（左上厅名与 y58 接缝、左下讲座标签、右下门牌页码字段）
   | "stage-motif" // 2026-10-08：stage 演讲遥控器进度线（y676 轨道、已讲比例哑银、右端页码字段与总页数）
+  | "profile-motif" // 2026-10-12：profile 人物专访页脚（左 deck 标签，右讲者名字与页码字段）

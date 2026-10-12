@@ -63,9 +63,9 @@ import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
 import type { ComponentCtx } from "../components/types"
 
-// layoutDef imports (src domain reorg wave 1, task T1d): 105 layout files
+// layoutDef imports (src domain reorg wave 1, task T1d): 109 layout files
 // (one `layoutDef` each) plus image-pages.tsx's 2 uniquely named takeover
-// exports, 107 bindings total. The original migration covered 33 layout
+// exports, 111 bindings total. The original migration covered 33 layout
 // files and 4 takeovers. Later content expansion and theme redesign waves
 // grew the registry, and the faces no built-in theme menu used were deleted.
 // Grouped by family, each group in the exact
@@ -95,6 +95,7 @@ import { layoutDef as coverLineupCover } from "./cover-lineup-cover"
 import { layoutDef as coverPlacardCover } from "./cover-placard-cover"
 import { layoutDef as coverKeynoteCover } from "./cover-keynote-cover"
 import { layoutDef as coverChalkboardCover } from "./cover-chalkboard-cover"
+import { layoutDef as coverPortraitCover } from "./cover-portrait-cover"
 import { layoutDef as coverGaugeVerdict } from "./cover-gauge-verdict"
 
 import { layoutDef as chapterBlockNumeralChapter } from "./chapter-block-numeral-chapter"
@@ -114,6 +115,7 @@ import { layoutDef as chapterLineupChapter } from "./chapter-lineup-chapter"
 import { layoutDef as chapterPlacardChapter } from "./chapter-placard-chapter"
 import { layoutDef as chapterKeynoteChapter } from "./chapter-keynote-chapter"
 import { layoutDef as chapterChalkboardChapter } from "./chapter-chalkboard-chapter"
+import { layoutDef as chapterPortraitChapter } from "./chapter-portrait-chapter"
 import { layoutDef as chapterFieldBandChapter } from "./chapter-field-band-chapter"
 import { layoutDef as chapterSubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { layoutDef as chapterDecimalIndexChapter } from "./chapter-decimal-index-chapter"
@@ -140,6 +142,7 @@ import { layoutDef as endingLineupEnding } from "./ending-lineup-ending"
 import { layoutDef as endingPlacardEnding } from "./ending-placard-ending"
 import { layoutDef as endingKeynoteEnding } from "./ending-keynote-ending"
 import { layoutDef as endingChalkboardEnding } from "./ending-chalkboard-ending"
+import { layoutDef as endingPortraitEnding } from "./ending-portrait-ending"
 import { layoutDef as endingResolutionEnding } from "./ending-resolution-ending"
 import { layoutDef as endingGaugeNext } from "./ending-gauge-next"
 
@@ -181,6 +184,7 @@ import { layoutDef as contentChalkboardSheet } from "./content-chalkboard-sheet"
 import { layoutDef as contentNoticeStatement } from "./content-notice-statement"
 import { layoutDef as contentNoticeFigure } from "./content-notice-figure"
 import { layoutDef as contentNoticeExhibit } from "./content-notice-exhibit"
+import { layoutDef as contentPortraitSheet } from "./content-portrait-sheet"
 import { layoutDef as contentSealFigure } from "./content-seal-figure"
 
 import {
@@ -625,6 +629,8 @@ const COVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [coverKeynoteCover.id]: coverKeynoteCover,
   // lecture sample redesign (2026-10-08).
   [coverChalkboardCover.id]: coverChalkboardCover,
+  // profile theme (2026-10-12).
+  [coverPortraitCover.id]: coverPortraitCover,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -669,6 +675,8 @@ const CHAPTER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [chapterKeynoteChapter.id]: chapterKeynoteChapter,
   // lecture sample redesign (2026-10-08): the board wiped for the next part of the lesson.
   [chapterChalkboardChapter.id]: chapterChalkboardChapter,
+  // profile theme (2026-10-12): the next part of the talk on white paper.
+  [chapterPortraitChapter.id]: chapterPortraitChapter,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -716,6 +724,8 @@ const ENDING_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [endingKeynoteEnding.id]: endingKeynoteEnding,
   // lecture sample redesign (2026-10-08): homework under the lit school at night.
   [endingChalkboardEnding.id]: endingChalkboardEnding,
+  // profile theme (2026-10-12): the closing promise and the speaker's card.
+  [endingPortraitEnding.id]: endingPortraitEnding,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -830,11 +840,14 @@ const CONTENT_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [contentNoticeStatement.id]: contentNoticeStatement,
   [contentNoticeFigure.id]: contentNoticeFigure,
   [contentNoticeExhibit.id]: contentNoticeExhibit,
+  // profile theme (2026-10-12): the board's ordinary content page,
+  // theme-locked.
+  [contentPortraitSheet.id]: contentPortraitSheet,
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Image takeover layouts (4). With the 57 standard content layouts above,
-// the content page type has 61 registered entries. These are `slide.layout`
+// Image takeover layouts (2). With the 40 standard content layouts above,
+// the content page type has 42 registered entries. These are `slide.layout`
 // ids for the page-level
 // `image-split`/`image-top`/`image-bottom`/`image-annotate` takeovers
 // (full-slide-svg.tsx's splitTakeover branch, keyed off `getLayout(slide.
@@ -853,7 +866,7 @@ const TAKEOVER_LAYOUT_DEFS: Record<string, LayoutDefinition> = {
   [imageTopLayoutDef.id]: imageTopLayoutDef,
 }
 
-/** All 105 standard layouts and 2 takeover layouts, 107 entries keyed by id.
+/** All 109 standard layouts and 2 takeover layouts, 111 entries keyed by id.
  *  `kind` still spells the standard tier `"standard"`, a wire-format fossil. See
  *  {@link LayoutDefinition.kind}. */
 export const LAYOUT_REGISTRY: Record<string, LayoutDefinition> = {

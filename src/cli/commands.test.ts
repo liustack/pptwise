@@ -790,9 +790,9 @@ describe("runSchema / runThemes", () => {
     expect(lines).toContain("alarm-clock")
     expect(JSON.parse(runIcons(true))).toEqual(lines)
   })
-  it("prints 22 themes, json mode parses", async () => {
-    expect((await runThemes(false)).split("\n")).toHaveLength(22)
-    expect(JSON.parse(await runThemes(true))).toHaveLength(22)
+  it("prints 23 themes, json mode parses", async () => {
+    expect((await runThemes(false)).split("\n")).toHaveLength(23)
+    expect(JSON.parse(await runThemes(true))).toHaveLength(23)
   })
   it("JSON objects include occasions and identity without replacing listThemes label", async () => {
     const rows = JSON.parse(await runThemes(true)) as Array<{
@@ -803,7 +803,7 @@ describe("runSchema / runThemes", () => {
       identity: unknown
       source: unknown
     }>
-    expect(rows).toHaveLength(22)
+    expect(rows).toHaveLength(23)
     expect(Object.keys(rows[0]!)).toEqual(expect.arrayContaining(["id", "label", "colors", "occasions", "identity", "source"]))
     expect(rows.every((row) => row.source === "builtin")).toBe(true)
     for (const row of rows) {
@@ -826,7 +826,7 @@ describe("runThemes --json menu", () => {
       id: string
       menu: { cover: string; chapter: string; ending: string; content: Record<string, string> }
     }>
-    expect(rows).toHaveLength(22)
+    expect(rows).toHaveLength(23)
     for (const row of rows) {
       const menu = getThemeDefinition(row.id).menu
       expect(row.menu.cover).toBe(resolveLayoutId("cover", undefined, menu))

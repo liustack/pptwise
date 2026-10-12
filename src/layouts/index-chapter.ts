@@ -16,6 +16,7 @@ import { LineupChapter } from "./chapter-lineup-chapter"
 import { PlacardChapter } from "./chapter-placard-chapter"
 import { KeynoteChapter } from "./chapter-keynote-chapter"
 import { ChalkboardChapter } from "./chapter-chalkboard-chapter"
+import { PortraitChapter } from "./chapter-portrait-chapter"
 import { FieldBandChapter } from "./chapter-field-band-chapter"
 import { SubjectRuleChapter } from "./chapter-subject-rule-chapter"
 import { DecimalIndexChapter } from "./chapter-decimal-index-chapter"
@@ -50,4 +51,5 @@ export const CHAPTER_LAYOUTS: Record<ChapterLayoutId, ChapterLayout> = {
   "placard-chapter": PlacardChapter,
   "keynote-chapter": KeynoteChapter,
   "chalkboard-chapter": ChalkboardChapter,
+  "portrait-chapter": PortraitChapter,
 }

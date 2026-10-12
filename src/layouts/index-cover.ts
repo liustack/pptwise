@@ -20,6 +20,7 @@ import { LineupCover } from "./cover-lineup-cover"
 import { PlacardCover } from "./cover-placard-cover"
 import { KeynoteCover } from "./cover-keynote-cover"
 import { ChalkboardCover } from "./cover-chalkboard-cover"
+import { PortraitCover } from "./cover-portrait-cover"
 import { GaugeVerdictCover } from "./cover-gauge-verdict"
 
 export type { CoverLayout, CoverLayoutId } from "./types"
@@ -49,4 +50,5 @@ export const COVER_LAYOUTS: Record<CoverLayoutId, CoverLayout> = {
   "placard-cover": PlacardCover,
   "keynote-cover": KeynoteCover,
   "chalkboard-cover": ChalkboardCover,
+  "portrait-cover": PortraitCover,
 }

@@ -285,6 +285,16 @@ export type CompositionId =
   | "sentence"
   | "billboard"
   | "proof"
+  | "aside"
+  | "stations"
+  | "verdicts"
+  | "casework"
+  | "results"
+  | "uplift"
+  | "appraisal"
+  | "shortfalls"
+  | "tenure"
+  | "credo"
 
 /**
  * The type a composition sets its page in.
@@ -599,10 +609,28 @@ export type CompositionId =
  *   misquoted one struck out, and dates laid on a line at their true
  *   distance. See `./chalkboard.tsx`.
  *
+ * - `portrait`: profile's 2026-10 board. A magazine profile of one person
+ *   before a panel: white paper, open columns under hairlines (the first a
+ *   hairline of the ink), claims, names and figures bold in the heading
+ *   serif, the person's photograph bled off one side, and the accent on the
+ *   short rule before each page's section and on the one result, row or
+ *   block a page is about, a block filled whole taking white or the ink,
+ *   whichever reads. A composition offered this setting is handed the whole
+ *   page and places the page's section line (`kicker`), claim (`claim`) and
+ *   source (`source`, in the footer row when it credits a photograph)
+ *   itself, and draws the shapes that board drew and no other did: who the
+ *   speaker is beside a photograph, the posts they held with one result
+ *   each, what a role asks against what they have done with a verdict a
+ *   row, a case worked from the problem through what was done to the
+ *   result, figures beside a photograph, bars against a control group, a
+ *   self-assessment as a radar beside a table of dots, the gaps and how they
+ *   close, the first days in phases on a ruler, and one sentence in the
+ *   speaker's own words beside their portrait. See `./portrait.tsx`.
+ *
  * A setting is the face's choice, not the theme's: the face that offers the
  * compositions names the setting its own frame was drawn with.
  */
-export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote" | "chalkboard"
+export type CompositionSetting = "board" | "notice" | "grid" | "panel" | "seal" | "console" | "memo" | "dossier" | "yearbook" | "lesson" | "pitch" | "marquee" | "binder" | "manuscript" | "periodical" | "scroll" | "crayonbox" | "invitation" | "lineup" | "placard" | "keynote" | "chalkboard" | "portrait"
 
 export interface CompositionProps {
   /** The page's components, in the order the author wrote them. */
@@ -722,6 +750,8 @@ export interface CompositionProps {
     foot?: number
     /** Set a size up in the quieter ink, as the note a board writes under an example's stamp (the chalkboard's exercises). */
     note?: boolean
+    /** Set in the footer row after the deck's label, `x` to `x + w` the row's measure, as a board credits a photograph there (profile's pages). */
+    footer?: boolean
   }) => React.ReactElement | null
   /**
    * The page's chapter (`Slide.kicker`), drawn by the face's own rules into

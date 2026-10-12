@@ -34,6 +34,7 @@ import { LineupSheetContent } from "./content-lineup-sheet"
 import { PlacardSheetContent } from "./content-placard-sheet"
 import { KeynoteSheetContent } from "./content-keynote-sheet"
 import { ChalkboardSheetContent } from "./content-chalkboard-sheet"
+import { PortraitSheetContent } from "./content-portrait-sheet"
 import { NoticeStatementContent } from "./content-notice-statement"
 import { NoticeFigureContent } from "./content-notice-figure"
 import { NoticeExhibitContent } from "./content-notice-exhibit"
@@ -78,7 +79,8 @@ export type { ContentLayout, ContentLayoutId } from "./types"
 // adds placard-sheet: 52 in all. The stage sample redesign adds
 // keynote-sheet: 53 in all. The lecture sample redesign adds
 // chalkboard-sheet: 54 in all. The bulletin kinds round adds
-// notice-statement, notice-figure and notice-exhibit: 57 in all.
+// notice-statement, notice-figure and notice-exhibit: 57 in all. The profile
+// theme adds portrait-sheet: 58 in all.
 export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   statement: StatementContent,
   "pull-quote": PullQuoteContent,
@@ -119,4 +121,5 @@ export const CONTENT_LAYOUTS: Record<ContentLayoutId, ContentLayout> = {
   "notice-statement": NoticeStatementContent,
   "notice-figure": NoticeFigureContent,
   "notice-exhibit": NoticeExhibitContent,
+  "portrait-sheet": PortraitSheetContent,
 }

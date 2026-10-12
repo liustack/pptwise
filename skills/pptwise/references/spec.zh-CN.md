@@ -112,6 +112,7 @@ pptwise theme fork acme --brand '#0B5FFF' --id acme-blue
 | `swiss` | Swiss | institutional | low | 10 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact`, `evidence`, `hierarchy` |
 | `memo` | Memo | business, institutional | low | 11 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `quote`, `fact`, `evidence`, `hierarchy` |
 | `proposal` | Proposal | sales, business | medium | 9 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `fact`, `evidence`, `hierarchy` |
+| `profile` | Profile | career | medium | 8 | `points`, `list`, `comparison`, `process`, `data`, `photo`, `statement`, `fact` |
 <!-- generated:end themes -->
 
 ## 11 种内容页讲法

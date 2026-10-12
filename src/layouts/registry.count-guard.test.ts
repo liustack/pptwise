@@ -17,11 +17,11 @@ describe("LAYOUT_REGISTRY count guard", () => {
   const definitions = Object.values(LAYOUT_REGISTRY)
 
   it("pins the registry, standard-layout, and takeover totals", () => {
-    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(107)
+    expect(definitions, COUNT_DRIFT_MESSAGE).toHaveLength(111)
     expect(
       definitions.filter((definition) => definition.kind === "standard"),
       COUNT_DRIFT_MESSAGE,
-    ).toHaveLength(105)
+    ).toHaveLength(109)
     expect(
       definitions.filter((definition) => definition.kind === "takeover"),
       COUNT_DRIFT_MESSAGE,
@@ -38,10 +38,10 @@ describe("LAYOUT_REGISTRY count guard", () => {
     )
 
     expect(counts, COUNT_DRIFT_MESSAGE).toEqual({
-      cover: { registered: 22 },
-      chapter: { registered: 22 },
-      ending: { registered: 22 },
-      content: { registered: 41 },
+      cover: { registered: 23 },
+      chapter: { registered: 23 },
+      ending: { registered: 23 },
+      content: { registered: 42 },
     })
   })
 })

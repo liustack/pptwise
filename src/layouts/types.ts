@@ -76,6 +76,8 @@ export type CoverLayoutId =
   | "keynote-cover"
   // lecture sample redesign (2026-10-08): the board before an evening class begins.
   | "chalkboard-cover"
+  // profile theme (2026-10-12): a magazine profile's opening spread beside the speaker's portrait.
+  | "portrait-cover"
 
 // Wave 2（chapter/ending）新增 id：每主题 1 个（命名见 Wave 2 任务表）
 export type ChapterLayoutId =
@@ -118,6 +120,8 @@ export type ChapterLayoutId =
   | "keynote-chapter"
   // lecture sample redesign (2026-10-08): the board wiped for the next part of the lesson.
   | "chalkboard-chapter"
+  // profile theme (2026-10-12): the next part of the talk on white paper.
+  | "portrait-chapter"
 export type EndingLayoutId =
   // Wave 8 batch 1 pinOnly ending faces.
   | "signoff-ending"
@@ -161,6 +165,8 @@ export type EndingLayoutId =
   | "keynote-ending"
   // lecture sample redesign (2026-10-08): homework under the lit school at night.
   | "chalkboard-ending"
+  // profile theme (2026-10-12): the closing promise and the speaker's card.
+  | "portrait-ending"
 
 // Wave 3（content）新增 id
 export type ContentLayoutId =
@@ -233,3 +239,5 @@ export type ContentLayoutId =
   | "notice-statement"
   | "notice-figure"
   | "notice-exhibit"
+  // profile theme (2026-10-12): the board's ordinary content page. Theme-locked.
+  | "portrait-sheet"

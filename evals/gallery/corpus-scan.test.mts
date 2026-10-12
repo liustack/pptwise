@@ -351,7 +351,7 @@ describe("gallery SVG text respects the readable font floor", () => {
         if (
           !content ||
           hasDecor(el) ||
-          ["gauge-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
+          ["gauge-spec", "notice-spec", "grid-spec", "panel-spec", "seal-spec", "console-spec", "memo-spec", "dossier-spec", "yearbook-spec", "lesson-spec", "pitch-spec", "marquee-spec", "binder-spec", "manuscript-spec", "periodical-spec", "scroll-spec", "crayonbox-spec", "invitation-spec", "lineup-spec", "placard-spec", "keynote-spec", "chalkboard-spec", "portrait-spec"].includes(el.getAttribute("data-font-floor-exempt") ?? "")
         ) continue
         const fontSize = Number(el.getAttribute("font-size") ?? 16)
         if (fontSize < META_FONT_FLOOR_PX) {
@@ -392,15 +392,15 @@ describe("gallery text reads against what it is painted on", () => {
 // ---------------------------------------------------------------------------
 
 /**
- * What the corpus holds today: 24 component-band specimens per device — the
+ * What the corpus holds today: 25 component-band specimens per device — the
  * component band draws this type twice, once as a browser window and once as a
  * phone — plus the four sample-deck pages whose narrative includes a product
  * screenshot, and terminal's console window on its composition page
  * (`screen`). Pinned per device, because a corpus that covered only browsers
  * left the phone branch of both the component and this test unexecuted.
  */
-const EXPECTED_DEVICE_PAGES = 53
-const EXPECTED_BY_DEVICE = { browser: 29, phone: 24 }
+const EXPECTED_DEVICE_PAGES = 55
+const EXPECTED_BY_DEVICE = { browser: 30, phone: 25 }
 const EXPECTED_DECK_PAGES = [
   "bulletin--deck--p09",
   "homeroom--deck--p07",

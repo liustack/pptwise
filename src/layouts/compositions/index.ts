@@ -248,6 +248,16 @@ import { chronologyComposition } from "./chronology"
 import { sentenceComposition } from "./sentence"
 import { billboardComposition } from "./billboard"
 import { proofComposition } from "./proof"
+import { asideComposition } from "./aside"
+import { stationsComposition } from "./stations"
+import { verdictsComposition } from "./verdicts"
+import { caseworkComposition } from "./casework"
+import { resultsComposition } from "./results"
+import { upliftComposition } from "./uplift"
+import { appraisalComposition } from "./appraisal"
+import { shortfallsComposition } from "./shortfalls"
+import { tenureComposition } from "./tenure"
+import { credoComposition } from "./credo"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
@@ -509,6 +519,16 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   sentence: sentenceComposition,
   billboard: billboardComposition,
   proof: proofComposition,
+  aside: asideComposition,
+  stations: stationsComposition,
+  verdicts: verdictsComposition,
+  casework: caseworkComposition,
+  results: resultsComposition,
+  uplift: upliftComposition,
+  appraisal: appraisalComposition,
+  shortfalls: shortfallsComposition,
+  tenure: tenureComposition,
+  credo: credoComposition,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]
@@ -564,7 +584,7 @@ const PAGE_TAG_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>
  * ordinary timeline draws them all: the spans as a row of named spans under
  * its milestones, a source and a tag under a milestone's words.
  */
-const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints", "cadence", "handscroll", "chronology"])
+const TIMELINE_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "outlook", "checkpoints", "cadence", "handscroll", "chronology", "stations"])
 
 function asksForTimelineDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -580,7 +600,7 @@ function asksForTimelineDetail(components: readonly CompositionProps["components
  * line or note leaves them off. The ordinary callout sets the title bold over
  * its text and the tag under it.
  */
-const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror", "toll", "strikeout"])
+const CALLOUT_DETAIL_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["calendar", "paired", "survey", "ranking", "methods", "funnel", "crest", "branch", "regions", "levers", "cycles", "checkpoints", "cadence", "nations", "lapse", "mirror", "toll", "strikeout", "casework", "shortfalls", "tenure"])
 
 function asksForCalloutDetail(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "callout" && (component.title !== undefined || component.tag !== undefined))
@@ -604,7 +624,7 @@ function asksForWaterfallNote(components: readonly CompositionProps["components"
  * carries one is offered to these alone; the ordinary chart draws the line
  * and names it in its legend.
  */
-const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["benchmark", "climb"])
+const CHART_REFERENCE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["benchmark", "climb", "uplift"])
 
 function asksForChartReference(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && component.reference !== undefined)
@@ -663,7 +683,7 @@ const ROADMAP_BASIS_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<Compositi
  * the length to the period line, the points under the title and the
  * checkpoint as a tag under them.
  */
-const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway", "floorplan"])
+const ROADMAP_PHASE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["syllabus", "runway", "floorplan", "tenure"])
 
 function asksForRoadmapPhases(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some(
@@ -727,7 +747,7 @@ function asksForIconCardDetail(components: readonly CompositionProps["components
  * it. A page whose chart carries one is offered to these alone; the ordinary
  * chart sets the title over it as a table does.
  */
-const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing", "podiums", "toll", "proof"])
+const CHART_TITLE_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["ladder", "backdrop", "thresholds", "partition", "chronicle", "measures", "headline", "census", "contrast", "bracket", "mix", "twins", "bases", "checkup", "swing", "podiums", "toll", "proof", "uplift"])
 
 function asksForChartTitle(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => component.type === "chart" && Boolean(component.title?.trim()))
@@ -860,7 +880,7 @@ const STAMP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["
  * (`image.crop`, `image_grid.items[].crop`). A page whose picture carries
  * one is offered to these alone; the ordinary image and grid crop it.
  */
-const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower", "confluence", "givens", "exercises"])
+const IMAGE_CROP_COMPOSITIONS: ReadonlySet<CompositionId> = new Set<CompositionId>(["collage", "thread", "shades", "atelier", "parade", "look", "specimen", "lenses", "cabinet", "tower", "confluence", "givens", "exercises", "aside", "stations", "results", "credo"])
 
 function asksForImageCrop(components: readonly CompositionProps["components"][number][]): boolean {
   return components.some((component) => (component.type === "image" && component.crop !== undefined) || (component.type === "image_grid" && component.items.some((item) => item.crop !== undefined)))

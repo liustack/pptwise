@@ -36,6 +36,7 @@ export const OCCASION_VOCAB = {
   editorial: "Journals, features, and long-form editorial reviews.",
   luxury: "Maison, beauty, and invitation-grade hospitality.",
   event: "Short-run announcements, recitals, and convenings.",
+  career: "One person before a panel: candidacies, self-introductions, and career plans.",
 } as const
 
 export type Occasion = keyof typeof OCCASION_VOCAB
@@ -96,4 +97,6 @@ export const THEME_OCCASIONS: Record<BuiltinThemeId, ThemeOccasionRecord> = {
   memo: { occasions: ["business", "institutional"], identity: "low" },
   // 递到客户管理层手里的提案书：提案、解决方案、投标，比 brief 暖、敢用橘
   proposal: { occasions: ["sales", "business"], identity: "medium" },
+  // 一个人向评委介绍自己：竞聘、自我介绍、职业规划，杂志人物专访腔
+  profile: { occasions: ["career"], identity: "medium" },
 }

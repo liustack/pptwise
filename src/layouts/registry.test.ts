@@ -39,7 +39,7 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     }
   }
 
-  it("has exactly 105 layout-kind entries, all traceable to one of the four real registries", () => {
+  it("has exactly 109 layout-kind entries, all traceable to one of the four real registries", () => {
     const knownIds = new Set([
       ...Object.keys(COVER_LAYOUTS),
       ...Object.keys(CHAPTER_LAYOUTS),
@@ -48,7 +48,8 @@ describe("LAYOUT_REGISTRY completeness (layout ids)", () => {
     ])
     const layoutEntries = Object.values(LAYOUT_REGISTRY).filter((e) => e.kind === "standard")
     // 202 until the 99 faces no built-in theme menu used were deleted: 105.
-    expect(layoutEntries).toHaveLength(105)
+    // profile's four faces: 109.
+    expect(layoutEntries).toHaveLength(109)
     for (const entry of layoutEntries) {
       expect(knownIds.has(entry.id), `"${entry.id}" is not a real layout id`).toBe(true)
     }
@@ -116,7 +117,9 @@ describe("content family: body slot", () => {
           id === "binder-chapter" ||
           id === "binder-ending" ||
           id === "manuscript-ending" ||
-          id === "chalkboard-ending"
+          id === "chalkboard-ending" ||
+          id === "portrait-cover" ||
+          id === "portrait-ending"
         ) {
           expect(entry.slots.some((s) => s.name === "body")).toBe(true)
           continue
@@ -206,16 +209,16 @@ describe("layoutsForSlideType", () => {
     for (const l of covers) expect(l.slideTypes).toContain("cover")
   })
 
-  it("cover, chapter, and ending expose 22 registered layouts each with no takeovers", () => {
-    expect(layoutsForSlideType("cover")).toHaveLength(22)
-    expect(layoutsForSlideType("chapter")).toHaveLength(22)
-    expect(layoutsForSlideType("ending")).toHaveLength(22)
+  it("cover, chapter, and ending expose 23 registered layouts each with no takeovers", () => {
+    expect(layoutsForSlideType("cover")).toHaveLength(23)
+    expect(layoutsForSlideType("chapter")).toHaveLength(23)
+    expect(layoutsForSlideType("ending")).toHaveLength(23)
   })
 
-  it("content includes both the 39 layouts and the 2 takeovers", () => {
+  it("content includes both the 40 layouts and the 2 takeovers", () => {
     const contents = layoutsForSlideType("content")
-    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(39)
+    expect(contents.filter((l) => l.kind === "standard")).toHaveLength(40)
     expect(contents.filter((l) => l.kind === "takeover")).toHaveLength(2)
-    expect(contents).toHaveLength(41)
+    expect(contents).toHaveLength(42)
   })
 })

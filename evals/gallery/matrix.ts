@@ -41,7 +41,7 @@ export const BAND_IDS = ["deck", "face", "compose", "aside", "component"] as con
  * them. `compose` shows the shared compositions (`src/layouts/compositions/`)
  * on the themes whose faces hand pages to them, see `COMPOSITION_PAGES`.
  * `aside` exists to show the shared step-aside (`src/render/step-aside.tsx`)
- * to a reviewer, and three pages cover that rendering for all 25 skins
+ * to a reviewer, and three pages cover that rendering for all 26 skins
  * because the sheet is the same sheet on every one of them. See
  * `STEP_ASIDE_PAGES`.
  */
@@ -450,6 +450,18 @@ export const COMPOSITION_PAGES: readonly {
   { theme: "proposal", kind: "process", composition: "checkpoints" },
   { theme: "proposal", kind: "list", composition: "quote" },
   { theme: "proposal", kind: "hierarchy", composition: "papers" },
+  // profile's portrait sheet sets the shapes as one person presenting
+  // themselves to a panel, and draws the ten its own board added.
+  { theme: "profile", kind: "points", composition: "aside" },
+  { theme: "profile", kind: "process", composition: "stations" },
+  { theme: "profile", kind: "comparison", composition: "verdicts" },
+  { theme: "profile", kind: "comparison", composition: "casework" },
+  { theme: "profile", kind: "data", composition: "results" },
+  { theme: "profile", kind: "data", composition: "uplift" },
+  { theme: "profile", kind: "comparison", composition: "appraisal" },
+  { theme: "profile", kind: "list", composition: "shortfalls" },
+  { theme: "profile", kind: "process", composition: "tenure" },
+  { theme: "profile", kind: "points", composition: "credo" },
   // thesis's manuscript sheet sets the shapes as a thesis proposal sets its
   // evidence, and draws the fifteen its own board added.
   { theme: "thesis", kind: "photo", composition: "inquiry" },

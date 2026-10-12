@@ -24,11 +24,12 @@ import { LECTURE_THEME } from "./builtin/lecture";
 import { SWISS_THEME } from "./builtin/swiss";
 import { MEMO_THEME } from "./builtin/memo";
 import { PROPOSAL_THEME } from "./builtin/proposal";
+import { PROFILE_THEME } from "./builtin/profile";
 import type { BuiltinThemeDeclaration } from "./schema";
 
 /**
- * The 22 canonical theme ids, registered/renderable（产品口径 22 套主题、
- * 22 个 id）。命名规矩：id、label、story.name 一律命名腔调或体裁，
+ * The 23 canonical theme ids, registered/renderable（产品口径 23 套主题、
+ * 23 个 id）。命名规矩：id、label、story.name 一律命名腔调或体裁，
  * 不命名行业、职能、受众或组织类型（见 `design-story.ts`；九个场景名
  * 已在改名批次里一次性换掉，旧 id 直接硬错并报出新名，见
  * `retired-ids.ts`）（brief Brief / bulletin Bulletin /
@@ -46,7 +47,8 @@ import type { BuiltinThemeDeclaration } from "./schema";
  * Top 5 第 3 / lecture Lecture Hall——黑板夜校，2026-08-21
  * 大学/成人课程夜校板 / swiss Swiss Institutional——冷白制度，机构年报 / 政策汇报 /
  * 审计交付，2026-08-21 wave7 / memo Decision Memo——打字机决定，备忘录 /
- * proposal Proposal——递到客户管理层手里的提案书）。
+ * proposal Proposal——递到客户管理层手里的提案书 / profile Profile——
+ * 一个人向评委介绍自己的人物专访）。
  * 2026-10 合并退役三家：arena、playbill 并入 rally，heritage 并入 luxe。
  * 旧 id 不在本表，validate 与查名把它读成并入的主题并给警告，见
  * `retired-ids.ts` 的 `FOLDED_THEME_IDS`。resolveThemeId 本身对未知 id
@@ -75,6 +77,7 @@ export const CANONICAL_THEME_IDS = [
   "swiss",
   "memo",
   "proposal",
+  "profile",
 ] as const;
 
 export type CanonicalThemeId = (typeof CANONICAL_THEME_IDS)[number];
@@ -103,6 +106,7 @@ export const BUILTIN_THEME_FILES = {
   swiss: SWISS_THEME,
   memo: MEMO_THEME,
   proposal: PROPOSAL_THEME,
+  profile: PROFILE_THEME,
 } satisfies Record<CanonicalThemeId, BuiltinThemeDeclaration>;
 
 /** 场景 id → 英文场景名（plan 卡片徽章等对用户展示处用，接口统一英文）。 */
