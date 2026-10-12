@@ -120,10 +120,10 @@ describe("the binder faces on proposal", () => {
     expect(byText(root, "图为 AI 生成的示意图")).toBeDefined()
   })
 
-  it("sheet: the running head with the label at the left and the stage after its place in the course at the right, the claim in petrol, and the folio", () => {
+  it("sheet: the running head with the label at the left and the stage's name with no number at the right, the claim in petrol, and the folio", () => {
     const root = page(ir, 3)
     expect(root.querySelector("[data-face='binder-sheet']")).not.toBeNull()
-    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("二\u3000算账")
+    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("算账")
     expect(root.querySelector("[data-binder-stage] text")!.getAttribute("fill")).toBe(PETROL)
     expect(root.querySelector("[data-binder-running-head] rect")!.getAttribute("y")).toBe("64")
     const title = byText(root, "电价时段改了，光伏仍能回本，储能先算清再上")!
@@ -136,13 +136,13 @@ describe("the binder faces on proposal", () => {
     expect(root.querySelector("[data-binder-source] text")!.getAttribute("x")).toBe("64")
   })
 
-  it("sheet: numbers a Latin deck's stage in figures and leaves the right of the head empty for a stage the course lacks", () => {
+  it("sheet: names a Latin deck's stage with no number and leaves the right of the head empty for a stage the course lacks", () => {
     const en = deck([sheet("Numbers", { heading: "Solar still pays back", components: [{ type: "paragraph", text: "Body." }], footnote: "Source: Jiangsu bidding notice" } as Partial<Slide>)], {
       meta: { date: "October 2026" },
       footer: { page_number: true, label: "Rooftop solar proposal" },
       course: { stages: [{ label: "Summary" }, { label: "Numbers" }] },
     } as Partial<PptxIR>)
-    expect(page(en, 0).querySelector("[data-binder-stage] text")!.textContent).toBe("2 Numbers")
+    expect(page(en, 0).querySelector("[data-binder-stage] text")!.textContent).toBe("Numbers")
     const none = deck([sheet("算账")], { course: undefined } as Partial<PptxIR>)
     expect(page(none, 0).querySelector("[data-binder-stage]")).toBeNull()
     expect(page(none, 0).querySelector("[data-binder-running-head]")).not.toBeNull()
@@ -182,7 +182,7 @@ describe("the binder faces on proposal", () => {
     const root = page(ir, 4)
     expect(root.querySelector("[data-face='binder-ending']")).not.toBeNull()
     expect(root.querySelector("[data-binder-label]")).not.toBeNull()
-    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("五\u3000决定")
+    expect(root.querySelector("[data-binder-stage] text")!.textContent).toBe("决定")
     const decisions = Array.from(root.querySelectorAll("[data-binder-decision]"))
     expect(decisions.map((d) => Array.from(d.querySelectorAll("[data-ballot-choice]")).map((c) => c.getAttribute("data-ballot-choice")))).toEqual([
       ["同意", "再议"],

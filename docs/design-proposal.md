@@ -34,7 +34,7 @@ No orange. The board drew the lead in a tangerine, and on 2026-10-06 the maintai
 
 ## The running head, the claim and the foot
 
-- Every content page and the close: a running head on y36. At the left the deck's label (the footer's `label`) at 13px regular in the grey. At the right the page's section in petrol bold at 13px, numbered by its place in the deck's `course` (「二 算账」 in a Chinese deck, "2 Numbers" in any other). A hairline under both on y64, across the whole measure.
+- Every content page and the close: a running head on y36. At the left the deck's label (the footer's `label`) at 13px regular in the grey. At the right the page's section in petrol bold at 13px, named by its label in the deck's `course` with no number (「算账」, "Numbers"), since one part of a deck may span several stages. A hairline under both on y64, across the whole measure.
 - The author writes the deck's sections once as `course.stages` and each page's section as its `stage`. No tabs, no index down the edge.
 - The claim bold at 30/42 in petrol from x64 across 1152px, from y92, at most two lines. It stays on one line whenever it fits, and a second line lifts it 20px.
 - The body runs from y176 to y640 over a source and to y648 without one.
@@ -76,7 +76,7 @@ Microsoft YaHei for everything (PingFang on the board). Weight does the work: bo
 
 | the author marks | how it is drawn |
 | :-- | :-- |
-| a page's section (`stage`, with `course` on the deck) | the right of the running head, numbered by its place in the course |
+| a page's section (`stage`, with `course` on the deck) | the right of the running head, its name with no number |
 | the figure a page lands on (`**…**` around a `kpi_cards` value) | in the brick red |
 | a day's tariff (`steps`, `label_every` and a band with an `icon` on `heatmap`) | runs of hours in four blues, the band framed in a dashed outline of the brick red |
 | the case a payback is read at (`emphasis` on a bar) | the bar in the brick red |

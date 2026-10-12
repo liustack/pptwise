@@ -909,7 +909,7 @@ The tests draw every board page on proposal and on brief and rally, a light them
 
 | field | what it does | code | board |
 | :-- | :-- | :-- | :-- |
-| `stage` on a content, chapter and ending page, with `course` on the deck | the page's section at the right of the running head, numbered by its place in the course, and on a chapter page the part's name when its kicker has no 「 · 」 | [binder-shared.tsx](../src/layouts/binder-shared.tsx) | [design/faces/binder-sheet](../design/faces/binder-sheet/README.md) |
+| `stage` on a content, chapter and ending page, with `course` on the deck | the page's section at the right of the running head, its name with no number, and on a chapter page the part's name when its kicker has no 「 · 」 | [binder-shared.tsx](../src/layouts/binder-shared.tsx) | [design/faces/binder-sheet](../design/faces/binder-sheet/README.md) |
 | `steps`, `label_every`, 24 columns and a band's `icon` on `heatmap` | a day of hours coloured by named steps with a key, labels every so many columns, an icon before a band's name | [heatmap.ts](../src/ir/components/heatmap.ts), [heatmap.tsx](../src/components/heatmap.tsx) | [design/components/heatmap](../design/components/heatmap/README.md) |
 | `icon` and `note` on a `from_to` row | a symbol before the row's name and its source under it | [from-to.ts](../src/ir/components/from-to.ts), [from-to.tsx](../src/components/from-to.tsx) | [design/components/from_to](../design/components/from_to/README.md) |
 | `tag` on an `image_grid` picture | a chip at the picture's top right, an unsettled `basis` marking the part as optional | [image-grid.tsx](../src/components/image-grid.tsx) | [design/components/image_grid](../design/components/image_grid/README.md) |

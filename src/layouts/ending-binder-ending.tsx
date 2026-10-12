@@ -59,7 +59,7 @@ export function readFillIn(text: string): { label: string; parts: ({ blank: numb
 
 export function BinderEnding({ ir, slide, ctx }: SvgTemplateProps) {
   const inks = binderInks(ctx)
-  const stage = binderStageLine(ir, slide, ctx)
+  const stage = binderStageLine(ir, slide)
   const stageW = binderStageWidth(stage, ctx)
   const cards = boundarySlotBlock(slide, ["numbered_cards"]) as NumberedCards | undefined
   const ballot = slide.ballot

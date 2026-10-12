@@ -11,7 +11,7 @@ import { BINDER_FOOT, BINDER_LEFT, BINDER_RIGHT, BinderLabelLine, RUNNING_HEAD, 
  *
  * 书眉左端（内容页，deck 要页脚时）：一行 deck 的标签（`footer.label`，
  * 「屋顶光伏与储能方案 · 呈 贵司管理层」），13px 灰色常规体，右边给书眉右端
- * 的段落名（脸画的「一 算账」）留出 24px。书眉下的细线也是脸画的。
+ * 的段落名（脸画的「算账」）留出 24px。书眉下的细线也是脸画的。
  *
  * 页脚（内容页）：右下角页码，13px 墨色粗体，右对齐在 x1216，前面是草稿和保密
  * 标记；左下是发文单位（`meta.organization`）和 `footer.notice`，11px 灰。页码是
@@ -34,7 +34,7 @@ export function ProposalMotif(props: DecorProps) {
   const { ir, slide, page, ctx } = props
   if (slide.type !== "content" || !drawsRow(props)) return null
   const footer: DeckFooter = page?.footer ?? resolveDeckFooter(ir)
-  const stageW = binderStageWidth(binderStageLine(ir, slide, ctx), ctx)
+  const stageW = binderStageWidth(binderStageLine(ir, slide), ctx)
   return (
     <>
       {footer.label ? (

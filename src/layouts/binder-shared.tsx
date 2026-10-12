@@ -5,8 +5,6 @@ import { fitEmphasisText, headingEmphasisPaint, renderEmphasisHeading, stripEmph
 import type { ContentRect } from "../render/layout"
 import { stageIndex } from "../render/course-marks"
 import type { DeckFooter } from "../render/footer-marks"
-import { chineseNumeral } from "./compositions/numerals"
-import { manuscriptChinese } from "./compositions/manuscript"
 import { fitDossierTitle } from "./dossier-shared"
 import { BINDER_SPEC, binderBaseline, binderInks, binderMeta, binderText, binderWidth, paintBinderLine } from "./compositions/binder"
 
@@ -17,9 +15,9 @@ import { BINDER_SPEC, binderBaseline, binderInks, binderMeta, binderText, binder
  *
  * Along the top a running head on y36: the deck's label at the left in the
  * grey at 13px (the motif's, `motifs/motif-proposal-motif.tsx`), the part
- * of the deck the page sits in at the right in petrol bold (「一 算账」,
- * "1 Numbers", the page's `stage` numbered by its place in the deck's
- * `course`), and a hairline under both on y64. Under it the claim bold at
+ * of the deck the page sits in at the right in petrol bold (「算账」,
+ * "Numbers", the label of the page's `stage` in the deck's `course`, with
+ * no number), and a hairline under both on y64. Under it the claim bold at
  * 30/42 in petrol across the whole measure, x64 to x1216, from y92 on one
  * line whenever it fits, a two-line claim lifted 20px so its foot stays
  * clear of the body. The body runs from y176 to y640 over a source and to
@@ -48,17 +46,16 @@ export const BINDER_HEAD_FIT = { maxWidth: BINDER_W, fontSize: HEAD.size, maxLin
 
 /**
  * The part of the deck a page sits in, as the running head names it: the
- * page's `stage` after its place in the deck's `course`, 「一 算账」 in a
- * Chinese deck and "1 Numbers" in any other, or `null` when the page names
- * no stage the course has.
+ * label of the page's `stage` in the deck's `course`, 「算账」 or "Numbers",
+ * with no number, since a part of the deck may span several stages. `null`
+ * when the page names no stage the course has.
  */
-export function binderStageLine(ir: Pick<PptxIR, "course">, slide: Pick<Slide, "stage">, ctx: ComponentCtx): string | null {
+export function binderStageLine(ir: Pick<PptxIR, "course">, slide: Pick<Slide, "stage">): string | null {
   const course = ir.course
   if (!course || !slide.stage) return null
   const at = stageIndex(course, slide.stage)
   if (at < 0) return null
-  const label = stripEmphasis(course.stages[at]!.label).trim()
-  return manuscriptChinese(ctx, [label]) ? `${chineseNumeral(at + 1)}\u3000${label}` : `${at + 1} ${label}`
+  return stripEmphasis(course.stages[at]!.label).trim()
 }
 
 /** The width the right of the running head takes: the stage line bold at 13px, or nothing. */
@@ -185,7 +182,7 @@ export function BinderTitle({ heading, ctx }: { heading: string | undefined; ctx
 export function BinderHead({ ir, slide, ctx }: { ir: Pick<PptxIR, "course">; slide: Slide; ctx: ComponentCtx }): React.ReactElement {
   return (
     <g data-binder-head="">
-      <BinderRunningHead stage={binderStageLine(ir, slide, ctx)} ctx={ctx} />
+      <BinderRunningHead stage={binderStageLine(ir, slide)} ctx={ctx} />
       <BinderTitle heading={slide.heading} ctx={ctx} />
     </g>
   )
