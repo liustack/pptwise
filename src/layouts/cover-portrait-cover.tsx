@@ -54,7 +54,8 @@ const COLUMN = 500
 const PHOTO = { x: 640, y: 0, w: 640, h: 720, focus: [0.5, 0.2] as const }
 const KICKER = { top: 64, lineHeight: 22, size: 15, tracking: 3, dateSize: 14 } as const
 const RULE = { y: 96 } as const
-const NAME = { top: 176, size: 112, lineHeight: 112, tracking: 0.04, w: 520, floor: 72 } as const
+// The name keeps to the column the rule above it spans (500), stepping its size down until it does.
+const NAME = { top: 176, size: 112, lineHeight: 112, tracking: 0.04, w: COLUMN, floor: 72 } as const
 const CLAIM = { size: 34, lineHeight: 48, w: 520, maxLines: 2, gap: 20 } as const
 const ROLE = { size: 18, lineHeight: 26, gap: 20, arrow: 28, between: 14 } as const
 const FACTS = { top: 500, w: COLUMN, max: 3, pad: 20, inset: 20, value: { size: 40, lineHeight: 40, unit: 18, gap: 4 }, between: 6, label: { size: 14, lineHeight: 21, maxLines: 3 } } as const

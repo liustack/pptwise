@@ -8,6 +8,7 @@ import { parseSvgRoot } from "../render/serialize"
 import { validateIr } from "../validate-core"
 import { treeFooterPack, treeFrameLeft, treeFrameRight } from "../render/frame-left"
 import { portraitSectionText } from "./portrait-shared"
+import { portraitTrackedWidth } from "./compositions/portrait"
 import { testCtx } from "./compositions/__fixtures__/kit"
 
 await installNodePlatform()
@@ -59,7 +60,7 @@ const cover = (extra: Partial<Slide> = {}): Slide =>
         type: "kpi_cards",
         items: [
           { value: "9 年", label: "在会员一线", note: "客服到会员运营" },
-          { value: "3 次", label: "主导会员规则改版", note: "生日券、储值卡、唤回" },
+          { value: "3 次", label: "主导会员规则改版", note: "生日券、储值、唤回" },
           { value: "13.4 万", label: "请回来的沉睡会员", note: "2025 年全量" },
         ],
       },
@@ -106,6 +107,8 @@ describe("the portrait faces on profile", () => {
     expect(name.getAttribute("font-size")).toBe("112")
     expect(root.querySelector("[data-portrait-role] [data-portrait-arrow]")).not.toBeNull()
     expect(root.querySelectorAll("[data-portrait-fact]")).toHaveLength(3)
+    // Each fact's label and note take two lines, so the three columns end level.
+    for (const fact of Array.from(root.querySelectorAll("[data-portrait-fact]"))) expect(fact.querySelectorAll("text[font-size='14']").length).toBe(2)
     expect(root.querySelector("[data-portrait-photo='portrait']")).not.toBeNull()
     expect(root.querySelector("[data-dropped]")).toBeNull()
   })
@@ -118,6 +121,12 @@ describe("the portrait faces on profile", () => {
     const size = Number(root.querySelector("[data-portrait-name] text")!.getAttribute("font-size"))
     expect(size).toBeLessThan(112)
     expect(size).toBeGreaterThanOrEqual(72)
+    // The name keeps inside the 500px rule above it.
+    const { ctx } = testCtx("profile")
+    expect(portraitTrackedWidth("Chen Lixing", size, size * 0.04, ctx, { serif: true, bold: true })).toBeLessThanOrEqual(500)
+    // The claim breaks where its second line keeps company, not on "product" alone.
+    const claim = Array.from(root.querySelectorAll("text")).map((t) => (t.textContent ?? "").trim()).filter((t) => /loyalty|product$/.test(t) && !/Manager/.test(t))
+    expect(claim).toEqual(["Making member loyalty part of", "the product"])
     const role = byText(root, "Membership Ops Lead")!
     const target = byText(root, "Membership Product Manager")!
     expect(Number(target.getAttribute("y"))).toBeGreaterThan(Number(role.getAttribute("y")))
