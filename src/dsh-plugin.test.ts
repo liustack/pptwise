@@ -475,6 +475,16 @@ interface PreviewModule {
     encodePreviewId: (anchor: string, key: string) => string
     decodePreviewId: (id: unknown) => { root: string; key: string } | undefined
     workspaceFor: (exec: unknown, target: string | undefined) => string
+    WORKSPACE_IGNORE_ENTRY: string
+    ensureGitIgnored: (
+      dir: string,
+      entry: string,
+      runGit?: (args: string[], cwd: string) => Promise<{ code: number; stdout: string } | null>,
+    ) => Promise<{ kind: string; path?: string; reason?: string }>
+    ensureWorkspaceDir: (
+      anchor: string,
+      runGit?: (args: string[], cwd: string) => Promise<{ code: number; stdout: string } | null>,
+    ) => Promise<{ created: boolean; exclude?: { kind: string; path?: string }; selfIgnore?: string }>
     PreviewExpired: new (m?: string) => Error
     PreviewUnreadable: new (m?: string) => Error
     PreviewDamaged: new (m?: string) => Error
@@ -1372,6 +1382,93 @@ describe("where a call's previews go", () => {
     expect(value.previewId).toBe(__testing.encodePreviewId(project, keyOf(value.previewId)))
     // The folder keeps itself out of git the same way the CLI's does.
     expect(await readFile(join(project, ".pptwise", __testing.SELF_IGNORE_FILENAME), "utf8")).toBe("*\n")
+  })
+
+  /** A fresh git repository at `dir`, read through no user or system git config. */
+  async function gitRepo(dir: string): Promise<(args: string[]) => string> {
+    const { execFileSync } = await import("node:child_process")
+    const { join } = await import("node:path")
+    const { writeFile } = await import("node:fs/promises")
+    const emptyConfig = join(await scratchTmp("pptwise-gitconfig-"), "config")
+    await writeFile(emptyConfig, "")
+    // The plugin's own git runs inherit these, so a developer's global
+    // excludes file cannot make the folder look ignored already.
+    process.env.GIT_CONFIG_GLOBAL = emptyConfig
+    process.env.GIT_CONFIG_NOSYSTEM = "1"
+    const git = (args: string[]) => execFileSync("git", args, { cwd: dir, encoding: "utf8" })
+    git(["init", "-q"])
+    return git
+  }
+
+  afterEach(() => {
+    delete process.env.GIT_CONFIG_GLOBAL
+    delete process.env.GIT_CONFIG_NOSYSTEM
+  })
+
+  it("keeps .pptwise out of git both ways the CLI does: the exclude line, then its own .gitignore", async () => {
+    const { readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const project = await scratchProject("git-both")
+    const git = await gitRepo(project)
+    const svc = await makeService("git-both-svc", { project, cliPath: await fakeCli() })
+    const { deck } = await deckFixture("GIT")
+    await svc.tool.execute({ target: deck })
+
+    const exclude = await readFile(join(project, ".git", "info", "exclude"), "utf8")
+    expect(exclude.split("\n").filter((line) => line === ".pptwise/")).toHaveLength(1)
+    expect(await readFile(join(project, ".pptwise", ".gitignore"), "utf8")).toBe("*\n")
+    expect(git(["status", "--porcelain", "--untracked-files=all"])).toBe("")
+
+    // Only the call that creates the folder touches git: a second preview adds no second line.
+    await svc.tool.execute({ target: deck })
+    expect(await readFile(join(project, ".git", "info", "exclude"), "utf8")).toBe(exclude)
+  })
+
+  it.skipIf(process.platform === "win32")("still previews when .git cannot be written, and the .gitignore keeps git status clean", async () => {
+    const { chmod, readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const { __testing } = await loadPreviewTool()
+    const project = await scratchProject("git-read-only")
+    const git = await gitRepo(project)
+    const info = join(project, ".git", "info")
+    const before = await readFile(join(info, "exclude"), "utf8")
+    await chmod(join(info, "exclude"), 0o444)
+    await chmod(info, 0o555)
+    try {
+      expect(await __testing.ensureWorkspaceDir(project)).toMatchObject({
+        created: true,
+        exclude: { kind: "failed", path: join(project, ".git", "info", "exclude") },
+        selfIgnore: "written",
+      })
+      const svc = await makeService("git-read-only-svc", { project, cliPath: await fakeCli() })
+      const { deck } = await deckFixture("RO")
+      const value = await svc.tool.execute({ target: deck })
+      expect(await svc.recallAnywhere(value.previewId)).toBeDefined()
+      expect(await readFile(join(info, "exclude"), "utf8")).toBe(before)
+      expect(git(["status", "--porcelain", "--untracked-files=all"])).toBe("")
+    } finally {
+      await chmod(info, 0o755)
+      await chmod(join(info, "exclude"), 0o644)
+    }
+  })
+
+  it("skips the exclude line quietly outside a repository, without git, or when git already ignores the folder", async () => {
+    const { readFile } = await import("node:fs/promises")
+    const { join } = await import("node:path")
+    const { __testing } = await loadPreviewTool()
+    expect(await __testing.ensureWorkspaceDir(await scratchProject("no-repo"))).toMatchObject({
+      created: true,
+      exclude: { kind: "no-repo" },
+      selfIgnore: "written",
+    })
+    const noGit = async () => null
+    const bare = await scratchProject("no-git")
+    expect(await __testing.ensureWorkspaceDir(bare, noGit)).toMatchObject({ exclude: { kind: "no-repo" }, selfIgnore: "written" })
+    expect(await readFile(join(bare, ".pptwise", ".gitignore"), "utf8")).toBe("*\n")
+    const ignored = async () => ({ code: 0, stdout: "" })
+    expect(await __testing.ensureGitIgnored(bare, __testing.WORKSPACE_IGNORE_ENTRY, ignored)).toEqual({ kind: "already-ignored" })
+    // A folder that is already there is left exactly as it is.
+    expect(await __testing.ensureWorkspaceDir(bare)).toEqual({ created: false })
   })
 
   it("leaves a .gitignore the user already has in .pptwise alone", async () => {

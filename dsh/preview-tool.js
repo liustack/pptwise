@@ -84,7 +84,7 @@
 
 import { createHash, randomUUID } from 'node:crypto'
 import { accessSync, constants as fsConstants, existsSync, statSync } from 'node:fs'
-import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { appendFile, copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { runChild } from './spawnHidden.js'
@@ -368,19 +368,78 @@ export function previewRoot(anchor) {
   return join(resolve(anchor), WORKSPACE_DIRNAME, PREVIEW_DIR)
 }
 
+/** The line the local exclude file gets. Must match `WORKSPACE_IGNORE_ENTRY` in `src/cli/workspace.ts`. */
+const WORKSPACE_IGNORE_ENTRY = `${WORKSPACE_DIRNAME}/`
+
+/** Long enough for a cold `git` on a slow disk, short enough that a hung one cannot hold a preview. */
+const GIT_TIMEOUT_MS = 10_000
+
+/** One `git` run, or `null` when git could not be run at all (no binary, a timeout). */
+async function runGitDefault(args, cwd) {
+  try {
+    const { code, stdout } = await runChild('git', args, { cwd, timeoutMs: GIT_TIMEOUT_MS })
+    return { code, stdout }
+  } catch {
+    return null
+  }
+}
+
 /**
- * Make the project's `.pptwise/` exist, writing its `.gitignore` when this
- * call is the one that creates the folder. Never over a file already there.
+ * Append `entry` to the repository's local exclude file unless git already
+ * ignores it. A copy of `ensureGitIgnored` in `src/cli/workspace.ts`, which
+ * argues each case: this plugin is plain JS and cannot import the CLI's
+ * TypeScript, so the two are kept in step by hand. Change one, change both.
+ *
+ * Outcomes: `already-ignored` (check-ignore exit 0), `no-repo` (exit 128, or
+ * no git), `appended`, and `failed` when the exclude file cannot be written
+ * (a read-only `.git`). None of them stops a preview.
  */
-async function ensureWorkspaceDir(anchor) {
+async function ensureGitIgnored(dir, entry, runGit = runGitDefault) {
+  const check = await runGit(['check-ignore', '-q', '--', entry], dir)
+  if (check === null || (check.code !== 0 && check.code !== 1)) return { kind: 'no-repo' }
+  if (check.code === 0) return { kind: 'already-ignored' }
+
+  const common = await runGit(['rev-parse', '--git-common-dir'], dir)
+  if (common === null || common.code !== 0 || common.stdout.trim() === '') return { kind: 'no-repo' }
+  const excludePath = join(resolve(dir, common.stdout.trim()), 'info', 'exclude')
+  try {
+    await mkdir(dirname(excludePath), { recursive: true })
+    let existing = ''
+    try {
+      existing = await readFile(excludePath, 'utf8')
+    } catch {
+      existing = ''
+    }
+    const lead = existing === '' || existing.endsWith('\n') ? '' : '\n'
+    await appendFile(excludePath, `${lead}${entry}\n`)
+    return { kind: 'appended', path: excludePath }
+  } catch (error) {
+    return { kind: 'failed', path: excludePath, reason: error instanceof Error ? error.message : String(error) }
+  }
+}
+
+/**
+ * Make the project's `.pptwise/` exist, and on the call that creates it keep
+ * it out of git the two ways the CLI does (`prepareWorkspaceDir`,
+ * `src/cli/workspace.ts`): a line in the local exclude file, then a
+ * `.gitignore` holding `*` inside the folder, never over one already there.
+ * The exclude line goes first, because git reports the folder as ignored
+ * once the inner file exists. Either alone is enough, so neither failing
+ * stops a preview: the CLI prints a note for that, and a tool call has no
+ * one to print it to, so the outcome is only returned.
+ */
+async function ensureWorkspaceDir(anchor, runGit = runGitDefault) {
   const dir = join(anchor, WORKSPACE_DIRNAME)
-  if (existsSync(dir)) return
+  if (existsSync(dir)) return { created: false }
   await mkdir(dir, { recursive: true })
+  const exclude = await ensureGitIgnored(anchor, WORKSPACE_IGNORE_ENTRY, runGit)
+  let selfIgnore = 'written'
   try {
     await writeFile(join(dir, SELF_IGNORE_FILENAME), SELF_IGNORE_RULES, { flag: 'wx' })
   } catch (error) {
-    if (!error || error.code !== 'EEXIST') throw error
+    selfIgnore = error && error.code === 'EEXIST' ? 'kept' : 'failed'
   }
+  return { created: true, exclude, selfIgnore }
 }
 
 /**
@@ -2731,7 +2790,10 @@ export const __testing = {
   PARTIAL_SUFFIX,
   OWNER_MARKER,
   WORKSPACE_DIRNAME,
+  WORKSPACE_IGNORE_ENTRY,
   SELF_IGNORE_FILENAME,
+  ensureGitIgnored,
+  ensureWorkspaceDir,
   projectAnchor,
   encodePreviewId,
   decodePreviewId,

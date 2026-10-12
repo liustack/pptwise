@@ -305,6 +305,11 @@ export async function inspectWorkspace(
  * a *file* pointing elsewhere, and `--git-common-dir` is the one answer that
  * is right in all three shapes (plain clone, worktree, submodule). It can
  * come back relative to the cwd git ran in, hence the `resolve(dir, ...)`.
+ *
+ * The DSH plugin keeps a plain-JS copy of this function and of the two-step
+ * order in {@link prepareWorkspaceDir} (`ensureGitIgnored` and
+ * `ensureWorkspaceDir` in `dsh/preview-tool.js`), since it cannot import
+ * TypeScript. Change one, change both.
  */
 export async function ensureGitIgnored(
   dir: string,

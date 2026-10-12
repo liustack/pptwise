@@ -364,4 +364,4 @@ pptwise self-update
 
 第一次创建 `.pptwise/` 的命令用两种办法让它不进 git：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。
 
-DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 旁边，两样都没有就拒绝并说明原因。`previews/` 和 `theme-try/` 两个名字归 pptwise 自己用，deck 落到这两个名字上时，目录名后面加 `-deck`。
+DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。`.pptwise/` 由插件先建出来时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 旁边，两样都没有就拒绝并说明原因。`previews/` 和 `theme-try/` 两个名字归 pptwise 自己用，deck 落到这两个名字上时，目录名后面加 `-deck`。
