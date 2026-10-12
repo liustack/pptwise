@@ -7,7 +7,7 @@
  */
 import { createHash } from "node:crypto"
 import JSZip from "jszip"
-import { themeFileFromPreset } from "../../theme-resolve"
+import { themeFileFromPreset } from "../../../themes/presets"
 import type { ThemeFile } from "../../../themes/schema"
 
 export interface PackFixture {

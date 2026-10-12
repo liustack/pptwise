@@ -32,14 +32,14 @@
  *    which takes the theme's second colored slot and the chart's second
  *    series under the same rules.
  */
-import type { BackgroundSpec } from "../ir"
-import { PptwiseError } from "../errors"
-import { contrastRatio, requiredContrastRatio } from "../render/ink"
-import { assertContrastFloor } from "../themes/definitions"
-import { isTabooPair } from "../themes/chart-taboo"
-import { HexTokenSchema } from "../themes/hex"
-import { hexToOklch, oklabDistance, oklchToHex, type Oklch } from "../themes/palette-rebase"
-import { ThemeFileSchema, type ThemeFile } from "../themes/schema"
+import type { BackgroundSpec } from "../../ir"
+import { PptwiseError } from "../../errors"
+import { contrastRatio, requiredContrastRatio } from "../../render/ink"
+import { assertContrastFloor } from "../definitions"
+import { isTabooPair } from "../chart-taboo"
+import { HexTokenSchema } from "../hex"
+import { hexToOklch, oklabDistance, oklchToHex, type Oklch } from "../palette-rebase"
+import { ThemeFileSchema, type ThemeFile } from "../schema"
 import { isChromatic, measureBrandFace, paintedField, type BrandFace, type BrandSlot } from "./brand-face"
 import { keepsName } from "./color-name"
 

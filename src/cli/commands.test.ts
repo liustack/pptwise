@@ -17,7 +17,7 @@ import { LAYOUT_REGISTRY } from "../layouts/registry"
 import { resolveLayoutId } from "../render/layout-selection"
 import { resolveThemeByName } from "./theme-resolve"
 import { THEME_OCCASIONS } from "../themes/occasions"
-import { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
+import { buildThmxBytes, BRAND_THMX_COLORS } from "../themes/extract/__fixtures__/thmx"
 import {
   applyDeckConfig,
   runAssemble,
@@ -1748,16 +1748,6 @@ describe("brand extract + deck theme.json / workspace themes/", () => {
     expect(msg).toContain('theme "brief"')
     const written = JSON.parse(await readFile(out, "utf8")) as { id: string }
     expect(written.id).toBe("brief")
-  })
-
-  it("brand extract rejects a pathological palette before writing by default", async () => {
-    const d = await freshDir()
-    const src = await writeFixtureTemplate(d, { colors: PATHOLOGICAL_THMX_COLORS })
-    const out = join(d, "gray.theme.json")
-    await expect(runBrandExtract(src, { output: out })).rejects.toThrow(
-      /cannot derive colors\.muted.*pptwise theme new --from <preset>.*hand.*bind/is,
-    )
-    await expect(stat(out)).rejects.toMatchObject({ code: "ENOENT" })
   })
 
   it("brand extract keeps the donor's ground, text, and surface, and takes only the brand colors and fonts", async () => {

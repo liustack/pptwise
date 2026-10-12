@@ -60,9 +60,9 @@ export const DEFAULT_THMX_COLORS: Required<ThmxColorSlots> = {
 export const BRAND_THMX_COLORS: Required<ThmxColorSlots> = { ...DEFAULT_THMX_COLORS, accent1: "1F4E79" }
 
 /** A deliberately near-monochrome palette (裁定 5's "病态色值" fixture): dk1/
- *  lt1/accent1 are all close-together mid-grays, so no muted derivation step
- *  can ever clear even the 3.0:1 registration floor — the guaranteed-failing
- *  fixture `registerBrandThemeFile`'s contrast-floor test loads. */
+ *  lt1/lt2 are all close-together mid-grays, so no muted derivation step
+ *  can ever clear the body-text floor — the guaranteed-failing input
+ *  `deriveMuted`'s own test feeds it. */
 export const PATHOLOGICAL_THMX_COLORS: Required<ThmxColorSlots> = {
   dk1: "808080",
   lt1: "868686",

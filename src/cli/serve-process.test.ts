@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url"
 import { describe, expect, it } from "vitest"
 import { THEME_FILENAME } from "./deck-dir"
 import { THEME_POLL_MS, watchTree } from "./serve"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../themes/presets"
 import type { ServeBuildStatus, ServeHandle } from "./serve"
 
 describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("pptwise serve — the CLI process", () => {

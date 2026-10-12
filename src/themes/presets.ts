@@ -22,7 +22,8 @@ import { BUILTIN_THEME_FILES, CANONICAL_THEME_IDS, type CanonicalThemeId } from 
 import { THEME_OCCASIONS, type IdentityStrength, type Occasion } from "./occasions"
 import { assertNotRetiredThemeId, retiredThemeHint } from "./retired-ids"
 import { getLayout } from "../layouts/registry"
-import type { BuiltinThemeDeclaration, Menu, MenuEntry } from "./schema"
+import type { ThemeDefinition } from "./definitions"
+import { ThemeFileSchema, type BuiltinThemeDeclaration, type Menu, type MenuEntry, type ThemeFile } from "./schema"
 
 /** One shelf entry: what a picker needs to choose a starting point. */
 export interface ThemePresetSummary {
@@ -117,4 +118,52 @@ export function copyThemePreset(presetId: string, targetId: string): BuiltinThem
     ...(preset.story ? { story: structuredClone(preset.story) } : {}),
     menu: copyMenu(preset.menu, preset.motif),
   }
+}
+
+function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["style"] {
+  const colors = { ...style.colors }
+  const fonts: ThemeFile["style"]["fonts"] = {
+    heading: [...style.fonts.heading],
+    body: [...style.fonts.body],
+  }
+  if (style.fonts.mono !== undefined) fonts.mono = [...style.fonts.mono]
+  const out: ThemeFile["style"] = {
+    id,
+    colors,
+    fonts,
+    defaultBackgrounds: structuredClone(style.defaultBackgrounds),
+  }
+  if (style.allowCustomBackground !== undefined) out.allowCustomBackground = style.allowCustomBackground
+  if (style.shape !== undefined) {
+    const shape: NonNullable<ThemeFile["style"]["shape"]> = {}
+    if (style.shape.radius !== undefined) shape.radius = style.shape.radius
+    if (style.shape.gapScale !== undefined) shape.gapScale = style.shape.gapScale
+    if (style.shape.typeScale !== undefined) shape.typeScale = style.shape.typeScale
+    if (Object.keys(shape).length > 0) out.shape = shape
+  }
+  return out
+}
+
+/** Copy a factory preset into a public v2 ThemeFile. Engine-only
+ *  `style.shape.cover` is stripped. Motif is materialized per menu entry.
+ *  `emphasis` is copied like the rest of the theme's identity — a `theme new
+ *  --from lecture` that dropped it chalked no line under a `**marked**` run. */
+export function themeFileFromPreset(
+  presetId: string,
+  identity: { id: string; label?: string },
+): ThemeFile {
+  const copy = copyThemePreset(presetId, identity.id)
+  const file = {
+    version: 2 as const,
+    id: identity.id,
+    label: identity.label ?? copy.label,
+    style: publicStyle(copy.style, identity.id),
+    brand: copy.brand,
+    occasions: copy.occasions !== undefined ? [...copy.occasions] : undefined,
+    identity: copy.identity,
+    emphasis: copy.emphasis,
+    story: copy.story,
+    menu: copy.menu,
+  }
+  return ThemeFileSchema.parse(file) as ThemeFile
 }

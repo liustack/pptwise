@@ -26,9 +26,8 @@ import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, STRATEGY_VALUES,
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
 import { buildAssetBrief, type AssetBrief, type AssetBriefItem } from "../render/asset-brief"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
-import { resolveFontFace, SAFE_FONTS } from "../render/fonts"
-import { hasExactWidthTable } from "../lib/svg-text-layout"
-import { extractBrandTheme, readTemplateFonts, slugify } from "../themes/extract/brand-extract"
+import { resolveFontFace } from "../render/fonts"
+import { extractBrandTheme, slugify } from "../themes/extract/brand-extract"
 import { ThemeFileSchema, type Menu, type ThemeFile } from "../themes/schema"
 import { OCCASION_VOCAB, THEME_OCCASIONS } from "../themes/occasions"
 import { themeShortlist } from "../themes/select"
@@ -92,7 +91,6 @@ import {
   readThemeFile,
   resolveThemeSelection,
   resolveThemeByName,
-  themeFileFromPreset,
   themeNameFromUnknown,
   WORKSPACE_THEMES_DIRNAME,
   type ResolvedTheme,
@@ -108,8 +106,8 @@ import {
   type ThemeInputs,
 } from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
-import { describePlacement, parseBrandOption, regenerateFromBrand } from "./brand-regen"
-import { isChromatic } from "./brand-face"
+import { describePlacement, parseBrandOption, regenerateFromBrand } from "../themes/brand/brand-regen"
+import { themeFileFromPreset } from "../themes/presets"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 import { offeredContentKinds } from "../render/layout-selection"
 
@@ -1344,38 +1342,6 @@ export interface BrandExtractOptions {
   force?: boolean
 }
 
-/**
- * The theme's font stacks with the template's Latin faces put first, and
- * the warnings a reader needs about them. The theme's East Asian faces stay
- * where they are in each stack, so Chinese text keeps the theme's face.
- */
-function withTemplateFonts(
-  fonts: ThemeFile["style"]["fonts"],
-  template: { major?: string; minor?: string },
-): { fonts: ThemeFile["style"]["fonts"]; notes: string[] } {
-  const notes: string[] = []
-  const lead = (role: "heading" | "body", face: string | undefined, stack: string[]): string[] => {
-    if (face === undefined) {
-      notes.push(`  fonts: the template names no ${role} font, so ${role} text keeps the theme's own`)
-      return stack
-    }
-    const next = [face, ...stack.filter((f) => f.toLowerCase() !== face.toLowerCase())]
-    const resolved = resolveFontFace(next, role)
-    if (!SAFE_FONTS.has(face.toLowerCase())) {
-      notes.push(
-        `  warning: ${role} font "${face}" is not on the safe font list (the fonts a stock Windows machine has), so the slides set ${role} text in "${resolved}", the next safe face in the stack`,
-      )
-    } else if (!hasExactWidthTable(face)) {
-      notes.push(`  warning: ${role} font "${face}" has no exact width table: text widths are estimated and long lines may overflow`)
-    }
-    return next
-  }
-  return {
-    fonts: { ...fonts, heading: lead("heading", template.major, fonts.heading), body: lead("body", template.minor ?? template.major, fonts.body) },
-    notes,
-  }
-}
-
 /** `basename(output)` minus a trailing `.theme.json`/`.json`, slugged — the
  *  裁定 4 default id (`my-brand.theme.json` → `my-brand`). */
 function defaultThemeIdFor(output: string): string {
@@ -1432,7 +1398,7 @@ function rethrowBrandColorError(error: unknown, id: string): never {
  * `pptwise brand extract <file> -o <out.theme.json> [--id] [--label] [--from]`
  * reads the template's brand color (its accent1), the second color the
  * company paired with it (accent2), and its fonts locally, then repaints
- * the donor theme around them (`./brand-regen.ts`). The
+ * the donor theme around them (`../themes/brand/brand-regen.ts`). The
  * donor keeps its ground, text, and surface. Contrast failure is a hard
  * error.
  */
@@ -1445,35 +1411,17 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
   }
   const id = opts.id ?? defaultThemeIdFor(opts.output)
   assertThemeId(id)
-  let extracted: Awaited<ReturnType<typeof extractBrandTheme>>
-  try {
-    extracted = await extractBrandTheme(bytes, { id, label: opts.label })
-  } catch (error) {
-    rethrowBrandColorError(error, id)
-  }
-  // bulletin: the business theme that carries a brand color best, as given and on its face.
   const from = opts.from ?? "bulletin"
   const cwd = dirname(resolve(opts.output))
-  const donorResolved = await resolveThemeByName(from, { startDir: cwd })
-  const donor = await themeFileFromResolved(donorResolved, { id: extracted.id, label: extracted.label })
-  // The template's accent1 is its brand color and accent2 the second color
-  // the company paired with it. Its dk1/lt1 ground and its other accents
-  // are left behind: Office templates nearly all carry plain black on white
-  // there, which says nothing about the brand and would wipe out the
-  // donor's own paper.
-  const brandColor = extracted.style.colors.primary
-  const secondColor = extracted.style.colors.accent
-  const colors =
-    secondColor.toUpperCase() !== brandColor.toUpperCase() && isChromatic(secondColor)
-      ? { brand: brandColor, second: secondColor }
-      : { brand: brandColor }
-  // Fonts stay the theme's own unless asked for: a template's Latin face
-  // that is not on the safe list never reaches the slides, and the
-  // template's Chinese face is never used at all.
-  const templateFonts = opts.brandFonts === true ? withTemplateFonts(donor.style.fonts, await readTemplateFonts(bytes)) : undefined
-  let result: ReturnType<typeof regenerateFromBrand>
+  const donor = await resolveThemeByName(from, { startDir: cwd })
+  let result: Awaited<ReturnType<typeof extractBrandTheme>>
   try {
-    result = regenerateFromBrand(donor, colors, { id: extracted.id, label: extracted.label, fonts: templateFonts?.fonts })
+    result = await extractBrandTheme(bytes, {
+      id,
+      label: opts.label,
+      from: donor.kind === "builtin" ? donor.id : donor.file,
+      brandFonts: opts.brandFonts === true,
+    })
   } catch (error) {
     rethrowBrandColorError(error, id)
   }
@@ -1485,10 +1433,10 @@ export async function runBrandExtract(file: string, opts: BrandExtractOptions): 
     `wrote ${opts.output} (theme "${theme.id}", label "${theme.label}", from "${from}")`,
     ...describePlacement(result.placement),
     `  colors: primary ${c.primary}, accent ${c.accent}, ${c.chartPalette.length} chart colors. bg ${c.bg}, text ${c.text}, surface ${c.surface} stay ${from}'s`,
-    templateFonts === undefined
+    opts.brandFonts !== true
       ? `  fonts: ${from}'s own, heading "${resolveFontFace(theme.style.fonts.heading, "heading")}", body "${resolveFontFace(theme.style.fonts.body, "body")}" (--brand-fonts puts the template's Latin fonts first)`
       : `  fonts: heading "${theme.style.fonts.heading[0]}", body "${theme.style.fonts.body[0]}" from the template, Chinese text in ${from}'s own faces`,
-    ...(templateFonts?.notes ?? []),
+    ...result.fontNotes.map((note) => `  ${note}`),
     `Drop the file in a deck ${THEME_FILENAME} or workspace themes/ and set spec.theme to "${theme.id}".`,
   ]
   return lines.join("\n")
@@ -1533,7 +1481,7 @@ const FORK_ANCHOR_FLAGS = ["primary", "accent", "bg", "text", "surface"] as cons
 
 /** `pptwise theme fork <name> --brand <#hex>` repaints the source around one
  *  brand color, or a brand color and its second color joined by a comma
- *  (`./brand-regen.ts`). `--primary <#hex>` and the other anchor
+ *  (`../themes/brand/brand-regen.ts`). `--primary <#hex>` and the other anchor
  *  flags set those tokens literally and rederive the rest. The two ways do
  *  not mix. Contrast failure is a hard error. */
 export async function runThemeFork(name: string, opts: ThemeForkOptions): Promise<string> {

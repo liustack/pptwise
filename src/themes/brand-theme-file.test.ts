@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest"
+import { installNodePlatform } from "@/platform/node"
 import { __resetRegisteredThemes, compileThemeDefinition, getInstalledThemeIds, getThemeDefinition } from "./definitions"
-import { buildThmxBytes, PATHOLOGICAL_THMX_COLORS } from "./extract/__fixtures__/thmx"
+import { buildThmxBytes } from "./extract/__fixtures__/thmx"
 import { extractBrandTheme, type BrandThemeFile } from "./extract/brand-extract"
 import { parseBrandThemeFile, registerBrandThemeFile } from "./brand-theme-file"
 import type { ThemeFile } from "./schema"
+
+installNodePlatform()
 
 afterEach(() => {
   __resetRegisteredThemes()
@@ -11,7 +14,7 @@ afterEach(() => {
 
 async function extractFixtureTheme(id = "acme"): Promise<BrandThemeFile> {
   const bytes = await buildThmxBytes({ schemeName: "Acme" })
-  return extractBrandTheme(bytes, { id })
+  return (await extractBrandTheme(bytes, { id })).file
 }
 
 describe("parseBrandThemeFile", () => {
@@ -156,12 +159,6 @@ describe("registerBrandThemeFile", () => {
     registerBrandThemeFile(theme)
     expect(() => registerBrandThemeFile(theme)).toThrow(/theme "acme" is already installed/)
     expect(getInstalledThemeIds().filter((id) => id === "acme")).toHaveLength(1)
-  })
-
-  it("brand extraction rejects a pathological palette before it can be registered", async () => {
-    const bytes = await buildThmxBytes({ colors: PATHOLOGICAL_THMX_COLORS })
-    await expect(extractBrandTheme(bytes, { id: "gray-soup" })).rejects.toThrow(/cannot derive colors\.muted/)
-    expect(getInstalledThemeIds()).not.toContain("gray-soup")
   })
 
   it("applies the same contrast floor to a complete theme", async () => {

@@ -16,7 +16,7 @@ import { mkdtemp, readdir, readFile, stat } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../themes/presets"
 import { writeThemeFile } from "./theme-write"
 
 async function targetExists(path: string): Promise<boolean> {

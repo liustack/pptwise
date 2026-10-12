@@ -4,7 +4,8 @@ import { installNodePlatform } from "@/platform/node"
 import { contrastRatio, relativeLuminance } from "../render/ink"
 import { deriveMuted } from "../themes/extract/brand-extract"
 import { forkTheme } from "./theme-fork"
-import { menusEqual, themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../themes/presets"
+import { menusEqual } from "./theme-resolve"
 
 installNodePlatform()
 

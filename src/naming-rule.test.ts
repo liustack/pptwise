@@ -3,7 +3,7 @@ import { KIND_STORIES } from "@/ir/kind-stories"
 import { KIND_VALUES } from "@/ir/narrative-values"
 import { THEME_DEFINITIONS } from "@/themes/definitions"
 import { StructuralThemeFileSchema, ThemeFileSchema } from "@/themes/schema"
-import { themeFileFromPreset } from "@/cli/theme-resolve"
+import { themeFileFromPreset } from "@/themes/presets"
 import { FORBIDDEN_NAME_WORDS, findForbiddenNameWords } from "./design-story"
 import { LEGACY_THEME_NAMES } from "./themes/legacy-names"
 

@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { CANONICAL_THEME_IDS } from "../themes"
+import { CANONICAL_THEME_IDS } from ".."
 import { countHeadingRuns, countSlotUse, isChromatic, LARGE_TEXT_PX, measureBrandFace, paintedField, pickBrandFace, renderBrandSample } from "./brand-face"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../presets"
 
 installNodePlatform()
 

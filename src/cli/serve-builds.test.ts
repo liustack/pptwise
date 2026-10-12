@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest"
 import { collectDeckThemeInputs } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
 import { THEME_POLL_MS } from "./serve"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../themes/presets"
 import type { ServeBuildStatus, ServeHandle } from "./serve"
 
 describe("createServeServer — the source is read once per build", () => {

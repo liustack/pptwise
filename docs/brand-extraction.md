@@ -42,17 +42,17 @@ By default the theme keeps its own fonts: ink's kaishu, memo's typewriter serif,
 
 ## Repainting around a brand color
 
-`theme fork --brand` and `brand extract` share one route (`src/cli/brand-regen.ts`). The theme stays itself. Only its colored slots move. The aim is to keep the brand color exactly as the company wrote it and build a calm palette around it, not to scatter new hues.
+`theme fork --brand` and `brand extract` share one route (`src/themes/brand/brand-regen.ts`). The theme stays itself. Only its colored slots move. The aim is to keep the brand color exactly as the company wrote it and build a calm palette around it, not to scatter new hues.
 
 `--brand` takes one hex color, or two separated by a comma for a company that pairs two colors: `--brand '#156082,#E97132'`. More than two is an error.
 
 ### The theme's face
 
-A theme's face is the color slot, `primary` or `accent`, that its own pages show most. It is measured, not declared (`src/cli/brand-face.ts`). The theme draws a sample deck: a cover, a chapter, one page for every content kind its menu offers, and an ending. For each slot, the area painted in its exact color (fills, strokes, and text) is summed and weighed by how far the color stands from the page ground (OKLab distance). Only a slot with real chroma can be the face: OKLCH chroma at least 0.04. Ink's warm black, lecture's blackboard green-grey, and stage's silver do not qualify. Brief's navy and proposal's petrol do. When neither slot has chroma (stage), the accent takes the brand.
+A theme's face is the color slot, `primary` or `accent`, that its own pages show most. It is measured, not declared (`src/themes/brand/brand-face.ts`). The theme draws a sample deck: a cover, a chapter, one page for every content kind its menu offers, and an ending. For each slot, the area painted in its exact color (fills, strokes, and text) is summed and weighed by how far the color stands from the page ground (OKLab distance). Only a slot with real chroma can be the face: OKLCH chroma at least 0.04. Ink's warm black, lecture's blackboard green-grey, and stage's silver do not qualify. Brief's navy and proposal's petrol do. When neither slot has chroma (stage), the accent takes the brand.
 
 The same pass records, for each slot, whether it sets body-size text (under 24px), whether it writes the deck's headings and at what size, whether it fills a page as a ground (one rectangle covering half the page or more), and how much of its area is fields of color (bars, blocks, and discs at least 16px across) rather than marks (rules, strokes, words). The sample is then drawn once more with each colored slot turned to the opposite hue. A rectangle whose color follows the slot without being it is a field the layouts work out from the slot, like homeroom's blackboard, which is its primary darkened.
 
-`src/cli/brand-face.test.ts` pins the face of all 22 built-in themes:
+`src/themes/brand/brand-face.test.ts` pins the face of all 22 built-in themes:
 
 | face | themes |
 | --- | --- |
@@ -79,12 +79,12 @@ The theme file has one value per token, so the split is made per slot by what th
 Every other colored token is drawn from the brand in OKLCH. Nothing is turned by a global hue step.
 
 - The theme's second colored slot becomes a shade of the brand: the same hue, clearly lighter or darker (at least 0.12 OKLab away), near the lightness and chroma the theme gave that slot, chroma no higher than the brand's. A neighbouring hue within 30° is tried only when the brand's own hue cannot give a distinct shade.
-- A shade never changes the color's name. `src/cli/color-name.ts` names a color by OKLCH hue band, and in the warm bands by lightness too: a red from lightness 0.62 up is pink, an orange below 0.6 is brown and from 0.82 up peach, a yellow below 0.6 is olive and from 0.9 up cream. A shade whose name differs from the brand's is not used. The theme's own grey or ink stands in (its chart's neutrals, then its muted and text inks), so brief under a red brand draws its accent rule in its grey, not in pink.
+- A shade never changes the color's name. `src/themes/brand/color-name.ts` names a color by OKLCH hue band, and in the warm bands by lightness too: a red from lightness 0.62 up is pink, an orange below 0.6 is brown and from 0.82 up peach, a yellow below 0.6 is olive and from 0.9 up cream. A shade whose name differs from the brand's is not used. The theme's own grey or ink stands in (its chart's neutrals, then its muted and text inks), so brief under a red brand draws its accent rule in its grey, not in pink.
 - `emphasisInk` follows the slot it matched in the theme, or becomes a shade of the brand, lifted to 4.5:1 so emphasized words read. If the lifted ink would change name (Berlin's orange lifted to 4.5:1 is brown), the theme's own emphasis ink stays.
 - The chart palette leads with the brand, then its shades, then the theme's neutrals (near blacks and greys), with every pair of neighbours at least 0.1 OKLab apart. A theme whose chart is one color among inks and greys (swiss, ink, journal, memo, ledger, luxe, runway, stage) stays that way: the brand takes its one color, the inks stay, and a second color never enters it. The blue-with-orange ban (`src/themes/chart-taboo.ts`) still holds for derived colors.
 - `bg`, `surface`, `text`, `muted`, `panel`, `border`, `cardStroke`, and the status colors `danger`, `warning`, `success` stay the theme's own. A default background that was the theme's primary or accent becomes the new one. Every other background stays.
 
-A color outside the brand's family appears only when the company names it. The second color goes to the theme's second colored slot and the chart's second series, under rules 1 and 2. When that slot writes headings it cannot read in, the second color is drawn in the chart only. On a theme whose chart is one color among inks, it goes to the second slot only, and with no colored second slot it is not used. The command says which. `src/cli/brand-regen.test.ts` sweeps every theme against several brands and checks that each new color is within 30° of the brand's hue, of the second color's hue, or a neutral.
+A color outside the brand's family appears only when the company names it. The second color goes to the theme's second colored slot and the chart's second series, under rules 1 and 2. When that slot writes headings it cannot read in, the second color is drawn in the chart only. On a theme whose chart is one color among inks, it goes to the second slot only, and with no colored second slot it is not used. The command says which. `src/themes/brand/brand-regen.test.ts` sweeps every theme against several brands and checks that each new color is within 30° of the brand's hue, of the second color's hue, or a neutral.
 
 `--brand` cannot be combined with `--primary`, `--accent`, `--bg`, `--text`, or `--surface`. Those flags set tokens exactly through the anchor fork, for an author who wants exact control.
 
@@ -102,18 +102,17 @@ User Office files are never committed as fixtures. Tests build small OOXML packa
 | `accent2` | The second color, when it has chroma and differs from the brand. |
 | major Latin font | With `--brand-fonts`, first in the heading stack. Otherwise not used. |
 | minor Latin font | With `--brand-fonts`, first in the body stack (the major face when absent). Otherwise not used. |
-| `dk1`, `lt1`, `lt2`, `accent3` to `accent6` | Parsed and checked, not used. |
+| `dk1`, `lt1`, `lt2`, `accent3` to `accent6` | Not used. |
 
 `hlink` and `folHlink` may be parsed but are not mapped because pptwise has no hyperlink color token.
 
-The SDK's `extractBrandTheme` still returns the template's own palette mapped onto tokens, with a fixed menu. Only the CLI repaints a donor.
+The SDK's `extractBrandTheme(bytes, { id, label, from, brandFonts })` is the same route: the CLI reads the file and resolves `--from` by name, then calls it. `from` is a built-in theme id or a complete theme file passed by value, `"bulletin"` by default. It returns `{ file, placement, fontNotes }`: the repainted theme, where the brand and second color went, and the font warnings `--brand-fonts` prints. It renders the theme's sample deck to measure its face, so a platform must be installed first (`installPlatform`).
 
 ## Failure behavior
 
 Extraction has hard structural requirements:
 
 - the package must contain a theme part
-- `dk1` and `lt1` must be present, and must leave room for a readable muted color
 - at least one accent color must exist
 - the target id must not collide with a factory preset
 - the final file must satisfy the strict v2 schema

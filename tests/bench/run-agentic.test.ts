@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { dirname, join, resolve, sep } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { loadValidatedDeckIr } from "../../src/cli/commands"
-import { themeFileFromPreset } from "../../src/cli/theme-resolve"
+import { themeFileFromPreset } from "../../src/themes/presets"
 import {
   buildMeta,
   checkPathSafety,

@@ -11,12 +11,12 @@
  * must keep body-text contrast, and how much of a slot is fields of color
  * (bars, blocks) rather than marks (rules, strokes, words).
  */
-import { renderSlideSvg, validateIr, formatIssues } from "../api"
-import { PptwiseError } from "../errors"
-import { offeredContentKinds } from "../render/layout-selection"
-import { compileThemeDefinition } from "../themes/definitions"
-import { hexToOklch, oklabDistance, oklchChroma, oklchToHex } from "../themes/palette-rebase"
-import type { ThemeFile } from "../themes/schema"
+import { renderSlideSvg, validateIr, formatIssues } from "../../api"
+import { PptwiseError } from "../../errors"
+import { offeredContentKinds } from "../../render/layout-selection"
+import { compileThemeDefinition } from "../definitions"
+import { hexToOklch, oklabDistance, oklchChroma, oklchToHex } from "../palette-rebase"
+import type { ThemeFile } from "../schema"
 import { BRAND_SAMPLE_HEADINGS, brandSampleIr } from "./brand-sample"
 
 export type BrandSlot = "primary" | "accent"

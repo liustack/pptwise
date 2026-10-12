@@ -45,7 +45,9 @@ export type { ThemePresetSummary } from "./themes/presets"
 // (`registerBrandThemeFile`). The `pptwise brand extract` CLI command wraps
 // the extraction.
 export { extractBrandTheme } from "./themes/extract/brand-extract"
-export type { BrandThemeFile, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
+export type { BrandThemeFile, BrandThemeResult, ExtractBrandThemeOptions } from "./themes/extract/brand-extract"
+export type { BrandPlacement, PlacedColor, Refusal } from "./themes/brand/brand-regen"
+export type { BrandSlot } from "./themes/brand/brand-face"
 export { parseBrandThemeFile, registerBrandThemeFile, BrandThemeFileSchema } from "./themes/brand-theme-file"
 export { forkTheme } from "./cli/theme-fork"
 export type { ForkThemeAnchors, ForkThemeIdentity } from "./cli/theme-fork"

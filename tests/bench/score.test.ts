@@ -5,7 +5,7 @@ import { join, resolve } from "node:path"
 import JSZip from "jszip"
 import { afterEach, describe, expect, it } from "vitest"
 import { forkTheme } from "../../src/cli/theme-fork"
-import { themeFileFromPreset } from "../../src/cli/theme-resolve"
+import { themeFileFromPreset } from "../../src/themes/presets"
 import {
   loadArtifact,
   loadQuestionMetas,

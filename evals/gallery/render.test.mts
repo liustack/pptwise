@@ -17,7 +17,7 @@ import type { PptxIR } from "@/ir"
 import { installNodePlatform } from "@/platform/node"
 import { registerTheme } from "@/themes/definitions"
 import { forkTheme } from "@/cli/theme-fork"
-import { themeFileFromPreset } from "@/cli/theme-resolve"
+import { themeFileFromPreset } from "@/themes/presets"
 import { splitPaint, verdictFreshness } from "./render"
 
 await installNodePlatform()

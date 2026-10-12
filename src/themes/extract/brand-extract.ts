@@ -1,62 +1,37 @@
 /**
- * Local brand-color/font extraction from a user's own `.thmx`/`.potx`/`.pptx`
- * OOXML theme part (brand-extract wave, roadmap §2.0.1: the free
- * adoption-friction remover — "the output doesn't look like our company" is
- * pptwise's #1 bulletin-adoption blocker, and every user who hits it
- * already has a company template on disk). Everything in this module runs
- * against zip bytes only (`jszip`, already a browser-safe dependency) —
- * `src/index.ts`'s dependency closure stays free of Node-only deps
- * (`AGENTS.md`'s layout rule), so this can run in a browser as readily as
- * the CLI's `pptwise brand extract` wraps it for.
+ * A theme repainted around the brand color of a user's own `.thmx`/`.potx`/
+ * `.pptx` template. The template's OOXML theme part gives the brand color
+ * (its `accent1`), the second color the company paired with it (`accent2`),
+ * and its Latin fonts. A theme, bulletin unless the caller names another,
+ * is then repainted around them by the same rules `pptwise theme fork
+ * --brand` uses (`../brand/brand-regen.ts`). The template's `dk1`/`lt1`
+ * ground and its other accents are left behind: Office templates nearly all
+ * carry plain black on white there, which says nothing about the brand and
+ * would wipe out the theme's own paper.
+ *
+ * Everything here runs against zip bytes only (`jszip`, already a
+ * browser-safe dependency), so `src/index.ts`'s dependency closure stays
+ * free of Node-only deps (`AGENTS.md`'s layout rule). The CLI's `pptwise
+ * brand extract` reads the file and resolves a workspace theme by name, then
+ * calls {@link extractBrandTheme} like any other caller.
  *
  * Rewritten from `.issues/notes/brand-extraction-probe.py` (the 39/39
  * feasibility reference: every macOS Office `.thmx` extracted cleanly) —
  * read that file for the reference regex shapes, not embedded here as
  * Python. This is a TS reimplementation, not a port with a Python shim.
- *
- * ── Slot → token mapping (roadmap §2.0.1's table, 裁定 2) ──────────────
- *
- *   dk1/lt1 (by measured lightness) → text / bg — see below, not a fixed
- *                      dk1→text/lt1→bg assignment
- *   lt2              → surface (falls back to bg when absent)
- *   accent1 (or dk2) → primary/accent
- *   accent1-6        → chartPalette (OOXML's 6 accent slots map 1:1 onto
- *                      pptwise's chart palette — no reshaping needed)
- *   —                → muted, derived (see {@link deriveMuted})
- *
- * ── bg/text assignment: by measured lightness, not slot name ────────────
- *
- * OOXML's `dk1`/`lt1` are slot *names*, not a guarantee about which one is
- * actually darker. Empirically verified against all 39 real `.thmx` files
- * shipped with a local macOS Office install (`.issues/notes/brand-extraction-probe.py`'s
- * own corpus) before writing this: every single one — including
- * "Dark Gradient.thmx", the one visually dark-background theme in that
- * set — declares the conventional `dk1=#000000`/`lt1=#FFFFFF` unchanged;
- * six declare a near-black-but-not-pure `dk1` (e.g. `#131313`), never a
- * *light* `dk1`. A theme's actual dark/light background comes from the
- * slide master's own background fill (`<p:bg>`, often referencing `dk2` or a
- * gradient) — a part this extractor deliberately never reads (theme part
- * only, 裁定 1) — not from which literal color sits in `dk1` vs `lt1`. So
- * this extractor makes no claim about detecting "is this a dark theme" at
- * all; it only guards against the (real, if rare outside this local corpus)
- * case of a producer that swapped which raw color occupies which *named*
- * slot: {@link resolveBgText} assigns `text` to whichever of `dk1`/`lt1`
- * measures darker and `bg` to whichever measures lighter, regardless of
- * which slot name it came from — always a legible dark-ink-on-light-bg (or,
- * for a genuinely inverted producer, the reverse) pairing, never a
- * name-literal assignment that could land dark-on-dark. `isDark` (below)
- * measures "darker" with nothing but the already-exported `contrastRatio`
- * (`../../render/ink`) against pure black/white — no new luminance formula, per
- * this wave's "reuse existing ratio/mix utilities" discipline.
  */
 import JSZip from "jszip"
 import { PptwiseError } from "../../errors"
+import { hasExactWidthTable } from "../../lib/svg-text-layout"
+import { resolveFontFace, SAFE_FONTS } from "../../render/fonts"
 import { contrastRatio } from "../../render/ink"
 import { mixHex } from "../../components/color-mix"
-import type { Menu, ThemeFile } from "../schema"
-import type { StyleTokens } from "../tokens"
+import { isChromatic } from "../brand/brand-face"
+import { regenerateFromBrand, type BrandColors, type BrandPlacement } from "../brand/brand-regen"
+import { themeFileFromPreset } from "../presets"
+import { ThemeFileSchema, type ThemeFile } from "../schema"
 
-/** The complete v2 theme-file shape written by `pptwise brand extract`. */
+/** The complete v2 theme-file shape {@link extractBrandTheme} writes. */
 export type BrandThemeFile = ThemeFile
 
 export interface ExtractBrandThemeOptions {
@@ -69,27 +44,27 @@ export interface ExtractBrandThemeOptions {
   /** Human-readable label — defaults to the source theme part's own
    *  `<a:clrScheme name="…">`. */
   label?: string
+  /** The theme repainted around the brand: a built-in theme id, or a
+   *  complete v2 theme file. Default `"bulletin"`, the business theme that
+   *  carries a brand color best, as given and on its face. */
+  from?: string | ThemeFile
+  /** Set the template's Latin fonts ahead of the theme's own. Off by
+   *  default: the theme keeps its fonts, and the template's East Asian faces
+   *  are never used. */
+  brandFonts?: boolean
 }
 
-/** Materialized brief-style menu used by shallow brand extraction. */
-const EXTRACTED_THEME_MENU = {
-  cover: { face: "poster-center" },
-  chapter: { face: "masthead-chapter" },
-  content: {
-    points: { face: "two-column" },
-    list: { face: "bento-panel" },
-    comparison: { face: "two-column" },
-    process: { face: "rail-numbered" },
-    data: { face: "bento-panel" },
-    photo: { face: "asymmetric-triptych" },
-    statement: { face: "statement" },
-    quote: { face: "pull-quote" },
-    fact: { face: "stat-hero" },
-    evidence: { face: "one-evidence" },
-    hierarchy: { face: "two-column" },
-  },
-  ending: { face: "poster-ending" },
-} satisfies Menu
+/** What {@link extractBrandTheme} returns. */
+export interface BrandThemeResult {
+  /** The repainted theme, a complete v2 file under the new id and label. */
+  file: BrandThemeFile
+  /** Where the brand color and the second color went, and why. */
+  placement: BrandPlacement
+  /** What became of the template's fonts under `brandFonts`: a role the
+   *  template names no font for, or a font the slides cannot set as named.
+   *  Empty without `brandFonts`. */
+  fontNotes: string[]
+}
 
 /** Every OOXML color-scheme slot this parser reads. `hlink`/`folHlink` are
  *  parsed (mirroring probe.py) but never mapped onto a pptwise token — no
@@ -148,29 +123,6 @@ function parseFonts(xml: string): { major: string | undefined; minor: string | u
   return { major: m[2]?.trim() || undefined, minor: m[3]?.trim() || undefined }
 }
 
-/** `hex` reads as closer to black than to white — see this file's own header
- *  comment ("bg/text assignment: by measured lightness, not slot name"). No
- *  new luminance math: two `contrastRatio` (`../../render/ink`) calls against pure
- *  black/white, compared against each other, rather than a fresh relative-
- *  luminance computation of its own. */
-function isDark(hex: string): boolean {
-  return contrastRatio(hex, "#FFFFFF") > contrastRatio(hex, "#000000")
-}
-
-/** `text` = whichever of `dk1`/`lt1` measures darker, `bg` = whichever
- *  measures lighter — see this file's own header comment for why this is
- *  a measured-lightness assignment, not a `dk1`-always-means-text one. The
- *  conventional case (`dk1` dark, `lt1` light — every real-world sample this
- *  wave checked) and the by-name assignment agree; this only diverges for a
- *  producer that put an unconventional raw color in either named slot. */
-function resolveBgText(dk1: string, lt1: string): { bg: string; text: string } {
-  return isDark(dk1) === isDark(lt1)
-    ? { bg: lt1, text: dk1 } // ambiguous (both/neither read dark) — keep the conventional dk1→text/lt1→bg mapping
-    : isDark(dk1)
-      ? { bg: lt1, text: dk1 }
-      : { bg: dk1, text: lt1 }
-}
-
 /** How many discrete steps {@link deriveMuted} walks from the most-muted
  *  (blended fully toward `bg`) candidate back toward `text` itself — same
  *  20-step (5% increment) granularity `metaInk` (`../../render/ink.ts`) already
@@ -216,58 +168,6 @@ export function deriveMuted(text: string, bg: string, surface: string): string {
   )
 }
 
-/** Keywords (lower-cased, substring match) that mark a font name as
- *  belonging to the serif family — used only to pick which of two
- *  `SAFE_FONTS` fallback chains {@link buildFontStack} appends after the
- *  extracted face, mirroring brief's own `["Bower", "Georgia", "Source
- *  Han Serif SC", "serif"]` precedent (`../builtin/brief.ts`) for a serif brand
- *  font, or a sans equivalent otherwise. This is a display-quality heuristic,
- *  not a safety one: `resolveFontFace` (`../../render/fonts.ts`) already falls
- *  back to a Windows-safe CJK default (`Microsoft YaHei`) when nothing in
- *  the stack matches `SAFE_FONTS` at all, so a missed classification here
- *  degrades to "the fallback face doesn't visually match the brand font's
- *  register," never a broken/unmeasured export. */
-const SERIF_HINTS = [
-  "times",
-  "georgia",
-  "cambria",
-  "garamond",
-  "palatino",
-  "constantia",
-  "book antiqua",
-  "minion",
-  "serif",
-  "cochin",
-  "didot",
-  "baskerville",
-  "sitka",
-  "century",
-  "goudy",
-  "bodoni",
-  "caslon",
-  "perpetua",
-  "rockwell",
-  "playfair",
-]
-
-function isSerifName(name: string): boolean {
-  const n = name.toLowerCase()
-  return SERIF_HINTS.some((hint) => n.includes(hint))
-}
-
-/** Extracted face at the head of the stack (when present), followed by a
- *  Windows-safe fallback chain matching its apparent register — see
- *  {@link SERIF_HINTS}'s own doc comment. `undefined` (no `<a:latin
- *  typeface>` found at all) skips straight to the sans-serif fallback chain
- *  alone — the common Office default (Calibri/Calibri Light) is itself
- *  sans, so this is the safer bare default. */
-function buildFontStack(extracted: string | undefined): string[] {
-  if (extracted === undefined) return ["Calibri", "Microsoft YaHei", "sans-serif"]
-  return isSerifName(extracted)
-    ? [extracted, "Georgia", "Source Han Serif SC", "serif"]
-    : [extracted, "Calibri", "Microsoft YaHei", "sans-serif"]
-}
-
 /** Lower-cases, replaces every run of non-alphanumeric characters with a
  *  single hyphen, and trims leading/trailing hyphens — a plain, dependency-free
  *  slug (no new package for one string transform). Empty input (or input
@@ -285,46 +185,76 @@ export function slugify(input: string, fallback = "brand"): string {
   return slug || fallback
 }
 
-/**
- * The Latin faces a template's font scheme names for headings (major) and
- * body text (minor), read from the same theme part {@link extractBrandTheme}
- * reads. A face the template does not name is `undefined`. Its East Asian
- * faces are not read: a repainted theme never takes them.
- */
-export async function readTemplateFonts(bytes: Uint8Array | ArrayBuffer): Promise<{ major?: string; minor?: string }> {
-  const zip = await JSZip.loadAsync(bytes)
-  const part = await findThemePart(zip)
-  if (!part) return {}
-  const { major, minor } = parseFonts(part.xml)
-  return { ...(major ? { major } : {}), ...(minor ? { minor } : {}) }
+/** The brand color and the second color a template names: its `accent1`
+ *  (or `dk2`, or its first accent) and its `accent2`, when that is a color
+ *  of its own and not a grey. */
+function templateColors(slots: ClrSlots, path: string): BrandColors {
+  const accents = ACCENT_SLOTS.map((slot) => slots[slot]).filter((c): c is string => c !== undefined)
+  if (accents.length === 0) {
+    throw new PptwiseError(`theme part ${path} has no accent colors — cannot read a brand color`)
+  }
+  const brand = slots.accent1 ?? slots.dk2 ?? accents[0]!
+  const second = slots.accent2
+  return second !== undefined && second.toUpperCase() !== brand.toUpperCase() && isChromatic(second) ? { brand, second } : { brand }
 }
 
 /**
- * Extract a {@link BrandThemeFile} from raw OOXML package bytes (a
- * `.thmx`/`.potx`/`.pptx` file's own bytes — this function only ever reads
- * the theme part inside, nothing else in the package). Deterministic: the
- * same bytes always produce the same output (no randomness, no wall-clock
- * read) — required for this wave's fixture tests' double-run-equality
- * assertions.
+ * The theme's font stacks with the template's Latin faces put first, and
+ * what a reader needs to know about them. The theme's East Asian faces stay
+ * where they are in each stack, so Chinese text keeps the theme's face.
+ */
+function withTemplateFonts(
+  fonts: ThemeFile["style"]["fonts"],
+  template: { major: string | undefined; minor: string | undefined },
+): { fonts: ThemeFile["style"]["fonts"]; notes: string[] } {
+  const notes: string[] = []
+  const lead = (role: "heading" | "body", face: string | undefined, stack: string[]): string[] => {
+    if (face === undefined) {
+      notes.push(`fonts: the template names no ${role} font, so ${role} text keeps the theme's own`)
+      return stack
+    }
+    const next = [face, ...stack.filter((f) => f.toLowerCase() !== face.toLowerCase())]
+    const resolved = resolveFontFace(next, role)
+    if (!SAFE_FONTS.has(face.toLowerCase())) {
+      notes.push(
+        `warning: ${role} font "${face}" is not on the safe font list (the fonts a stock Windows machine has), so the slides set ${role} text in "${resolved}", the next safe face in the stack`,
+      )
+    } else if (!hasExactWidthTable(face)) {
+      notes.push(`warning: ${role} font "${face}" has no exact width table: text widths are estimated and long lines may overflow`)
+    }
+    return next
+  }
+  return {
+    fonts: { ...fonts, heading: lead("heading", template.major, fonts.heading), body: lead("body", template.minor ?? template.major, fonts.body) },
+    notes,
+  }
+}
+
+/** The theme to repaint, copied under the new id and label. */
+function donorTheme(from: string | ThemeFile, identity: { id: string; label: string }): ThemeFile {
+  if (typeof from === "string") return themeFileFromPreset(from, identity)
+  const copy = structuredClone(from)
+  return ThemeFileSchema.parse({ ...copy, id: identity.id, label: identity.label, style: { ...copy.style, id: identity.id } }) as ThemeFile
+}
+
+/**
+ * Repaint a theme around the brand color of a template, from the raw bytes
+ * of a `.thmx`/`.potx`/`.pptx` file (only its theme part is read). The
+ * theme keeps its ground, text, surface, menu, and fonts. Its colored
+ * tokens move to the brand by the rules `../brand/brand-regen.ts` sets out.
+ * Deterministic: the same bytes and options always give the same theme.
  *
- * Throws {@link PptwiseError} for two *structural* failures — data this
- * function has no reasonable default for:
- * - no theme part found in the package at all
- * - a theme part with no `dk1`/`lt1` (nothing to derive `bg`/`text` from) or
- *   no accent color at all (nothing to derive `primary`/`chartPalette` from)
+ * Rendering the theme to find which slot it shows most needs a platform
+ * (`installPlatform`), as any other render does.
  *
- * Everything else degrades gracefully rather than throwing — a missing
- * `lt2` falls back to `bg` (no distinct surface tone available), a missing
- * `accent1` falls back to `dk2` then to the first available chart color, a
- * missing font falls back to a Windows-safe generic stack — so a real-world
- * theme missing a slot or two (this wave's own fixture matrix covers
- * several) still produces a usable, if plainer, theme. An unreadable palette
- * is rejected while deriving `muted`.
+ * Throws {@link PptwiseError} when the package has no theme part, when the
+ * theme part names no accent color, and when the repainted theme would fail
+ * a contrast floor.
  */
 export async function extractBrandTheme(
   bytes: Uint8Array | ArrayBuffer,
   opts: ExtractBrandThemeOptions = {},
-): Promise<BrandThemeFile> {
+): Promise<BrandThemeResult> {
   const zip = await JSZip.loadAsync(bytes)
   const part = await findThemePart(zip)
   if (!part) {
@@ -333,38 +263,11 @@ export async function extractBrandTheme(
     )
   }
   const { schemeName, slots } = parseColors(part.xml)
-  if (!slots.dk1 || !slots.lt1) {
-    throw new PptwiseError(`theme part ${part.path} is missing dk1/lt1 colors — cannot derive bg/text tokens`)
-  }
-  const chartPalette = ACCENT_SLOTS.map((slot) => slots[slot]).filter((c): c is string => c !== undefined)
-  if (chartPalette.length === 0) {
-    throw new PptwiseError(`theme part ${part.path} has no accent colors — cannot derive a chart palette or primary color`)
-  }
-
-  const { bg, text } = resolveBgText(slots.dk1, slots.lt1)
-  const surface = slots.lt2 ?? bg
-  const primary = slots.accent1 ?? slots.dk2 ?? chartPalette[0]!
-  const accent = slots.accent2 ?? primary
-  const muted = deriveMuted(text, bg, surface)
-
-  const fonts = parseFonts(part.xml)
-  const heading = buildFontStack(fonts.major)
-  const body = buildFontStack(fonts.minor ?? fonts.major)
-
+  const colors = templateColors(slots, part.path)
   const label = opts.label ?? schemeName ?? "brand"
   const id = opts.id ?? slugify(opts.label ?? schemeName ?? "brand")
-
-  const style: StyleTokens = {
-    id,
-    colors: { bg, surface, primary, accent, text, muted, chartPalette },
-    fonts: { heading, body },
-    defaultBackgrounds: {
-      cover: { kind: "color", value: bg },
-      chapter: { kind: "color", value: bg },
-      content: { kind: "color", value: bg },
-      ending: { kind: "color", value: bg },
-    },
-  }
-
-  return { version: 2, id, label, style, brand: {}, menu: EXTRACTED_THEME_MENU }
+  const donor = donorTheme(opts.from ?? "bulletin", { id, label })
+  const template = opts.brandFonts === true ? withTemplateFonts(donor.style.fonts, parseFonts(part.xml)) : undefined
+  const { file, placement } = regenerateFromBrand(donor, colors, { id, label, fonts: template?.fonts })
+  return { file, placement, fontNotes: template?.notes ?? [] }
 }

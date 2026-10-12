@@ -27,7 +27,7 @@
  * peach and homeroom's board `#A66500` (0.57) brown, while `#C67800`
  * (0.64) is still orange.
  */
-import { hexToOklch } from "../themes/palette-rebase"
+import { hexToOklch } from "../palette-rebase"
 import { CHROMA_FLOOR } from "./brand-face"
 
 export type ColorName = "neutral" | "pink" | "red" | "brown" | "orange" | "peach" | "olive" | "yellow" | "cream" | "green" | "teal" | "blue" | "purple"

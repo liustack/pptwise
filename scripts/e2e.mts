@@ -273,25 +273,22 @@ for (const [i, slide] of footerDeck.slides.entries()) {
 if (numberedPages < 4) throw new Error(`e2e: footer leg: only ${numberedPages} content pages carry a page number`)
 console.log(`footer leg OK (${numberedPages} content pages carry the slide-number field, no other page does)`)
 
-const invalidBrandFixturePath = join(OUT, "brand-fixture-invalid.pptx")
+// A template whose palette is all grey used to be refused, by a check on
+// its dk1/lt1 ground that the repainted theme never keeps. It now extracts:
+// the theme keeps the donor's own ground and text, and only the brand color
+// comes from the template.
+const greyBrandFixturePath = join(OUT, "brand-fixture-grey.pptx")
 writeFileSync(
-  invalidBrandFixturePath,
-  Buffer.from(await buildThmxBytes({ schemeName: "Invalid E2E Brand", colors: PATHOLOGICAL_THMX_COLORS })),
+  greyBrandFixturePath,
+  Buffer.from(await buildThmxBytes({ schemeName: "Grey E2E Brand", colors: PATHOLOGICAL_THMX_COLORS })),
 )
-const invalidBrandThemePath = join(brandWorkspace, "themes", "invalid-e2e-brand.theme.json")
-const invalidBrandStderr = shExpectFail("node", [
-  "dist/cli.js",
-  "brand",
-  "extract",
-  invalidBrandFixturePath,
-  "-o",
-  invalidBrandThemePath,
-])
-if (!/pptwise theme new --from <preset>/.test(invalidBrandStderr)) {
-  throw new Error(`e2e: brand leg — invalid anchors did not print the manual recolor guidance: ${invalidBrandStderr}`)
+const greyBrandThemePath = join(brandWorkspace, "themes", "grey-e2e-brand.theme.json")
+const greyBrandStdout = sh("node", ["dist/cli.js", "brand", "extract", greyBrandFixturePath, "-o", greyBrandThemePath])
+if (!existsSync(greyBrandThemePath)) {
+  throw new Error(`e2e: brand leg — a grey template wrote no theme file: ${greyBrandStdout}`)
 }
-if (existsSync(invalidBrandThemePath)) {
-  throw new Error("e2e: brand leg — invalid anchors wrote a theme file before the contrast gate")
+if (!/stay bulletin's/.test(greyBrandStdout)) {
+  throw new Error(`e2e: brand leg — a grey template did not keep the donor's ground and text: ${greyBrandStdout}`)
 }
 const uncheckedStderr = shExpectFail("node", [
   "dist/cli.js",
@@ -299,7 +296,7 @@ const uncheckedStderr = shExpectFail("node", [
   "extract",
   brandFixturePath,
   "-o",
-  invalidBrandThemePath,
+  join(brandWorkspace, "themes", "unchecked-e2e-brand.theme.json"),
   "--unchecked",
 ])
 if (!/unknown option.*--unchecked/i.test(uncheckedStderr)) {

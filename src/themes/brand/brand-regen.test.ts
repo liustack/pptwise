@@ -1,16 +1,16 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { contrastRatio } from "../render/ink"
-import { CANONICAL_THEME_IDS } from "../themes"
-import { paletteBreaksTaboo } from "../themes/chart-taboo"
-import { compileThemeDefinition } from "../themes/definitions"
-import { hexToOklch, hueDistance, oklabDistance } from "../themes/palette-rebase"
-import type { ThemeFile } from "../themes/schema"
+import { contrastRatio } from "../../render/ink"
+import { CANONICAL_THEME_IDS } from ".."
+import { paletteBreaksTaboo } from "../chart-taboo"
+import { compileThemeDefinition } from "../definitions"
+import { hexToOklch, hueDistance, oklabDistance } from "../palette-rebase"
+import type { ThemeFile } from "../schema"
 import { isChromatic, measureBrandFace, renderBrandSample, type BrandFace } from "./brand-face"
 import { colorName } from "./color-name"
 import { isSingleColorPalette, parseBrandOption, regenerateFromBrand, type BrandColors, type BrandRegenResult } from "./brand-regen"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../presets"
 
 installNodePlatform()
 

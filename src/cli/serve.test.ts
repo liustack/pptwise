@@ -8,7 +8,7 @@ import { buildThmxBytes, BRAND_THMX_COLORS } from "../themes/extract/__fixtures_
 import { runBrandExtract } from "./commands"
 import { THEME_FILENAME } from "./deck-dir"
 import { createServeServer, SERVE_CLIENT_SCRIPT_ID, THEME_POLL_MS, themeWatchRoots, watchRoots } from "./serve"
-import { themeFileFromPreset } from "./theme-resolve"
+import { themeFileFromPreset } from "../themes/presets"
 import type { ServeBuildStatus, ServeHandle } from "./serve"
 
 describe("createServeServer — GET /", () => {

@@ -3,7 +3,7 @@
  * must not put a vivid orange and a vivid blue in the same chart. The bands
  * and their reasons are written up in `chart-palette-taboo.test.ts`, which
  * sweeps every built-in palette with these same predicates. A palette that
- * `--brand` rederives is held to it too (`cli/brand-regen.ts`).
+ * `--brand` rederives is held to it too (`brand/brand-regen.ts`).
  */
 import { hexToHsl } from "./palette-rebase"
 

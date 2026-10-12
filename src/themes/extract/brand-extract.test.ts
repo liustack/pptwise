@@ -1,130 +1,123 @@
 import { describe, expect, it } from "vitest"
+import { installNodePlatform } from "@/platform/node"
 import { contrastRatio } from "../../render/ink"
-import { buildThemeXml, buildThmxBytes, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "./__fixtures__/thmx"
+import { regenerateFromBrand } from "../brand/brand-regen"
+import { themeFileFromPreset } from "../presets"
+import { buildThemeXml, buildThmxBytes, BRAND_THMX_COLORS, DEFAULT_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "./__fixtures__/thmx"
 import { deriveMuted, extractBrandTheme, slugify } from "./brand-extract"
 
-describe("extractBrandTheme — light theme (the common case)", () => {
-  it("maps dk1/lt1/lt2/accent1-6 onto text/bg/surface/chartPalette", async () => {
-    const bytes = await buildThmxBytes({ schemeName: "Acme Corp" })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.text).toBe(`#${DEFAULT_THMX_COLORS.dk1}`)
-    expect(theme.style.colors.bg).toBe(`#${DEFAULT_THMX_COLORS.lt1}`)
-    expect(theme.style.colors.surface).toBe(`#${DEFAULT_THMX_COLORS.lt2}`)
-    expect(theme.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.accent1}`)
-    expect(theme.style.colors.accent).toBe(`#${DEFAULT_THMX_COLORS.accent2}`)
-    expect(theme.style.colors.chartPalette).toEqual([
-      `#${DEFAULT_THMX_COLORS.accent1}`,
-      `#${DEFAULT_THMX_COLORS.accent2}`,
-      `#${DEFAULT_THMX_COLORS.accent3}`,
-      `#${DEFAULT_THMX_COLORS.accent4}`,
-      `#${DEFAULT_THMX_COLORS.accent5}`,
-      `#${DEFAULT_THMX_COLORS.accent6}`,
-    ])
-    expect(theme.label).toBe("Acme Corp")
-    expect(theme.id).toBe("acme-corp")
-    expect(theme.brand).toEqual({})
-    // Self-contained v2: no base, no inherited structure (see the menu
-    // assertion below for the materialized structure itself).
-    expect(theme.version).toBe(2)
-    expect(theme).not.toHaveProperty("base")
-    expect(theme).not.toHaveProperty("faces")
+installNodePlatform()
+
+const ACCENT1 = `#${BRAND_THMX_COLORS.accent1}`
+const ACCENT2 = `#${BRAND_THMX_COLORS.accent2}`
+
+describe("extractBrandTheme repaints a theme around the template's brand color", () => {
+  it("repaints bulletin by default, by the same rules as theme fork --brand", async () => {
+    const bytes = await buildThmxBytes({ schemeName: "Acme Corp", colors: BRAND_THMX_COLORS })
+    const { file, placement, fontNotes } = await extractBrandTheme(bytes)
+    const bulletin = themeFileFromPreset("bulletin", { id: "acme-corp", label: "Acme Corp" })
+    const forked = regenerateFromBrand(bulletin, { brand: ACCENT1, second: ACCENT2 }, { id: "acme-corp", label: "Acme Corp" })
+    expect(file).toEqual(forked.file)
+    expect(placement).toEqual(forked.placement)
+    expect(fontNotes).toEqual([])
+    expect(file.id).toBe("acme-corp")
+    expect(file.label).toBe("Acme Corp")
+    expect(file.menu).toEqual(bulletin.menu)
+    expect(placement.brand.color).toBe(ACCENT1)
+    expect(placement.second?.color).toBe(ACCENT2)
+    // The theme keeps its own paper: the template's dk1/lt1/lt2 never reach it.
+    expect(file.style.colors.bg).toBe(bulletin.style.colors.bg)
+    expect(file.style.colors.text).toBe(bulletin.style.colors.text)
+    expect(file.style.colors.surface).toBe(bulletin.style.colors.surface)
   })
 
-  it("leads the font stack with the source theme's major/minor faces, sans fallback for a non-serif face", async () => {
-    const bytes = await buildThmxBytes({ majorFont: "Calibri Light", minorFont: "Calibri" })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.fonts.heading[0]).toBe("Calibri Light")
-    expect(theme.style.fonts.body[0]).toBe("Calibri")
-    // A SAFE_FONTS member somewhere in the stack (../../render/fonts.ts) so
-    // resolveFontFace never has to fall all the way back to ROLE_DEFAULT.
-    expect(theme.style.fonts.heading).toContain("Calibri")
+  it("repaints the built-in theme named by from", async () => {
+    const bytes = await buildThmxBytes({ schemeName: "Acme Corp", colors: BRAND_THMX_COLORS })
+    const { file } = await extractBrandTheme(bytes, { id: "acme", label: "Acme", from: "swiss" })
+    const swiss = themeFileFromPreset("swiss", { id: "acme", label: "Acme" })
+    expect(file).toEqual(regenerateFromBrand(swiss, { brand: ACCENT1, second: ACCENT2 }, { id: "acme", label: "Acme" }).file)
+    expect(file.menu).toEqual(swiss.menu)
   })
 
-  it("uses a serif SAFE_FONTS fallback chain for a serif-named source font", async () => {
-    const bytes = await buildThmxBytes({ majorFont: "Sitka Display", minorFont: "Sitka Text" })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.fonts.heading).toEqual(["Sitka Display", "Georgia", "Source Han Serif SC", "serif"])
+  it("repaints a theme file passed by value, under the new id and label", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS })
+    const own = themeFileFromPreset("thesis", { id: "house-style", label: "House style" })
+    const { file } = await extractBrandTheme(bytes, { id: "acme", label: "Acme", from: own })
+    expect(file.id).toBe("acme")
+    expect(file.style.id).toBe("acme")
+    expect(file.label).toBe("Acme")
+    expect(file.menu).toEqual(own.menu)
+    expect(own.id).toBe("house-style")
   })
 
-  it("supports the real .thmx theme part path (theme/theme/theme1.xml) as well as .pptx/.potx's", async () => {
-    const bytes = await buildThmxBytes({ themePartPath: "theme/theme/theme1.xml" })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.text).toBe(`#${DEFAULT_THMX_COLORS.dk1}`)
+  it("leaves the second color out when the template's accent2 is a grey", async () => {
+    const bytes = await buildThmxBytes({ colors: { ...BRAND_THMX_COLORS, accent2: "A5A5A5" } })
+    const { placement } = await extractBrandTheme(bytes, { id: "acme" })
+    expect(placement.brand.color).toBe(ACCENT1)
+    expect(placement.second).toBeUndefined()
   })
 
-  it("picks the real theme part over a themeVariants sibling with different colors", async () => {
+  it("takes dk2 as the brand color when accent1 is absent", async () => {
+    const { accent1: _accent1, ...rest } = DEFAULT_THMX_COLORS
+    const bytes = await buildThmxBytes({ colors: rest })
+    const { placement } = await extractBrandTheme(bytes, { id: "acme" })
+    expect(placement.brand.color).toBe(`#${DEFAULT_THMX_COLORS.dk2}`)
+  })
+
+  it("reads the real .thmx theme part path and ignores a themeVariants sibling", async () => {
     const bytes = await buildThmxBytes({
+      colors: BRAND_THMX_COLORS,
       themePartPath: "theme/theme/theme1.xml",
       extraEntries: {
         "theme/themeVariants/variant1/theme/theme1.xml": buildThemeXml({
-          colors: { ...DEFAULT_THMX_COLORS, dk1: "112233" },
+          colors: { ...BRAND_THMX_COLORS, accent1: "C00000" },
         }),
       },
     })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.text).toBe(`#${DEFAULT_THMX_COLORS.dk1}`)
+    const { placement } = await extractBrandTheme(bytes, { id: "acme" })
+    expect(placement.brand.color).toBe(ACCENT1)
   })
 
-  it("recognizes the <a:sysClr lastClr> form (real Office themes' dk1/lt1 shape)", async () => {
-    const bytes = await buildThmxBytes({ useSysClrForDkLt: true })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.text).toBe(`#${DEFAULT_THMX_COLORS.dk1}`)
-    expect(theme.style.colors.bg).toBe(`#${DEFAULT_THMX_COLORS.lt1}`)
-  })
-
-  it("is deterministic: the same bytes always extract to the same theme JSON", async () => {
-    const bytes = await buildThmxBytes({ schemeName: "Acme Corp", majorFont: "Sitka Display" })
+  it("is deterministic: the same bytes always give the same theme JSON", async () => {
+    const bytes = await buildThmxBytes({ schemeName: "Acme Corp", colors: BRAND_THMX_COLORS })
     const a = await extractBrandTheme(bytes)
     const b = await extractBrandTheme(bytes)
     expect(JSON.stringify(a)).toBe(JSON.stringify(b))
   })
-
-  it("materializes a self-contained v2 menu", async () => {
-    const bytes = await buildThmxBytes({ schemeName: "Acme Corp" })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.version).toBe(2)
-    expect(theme.menu.content.points?.face).toBe("two-column")
-    expect(theme).not.toHaveProperty("base")
-  })
 })
 
-describe("extractBrandTheme — swapped dk1/lt1 (measured-lightness assignment)", () => {
-  it("assigns text/bg by which raw color actually measures darker, not by slot name", async () => {
-    const bytes = await buildThmxBytes({
-      colors: { ...DEFAULT_THMX_COLORS, dk1: "F5F5F5", lt1: "121212" },
-    })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.text).toBe("#121212")
-    expect(theme.style.colors.bg).toBe("#F5F5F5")
-  })
-})
-
-describe("extractBrandTheme — missing slots degrade gracefully", () => {
-  it("falls back surface to bg when lt2 is absent", async () => {
-    const { lt2: _lt2, ...rest } = DEFAULT_THMX_COLORS
-    const bytes = await buildThmxBytes({ colors: rest })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.surface).toBe(theme.style.colors.bg)
+describe("extractBrandTheme — fonts", () => {
+  it("keeps the theme's own fonts unless brandFonts is on", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS, majorFont: "Georgia", minorFont: "Verdana" })
+    const { file } = await extractBrandTheme(bytes, { id: "acme" })
+    expect(file.style.fonts).toEqual(themeFileFromPreset("bulletin", { id: "acme" }).style.fonts)
   })
 
-  it("falls back primary to dk2 when accent1 is absent", async () => {
-    const { accent1: _accent1, ...rest } = DEFAULT_THMX_COLORS
-    const bytes = await buildThmxBytes({ colors: rest })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.primary).toBe(`#${DEFAULT_THMX_COLORS.dk2}`)
+  it("puts the template's Latin fonts first under brandFonts and keeps the theme's East Asian faces", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS, majorFont: "Georgia", minorFont: "Times New Roman" })
+    const { file, fontNotes } = await extractBrandTheme(bytes, { id: "acme", brandFonts: true })
+    const own = themeFileFromPreset("bulletin", { id: "acme" }).style.fonts
+    expect(file.style.fonts.heading[0]).toBe("Georgia")
+    expect(file.style.fonts.body[0]).toBe("Times New Roman")
+    expect(file.style.fonts.heading.slice(1)).toEqual(own.heading.filter((f) => f !== "Georgia"))
+    expect(fontNotes).toEqual([])
   })
 
-  it("falls back to a generic safe font stack when no <a:latin typeface> is declared", async () => {
-    const bytes = await buildThmxBytes({ majorFont: undefined, minorFont: undefined })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.fonts.heading).toEqual(["Calibri", "Microsoft YaHei", "sans-serif"])
+  it("says when a template font is not on the safe list", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS, majorFont: "Acme Grotesk", minorFont: "Georgia" })
+    const { fontNotes } = await extractBrandTheme(bytes, { id: "acme", brandFonts: true })
+    expect(fontNotes).toHaveLength(1)
+    expect(fontNotes[0]).toMatch(/^warning: heading font "Acme Grotesk" is not on the safe font list/)
   })
 
-  it("shrinks chartPalette to only the accent slots actually present", async () => {
-    const { accent4: _a4, accent5: _a5, accent6: _a6, ...rest } = DEFAULT_THMX_COLORS
-    const bytes = await buildThmxBytes({ colors: rest })
-    const theme = await extractBrandTheme(bytes)
-    expect(theme.style.colors.chartPalette).toHaveLength(3)
+  it("says when the template names no font for a role", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS, majorFont: undefined, minorFont: undefined })
+    const { file, fontNotes } = await extractBrandTheme(bytes, { id: "acme", brandFonts: true })
+    expect(file.style.fonts).toEqual(themeFileFromPreset("bulletin", { id: "acme" }).style.fonts)
+    expect(fontNotes).toEqual([
+      "fonts: the template names no heading font, so heading text keeps the theme's own",
+      "fonts: the template names no body font, so body text keeps the theme's own",
+    ])
   })
 })
 
@@ -137,15 +130,14 @@ describe("extractBrandTheme — structural failures", () => {
     await expect(extractBrandTheme(bytes)).rejects.toThrow(/no theme part found/)
   })
 
-  it("throws when dk1/lt1 are both missing", async () => {
-    const { dk1: _dk1, lt1: _lt1, ...rest } = DEFAULT_THMX_COLORS
-    const bytes = await buildThmxBytes({ colors: rest })
-    await expect(extractBrandTheme(bytes)).rejects.toThrow(/missing dk1\/lt1/)
-  })
-
   it("throws when there are no accent colors at all", async () => {
     const bytes = await buildThmxBytes({ colors: { dk1: DEFAULT_THMX_COLORS.dk1, lt1: DEFAULT_THMX_COLORS.lt1 } })
     await expect(extractBrandTheme(bytes)).rejects.toThrow(/no accent colors/)
+  })
+
+  it("throws when the theme does not exist", async () => {
+    const bytes = await buildThmxBytes({ colors: BRAND_THMX_COLORS })
+    await expect(extractBrandTheme(bytes, { id: "acme", from: "no-such-theme" })).rejects.toThrow(/no-such-theme/)
   })
 })
 

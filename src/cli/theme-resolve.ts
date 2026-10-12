@@ -4,7 +4,6 @@ import { PptwiseError } from "../errors"
 import { parseBrandThemeFile } from "../themes/brand-theme-file"
 import { compileThemeDefinition, THEME_DEFINITIONS, type ThemeDefinition } from "../themes/definitions"
 import { CANONICAL_THEME_IDS, type CanonicalThemeId } from "../themes"
-import { copyThemePreset } from "../themes/presets"
 import { assertNotRetiredThemeId, foldedThemeTarget } from "../themes/retired-ids"
 import {
   ThemeFileSchema,
@@ -88,54 +87,6 @@ export async function readThemeFile(path: string): Promise<ThemeFile> {
 
 function isCanonicalThemeId(name: string): name is CanonicalThemeId {
   return (CANONICAL_THEME_IDS as readonly string[]).includes(name)
-}
-
-function publicStyle(style: ThemeDefinition["style"], id: string): ThemeFile["style"] {
-  const colors = { ...style.colors }
-  const fonts: ThemeFile["style"]["fonts"] = {
-    heading: [...style.fonts.heading],
-    body: [...style.fonts.body],
-  }
-  if (style.fonts.mono !== undefined) fonts.mono = [...style.fonts.mono]
-  const out: ThemeFile["style"] = {
-    id,
-    colors,
-    fonts,
-    defaultBackgrounds: structuredClone(style.defaultBackgrounds),
-  }
-  if (style.allowCustomBackground !== undefined) out.allowCustomBackground = style.allowCustomBackground
-  if (style.shape !== undefined) {
-    const shape: NonNullable<ThemeFile["style"]["shape"]> = {}
-    if (style.shape.radius !== undefined) shape.radius = style.shape.radius
-    if (style.shape.gapScale !== undefined) shape.gapScale = style.shape.gapScale
-    if (style.shape.typeScale !== undefined) shape.typeScale = style.shape.typeScale
-    if (Object.keys(shape).length > 0) out.shape = shape
-  }
-  return out
-}
-
-/** Copy a factory preset into a public v2 ThemeFile. Engine-only
- *  `style.shape.cover` is stripped. Motif is materialized per menu entry.
- *  `emphasis` is copied like the rest of the theme's identity — a `theme new
- *  --from lecture` that dropped it chalked no line under a `**marked**` run. */
-export function themeFileFromPreset(
-  presetId: string,
-  identity: { id: string; label?: string },
-): ThemeFile {
-  const copy = copyThemePreset(presetId, identity.id)
-  const file = {
-    version: 2 as const,
-    id: identity.id,
-    label: identity.label ?? copy.label,
-    style: publicStyle(copy.style, identity.id),
-    brand: copy.brand,
-    occasions: copy.occasions !== undefined ? [...copy.occasions] : undefined,
-    identity: copy.identity,
-    emphasis: copy.emphasis,
-    story: copy.story,
-    menu: copy.menu,
-  }
-  return ThemeFileSchema.parse(file) as ThemeFile
 }
 
 async function tryParseThemeFile(path: string): Promise<ThemeFile | undefined> {

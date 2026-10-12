@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { themeFileFromPreset } from "../../src/cli/theme-resolve"
+import { themeFileFromPreset } from "../../src/themes/presets"
 import { describeError, runOneAgentic, type ChatCompletionResponse, type CliThemeLookupFn, type CompleteFn } from "./run-agentic.mts"
 
 // ── A placement-stage failure is retried on resume without a model call
