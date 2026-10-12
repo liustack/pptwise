@@ -33,7 +33,7 @@ Speaker `notes` export as native PowerPoint notes and never paint on the slide.
 
 ## One deck, one final file
 
-`build` writes the `.pptx` at `.pptwise/<deck>/<deck>.pptx`, the same path `render` uses, and only when every check passes. A build that does not pass removes the file an earlier build left there, so the file on disk always matches the sources. Deliver the `pptx` path from the report as it is: do not render it again, copy it, rename it, or export a second one. On DSH, hand it over with `present`. There is no render-time theme switch. The project spec is the binding.
+`build` writes the `.pptx` at `.pptwise/<deck>/<filename>.pptx`, named after the spec's `filename` (the deck directory's name when the spec sets none), the same path `render` uses, and only when every check passes. A build that does not pass removes the file an earlier build left there, so the file on disk always matches the sources. Deliver the `pptx` path from the report as it is: do not render it again, copy it, rename it, or export a second one. On DSH, hand it over with `present`. There is no render-time theme switch. The project spec is the binding.
 
 `render` alone is for the two compromises below:
 

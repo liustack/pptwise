@@ -13,6 +13,7 @@ import {
   WORKSPACE_IGNORE_ENTRY,
   deckSlug,
   ensureGitIgnored,
+  finalPptxName,
   inspectWorkspace,
   isSelfIgnored,
   prepareWorkspaceDir,
@@ -169,6 +170,28 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
       isDir: false,
     })
     expect(loc.root).toBe(join(cwd, ".pptwise"))
+  })
+})
+
+describe("finalPptxName", () => {
+  it("uses the deck's filename, with or without the extension, and keeps any script", () => {
+    expect(finalPptxName("q3-review", "deck")).toBe("q3-review.pptx")
+    expect(finalPptxName("q3-review.PPTX", "deck")).toBe("q3-review.pptx")
+    expect(finalPptxName("第三季度 复盘", "deck")).toBe("第三季度 复盘.pptx")
+  })
+
+  it("falls back when the deck sets no usable filename", () => {
+    expect(finalPptxName(undefined, "launch-deck")).toBe("launch-deck.pptx")
+    expect(finalPptxName("  ", "launch-deck")).toBe("launch-deck.pptx")
+    expect(finalPptxName(".pptx", "launch-deck")).toBe("launch-deck.pptx")
+    expect(finalPptxName(42, "launch-deck")).toBe("launch-deck.pptx")
+  })
+
+  it("keeps the name one file inside the folder", () => {
+    expect(finalPptxName("../../etc/passwd", "deck")).toBe("etc-passwd.pptx")
+    expect(finalPptxName("a/b\\c:d", "deck")).toBe("a-b-c-d.pptx")
+    expect(finalPptxName("..", "deck")).toBe("deck.pptx")
+    expect(finalPptxName("tab\there", "deck")).toBe("tab-here.pptx")
   })
 })
 

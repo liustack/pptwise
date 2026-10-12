@@ -78,8 +78,10 @@ import {
 } from "./theme-wall"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
+  finalPptxName,
   prepareWorkspaceDir,
   pruneRenderedSvgs,
+  removeFinalPptx,
   resolveWorkspaceLocation,
   scanWorkspaceAssets,
   type GitRunner,
@@ -337,6 +339,15 @@ async function readDeckTarget(
   }
 }
 
+/** The `filename` the deck itself sets: the spec's for a deck project, the
+ *  raw file's own for an IR file. Never the IR schema's default, which
+ *  assembly has already filled in for a deck project. */
+function deckFilename(loaded: Pick<LoadedDeckTarget, "isDir" | "raw" | "spec">): unknown {
+  if (loaded.isDir) return loaded.spec?.filename
+  const raw = loaded.raw
+  return typeof raw === "object" && raw !== null ? (raw as { filename?: unknown }).filename : undefined
+}
+
 /** `<dir>/<asset id>`, shown from `cwd` when it lies under it. */
 function assetPathIn(dir: string, cwd: string): (assetId: string) => string {
   return (assetId) => {
@@ -417,7 +428,8 @@ export interface RenderOptions {
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit] = await readConfigs(cwd)
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit)
+  const loaded = await loadDeckTarget(irPath, cwd, projectHit)
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = loaded
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath, allowDroppedContent: opts.allowDroppedContent })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
@@ -440,7 +452,7 @@ export async function runRender(irPath: string, opts: RenderOptions): Promise<st
       isDir,
     })
     extraNotes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
-    output = join(location.dir, `${location.name}.pptx`)
+    output = join(location.dir, finalPptxName(deckFilename(loaded), location.name))
   }
   await writeFile(output, bytes)
   const ok = `wrote ${output} (${v.ir!.slides.length} slides, ${bytes.length} bytes)`
@@ -2172,7 +2184,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   const location = await locateDeckTarget(target, cwd)
   const { isDir, resolvedTarget } = location
   if (!(await pathExists(resolvedTarget))) {
-    throw new PptwiseError(`nothing to build at ${resolvedTarget}: pass a deck project directory, an IR JSON file, or a deck name`)
+    throw new PptwiseError(`nothing to build at ${resolvedTarget}: pass a deck project directory or an IR JSON file`)
   }
   const workspace = resolveWorkspaceLocation({
     cwd,
@@ -2180,7 +2192,6 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
     target: resolvedTarget,
     isDir,
   })
-  const pptxPath = join(workspace.dir, `${workspace.name}.pptx`)
   const report: BuildReport = {
     status: "needs_revision",
     target: resolvedTarget,
@@ -2195,7 +2206,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   }
   const needsRevision = async (errors: BuildIssue[]): Promise<BuildReport> => {
     // The .pptx an earlier build wrote describes sources that no longer pass.
-    await rm(pptxPath, { force: true })
+    await removeFinalPptx(workspace.dir)
     return { ...report, status: "needs_revision", errors }
   }
 
@@ -2249,6 +2260,9 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
     if (!(e instanceof PptwiseError)) throw e
     return needsRevision([{ stage: "render", message: e.message }])
   }
+  // One final .pptx per deck: a name changed in `filename` leaves no old export beside the new one.
+  await removeFinalPptx(workspace.dir)
+  const pptxPath = join(workspace.dir, finalPptxName(deckFilename(loaded), workspace.name))
   await writeFile(pptxPath, bytes)
   return { ...report, status: "ok", pptx: pptxPath }
 }

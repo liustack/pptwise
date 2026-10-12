@@ -1918,14 +1918,22 @@ describe("workspace artifacts (default -o)", () => {
     return mkdtemp(join(tmpdir(), "pptwise-ws-cmd-"))
   }
 
-  it("render without -o writes <cwd>/.pptwise/<slug>/<slug>.pptx and prints the absolute path", async () => {
+  it("render without -o writes <cwd>/.pptwise/<slug>/<filename>.pptx and prints the absolute path", async () => {
     const cwd = await freshCwd()
     await writeFile(join(cwd, "q3-review.json"), JSON.stringify(VALID_IR))
-    const expected = join(cwd, ".pptwise", "q3-review", "q3-review.pptx")
+    const expected = join(cwd, ".pptwise", "q3-review", "cli-test.pptx")
     const msg = await runRender(join(cwd, "q3-review.json"), { cwd, gitIgnore: false })
     expect(msg).toContain(expected)
     const bytes = await readFile(expected)
     expect(bytes.subarray(0, 2).toString("latin1")).toBe("PK")
+  })
+
+  it("an IR file without a filename names its .pptx after the file", async () => {
+    const cwd = await freshCwd()
+    const { filename: _unused, ...unnamed } = VALID_IR
+    await writeFile(join(cwd, "q3-review.json"), JSON.stringify(unnamed))
+    await runRender(join(cwd, "q3-review.json"), { cwd, gitIgnore: false })
+    await expect(stat(join(cwd, ".pptwise", "q3-review", "q3-review.pptx"))).resolves.toBeDefined()
   })
 
   it("preview without -o writes the per-slide SVGs under <cwd>/.pptwise/<slug>/", async () => {
@@ -1950,7 +1958,7 @@ describe("workspace artifacts (default -o)", () => {
     await writeFile(join(nested, "hello.json"), JSON.stringify(VALID_IR))
     await runRender(join(nested, "hello.json"), { cwd: nested, gitIgnore: false })
     // The workspace is named for the deck's place in the project, the pptx for the deck.
-    await expect(stat(join(root, ".pptwise", "nested-hello", "hello.pptx"))).resolves.toBeDefined()
+    await expect(stat(join(root, ".pptwise", "nested-hello", "cli-test.pptx"))).resolves.toBeDefined()
     await expect(stat(join(nested, ".pptwise"))).rejects.toThrow()
   })
 
@@ -2002,11 +2010,21 @@ describe("workspace artifacts (default -o)", () => {
     await expect(stat(join(cwd, "relative.pptx"))).resolves.toBeDefined()
   })
 
-  it("a deck project directory uses the directory name as the slug", async () => {
+  it("a deck project directory uses the directory name as the slug and the spec's filename for the .pptx", async () => {
     const cwd = await freshCwd()
     const deckDir = join(cwd, "launch-deck")
     await mkdir(join(deckDir, "pages"), { recursive: true })
-    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan({ filename: "第三季度复盘.pptx" })))
+    await runRender(deckDir, { cwd, gitIgnore: false, draft: true })
+    await expect(stat(join(cwd, ".pptwise", "launch-deck", "第三季度复盘.pptx"))).resolves.toBeDefined()
+  })
+
+  it("a deck whose spec sets no filename names its .pptx after the deck directory", async () => {
+    const cwd = await freshCwd()
+    const deckDir = join(cwd, "launch-deck")
+    await mkdir(join(deckDir, "pages"), { recursive: true })
+    const { filename: _unused, ...plan } = makeDeckPlan()
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(plan))
     await runRender(deckDir, { cwd, gitIgnore: false, draft: true })
     await expect(stat(join(cwd, ".pptwise", "launch-deck", "launch-deck.pptx"))).resolves.toBeDefined()
   })

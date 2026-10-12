@@ -153,6 +153,21 @@ describe("pptwise build", () => {
     ])
   })
 
+  it("names the .pptx after the spec's filename and keeps one when that name changes", async () => {
+    const { cwd, deck } = await workspace((spec) => {
+      spec.filename = "周会改版"
+    })
+    const out = join(cwd, ".pptwise", "weekly")
+    const first = await build(cwd)
+    expect(first.report.pptx).toBe(join(out, "周会改版.pptx"))
+    const spec = JSON.parse(await readFile(join(deck, "deck.spec.json"), "utf8")) as typeof SPEC
+    spec.filename = "weekly-v2.pptx"
+    await writeFile(join(deck, "deck.spec.json"), JSON.stringify(spec))
+    const second = await build(cwd)
+    expect(second.report.pptx).toBe(join(out, "weekly-v2.pptx"))
+    expect(await pptxFiles(cwd)).toEqual([join(out, "weekly-v2.pptx")])
+  })
+
   it("draws the deck but refuses the .pptx while a page is unwritten, naming the file to write", async () => {
     const { cwd } = await workspace((_spec, pages) => {
       delete pages.how

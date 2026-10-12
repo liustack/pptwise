@@ -1077,7 +1077,8 @@ const ws = mkdtempSync(join(tmpdir(), "pptwise-e2e-ws-"))
 copyFileSync("examples/basic.json", join(ws, "hello.json"))
 const cli = resolve("dist/cli.js")
 const wsRender = execFileSync("node", [cli, "render", "hello.json"], { cwd: ws, encoding: "utf8" })
-const wsPptx = join(ws, ".pptwise", "hello", "hello.pptx")
+// The folder is named for the file, the .pptx for the deck's own `filename`.
+const wsPptx = join(ws, ".pptwise", "hello", "pptwise-basic-demo.pptx")
 if (!existsSync(wsPptx)) {
   throw new Error(`e2e: workspace default-path leg — expected ${wsPptx} after render without -o`)
 }
@@ -1093,8 +1094,8 @@ const expectedWsFiles = [
   "003-content.svg",
   "004-content.svg",
   "005-ending.svg",
-  "hello.pptx",
   "manifest.json",
+  "pptwise-basic-demo.pptx",
   "preview.html",
 ]
 if (wsFiles.join(",") !== expectedWsFiles.join(",")) {
@@ -1331,7 +1332,7 @@ console.log("--- theme menu, theme wall and build leg ---")
       return { status: run.status, report: JSON.parse(run.stdout) }
     }
     const passed = build()
-    const pptx = join(buildWork, ".pptwise", "deck", "deck.pptx")
+    const pptx = join(buildWork, ".pptwise", "deck", "pptwise-e2e-deck-dir.pptx")
     if (passed.status !== 0 || passed.report.status !== "ok" || passed.report.pptx !== pptx) {
       throw new Error(`e2e: build leg — expected a passing build writing ${pptx}, got exit ${passed.status}: ${JSON.stringify(passed.report)}`)
     }

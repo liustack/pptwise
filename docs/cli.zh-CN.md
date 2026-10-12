@@ -80,7 +80,7 @@ pptwise build <target> [--json] [--no-git-ignore]
 
 `build` 组装 deck 工程（或读取 IR 文件），校验，画出每一页，检查画出来的结果，再渲染 `.pptx`，全部在一个进程里、基于对源文件的同一次读取完成。deck 通过全部检查时以 0 退出，需要修改时以 1 退出。
 
-输出位置就是 `render` 和 `preview` 的默认位置：页面、`preview.html` 和 `manifest.json` 写到 `.pptwise/<place>/`，deck 唯一的 `.pptx` 写到 `.pptwise/<place>/<deck>.pptx`，和 `render` 写的是同一个路径。没有 `-o`。只有全部检查通过才写 `.pptx`，没通过的 build 会删掉上一次 build 留在这个路径的文件，所以那里的文件永远和最近一次 build 读到的源文件一致。只要 validate 通过就会画出页面，有 audit 问题的 deck 也照样能看。
+输出位置就是 `render` 和 `preview` 的默认位置：页面、`preview.html` 和 `manifest.json` 写到 `.pptwise/<place>/`，deck 唯一的 `.pptx` 写到 `.pptwise/<place>/<filename>.pptx`，和 `render` 写的是同一个路径。没有 `-o`。只有全部检查通过才写 `.pptx`，没通过的 build 会删掉之前 build 留在这个目录里的 `.pptx`（改了 `filename` 也不会留下旧名字的文件），所以那里的文件永远和最近一次 build 读到的源文件一致。只要 validate 通过就会画出页面，有 audit 问题的 deck 也照样能看。
 
 `--json` 打印结论。`status` 是 `ok` 或 `needs_revision`。`errors` 的每一条写明是哪项检查报的（`stage`：`assemble`、`validate`、`audit` 或 `render`），落在哪里（`page`、`pageId`，deck 工程还有要改的 `file`，即 `pages/<id>.json` 或 `deck.spec.json`，以及其中的 `field`），以及检查自己的 `message`，检查知道怎么改时会写在里面。audit 的条目另带 `code` 和 `detail`。没写的页面算一条错误，会写明要写哪个页面文件，在所有页面写完之前不跑 audit。`warnings` 是 validate 的警告，从不阻止写出 `.pptx`。
 
@@ -126,7 +126,7 @@ pptwise render <target> \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<deck>.pptx`。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<filename>.pptx`。`<filename>` 是 deck 自己的 `filename`（spec 的，或 IR 文件的），带不带 `.pptx` 都行，deck 没写时用 deck 目录名或 IR 文件名。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 

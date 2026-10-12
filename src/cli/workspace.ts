@@ -87,7 +87,8 @@ export interface WorkspaceLocation {
   dir: string
   /** The deck's place in the project, slugified: the workspace's own name ({@link deckSlug}). */
   slug: string
-  /** The deck's own directory or file name, slugified: what its pptx is called. */
+  /** The deck's own directory or file name, slugified: what its pptx is
+   *  called when the deck sets no `filename` ({@link finalPptxName}). */
   name: string
 }
 
@@ -155,6 +156,41 @@ export function resolveWorkspaceLocation(opts: {
   const { anchor, root } = resolveWorkspaceRoot(opts)
   const slug = deckSlug(opts.target, opts.isDir, anchor)
   return { anchor, root, dir: join(root, slug), slug, name: deckSlug(opts.target, opts.isDir) }
+}
+
+const UNSAFE_NAME_CHARS = '<>:"/\\|?*'
+
+/**
+ * The file name of a deck's final .pptx in its workspace folder: the deck's
+ * own `filename` (the spec's, or an IR file's) when it sets one, else
+ * `fallback` ({@link WorkspaceLocation.name}). Authors write `filename` with
+ * or without the extension, so a trailing `.pptx` comes off before this adds
+ * it. Characters no file system takes in a name, and path separators, turn
+ * into `-`, so the name stays one file inside the folder. Letters of any
+ * script are kept: this is the name a person finds the deck by.
+ */
+export function finalPptxName(filename: unknown, fallback: string): string {
+  const raw = typeof filename === "string" ? filename.trim().replace(/\.pptx$/iu, "") : ""
+  const safe = Array.from(raw, (ch) => (ch.charCodeAt(0) < 0x20 || UNSAFE_NAME_CHARS.includes(ch) ? "-" : ch))
+    .join("")
+    .replace(/-{2,}/gu, "-")
+    .replace(/^[.\s-]+|[.\s]+$/gu, "")
+  const name = safe === "" ? fallback : safe
+  assertSafeFileSegment(name, "deck filename")
+  return `${name}.pptx`
+}
+
+/** A deck's workspace folder holds one final .pptx. Removes every `.pptx`
+ *  in `dir` so a build that does not pass, or a deck whose `filename`
+ *  changed, leaves no stale export behind. A missing folder is nothing to do. */
+export async function removeFinalPptx(dir: string): Promise<void> {
+  let entries: string[]
+  try {
+    entries = await readdir(dir)
+  } catch {
+    return
+  }
+  await Promise.all(entries.filter((name) => /\.pptx$/iu.test(name)).map((name) => unlink(join(dir, name))))
 }
 
 // ── git ignore ──────────────────────────────────────────────────────────

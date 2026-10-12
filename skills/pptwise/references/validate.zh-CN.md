@@ -38,7 +38,7 @@ pptwise validate deck-dir/
 
 ## 一份 deck，一个最终文件
 
-`build` 把 `.pptx` 写到 `.pptwise/<deck>/<deck>.pptx`，与 `render` 用的是同一路径，而且只在每项检查都通过时才写。没通过的 build 会删掉之前 build 留在那里的文件，所以磁盘上的文件总是和源文件一致。按报告里的 `pptx` 路径原样交付：不要再渲染、复制、改名，也不要另导出一份。在 DSH 上用 `present` 交给用户。渲染阶段没有临时换主题的开关。项目 spec 就是绑定。
+`build` 把 `.pptx` 写到 `.pptwise/<deck>/<filename>.pptx`，文件名取 spec 的 `filename`（spec 没写时用 deck 目录名），与 `render` 用的是同一路径，而且只在每项检查都通过时才写。没通过的 build 会删掉之前 build 留在那里的文件，所以磁盘上的文件总是和源文件一致。按报告里的 `pptx` 路径原样交付：不要再渲染、复制、改名，也不要另导出一份。在 DSH 上用 `present` 交给用户。渲染阶段没有临时换主题的开关。项目 spec 就是绑定。
 
 单独的 `render` 只用于下面两种妥协：
 
