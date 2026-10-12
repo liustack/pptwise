@@ -77,8 +77,8 @@ export const PROFILE_THEME = {
   label: "Profile",
   story: {
     name: "Profile",
-    story: "A few minutes in front of a panel, set as a magazine profile of you: your portrait, the turns of your career with one result each, the gaps you name yourself, and what you will do first.",
-    positioning: "Choose it when one person has a few minutes to make a panel remember who they are, what they have done and what they will do in the role: a candidacy, a self-introduction, a career plan.",
+    story: "The panel has seen ten candidates today. Yours is the one they can still describe on the way out: who you are, the one result each job left behind, and what you will do first.",
+    positioning: "Choose it when you have a few minutes to make a panel remember you: a candidacy, a promotion review, a self-introduction, a career plan.",
     audience: "A candidate in front of a hiring panel, a promotion board or a review committee.",
     notFor: "A team's report or a company's proposal, where one person's portrait on every page reads as a résumé that lost its way.",
     lineage: "The magazine profile: a portrait, a name set large, a career told in a few dated turns and one line in the subject's own words.",
