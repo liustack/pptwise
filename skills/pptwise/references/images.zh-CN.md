@@ -59,4 +59,6 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
+生成器把登录状态和会话放在自己的主目录里（例如 `~/.codex`、`~/.grok`），出图前先往那里写。agent 沙箱把主目录设成只读时，它会报 `Operation not permitted`、`EPERM` 或 `FS_PERMISSION_DENIED` 失败，`images generate` 会点名说明。这时在沙箱外运行这条命令，或请用户在宿主的沙箱设置里允许这个生成器写自己的主目录。绝不把任何登录或凭据文件复制、移动或重定向到可写的地方来绕过这个错误。
+
 目标是 deck 项目时，拉取与生成的图存进这个 deck 自己的 `assets/`，文件名是 `<asset_id>.jpg`，旁边带 `<asset_id>.json` sidecar，deck 换目录图也跟着走。目标是单个 IR 文件时，图存到 `.pptwise/<deck>/assets/`。不要为了重跑某一步而删除这两个目录，因为其中保存了已经选定的资产。validate 警告某个 `asset_id` 没有定义时，会给出这张图该放的路径。没有可用来源时，保留缺失状态并如实汇报。不要虚构照片，也不要抓取未支持的提供方。除非许可或用户要求在页面署名，归属信息默认打印在终端。

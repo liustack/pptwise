@@ -195,6 +195,71 @@ describe.skipIf(process.platform === "win32")("runImagesGenerate", () => {
     expect(await pathExists(join(cwd, ".pptwise", "demo-deck", "assets", "hero.jpg"))).toBe(false)
   })
 
+  it("says a sandbox refused the generator its home folder, and how to get past that without moving a login", async () => {
+    // An agent sandbox with a read-only home stops grok and codex before they
+    // draw anything: each writes its session into its own home folder first.
+    // Injected here as the refusals each one really prints, so no generator
+    // or image service is ever run.
+    await tmpHome()
+    await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
+    await persistUserConfigValue(["images", "generators", "codex", "enabled"], true)
+    await fakeBin("grok")
+    const binDir = process.env.PATH!
+    await writeFile(join(binDir, "codex"), "#!/bin/sh\nexit 0\n")
+    chmodSync(join(binDir, "codex"), 0o755)
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-sandbox-"))
+    const refusals: Record<string, string> = {
+      grok: "Error: FS_PERMISSION_DENIED: cannot create /home/u/.grok/sessions",
+      codex: "Error: EPERM: operation not permitted, mkdir '/home/u/.codex/sessions'",
+    }
+    const failure = await runImagesGenerate({
+      deck: join(cwd, "demo-deck"),
+      as: "hero",
+      cwd,
+      prompt: "a desk",
+      run: async (req) => {
+        if (req.args.includes("--version")) return { code: 0, stdout: "1.0.0\n", stderr: "" }
+        const id = req.command.endsWith("codex") ? "codex" : "grok"
+        return { code: 1, stdout: "", stderr: refusals[id]! }
+      },
+      resizeToJpeg: async (bytes) => bytes,
+    }).then(
+      () => undefined,
+      (e: unknown) => (e as Error).message,
+    )
+    expect(failure).toContain("All image generators failed")
+    for (const id of ["grok", "codex"]) {
+      expect(failure).toContain(`${id} could not write its own home folder, which this sandbox does not allow`)
+      expect(failure).toContain(`allow ${id} to write its home folder`)
+    }
+    expect(failure).toContain("FS_PERMISSION_DENIED")
+    expect(failure).toContain("operation not permitted")
+    expect(failure).toContain("Run pptwise images generate outside the sandbox")
+    expect(failure).toContain("Do not copy, move or redirect any of its login files")
+  })
+
+  it("keeps an ordinary generator failure as it was", async () => {
+    await tmpHome()
+    await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)
+    await fakeBin("grok")
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-gen-plain-"))
+    const failure = await runImagesGenerate({
+      deck: join(cwd, "demo-deck"),
+      as: "hero",
+      cwd,
+      prompt: "a desk",
+      run: async (req) => {
+        if (req.args.includes("--version")) return { code: 0, stdout: "1.0.0\n", stderr: "" }
+        return { code: 2, stdout: "", stderr: "rate limited, try later" }
+      },
+      resizeToJpeg: async (bytes) => bytes,
+    }).then(
+      () => undefined,
+      (e: unknown) => (e as Error).message,
+    )
+    expect(failure).toBe("All image generators failed: grok: exited 2: rate limited, try later")
+  })
+
   it("does not delete a pre-existing pin when every generator fails", async () => {
     await tmpHome()
     await persistUserConfigValue(["images", "generators", "grok", "enabled"], true)

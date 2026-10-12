@@ -29,7 +29,9 @@ import {
 import {
   defaultProcessRunner,
   GENERATOR_ADAPTERS,
+  GeneratorWriteDenied,
   locateGeneratorBin,
+  writeDeniedMessage,
   type ProcessRunner,
 } from "./image-generators"
 import { defaultSleep, loadOpenverseDetail, searchOpenverse, type SleepFn } from "./image-openverse"
@@ -829,7 +831,11 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
         const pinned = await writePinnedAsset(assetsDir, opts.as, jpeg, sidecar)
         return `pinned ${id} as ${opts.as} → ${pinned}`
       } catch (e) {
-        attempts.push(`${id}: ${e instanceof Error ? e.message : String(e)}`)
+        attempts.push(
+          e instanceof GeneratorWriteDenied
+            ? writeDeniedMessage(id, e.detail)
+            : `${id}: ${e instanceof Error ? e.message : String(e)}`,
+        )
       }
     }
     if (attempts.length === 0) {

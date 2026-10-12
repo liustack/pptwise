@@ -158,10 +158,42 @@ async function harvestNewestImage(workdir: string, dest: string): Promise<boolea
   return isSniffedImage(dest)
 }
 
+/**
+ * What a generator prints when the system refused it a file write. The
+ * generators keep sessions and login state in their own home folder (for
+ * example `~/.codex`, `~/.grok`), and an agent sandbox that makes the home
+ * folder read-only refuses exactly that write, before any image is drawn.
+ * Node spells the refusal `EPERM` or `EACCES`, the C library spells it
+ * "Operation not permitted", and grok reports `FS_PERMISSION_DENIED`.
+ */
+const WRITE_DENIED = /operation not permitted|FS_PERMISSION_DENIED|\bEPERM\b|\bEACCES\b|permission denied|read-only file system|\bEROFS\b/i
+
+/** A generator that exited because the system refused it a file write. */
+export class GeneratorWriteDenied extends PptwiseError {
+  constructor(readonly detail: string) {
+    super(`refused a file write: ${detail}`)
+  }
+}
+
+/**
+ * The line `images generate` reports for {@link GeneratorWriteDenied}. It
+ * names the likely cause and the two fixes that leave the generator's login
+ * where it is. Copying its credential files somewhere writable would get
+ * past the error and spread a login around the disk, so the line says not to.
+ */
+export function writeDeniedMessage(id: GeneratorId, detail: string): string {
+  return (
+    `${id} could not write its own home folder, which this sandbox does not allow (${detail}). ` +
+    `Run pptwise images generate outside the sandbox, or allow ${id} to write its home folder in the host's sandbox settings. ` +
+    `Do not copy, move or redirect any of its login files to get around this.`
+  )
+}
+
 async function settleDest(req: AdapterRequest, result: { code: number; stdout: string; stderr: string }): Promise<void> {
   if (await isSniffedImage(req.dest)) return
   if (await harvestNewestImage(req.workdir, req.dest)) return
   const detail = (result.stderr || result.stdout).trim().slice(0, 400)
+  if (result.code !== 0 && WRITE_DENIED.test(detail)) throw new GeneratorWriteDenied(detail)
   throw new PptwiseError(
     result.code === 0
       ? `produced no image file at ${req.dest}${detail ? `: ${detail}` : ""}`

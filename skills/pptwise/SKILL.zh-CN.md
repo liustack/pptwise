@@ -167,6 +167,7 @@ pptwise build deck-dir/ --json
 - 不声称 `chart` 或 `data_table` 的数字是原生 PowerPoint 数据对象。它们导出为可编辑的成组图形与文字。改数字要改源文件并重新渲染。
 - 把数值本身写出来。不要用剩余条数或省略号代替内容。validate 会拒绝。
 - preview 全程只读。修订回到 `deck.spec.json`、`pages/*.json`、资产或绑定主题文件。
+- 图片生成器因为沙箱不让它写自己的主目录而失败时，在沙箱外运行 `images generate`，或请用户放行。绝不复制、移动或重定向任何登录凭据文件来绕过。
 
 ## 何时阅读
 

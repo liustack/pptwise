@@ -165,6 +165,7 @@ Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Us
 - Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
 - Write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
 - Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.
+- When an image generator fails because a sandbox will not let it write its own home folder, run `images generate` outside the sandbox or ask the user to allow it. Never copy, move, or redirect any login or credential file to get around it.
 
 ## Read when
 

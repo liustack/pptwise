@@ -54,4 +54,6 @@ pptwise config set images.generators.codex.enabled true
 pptwise config set images.generators.antigravity.enabled true
 ```
 
+A generator keeps its login and sessions in its own home folder (such as `~/.codex` or `~/.grok`) and writes there before it draws anything. In an agent sandbox whose home folder is read-only it fails with `Operation not permitted`, `EPERM`, or `FS_PERMISSION_DENIED`, and `images generate` says so by name. Run the command outside the sandbox, or ask the user to let that generator write its home folder in the host's sandbox settings. Never copy, move, or redirect any login or credential file to a writable place to get around the error.
+
 For a deck project, fetched and generated pictures go into the deck's own `assets/` as `<asset_id>.jpg` with a `<asset_id>.json` sidecar, and move with the deck. For a single IR file they go under `.pptwise/<deck>/assets/`. Do not delete either directory to rerun a step because it holds selected assets. When validate warns that an `asset_id` is not defined, it names the path the picture belongs at. Without an available source, leave the asset missing and report it. Do not invent a photo or scrape an unsupported provider. Print required attribution in the terminal unless the license or user asks for on-slide credit.
