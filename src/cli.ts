@@ -48,8 +48,8 @@ function fail(e: unknown): never {
 
 program
   .command("render")
-  .description("Render an IR JSON file, deck project directory, or bare deck name to a .pptx")
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .description("Render an IR JSON file or deck project directory to a .pptx")
+  .argument("<target>", "IR JSON file or deck project directory")
   .option("-o, --output <file>", "output .pptx path (default: .pptwise/<deck>/<deck>.pptx under the project root)")
   .option("--draft", "allow unfilled placeholder pages (skip the draft gate)")
   .option(
@@ -88,7 +88,7 @@ program
   .description(
     "Assemble, validate, audit, preview and render a deck in one pass. Writes the pages and, only when every check passes, the deck's one .pptx under .pptwise/<deck>/ — exits 1 when the deck needs revision",
   )
-  .argument("<target>", "deck project directory, IR JSON file, or bare name under ~/.pptwise/decks")
+  .argument("<target>", "deck project directory or IR JSON file")
   .option("--json", "print the full report: status, every problem with its page, file and field, the preview, and the .pptx path")
   .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
   .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
@@ -106,8 +106,8 @@ program
 
 program
   .command("validate")
-  .description("Validate an IR JSON file, deck project directory, or bare deck name against the schema")
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .description("Validate an IR JSON file or deck project directory against the schema")
+  .argument("<target>", "IR JSON file or deck project directory")
   .action(async (target: string) => {
     try {
       console.log(await runValidate(target, process.cwd()))
@@ -121,7 +121,7 @@ program
   .description(
     "Deterministic geometry audit (overflow, out-of-bounds, low-contrast, overlap, content-truncated, content-dropped, stepped-aside, monotony), plus an optional --pixels contrast pass — exits 1 when it finds anything",
   )
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .argument("<target>", "IR JSON file or deck project directory")
   .option("--json", "machine-readable output (the full AuditReport)")
   .option("--pixels", "also run the optional pixel-contrast pass over image-backed text (requires sharp)")
   .action(async (target: string, opts: { json?: boolean; pixels?: boolean }) => {
@@ -142,7 +142,7 @@ program
   .description(
     "Image-generation brief for every image slot in a deck: the real rendered frame, fit/crop mode, suggested pixel size, theme palette/mood, and a paste-ready prompt",
   )
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .argument("<target>", "IR JSON file or deck project directory")
   .option("--json", "machine-readable output (the full AssetBrief)")
   .action(async (target: string, opts: { json?: boolean }) => {
     try {
@@ -178,7 +178,7 @@ program
   .description(
     "Show one page's fill contract: the spec's locked fields, the page file's fields, the components its face draws, the counts validate holds it to, and validate's findings on it. Exits 1 when the page has an error",
   )
-  .argument("<deck>", "deck project directory, or bare name under ~/.pptwise/decks")
+  .argument("<deck>", "deck project directory")
   .requiredOption("--page <id>", "the page id in deck.spec.json")
   .option("--component <type>", "expand one component the page may hold: its story, its limits on this page, and its schema")
   .option("--fit", "draw the page and report whether its content fits, as render's content-drop gate would judge it. Exits 1 when it does not")
@@ -231,7 +231,7 @@ spec
 program
   .command("assemble")
   .description("Assemble a deck project directory (deck.spec.json + pages/ + assets/) into an IR JSON file")
-  .argument("<dir|name>", "deck project directory, or bare name under ~/.pptwise/decks")
+  .argument("<dir>", "deck project directory")
   .option("-o, --output <file>", "output IR JSON path (default: <dir>/deck.json)")
   .action(async (target: string, opts: { output?: string }) => {
     try {
@@ -539,7 +539,7 @@ images
 images
   .command("fetch <ref>")
   .description("Download a photo (pexels:<id>, pixabay:<id>, or openverse:<id>) into .pptwise/<deck>/assets/")
-  .requiredOption("--deck <dir>", "deck project directory, path, or bare name")
+  .requiredOption("--deck <dir>", "deck project directory or IR JSON file")
   .requiredOption("--as <asset_id>", "local asset id (filename without extension)")
   .option("--query <text>", "search query that produced this pick (stored in the sidecar)")
   .action(async (ref: string, opts: { deck: string; as: string; query?: string }) => {
@@ -554,7 +554,7 @@ images
 images
   .command("list")
   .description("List pinned stock photos for a deck")
-  .requiredOption("--deck <dir>", "deck project directory, path, or bare name")
+  .requiredOption("--deck <dir>", "deck project directory or IR JSON file")
   .action(async (opts: { deck: string }) => {
     try {
       console.log(await runImagesList({ deck: opts.deck, cwd: process.cwd() }))
@@ -565,7 +565,7 @@ images
 images
   .command("generate")
   .description("Generate an image with a local CLI (grok, codex, or antigravity) and pin it")
-  .requiredOption("--deck <dir>", "deck project directory, path, or bare name")
+  .requiredOption("--deck <dir>", "deck project directory or IR JSON file")
   .requiredOption("--as <asset_id>", "local asset id (filename without extension)")
   .option("--prompt <text>", "image prompt (otherwise taken from asset-brief)")
   .action(async (opts: { deck: string; as: string; prompt?: string }) => {
@@ -592,7 +592,7 @@ program
 program
   .command("preview")
   .description("Render each slide to an SVG file for visual self-check")
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .argument("<target>", "IR JSON file or deck project directory")
   .option("-o, --output <dir>", "output directory (default: .pptwise/<deck>/ under the project root)")
   .option("--html", "also write a self-contained preview.html (all slides inlined — thumbnail strip, keyboard navigation) for human review")
   .option("--no-git-ignore", "do not add .pptwise/ to this repository's local exclude file")
@@ -612,8 +612,8 @@ program
 
 program
   .command("serve")
-  .description("Serve a live-reloading HTML preview of an IR JSON file, deck project directory, or bare deck name over HTTP")
-  .argument("<target>", "IR JSON file, deck project directory, or bare name under ~/.pptwise/decks")
+  .description("Serve a live-reloading HTML preview of an IR JSON file or deck project directory over HTTP")
+  .argument("<target>", "IR JSON file or deck project directory")
   .option("--port <number>", `port to listen on (default ${DEFAULT_PORT})`)
   .option("--no-open", "do not open the URL in a browser after starting")
   .action(async (target: string, opts: { port?: string; open: boolean }) => {

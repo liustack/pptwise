@@ -11,7 +11,7 @@ read_when:
 
 # CLI
 
-The CLI accepts an IR v5 file, a deck project directory, or a bare deck name for most deck operations. A bare name resolves under the configured deck root. An explicit path wins.
+The CLI accepts an IR v5 file or a deck project directory for most deck operations. Either is a path, resolved against the current directory.
 
 There is no render-time theme option. A project binds its theme in `deck.spec.json`. A bare IR binds it in `theme.id`. Compare unbound candidates with `theme try` before authoring the spec.
 

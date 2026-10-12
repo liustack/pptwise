@@ -6,20 +6,9 @@ import { userConfigPath } from "./home"
 import { ImagesConfigSchema } from "./image-config"
 
 /**
- * Project-level filesystem defaults.
- *
- * `decksDir` (W5 task 6, spec §7: a team that wants deck project
- * directories checked into the repo instead of living under
- * `~/.pptwise/decks` declares it here): a relative value resolves against
- * *this config file's own directory* (wherever `findConfig`'s cwd walk-up
- * found it) — never the CLI's cwd, and never `pptwiseHome()`. Wins over the
- * user config's own `decksDir` (`UserConfigSchema` below) when both are
- * set. The two
- * layers resolve against different bases, so this schema alone can't
- * express the final answer — `commands.ts`'s `resolveDecksDirSource`
- * computes the already-resolved absolute path before handing it down to
- * `./deck-dir.ts`'s `resolveDeckTarget` / `./home.ts`'s `decksRoot`, neither
- * of which knows there are two possible bases, only the final one.
+ * Project-level settings. The file also marks the project root: the
+ * nearest `pptwise.config.json` above the cwd is where `.pptwise/` and
+ * `themes/` go (`../cli/workspace.ts`).
  *
  * `outDir` (workspace-artifacts wave): where `render`/`preview` write when
  * the caller passes no `-o`. Default `.pptwise` under this config file's own
@@ -35,7 +24,6 @@ import { ImagesConfigSchema } from "./image-config"
  */
 const ConfigSchema = z
   .object({
-    decksDir: z.string().optional(),
     outDir: z.string().optional(),
   })
   .strict()
@@ -43,33 +31,16 @@ const ConfigSchema = z
 export type PptwiseConfig = z.infer<typeof ConfigSchema>
 
 /**
- * User-level config schema. It supports `decksDir` plus optional
- * `images` (Pexels/Pixabay keys and Openverse OAuth for stock-photo search). `outDir` is
+ * User-level config schema: optional `images` (Pexels/Pixabay keys and
+ * Openverse OAuth for stock-photo search, image generators). `outDir` is
  * deliberately absent — an artifact root belongs to this working tree, not
  * to the user's identity (see {@link ConfigSchema}'s own `outDir` comment).
  * `images` is user-layer only: project {@link ConfigSchema} rejects it so a
- * repo file cannot carry API keys.
- * `decksDir` is no longer project-config-free as of W5 task 6 (see
- * {@link ConfigSchema}'s own doc comment on that field), but the two layers
- * still resolve it against different bases: this user layer always resolves
- * against `pptwiseHome()` (`./home.ts`'s `decksRoot`, this layer's one fixed
- * location), the project layer against the project config file's own
- * directory. Declared as its own flat object literal rather than
- * `ConfigSchema.extend(...)` — a shape this small is not worth taking on
- * zod's extend-then-restrict chaining, and it keeps both schemas readable
- * independently.
- *
- * `decksDir`: a relative value resolves against this config file's own
- * directory (`./home.ts`'s `pptwiseHome()` — the only directory a user
- * config can ever live in, see `decksRoot`), never the CLI's cwd. No tilde
- * expansion — a literal `~/decks` is the literal relative path segment
- * `~/decks` under that base, not the home directory. The resulting (almost
- * certainly missing) directory surfaces through whatever downstream error
- * reads it, same as any other bad path.
+ * repo file cannot carry API keys. Decks live in the project, never under
+ * the user's home, so there is no deck root setting on either layer.
  */
 const UserConfigSchema = z
   .object({
-    decksDir: z.string().optional(),
     images: ImagesConfigSchema.optional(),
   })
   .strict()

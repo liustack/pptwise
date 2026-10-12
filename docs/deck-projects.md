@@ -184,6 +184,6 @@ pptwise disassemble deck.json -o my-deck/
 
 Disassembly writes a version 1 spec, one content-only file for every non-placeholder page, and local asset files when possible. It refuses to overwrite an existing `deck.spec.json`. The resulting project still contains no persisted face choice.
 
-## Workspace names
+## Where decks live
 
-`pptwise.config.json` can set a deck root. Commands that accept `<target>` can then resolve a bare deck name under that root. An explicit path still wins. This affects project discovery, not theme binding or page semantics.
+A deck lives in the project, and a `<target>` is always a path: a deck project directory or an IR file, resolved against the current directory. There is no deck folder under the home directory and no setting that points at one.

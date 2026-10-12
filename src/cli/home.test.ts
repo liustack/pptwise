@@ -2,9 +2,9 @@
 import { existsSync } from "node:fs"
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { join } from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
-import { decksRoot, pptwiseHome, userConfigPath } from "./home"
+import { pptwiseHome, userConfigPath } from "./home"
 import { resetProductEnvWarningsForTests } from "./product-env"
 
 const originalHome = process.env.PPTWISE_HOME
@@ -71,7 +71,6 @@ describe("pptwiseHome", () => {
     delete process.env.PPTPRESS_HOME
     delete process.env.PPTFAST_HOME
     expect(pptwiseHome({ homedir: () => home })).toBe(join(home, ".pptwise"))
-    expect(decksRoot(undefined, { homedir: () => home })).toBe(join(home, ".pptwise", "decks"))
     expect(userConfigPath({ homedir: () => home })).toBe(join(home, ".pptwise", "config.json"))
   })
 
@@ -171,37 +170,6 @@ describe("pptwiseHome", () => {
     })
     expect(first).toContain("PPTFAST_HOME")
     expect(second).toBe("")
-  })
-})
-
-describe("decksRoot", () => {
-  // Every home below goes through resolve, so it is absolute on every
-  // platform: `/tmp/...` alone has no drive on Windows, and decksRoot
-  // resolves it onto the current one.
-
-  it("defaults to $PPTWISE_HOME/decks with no config", () => {
-    process.env.PPTWISE_HOME = resolve("/tmp/pptwise-home-a")
-    expect(decksRoot()).toBe(join(resolve("/tmp/pptwise-home-a"), "decks"))
-  })
-
-  it("defaults to $PPTWISE_HOME/decks when config has no decksDir", () => {
-    process.env.PPTWISE_HOME = resolve("/tmp/pptwise-home-b")
-    expect(decksRoot({})).toBe(join(resolve("/tmp/pptwise-home-b"), "decks"))
-  })
-
-  it("uses config.decksDir as an override when present", () => {
-    process.env.PPTWISE_HOME = resolve("/tmp/pptwise-home-c")
-    expect(decksRoot({ decksDir: resolve("/elsewhere/decks") })).toBe(resolve("/elsewhere/decks"))
-  })
-
-  it("resolves a relative decksDir against PPTWISE_HOME, not the cwd (W5 review fix)", () => {
-    process.env.PPTWISE_HOME = resolve("/tmp/pptwise-home-relative")
-    expect(decksRoot({ decksDir: "team-decks" })).toBe(join(resolve("/tmp/pptwise-home-relative"), "team-decks"))
-  })
-
-  it("does not expand a leading tilde in decksDir — it is one literal relative path segment", () => {
-    process.env.PPTWISE_HOME = resolve("/tmp/pptwise-home-tilde")
-    expect(decksRoot({ decksDir: "~/team-decks" })).toBe(join(resolve("/tmp/pptwise-home-tilde"), "~/team-decks"))
   })
 })
 

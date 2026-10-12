@@ -25,7 +25,6 @@ import { basename, extname, isAbsolute, join, relative, resolve } from "node:pat
 import { PptwiseError } from "../errors"
 import { assembleDeck, type AssembleResult, type PageContent } from "../spec/assemble"
 import type { ThemeDefinition } from "../themes/definitions"
-import { decksRoot } from "./home"
 import { EXT_BY_MIME, loadIrFile } from "./load-ir"
 
 export const SPEC_FILENAME = "deck.spec.json"
@@ -140,63 +139,20 @@ export async function pathExists(path: string): Promise<boolean> {
 }
 
 /**
- * Path-vs-bare-name resolution (spec §7's CLI bare-name resolution): an
- * `arg` that contains a path separator, or that exists locally relative to
- * `cwd` (file *or* directory — a same-directory `deck.json` has no
- * separator but must still resolve as the obviously-intended local file,
- * not get redirected to the deck home), resolves against `cwd` and comes
- * back as a fully-resolved path in both cases — an explicit or
- * locally-resolvable path always wins over the bare-name interpretation,
- * but is never handed back unresolved: every downstream fs call (Node's
- * `readFile` et al.) always resolves a relative path against the process's
- * *real* `process.cwd()`, which only coincides with this function's `cwd`
- * parameter in production (`commands.ts` never passes one explicitly, so it
- * defaults to the real thing) — a test that exercises a different `cwd`
- * without an actual `process.chdir()` needs the already-resolved path back,
- * not the bare `arg`, or the caller's next fs call would silently resolve
- * against a completely different, real cwd. An absolute `arg` is unaffected
- * either way — `path.resolve` returns an absolute later segment as-is.
+ * Where a deck target argument points: `arg` resolved against `cwd`, a deck
+ * project directory or an IR file in the project. There is no deck home to
+ * fall back to, so a name that does not exist here is reported by whatever
+ * reads it next, naming the path the user typed. The path comes back
+ * resolved because every later fs call resolves a relative path against the
+ * real `process.cwd()`, which only matches `cwd` in production.
  *
- * Otherwise `arg` is treated as a deck name under `decksRoot(config)`
- * (`./home.ts` — `$PPTWISE_HOME/decks/<name>`, or a `decksDir` override) —
- * but only when that candidate actually exists. When *neither* the local
- * path nor the deck-home candidate exists, this returns the local
- * (cwd-resolved) path rather than the deck-home guess: a bare arg that was
- * actually a typo'd local filename (`pptwise validate typo.json`) should
- * have its eventual "cannot read" error name the file the user typed, not
- * an unrelated `~/.pptwise/decks/typo.json` path they never meant. `config`
- * is not either config layer's raw shape — it is the already-resolved
- * effective `decksDir` source (project `pptwise.config.json`'s own value,
- * spec §7's project-level escape hatch, W5 task 6, when it sets one, else
- * the user config's, `./config.ts`'s `UserPptwiseConfig`) computed once by
- * the caller (`commands.ts`'s `resolveDecksDirSource`) and passed in here
- * already resolved to an absolute path when it came from the project layer
- * — this function itself has no reason to know there were ever two
- * possible layers or bases, only the final answer. The caller fetches both
- * config files at most once per command and passes them in rather than
- * this function reaching for either itself, so a command that already
- * needs one of them for other reasons (theme/style resolution) never reads
- * the same file twice.
- *
- * An empty or whitespace-only `arg` (W5 whole-branch review finding 4) is
- * rejected up front rather than silently resolving to `cwd` itself — without
- * this guard, `resolve(cwd, "")` returns `cwd` unchanged and `pathExists`
- * always finds it (a directory always exists), so the empty string would
- * otherwise quietly pass through as "the target is cwd", surfacing later as
- * a confusing missing-`deck.spec.json` error instead of naming the actual
- * problem (an empty target argument) up front.
+ * An empty or whitespace-only `arg` is rejected up front: `resolve(cwd, "")`
+ * is `cwd` itself, which would surface later as a confusing missing
+ * `deck.spec.json` instead of naming the empty argument.
  */
-export async function resolveDeckTarget(
-  arg: string,
-  config?: { decksDir?: string },
-  cwd: string = process.cwd(),
-): Promise<string> {
+export async function resolveDeckTarget(arg: string, cwd: string = process.cwd()): Promise<string> {
   if (arg.trim() === "") throw new PptwiseError("deck target must not be empty")
-  if (arg.includes("/") || arg.includes("\\")) return resolve(cwd, arg)
-  const local = resolve(cwd, arg)
-  if (await pathExists(local)) return local
-  const fallback = join(decksRoot(config), arg)
-  return (await pathExists(fallback)) ? fallback : local
+  return resolve(cwd, arg)
 }
 
 // ── deck.spec.json ──────────────────────────────────────────────────────

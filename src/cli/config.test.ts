@@ -87,18 +87,11 @@ describe("findConfig", () => {
     )
   })
 
-  it("reads decksDir from a project pptwise.config.json (W5 task 6, controller addition A)", async () => {
+  it("rejects a leftover decksDir: decks live in the project, there is no deck root", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ decksDir: "./team-decks" }))
-    const hit = await findConfig(root)
-    expect(hit?.config.decksDir).toBe("./team-decks")
-  })
-
-  it("accepts a project config with only decksDir set", async () => {
-    const root = await tmp()
-    await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ decksDir: "/team/decks" }))
-    const hit = await findConfig(root)
-    expect(hit?.config).toEqual({ decksDir: "/team/decks" })
+    const configPath = join(root, "pptwise.config.json")
+    await writeFile(configPath, JSON.stringify({ decksDir: "./team-decks" }))
+    await expect(findConfig(root)).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "decksDir"`))
   })
 
   it("reads outDir from a project pptwise.config.json (workspace-artifacts wave)", async () => {
@@ -110,34 +103,34 @@ describe("findConfig", () => {
 
   it("reads pptpress.config.json when pptwise.config.json is absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ decksDir: "press-decks" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptpress.config.json"))
-    expect(hit?.config.decksDir).toBe("press-decks")
+    expect(hit?.config.outDir).toBe("press-out")
   })
 
   it("reads pptfast.config.json when both newer filenames are absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ decksDir: "fast-decks" }))
+    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "fast-out" }))
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptfast.config.json"))
-    expect(hit?.config.decksDir).toBe("fast-decks")
+    expect(hit?.config.outDir).toBe("fast-out")
   })
 
   it("prefers pptpress.config.json over pptfast.config.json when pptwise.config.json is absent", async () => {
     const root = await tmp()
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ decksDir: "press-decks" }))
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ decksDir: "fast-decks", outDir: "legacy-out" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
+    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "legacy-out" }))
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptpress.config.json"))
-    expect(hit?.config).toEqual({ decksDir: "press-decks" })
+    expect(hit?.config).toEqual({ outDir: "press-out" })
   })
 
   it("prefers pptwise.config.json when every filename exists (does not merge)", async () => {
     const root = await tmp()
     await writeFile(join(root, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
-    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ decksDir: "press-decks" }))
-    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ decksDir: "fast-decks", outDir: "legacy-out" }))
+    await writeFile(join(root, "pptpress.config.json"), JSON.stringify({ outDir: "press-out" }))
+    await writeFile(join(root, "pptfast.config.json"), JSON.stringify({ outDir: "legacy-out" }))
     const hit = await findConfig(root)
     expect(hit?.path).toBe(join(root, "pptwise.config.json"))
     expect(hit?.config).toEqual({ outDir: "artifacts" })
@@ -161,7 +154,7 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
     const home = await tmp()
     process.env.PPTWISE_HOME = home
     const configPath = join(home, "config.json")
-    await writeFile(configPath, JSON.stringify({ theme: "terminal", decksDir: "/elsewhere/decks" }))
+    await writeFile(configPath, JSON.stringify({ theme: "terminal" }))
     await expect(findUserConfig()).rejects.toThrow(
       new Error(`invalid ${configPath}:\n(root): Unrecognized key: "theme"`),
     )
@@ -208,12 +201,12 @@ describe("findUserConfig (W5 task 5: four-layer chain, user layer)", () => {
     )
   })
 
-  it("accepts a config with only decksDir set", async () => {
+  it("rejects a leftover decksDir at the user layer", async () => {
     const home = await tmp()
     process.env.PPTWISE_HOME = home
-    await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: "/team/decks" }))
-    const hit = await findUserConfig()
-    expect(hit?.config).toEqual({ decksDir: "/team/decks" })
+    const configPath = join(home, "config.json")
+    await writeFile(configPath, JSON.stringify({ decksDir: "/team/decks" }))
+    await expect(findUserConfig()).rejects.toThrow(new Error(`invalid ${configPath}:\n(root): Unrecognized key: "decksDir"`))
   })
 
   it("rejects outDir at the user layer (artifact root is a project property)", async () => {

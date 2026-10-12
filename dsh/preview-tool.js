@@ -1227,22 +1227,12 @@ async function isFile(path) {
  * `theme.json` can be copied into the snapshot directory.
  *
  * The CLI auto-loads that file for a deck *directory* only, so an assembled
- * IR naming a brand theme would fail to render from anywhere else. Path-form
- * targets and bare names under the default decks root are both covered here.
- * A bare name under a project-configured `decksDir` is not — that combination
- * fails loudly on an unknown theme id rather than rendering the wrong thing,
- * which is the disposition the rest of this module takes too.
+ * IR naming a brand theme would fail to render from anywhere else. A deck
+ * is always a path in the project, there is no deck home to look in.
  */
 async function locateDeckDir(target) {
   const direct = resolve(target)
-  if (await isDirectory(direct)) return direct
-  // `dirname(previewRoot())` rather than a second hard-coded `~/.pptwise`, so
-  // this follows `PPTWISE_HOME` the way the CLI's own `decksRoot()` does. The
-  // previous literal ignored that variable and looked in the wrong home
-  // whenever it was set.
-  const named = join(dirname(previewRoot()), 'decks', target)
-  if (await isDirectory(named)) return named
-  return undefined
+  return (await isDirectory(direct)) ? direct : undefined
 }
 
 /** Copy an adjacent theme file into the immutable snapshot directory. */
@@ -2196,14 +2186,14 @@ export function createPreviewService(cliPath) {
     name: TOOL_NAME,
     description:
       'Render a pptwise deck and show it to the user as a slide preview inside this conversation. ' +
-      'Accepts the same targets as the CLI: a deck project directory, a single IR json file, or a bare deck name. ' +
+      'Accepts the same targets as the CLI: a deck project directory or a single IR json file. ' +
       'Prefer this over telling the user to open a preview URL — they can page through the deck right here.',
     parameters: {
       type: 'object',
       properties: {
         target: {
           type: 'string',
-          description: 'Deck project directory, IR json file, or bare deck name — the same target the CLI takes.',
+          description: 'Deck project directory or IR json file, the same target the CLI takes.',
         },
       },
       required: ['target'],
@@ -2453,7 +2443,7 @@ export function createPreviewService(cliPath) {
       properties: {
         target: {
           type: 'string',
-          description: 'Deck project directory (or IR json file, or bare deck name), the same target the CLI takes.',
+          description: 'Deck project directory (or IR json file), the same target the CLI takes.',
         },
       },
       required: ['target'],

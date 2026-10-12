@@ -1128,30 +1128,22 @@ describe("deck project directory workflow (W5 task 5)", () => {
   })
 })
 
-describe("bare-name resolution through CLI commands (W5 task 5)", () => {
-  it("resolves a bare deck name to $PPTWISE_HOME/decks/<name> end to end", async () => {
+describe("deck targets resolve in the project (W5 task 5)", () => {
+  it("never finds a deck by name under $PPTWISE_HOME/decks", async () => {
     const home = await makeDeckDir("pptwise-barehome-")
     await withPptwiseHome(home, async () => {
       const deckDir = join(home, "decks", "q3-review")
       await mkdir(deckDir, { recursive: true })
       await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
       const cwd = await makeDeckDir("pptwise-barecwd-")
-      const msg = await runAssemble("q3-review", { cwd })
-      expect(msg).toContain(join(deckDir, "deck.json"))
-      const written = JSON.parse(await readFile(join(deckDir, "deck.json"), "utf8"))
-      expect(written.slides).toHaveLength(5)
+      await expect(runAssemble("q3-review", { cwd })).rejects.toThrow(join(cwd, "q3-review"))
     })
   })
 
-  it("prefers a same-name local file over the deck home (explicit/local path always wins)", async () => {
-    const home = await makeDeckDir("pptwise-barehome2-")
-    await withPptwiseHome(home, async () => {
-      const cwd = await makeDeckDir("pptwise-barecwd2-")
-      await writeFile(join(cwd, "deck.json"), JSON.stringify(VALID_IR))
-      // "deck.json" has no path separator, but exists locally under cwd —
-      // must resolve as that local file, not $PPTWISE_HOME/decks/deck.json.
-      await expect(runValidate("deck.json", cwd)).resolves.toMatch(/OK — 2 slides/)
-    })
+  it("resolves a plain file name against the cwd", async () => {
+    const cwd = await makeDeckDir("pptwise-barecwd2-")
+    await writeFile(join(cwd, "deck.json"), JSON.stringify(VALID_IR))
+    await expect(runValidate("deck.json", cwd)).resolves.toMatch(/OK — 2 slides/)
   })
 
   it("a nonexistent bare-name typo's error names the local candidate, not an obscure deck-home guess (W5 review fix, finding 3)", async () => {
@@ -1616,81 +1608,6 @@ describe("runDisassemble", () => {
 
       const stillThere = await readFile(join(outDir, "deck.spec.json"), "utf8")
       expect(stillThere).toBe(preExisting)
-    })
-  })
-})
-
-describe("decksDir redirect (W5 task 5)", () => {
-  it("resolves a bare deck name under the user config's decksDir override", async () => {
-    const home = await makeDeckDir()
-    const teamDecks = await makeDeckDir("pptwise-teamdecks-")
-    await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: teamDecks }))
-    await withPptwiseHome(home, async () => {
-      const deckDir = join(teamDecks, "q3-review")
-      await mkdir(deckDir, { recursive: true })
-      await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-      const cwd = await makeDeckDir("pptwise-redirect-cwd-")
-      const msg = await runAssemble("q3-review", { cwd })
-      expect(msg).toContain(join(deckDir, "deck.json"))
-    })
-  })
-
-  it("resolves a relative decksDir in the user config against the home dir, not the cwd (W5 review fix, finding 9)", async () => {
-    const home = await makeDeckDir()
-    await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: "team-decks" }))
-    await withPptwiseHome(home, async () => {
-      const deckDir = join(home, "team-decks", "q3-review")
-      await mkdir(deckDir, { recursive: true })
-      await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-      // cwd is deliberately unrelated to `home` — a cwd-relative (mis)read of
-      // decksDir would resolve to a directory under `cwd`, not find this one.
-      const cwd = await makeDeckDir("pptwise-redirect-relative-cwd-")
-      const msg = await runAssemble("q3-review", { cwd })
-      expect(msg).toContain(join(deckDir, "deck.json"))
-    })
-  })
-})
-
-describe("decksDir redirect — project config precedence (W5 task 6, controller addition A)", () => {
-  it("a project pptwise.config.json's decksDir wins over the user config's, resolved against the project config file's own directory", async () => {
-    const home = await makeDeckDir()
-    const userDecks = await makeDeckDir("pptwise-userdecks-")
-    await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: userDecks }))
-
-    const projectRoot = await makeDeckDir("pptwise-project-")
-    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ decksDir: "team-decks" }))
-    const projectDeckDir = join(projectRoot, "team-decks", "q3-review")
-    await mkdir(projectDeckDir, { recursive: true })
-    await writeFile(join(projectDeckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-
-    // Same bare name also resolves to something real under the user's
-    // decksDir, so this proves project wins on a genuine conflict, not just
-    // by being the only candidate that exists.
-    const userDeckDir = join(userDecks, "q3-review")
-    await mkdir(userDeckDir, { recursive: true })
-    await writeFile(join(userDeckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan({ filename: "wrong-deck" })))
-
-    await withPptwiseHome(home, async () => {
-      const msg = await runAssemble("q3-review", { cwd: projectRoot })
-      expect(msg).toContain(join(projectDeckDir, "deck.json"))
-    })
-  })
-
-  it("falls back to the user config's decksDir when the project config exists but sets no decksDir of its own", async () => {
-    const home = await makeDeckDir()
-    const userDecks = await makeDeckDir("pptwise-userdecks-")
-    await writeFile(join(home, "config.json"), JSON.stringify({ decksDir: userDecks }))
-
-    const projectRoot = await makeDeckDir("pptwise-project-partial-")
-    await writeFile(join(projectRoot, "pptwise.config.json"), JSON.stringify({ outDir: "artifacts" }))
-
-    const deckDir = join(userDecks, "q3-review")
-    await mkdir(deckDir, { recursive: true })
-    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
-
-    await withPptwiseHome(home, async () => {
-      const msg = await runAssemble("q3-review", { cwd: projectRoot })
-      expect(msg).toContain(join(deckDir, "deck.json"))
     })
   })
 })

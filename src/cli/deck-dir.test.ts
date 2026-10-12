@@ -2,7 +2,7 @@
 import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
-import { afterEach, describe, expect, it } from "vitest"
+import { describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
 import {
   assertSafeFileSegment,
@@ -111,13 +111,6 @@ describe("isDeckDirectory", () => {
 })
 
 describe("resolveDeckTarget", () => {
-  const originalHome = process.env.PPTWISE_HOME
-
-  afterEach(() => {
-    if (originalHome === undefined) delete process.env.PPTWISE_HOME
-    else process.env.PPTWISE_HOME = originalHome
-  })
-
   it("rejects an empty target (W5 whole-branch review finding 4)", async () => {
     await expect(resolveDeckTarget("")).rejects.toThrow(PptwiseError)
     await expect(resolveDeckTarget("")).rejects.toThrow("deck target must not be empty")
@@ -127,14 +120,9 @@ describe("resolveDeckTarget", () => {
     await expect(resolveDeckTarget("   ")).rejects.toThrow("deck target must not be empty")
   })
 
-  it("resolves a forward-slash path against cwd (explicit path always wins, W5 review fix: no longer returned unresolved)", async () => {
+  it("resolves a forward-slash path against cwd", async () => {
     const cwd = await tmp()
-    expect(await resolveDeckTarget("some/dir", undefined, cwd)).toBe(resolve(cwd, "some/dir"))
-  })
-
-  it("resolves a backslash path against cwd", async () => {
-    const cwd = await tmp()
-    expect(await resolveDeckTarget("some\\dir", undefined, cwd)).toBe(resolve(cwd, "some\\dir"))
+    expect(await resolveDeckTarget("some/dir", cwd)).toBe(resolve(cwd, "some/dir"))
   })
 
   it("returns an absolute path unchanged (path.resolve keeps an absolute later segment as-is)", async () => {
@@ -142,63 +130,25 @@ describe("resolveDeckTarget", () => {
     expect(await resolveDeckTarget(dir)).toBe(dir)
   })
 
-  it("resolves a bare name that exists locally under cwd to its full path", async () => {
-    const cwd = await tmp()
-    await writeFile(join(cwd, "deck.json"), "{}")
-    // Resolved (not the bare "deck.json") — every downstream fs call resolves
-    // a relative path against the *real* process.cwd(), which only matches
-    // this `cwd` parameter in production. See resolveDeckTarget's own doc
-    // comment for why returning it unresolved would be a latent bug.
-    expect(await resolveDeckTarget("deck.json", undefined, cwd)).toBe(join(cwd, "deck.json"))
-  })
-
-  it("resolves a bare directory name that exists locally under cwd to its full path", async () => {
+  it("resolves a plain name against cwd whether or not it exists", async () => {
     const cwd = await tmp()
     await mkdir(join(cwd, "mydeck"))
-    expect(await resolveDeckTarget("mydeck", undefined, cwd)).toBe(join(cwd, "mydeck"))
+    expect(await resolveDeckTarget("mydeck", cwd)).toBe(join(cwd, "mydeck"))
+    expect(await resolveDeckTarget("typo.json", cwd)).toBe(join(cwd, "typo.json"))
   })
 
-  it("resolves a bare name that does not exist locally to $PPTWISE_HOME/decks/<name> when that candidate exists", async () => {
+  it("never looks in a deck home under PPTWISE_HOME", async () => {
+    const original = process.env.PPTWISE_HOME
     const home = await tmp()
     process.env.PPTWISE_HOME = home
-    await mkdir(join(home, "decks", "q3-review"), { recursive: true })
-    const cwd = await tmp()
-    expect(await resolveDeckTarget("q3-review", undefined, cwd)).toBe(join(home, "decks", "q3-review"))
-  })
-
-  it("honors config.decksDir as an override for the bare-name case, when that candidate exists", async () => {
-    process.env.PPTWISE_HOME = await tmp()
-    const teamDecks = await tmp()
-    await mkdir(join(teamDecks, "q3-review"), { recursive: true })
-    const cwd = await tmp()
-    expect(await resolveDeckTarget("q3-review", { decksDir: teamDecks }, cwd)).toBe(join(teamDecks, "q3-review"))
-  })
-
-  describe("typo'd bare-name fallback (W5 review fix: neither candidate exists)", () => {
-    it("returns the local (cwd-resolved) path, not a decksRoot guess, when neither candidate exists", async () => {
-      const home = await tmp()
-      process.env.PPTWISE_HOME = home
-      const cwd = await tmp()
-      // Neither `<cwd>/typo.json` nor `<home>/decks/typo.json` exists on disk.
-      expect(await resolveDeckTarget("typo.json", undefined, cwd)).toBe(join(cwd, "typo.json"))
-    })
-
-    it("still prefers an existing decksRoot candidate over the local path", async () => {
-      const home = await tmp()
-      process.env.PPTWISE_HOME = home
+    try {
       await mkdir(join(home, "decks", "q3-review"), { recursive: true })
       const cwd = await tmp()
-      expect(await resolveDeckTarget("q3-review", undefined, cwd)).toBe(join(home, "decks", "q3-review"))
-    })
-  })
-
-  describe("non-ENOENT stat errors rethrow instead of silently falling back (W5 review fix)", () => {
-    it("rethrows when the local candidate's path is broken (ENOTDIR via a file as an intermediate segment)", async () => {
-      const base = await tmp()
-      // `bare-name` resolves inside this cwd, so the candidate is the broken path.
-      const brokenCwd = await unstattablePath(base)
-      await expect(resolveDeckTarget("bare-name", undefined, brokenCwd)).rejects.toThrow(/cannot check/)
-    })
+      expect(await resolveDeckTarget("q3-review", cwd)).toBe(join(cwd, "q3-review"))
+    } finally {
+      if (original === undefined) delete process.env.PPTWISE_HOME
+      else process.env.PPTWISE_HOME = original
+    }
   })
 })
 

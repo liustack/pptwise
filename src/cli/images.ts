@@ -6,7 +6,7 @@
  */
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { dirname, join, resolve } from "node:path"
+import { join, resolve } from "node:path"
 import { PptwiseError } from "../errors"
 import { sniffImageFormat } from "../ir/asset-sniff"
 import { isMissingModuleError } from "../platform/node"
@@ -412,12 +412,8 @@ async function resolveDeckWorkspace(
   deckArg: string,
   cwd: string,
 ): Promise<{ location: WorkspaceLocation; isDir: boolean; target: string }> {
-  const [projectHit, userHit] = await Promise.all([findConfig(cwd), findUserConfig()])
-  const decksDirSource =
-    projectHit?.config.decksDir !== undefined
-      ? { decksDir: resolve(dirname(projectHit.path), projectHit.config.decksDir) }
-      : userHit?.config
-  const target = await resolveDeckTarget(deckArg, decksDirSource, cwd)
+  const projectHit = await findConfig(cwd)
+  const target = await resolveDeckTarget(deckArg, cwd)
   const isDir = await isDeckDirectory(target)
   const location = resolveWorkspaceLocation({
     cwd,

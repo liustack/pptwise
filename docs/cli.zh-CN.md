@@ -11,7 +11,7 @@ read_when:
 
 # CLI
 
-大多数 deck 操作都接受 IR v5 文件、deck 项目目录或裸 deck 名。裸名称在已配置的 deck 根目录下解析。显式路径优先。
+大多数 deck 操作都接受 IR v5 文件或 deck 项目目录。两者都是路径，按当前目录解析。
 
 渲染阶段没有临时主题选项。项目在 `deck.spec.json` 中绑定主题，裸 IR 在 `theme.id` 中绑定。编写 spec 前用 `theme try` 比较尚未绑定的候选。
 

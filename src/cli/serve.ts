@@ -42,7 +42,7 @@
  * Watch roots (design ruling 3) come straight from {@link buildDeckPreview}'s
  * own `resolvedTarget`/`isDir` — the exact path `loadDeckTarget`
  * (`./commands.ts`) already resolved `target` to — rather than this module
- * re-deriving the bare-name/`decksDir` resolution a second time. The one
+ * resolving the target a second time. The one
  * exception is the set opened before the first build, which comes from
  * `locateDeck` (`./commands.ts`), the locator that build itself calls, and
  * which that build's own answer replaces as soon as it finishes: a deck
@@ -139,8 +139,8 @@ export const THEME_POLL_MS = 2_000
 
 export interface ServeOptions {
   /** Same target shape every deck-accepting command accepts: an IR JSON
-   *  file, a deck project directory, or a bare name under
-   *  `~/.pptwise/decks` (`buildDeckPreview`/`loadDeckTarget`, `./commands.ts`). */
+   *  file or a deck project directory (`buildDeckPreview`/`loadDeckTarget`,
+   *  `./commands.ts`). */
   target: string
   /** Default {@link DEFAULT_PORT}. `0` binds an OS-assigned ephemeral port
    *  (tests only — `pptwise serve` itself always resolves a fixed port, see

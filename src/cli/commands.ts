@@ -117,9 +117,7 @@ import { offeredContentKinds } from "../render/layout-selection"
 type UserConfigHit = Awaited<ReturnType<typeof findUserConfig>>
 
 /** `findConfig()`'s own return shape — the project-layer counterpart to
- *  {@link UserConfigHit}, threaded the same way and for the same reason
- *  (W5 task 6: `loadDeckTarget` now needs the project layer too, for
- *  `decksDir` — see {@link resolveDecksDirSource}). */
+ *  {@link UserConfigHit}, threaded the same way and for the same reason. */
 type ProjectConfigHit = Awaited<ReturnType<typeof findConfig>>
 
 /**
@@ -141,38 +139,6 @@ async function readConfigs(cwd: string): Promise<[ProjectConfigHit, UserConfigHi
     throw new PptwiseError(failures.map((f) => message(f.reason)).join("\n"), { cause: failures[0]!.reason })
   }
   return [(project as PromiseFulfilledResult<ProjectConfigHit>).value, (user as PromiseFulfilledResult<UserConfigHit>).value]
-}
-
-/**
- * The `config` argument `resolveDeckTarget` (`./deck-dir.ts`) and its
- * `decksRoot` (`./home.ts`) expect: an object exposing `decksDir`, resolved
- * against whichever base that value's own layer implies. Project
- * `pptwise.config.json`'s own `decksDir` (spec §7's project-level escape
- * hatch, `ConfigSchema` in `./config.ts`, W5 task 6) wins over the user
- * config's (`UserConfigSchema`) when both are set — same project-beats-user
- * precedence as other project config — but the two
- * layers resolve against different bases (project against the config file's
- * own directory, user against `pptwiseHome()`, `decksRoot`'s one fixed
- * base), so a winning project value is resolved to an absolute path *here*,
- * before being handed down: `decksRoot`'s own
- * `resolve(pptwiseHome(), config?.decksDir ?? "decks")` then returns that
- * absolute path unchanged (`path.resolve`'s own semantics for an absolute
- * later segment) — the same "already-absolute short-circuits the base"
- * behavior `decksRoot({ decksDir: "/elsewhere/decks" })` already exercises
- * for the user layer, reused rather than reimplemented. Falls through to
- * `userHit?.config` untouched when the project layer has no `decksDir` of
- * its own — including when there is no project config at all — so the user
- * layer (or, absent that too, `decksRoot`'s own built-in default) keeps
- * working exactly as before this function existed.
- */
-function resolveDecksDirSource(
-  projectHit: ProjectConfigHit,
-  userHit: UserConfigHit,
-): { decksDir?: string } | undefined {
-  if (projectHit?.config.decksDir !== undefined) {
-    return { decksDir: resolve(dirname(projectHit.path), projectHit.config.decksDir) }
-  }
-  return userHit?.config
 }
 
 /**
@@ -214,10 +180,7 @@ export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): P
  * Shared "turn a CLI target argument into a raw IR-shaped object plus its
  * asset base directory" step for `runValidate`/`runRender`/`runPreview` (W5
  * task 5) — the one piece of logic those three commands would otherwise
- * triplicate. `arg` is resolved through `resolveDeckTarget` (path vs.
- * bare-name, spec §7) using the effective `decksDir` source — project config
- * when it sets one, else the user config's, else `resolveDeckTarget`'s own
- * built-in default (W5 task 6, {@link resolveDecksDirSource}) — then
+ * triplicate. `arg` is resolved against the cwd (`resolveDeckTarget`), then
  * branches on whether the resolved target is a deck project directory:
  *
  * - directory → `readDeckDir` (assemble in memory — spec + pages/ + assets/,
@@ -225,19 +188,13 @@ export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): P
  * - file → the pre-existing single-file path, byte-for-byte: the IR as the
  *   theme-input record read it (`loadIrFile`, one read per build), then the
  *   same `dirname(resolve(...))` asset base every caller already used.
- *   When `arg` is an explicit path (has a separator, or exists locally —
- *   true of every pre-W5 caller, since every existing test passes a full
- *   path), `resolveDeckTarget` returns it completely unchanged with no
- *   `fs` call at all, so this branch degenerates to exactly the old inline
- *   code — single-file behavior stays byte-identical.
  *
  * `isDir` is threaded back so `runValidate` can gate its dir-only placeholder
  * note on it (single-file mode must never grow that note, even for a
  * hand-authored IR that happens to set `placeholder: true` itself).
  *
- * `projectHit`/`userHit` are the caller's own already-fetched
- * `findConfig(cwd)`/`findUserConfig()` results (see `applyDeckConfig`'s doc
- * comment above for why both are threaded rather than fetched here too).
+ * `projectHit` is the caller's own already-fetched `findConfig(cwd)` result,
+ * threaded rather than fetched here again.
  *
  * `themeInputs` is the record of every theme input this load read
  * (`collectThemeInputs`, `./theme-inputs.ts`), collected once the target is
@@ -252,8 +209,7 @@ export async function applyDeckConfig(raw: unknown, themeInputs: ThemeInputs): P
  * (`isDir: false`). `runRender`/`runPreview` use it as the slug source when
  * `-o` is omitted (workspace-artifacts wave). `buildDeckPreview` hands it to
  * `createServeServer` (`./serve.ts`) as the exact path to `fs.watch`, without
- * that module re-deriving the same bare-name/`decksDir` resolution a second
- * time.
+ * that module resolving the target a second time.
  */
 function mergeWorkspaceImages(raw: unknown, extras: Record<string, { src: string }>): unknown {
   if (typeof raw !== "object" || raw === null) return raw
@@ -287,13 +243,8 @@ export interface DeckLocation {
   isDir: boolean
 }
 
-async function locateDeckTarget(
-  arg: string,
-  cwd: string,
-  projectHit: ProjectConfigHit,
-  userHit: UserConfigHit,
-): Promise<DeckLocation> {
-  const target = await resolveDeckTarget(arg, resolveDecksDirSource(projectHit, userHit), cwd)
+async function locateDeckTarget(arg: string, cwd: string): Promise<DeckLocation> {
+  const target = await resolveDeckTarget(arg, cwd)
   if (await isDeckDirectory(target)) return { resolvedTarget: resolve(target), isDir: true }
   return { resolvedTarget: resolve(target), isDir: false }
 }
@@ -307,8 +258,8 @@ async function locateDeckTarget(
  */
 export async function locateDeck(arg: string, opts: { cwd?: string } = {}): Promise<DeckLocation> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  return locateDeckTarget(arg, cwd, projectHit, userHit)
+  await readConfigs(cwd)
+  return locateDeckTarget(arg, cwd)
 }
 
 /**
@@ -396,13 +347,8 @@ function assetPathIn(dir: string, cwd: string): (assetId: string) => string {
   }
 }
 
-async function loadDeckTarget(
-  arg: string,
-  cwd: string,
-  projectHit: ProjectConfigHit,
-  userHit: UserConfigHit,
-): Promise<LoadedDeckTarget> {
-  const location = await locateDeckTarget(arg, cwd, projectHit, userHit)
+async function loadDeckTarget(arg: string, cwd: string, projectHit: ProjectConfigHit): Promise<LoadedDeckTarget> {
+  const location = await locateDeckTarget(arg, cwd)
   const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
   return readDeckTarget(location, themeInputs, cwd, projectHit)
 }
@@ -414,8 +360,8 @@ export async function loadValidatedDeckIr(
   target: string,
   cwd: string,
 ): Promise<{ ir: PptxIR; theme: ThemeDefinition | undefined }> {
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
@@ -451,8 +397,8 @@ export interface RenderOptions {
 
 /**
  * `irPath` accepts a single IR/spec JSON file, a deck project directory, or
- * a bare deck name under `~/.pptwise/decks` (W5 task 5, `loadDeckTarget`
- * above) — directory/bare-name input is assembled in memory first, then
+ * a deck project directory (W5 task 5, `loadDeckTarget`
+ * above) — directory input is assembled in memory first, then
  * follows the exact same validate → resolve-assets → generate pipeline a
  * single file always has. `--draft` threads through unchanged either way
  * (`generatePptx`'s own gate, W5 task 1) — a deck project's own placeholder
@@ -471,8 +417,8 @@ export interface RenderOptions {
  */
 export async function runRender(irPath: string, opts: RenderOptions): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath, allowDroppedContent: opts.allowDroppedContent })
   if (!v.ok) throw new PptwiseError(`invalid IR:\n${formatIssues(v.errors)}`)
@@ -566,9 +512,9 @@ function placeholderNote(ir: PptxIR): string | undefined {
 }
 
 /**
- * `irPath` accepts a single IR/spec JSON file, a deck project directory, or
- * a bare deck name (same `loadDeckTarget` resolution `runRender` uses).
- * Directory/bare-name input additionally gets a {@link placeholderNote} —
+ * `irPath` accepts a single IR/spec JSON file or a deck project directory
+ * (same `loadDeckTarget` resolution `runRender` uses).
+ * Directory input additionally gets a {@link placeholderNote} —
  * gated on `isDir` specifically so single-file mode (including a
  * hand-authored IR that sets `placeholder: true` itself) never grows one,
  * keeping that path's output byte-identical to before this task.
@@ -606,8 +552,8 @@ export async function runValidate(
   irPath: string,
   cwd = process.cwd(),
 ): Promise<string> {
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const { raw, baseDir, isDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(irPath, cwd, projectHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok)
@@ -712,7 +658,7 @@ export interface AuditCliResult {
  * `pptwise audit <target> [--json]` (W6 task 2, spec §7 workflow ④): resolve
  * `target` through the exact same `loadDeckTarget` path `runValidate`/
  * `runRender`/`runPreview` already use (IR file / deck project directory /
- * bare name under `~/.pptwise/decks`), validate first, then hand the
+ * deck project directory), validate first, then hand the
  * validated IR to `auditDeck` (`../audit/deck-audit.ts`, pure, no I/O).
  *
  * An invalid deck fails exactly like `pptwise validate` — same message
@@ -734,8 +680,8 @@ export interface AuditCliResult {
  */
 export async function runAudit(target: string, opts: AuditOptions = {}): Promise<AuditCliResult> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
@@ -790,8 +736,8 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
   }
   if (opts.component !== undefined && opts.fit) throw new PptwiseError("pass --component or --fit, not both")
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const location = await locateDeckTarget(target, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const location = await locateDeckTarget(target, cwd)
   if (!location.isDir) {
     throw new PptwiseError(`pptwise inspect reads a deck project directory (deck.spec.json plus pages/), and ${target} is not one`)
   }
@@ -913,8 +859,8 @@ export interface AssetBriefOptions {
  */
 export async function runAssetBrief(target: string, opts: AssetBriefOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const { raw, baseDir, workspaceAssetsDir, themeInputs, missingAssetPath } = await loadDeckTarget(target, cwd, projectHit)
   const theme = (await applyDeckConfig(raw, themeInputs))?.definition
   const v = validateIr(raw, { theme, missingAssetPath })
   if (!v.ok) {
@@ -1833,8 +1779,8 @@ export interface PreviewOptions {
  * below (and transitively `createServeServer`, `./serve.ts`) can reuse it
  * without re-threading `loadDeckTarget`/`applyDeckConfig`/`validateIr`/
  * `resolveLocalAssets` a second time. Resolves `target` exactly like
- * `runRender`/`runValidate`/`runAudit` (single IR file, deck project
- * directory, or bare deck name — {@link loadDeckTarget} above), then renders
+ * `runRender`/`runValidate`/`runAudit` (single IR file or deck project
+ * directory, {@link loadDeckTarget} above), then renders
  * every slide to SVG once (`svgs`, index-aligned with `ir.slides`) — the same
  * strings both `runPreview`'s per-slide `.svg` files and
  * {@link buildDeckAuditAndHtml}'s embedded `preview.html` copies come from,
@@ -1893,9 +1839,8 @@ async function renderDeckSlides(
   let location: DeckLocation
   let projectHit: ProjectConfigHit
   try {
-    let userHit: UserConfigHit
-    ;[projectHit, userHit] = await readConfigs(cwd)
-    location = await locateDeckTarget(target, cwd, projectHit, userHit)
+    ;[projectHit] = await readConfigs(cwd)
+    location = await locateDeckTarget(target, cwd)
   } catch (e) {
     throw new DeckBuildError(e, unreadThemeInputs(e))
   }
@@ -2002,8 +1947,8 @@ export async function buildDeckPreview(
 }
 
 /**
- * `irPath` accepts a single IR/spec JSON file, a deck project directory, or
- * a bare deck name (same `loadDeckTarget` resolution `runRender` uses).
+ * `irPath` accepts a single IR/spec JSON file or a deck project directory
+ * (same `loadDeckTarget` resolution `runRender` uses).
  * Preview never gates on placeholder pages either way (single-file or
  * dir-mode) — `renderSlideSvg` itself never calls the draft gate, spec §7:
  * preview always lets everything through — an agent iterating on a
@@ -2227,8 +2172,8 @@ async function specPageIds(deckDir: string): Promise<string[]> {
 
 async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const location = await locateDeckTarget(target, cwd, projectHit, userHit)
+  const [projectHit] = await readConfigs(cwd)
+  const location = await locateDeckTarget(target, cwd)
   const { isDir, resolvedTarget } = location
   if (!(await pathExists(resolvedTarget))) {
     throw new PptwiseError(`nothing to build at ${resolvedTarget}: pass a deck project directory, an IR JSON file, or a deck name`)
@@ -2343,8 +2288,8 @@ function withRewrittenAssetPaths(ir: PptxIR, deckDir: string, outDir: string): P
 }
 
 /**
- * `pptwise assemble <dir|name>` (W5 task 5): resolve `target` (path or bare
- * deck name, `resolveDeckTarget`) → `readDeckDir` (spec + pages/ + assets/ →
+ * `pptwise assemble <dir>` (W5 task 5): resolve `target` against the cwd
+ * (`resolveDeckTarget`) → `readDeckDir` (spec + pages/ + assets/ →
  * IR, `./deck-dir.ts`) → write the assembled IR as pretty-printed JSON,
  * default `<deckDir>/deck.json` when `-o` is omitted. Deliberately does
  * *not* call `applyDeckConfig` — `assemble` materializes exactly what the
@@ -2389,8 +2334,7 @@ function withRewrittenAssetPaths(ir: PptxIR, deckDir: string, outDir: string): P
  */
 export async function runAssemble(target: string, opts: AssembleOptions = {}): Promise<string> {
   const cwd = opts.cwd ?? process.cwd()
-  const [projectHit, userHit] = await readConfigs(cwd)
-  const dir = await resolveDeckTarget(target, resolveDecksDirSource(projectHit, userHit), cwd)
+  const dir = await resolveDeckTarget(target, cwd)
   if ((await pathExists(dir)) && !(await isDeckDirectory(dir))) {
     throw new PptwiseError(`expected a deck project directory: ${dir}`)
   }
