@@ -98,6 +98,14 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 排在第二位，任何两个系列的图第二个系列都是红的，不管它是不是这一页要说的
  * 那个。现在没标重点的系列先用墨、蓝灰、褐，红排到第四。色值不变，只换
  * 顺序。
+ *
+ * **共享组件照打字稿排（2026-10，`shape.surfaces: "ruled"`）**：memo 构图之外
+ * 由共享渲染器画的页（矩阵、SWOT、编号卡、表格之类）也照一份打出来的备忘录
+ * 画，不铺卡、不画圆角，细线和留白撑结构，编号就是数字，实心块改成墨线描边，
+ * 领头的那一处是一条印章红细线，正合「红成线与字，永不成面」。卡面 `surface`
+ * 和 `radius` 不收：衬页是从便笺纸抬一档的真实卡色，不是为了装作没有卡设
+ * 的，打开后它只剩缺图垫底和热力图起色，上面压 surface 的实测照旧成立。圆角
+ * 只剩 memo 构图和图表自己的标记还在用，共享组件一律直角。
  */
 export const MEMO_TOKENS: StyleTokens = {
   id: "memo",
@@ -124,7 +132,8 @@ export const MEMO_TOKENS: StyleTokens = {
     // 用 Courier New（Consolas 是编程面，不承担公文眉字）。
     mono: ["Courier New", "Consolas"],
   },
-  shape: { radius: 2, gapScale: 0.9 }, // 微圆克制 + tight 留白（brief 同圆角，留白再收一档）
+  // 微圆克制 + tight 留白（brief 同圆角，留白再收一档）。共享组件照打字稿排，见文件头。
+  shape: { radius: 2, gapScale: 0.9, surfaces: "ruled" },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F6F1E7" },
     chapter: { kind: "color", value: "#F6F1E7" },

@@ -176,6 +176,10 @@ function consultingPadDeck(): PptxIR {
 // `shape.surfaces: "ruled"`, so page 4's callout drops its panel for a rule
 // over it and a hairline under it. Only `thesis|4` moves. The other 109
 // paths stay byte-identical.
+//
+// Recaptured (memo ruled surfaces, 2026-10-13). memo declares
+// `shape.surfaces: "ruled"`, so page 4's callout drops its panel the same
+// way. Only `memo|4` moves. The other 109 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }
