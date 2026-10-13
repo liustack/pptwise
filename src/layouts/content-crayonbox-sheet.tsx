@@ -7,6 +7,8 @@ import { fitEmphasisText } from "../render/emphasis"
 import { crayonInks, crayonSectionColor, crayonText, paintCrayon } from "./compositions/crayonbox"
 import {
   BODY,
+  CLAIM,
+  CLAIM_W,
   CRAYON_HEAD_FIT,
   CRAYON_LEFT,
   CRAYON_W,
@@ -15,6 +17,7 @@ import {
   CrayonSource,
   crayonBandRect,
   crayonClaimIn,
+  claimRoomUnderCapsule,
   crayonSourceIn,
   fitCrayonClaim,
   fitCrayonSource,
@@ -64,7 +67,7 @@ export function CrayonboxSheetContent({ ir, slide, index, ctx }: SvgTemplateProp
   const composed = slide.subheading?.trim()
     ? null
     : compose(
-        { components: slide.components, ctx, rect: crayonBandRect(), setting: "crayonbox", inks: { section: color }, claim: crayonClaimIn(slide.heading, ctx, color), source: crayonSourceIn(slide, ctx) },
+        { components: slide.components, ctx, rect: crayonBandRect(), setting: "crayonbox", inks: { section: color }, claim: crayonClaimIn(slide.heading, ctx, color, slide), source: crayonSourceIn(slide, ctx) },
         CRAYONBOX_COMPOSITIONS,
       )
   const veil = photo ? (
@@ -88,7 +91,7 @@ export function CrayonboxSheetContent({ ir, slide, index, ctx }: SvgTemplateProp
       </>
     )
   }
-  const claim = fitCrayonClaim(slide.heading, ctx)
+  const claim = fitCrayonClaim(slide.heading, ctx, CLAIM_W, CLAIM.size, CLAIM.lineHeight, claimRoomUnderCapsule(slide))
   const standfirst = slide.subheading?.trim() ? fitCrayonStandfirst(slide.subheading, ctx) : null
   const shift = standfirst ? standfirst.lines.length * STANDFIRST.lineHeight + STANDFIRST.gap : 0
   const body = { x: CRAYON_LEFT, y: BODY.top + shift, w: CRAYON_W, h: BODY.bottom - BODY.top - shift }

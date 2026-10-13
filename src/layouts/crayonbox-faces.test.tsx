@@ -113,12 +113,29 @@ describe("crayon's faces", () => {
   })
 
   it("a claim too long for one line breaks at a comma and ends on the same line", () => {
-    const one = svg(deck([cover, plain("新规定", "短标题")]), 1)
-    const two = svg(deck([cover, plain("新规定", "入园头几周孩子真有压力，陪着慢慢分开有研究支持，再多写一些让它放不下一行才行")]), 1)
+    const one = svg(deck([cover, plain(undefined, "短标题")]), 1)
+    const two = svg(deck([cover, plain(undefined, "入园头几周孩子真有压力，陪着慢慢分开有研究支持，再多写一些让它放不下一行才行")]), 1)
     const last = (root: Element) => Array.from(root.querySelectorAll("[data-crayon-claim] text")).at(-1)!.getAttribute("y")
     expect(two.querySelectorAll("[data-crayon-claim] text")).toHaveLength(2)
     expect(texts(two).find((t) => t.startsWith("入园"))!.endsWith("，")).toBe(true)
     expect(last(one)).toBe(last(two))
+  })
+
+  it("a long claim under the section's capsule is set smaller to clear it, and still ends on the same line", () => {
+    // Two lines at the claim's size, ending on its foot, rose into the
+    // capsule over them.
+    const one = svg(deck([cover, plain("新规定", "短标题")]), 1)
+    const long = svg(deck([cover, plain("新规定", "入园头几周孩子真有压力，陪着慢慢分开有研究支持，再多写一些让它放不下一行才行")]), 1)
+    const lines = Array.from(long.querySelectorAll("[data-crayon-claim] text"))
+    const capsule = long.querySelector("[data-crayon-capsule] rect")!
+    const capsuleFoot = Number(capsule.getAttribute("y")) + Number(capsule.getAttribute("height"))
+    const first = lines[0]!
+    expect(Number(first.getAttribute("y")) - 0.88 * Number(first.getAttribute("font-size"))).toBeGreaterThan(capsuleFoot)
+    expect(lines.map((t) => t.textContent).join("")).toBe("入园头几周孩子真有压力，陪着慢慢分开有研究支持，再多写一些让它放不下一行才行")
+    // The claim's foot, which the stroke under it hangs from, does not move.
+    const stroke = (root: Element) => root.querySelector("[data-decor-piece='crayon-underline'] path")!.getAttribute("d")
+    expect(stroke(long)).toBe(stroke(one))
+    expect(findContrastIssues(renderSlideSvg(deck([cover, plain("新规定", "入园头几周孩子真有压力，陪着慢慢分开有研究支持，再多写一些让它放不下一行才行")]), 1))).toEqual([])
   })
 
   it("a content page over a photograph lays the paper over it from the left", () => {

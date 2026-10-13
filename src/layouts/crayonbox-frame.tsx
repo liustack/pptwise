@@ -140,7 +140,26 @@ export function CrayonSection({ ir, slide, index, ctx }: { ir: PptxIR; slide: Sl
  * last comma or colon that lets both fit. A claim the author broke in two
  * keeps the author's break.
  */
-export function fitCrayonClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = CLAIM_W, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight): EmphasisHeadingLayout {
+export function fitCrayonClaim(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number = CLAIM_W, size: number = CLAIM.size, lineHeight: number = CLAIM.lineHeight, room: number = Infinity): EmphasisHeadingLayout {
+  const whole = fitClaimAt(heading, ctx, width, size, lineHeight)
+  if (whole.lines.length * whole.lineHeight <= room) return whole
+  // Two lines ending on the claim's foot rise past what stands over them
+  // (the section's capsule), so the claim is set smaller, its lines closer
+  // in the same proportion, until they fit under it.
+  for (let s = size - 1; s >= Math.min(CLAIM.minPt, size); s -= 1) {
+    const lead = Math.round((lineHeight * s) / size)
+    const smaller = fitClaimAt(heading, ctx, width, s, lead)
+    if (!smaller.truncated && smaller.lines.length * lead <= room) return smaller
+  }
+  return whole
+}
+
+/** The room a claim ending on `foot` has under the section's capsule, when the page draws one. */
+export function claimRoomUnderCapsule(slide: Pick<Slide, "kicker">, foot: number = CLAIM.foot): number {
+  return slide.kicker && stripEmphasis(slide.kicker).trim() ? foot - (CAPSULE.y + CAPSULE.h) : Infinity
+}
+
+function fitClaimAt(heading: string | undefined, ctx: Pick<ComponentCtx, "fonts">, width: number, size: number, lineHeight: number): EmphasisHeadingLayout {
   const plain = stripEmphasis(heading ?? "").trim()
   const floor = Math.round(size * CLAIM.oneLineFloor)
   const parts = (heading ?? "").split(/\n+/u).map((part) => part.trim()).filter(Boolean)
@@ -198,11 +217,11 @@ export function CrayonClaim({ layout, ctx, color, x = CRAYON_LEFT, foot = CLAIM.
  * The claim a composition places in a column of its own, or `null` when it
  * would not fit that column whole: the composition then declines the page.
  */
-export function crayonClaimIn(heading: string | undefined, ctx: ComponentCtx, color: string): (column: ClaimColumn) => React.ReactElement | null {
+export function crayonClaimIn(heading: string | undefined, ctx: ComponentCtx, color: string, slide: Pick<Slide, "kicker"> = {}): (column: ClaimColumn) => React.ReactElement | null {
   return ({ x, w, size, foot, lineHeight, maxLines, underline }) => {
     if (!stripEmphasis(heading ?? "").trim()) return null
     const s = size ?? CLAIM.size
-    const layout = fitCrayonClaim(heading, ctx, w, s, lineHeight ?? CLAIM.lineHeight)
+    const layout = fitCrayonClaim(heading, ctx, w, s, lineHeight ?? CLAIM.lineHeight, claimRoomUnderCapsule(slide, foot ?? CLAIM.foot))
     if (layout.truncated || layout.lines.length > (maxLines ?? CLAIM.maxLines)) return null
     return <CrayonClaim layout={layout} ctx={ctx} color={color} x={x} foot={foot ?? CLAIM.foot} underline={underline ?? UNDERLINE} />
   }
