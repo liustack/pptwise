@@ -10,7 +10,7 @@ import { buildCtx } from "../render/full-slide-svg"
 import { PACING_BUDGETS } from "@/narrative"
 import { findRunMisfits } from "../audit/svg-audit"
 import { measureTextUnits } from "../lib/svg-text-layout"
-import { contrastRatio } from "../render/ink"
+import { contrastRatio, requiredContrastRatio } from "../render/ink"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -236,12 +236,14 @@ describe("callout component emphasis", () => {
 
   it("renders **emphasized** runs with the theme accent color, independent of variant bar color", () => {
     const marked = { type: "callout" as const, variant: "warn" as const, text: "注意 **关键信息** 请查看" }
-    const { container } = svg(callout.render(marked, { x: 0, y: 0, w: 1120 }, ctx))
+    // An accent that reads on the panel, so the run keeps it as it is.
+    const deep = { ...ctx, colors: { ...ctx.colors, accent: "#00704F" } }
+    const { container } = svg(callout.render(marked, { x: 0, y: 0, w: 1120 }, deep))
     const first = container.querySelector("text")
     const tspans = Array.from(first?.querySelectorAll("tspan") ?? [])
     const accentSpan = tspans.find((t) => t.textContent === "关键信息")
-    // theme accent (#00A878), not the warn variant's bar/icon color (#DC2626)
-    expect(accentSpan?.getAttribute("fill")).toBe("#00A878")
+    // theme accent (#00704F), not the warn variant's bar/icon color (#DC2626)
+    expect(accentSpan?.getAttribute("fill")).toBe("#00704F")
     expect(accentSpan?.getAttribute("font-weight")).toBe("600")
   })
 
@@ -374,5 +376,18 @@ describe("a callout's title and tag", () => {
   it("declares a tag wider than its text's measure dropped, never squeezed", () => {
     const { container } = svg(callout.render({ ...noted, tag: { text: "很长的标签".repeat(12) } }, { x: 0, y: 0, w: 400 }, ctx))
     expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})
+
+describe("callout marked run ink", () => {
+  it("reads on the panel under a theme whose emphasis ink is pale there", () => {
+    // thesis's gold, set on its info panel, read 2.80:1.
+    const thesis = boundThemeCtx("thesis")
+    const component = { type: "callout" as const, variant: "info" as const, text: "**Why the gap:** the deduction is the benchmark times the factor" }
+    const { container } = svg(callout.render(component, { x: 0, y: 0, w: 1000 }, thesis))
+    const panel = container.querySelector("rect")!.getAttribute("fill")!
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "Why the gap:")!
+    const size = Number(run.closest("text")!.getAttribute("font-size"))
+    expect(contrastRatio(run.getAttribute("fill")!, panel)).toBeGreaterThanOrEqual(requiredContrastRatio(size))
   })
 })

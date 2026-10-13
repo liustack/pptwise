@@ -121,11 +121,23 @@ describe("paragraph component emphasis", () => {
     // whose accent cannot separate from its text ink (stage) is fixed on both
     // surfaces at once rather than on headings only.
     const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
-    const split = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    // On stage's own dark ground, where the ink reads.
+    const split = { ...ctx, colors: { ...ctx.colors, bg: "#1A1714", text: "#F2EDE4", emphasisInk: "#B8A888" } }
     const { container } = svg(paragraph.render(marked, { x: 0, y: 0, w: 1120 }, split))
     const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "强调内容")
     expect(run?.getAttribute("fill")).toBe("#B8A888")
     expect(run?.getAttribute("fill")).not.toBe(ctx.colors.accent)
+  })
+
+  it("lifts the run's ink on a ground it does not read on, keeping it apart from the text", () => {
+    // A deck switched to a theme whose emphasis ink is pale on its paper.
+    const marked = { type: "paragraph" as const, text: "普通 **强调内容** 普通" }
+    const pale = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    const { container } = svg(paragraph.render(marked, { x: 0, y: 0, w: 1120 }, pale))
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "强调内容")
+    const fill = run?.getAttribute("fill") ?? ""
+    expect(contrastRatio(fill, pale.colors.bg)).toBeGreaterThanOrEqual(requiredContrastRatio(pale.bodyFontPx))
+    expect(fill).not.toBe(pale.colors.text)
   })
 
   it("measures the same height with or without ** markers", () => {

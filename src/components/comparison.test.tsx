@@ -667,3 +667,21 @@ describe("comparison row icon", () => {
     expect(iconX + 20).toBeLessThanOrEqual(labelX(iconed))
   })
 })
+
+describe("comparison marked run ink", () => {
+  it("reads on a marked row's tint under a theme whose emphasis ink is pale there", () => {
+    const thesis = boundThemeCtx("thesis")
+    const component = {
+      type: "comparison" as const,
+      columns: ["What the role asks", "What I have done"],
+      rows: [
+        { label: "Membership", cells: ["Tiers and perks", "Led the redesign"] },
+        { label: "Roadmapping", cells: ["Own a roadmap", "**Never owned a roadmap past six months**"], emphasis: true },
+      ],
+    }
+    const { container } = svg(comparison.render(component, { x: 0, y: 0, w: 1100 }, thesis))
+    const tint = container.querySelector("[data-row-marked]")!.getAttribute("fill")!
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "Never owned a roadmap past six months")!
+    expect(contrastRatio(run.getAttribute("fill")!, tint)).toBeGreaterThanOrEqual(4.5)
+  })
+})

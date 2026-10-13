@@ -9,7 +9,7 @@ import {
   sliceEmphasisForLines,
   stripEmphasis,
 } from "../render/emphasis"
-import { accessibleInk, blendOver, graphicInk } from "../render/ink"
+import { accessibleInk, blendOver, graphicInk, liftedInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import { formLineHeight, layoutAtSize } from "./legibility"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -683,7 +683,9 @@ function renderDefault(rawComponent: ComparisonComponent, box: ComponentBox, ctx
                   renderEmphasisText(
                     lineSegments[li]!,
                     {
-                      accent: emphasisRunInk(ctx.colors),
+                      // A marked run reads on its row, and keeps its own ink.
+                      accent: liftedInk(emphasisRunInk(ctx.colors), tint ?? pageBg, cellFontSize),
+                      padFill: emphasisRunInk(ctx.colors),
                       baseFill: fill,
                       emphasis: ctx.emphasis,
                       fontWeight: bold ? "700" : undefined,

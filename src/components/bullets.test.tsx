@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { bullets } from "./bullets"
 import type { ComponentCtx } from "./types"
+import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { PACING_BUDGETS } from "@/narrative"
 
 const ctx: ComponentCtx = {
@@ -387,5 +388,18 @@ describe("bullets component spacious-pacing shrink (MIN_FONT floor)", () => {
       expect(container.querySelector("[data-dropped]")).toBeNull()
       expect(container.querySelectorAll("text").length).toBeGreaterThan(0)
     })
+  })
+})
+
+describe("bullets marked run ink", () => {
+  it("reads on the page under a theme whose emphasis ink is pale on it", () => {
+    const pale: ComponentCtx = { ...ctx, colors: { ...ctx.colors, emphasisInk: "#B8A888" } }
+    const component = { type: "bullets" as const, items: ["Pay **RMB 0** up front", "Keep the savings"] }
+    const { container } = svg(bullets.render(component, { x: 0, y: 0, w: 1000 }, pale))
+    const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "RMB 0")!
+    const size = Number(run.closest("text")!.getAttribute("font-size"))
+    expect(contrastRatio(run.getAttribute("fill")!, pale.colors.bg)).toBeGreaterThanOrEqual(requiredContrastRatio(size))
+    expect(run.getAttribute("fill")).not.toBe(pale.colors.emphasisInk)
+    expect(run.getAttribute("fill")).not.toBe(pale.colors.text)
   })
 })

@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { Fragment } from "react"
 import { layoutSvgText } from "../lib/svg-text-layout"
+import { liftedInk } from "../render/ink"
 import { parseEmphasis, renderEmphasisLine, sliceEmphasisForLines, stripEmphasis, emphasisRunInk } from "../render/emphasis"
 import type { RenderDef, SvgComponent } from "./types"
 
@@ -59,7 +60,9 @@ export const paragraph: SvgComponent<ParagraphComponent> = {
           // Runs are placed in the face they are painted in, so a pad
           // hugs its glyphs. The wrap above keeps the wider class estimate.
           const emphasis = renderEmphasisLine(segments, {
-            accent: emphasisRunInk(ctx.colors),
+            // A marked run reads on the ground it is set on, and keeps its own ink.
+            accent: liftedInk(emphasisRunInk(ctx.colors), ctx.defaultBg ?? ctx.colors.bg, l.fontSize),
+            padFill: emphasisRunInk(ctx.colors),
             baseFill: ctx.colors.text,
             fontSize: l.fontSize,
             x: 0,

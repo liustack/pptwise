@@ -6,7 +6,7 @@ import {
   type EmphasisSegment,
   emphasisRunInk,
 } from "../render/emphasis"
-import { accessibleInk, graphicInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
+import { accessibleInk, graphicInk, liftedInk, resolveSemanticColor, type SemanticColorTokens } from "../render/ink"
 import { mixHex } from "./color-mix"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
@@ -147,7 +147,9 @@ export const callout: SvgComponent<CalloutComponent> = {
           renderEmphasisText(
             segments,
             {
-              accent: emphasisRunInk(ctx.colors),
+              // A marked run reads on the panel, and keeps its own ink.
+              accent: liftedInk(emphasisRunInk(ctx.colors), panel, laid.fontSize),
+              padFill: emphasisRunInk(ctx.colors),
               baseFill: ink,
               emphasis: ctx.emphasis,
               measureWeight: { fontFamily: ctx.fonts.body },

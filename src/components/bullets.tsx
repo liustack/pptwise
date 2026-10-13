@@ -10,6 +10,7 @@ import {
   type EmphasisSegment,
   emphasisRunInk,
 } from "../render/emphasis"
+import { liftedInk } from "../render/ink"
 import type { RenderDef, SvgComponent } from "./types"
 
 type BulletsComponent = Extract<Component, { type: "bullets" }>
@@ -263,7 +264,9 @@ export const bullets: SvgComponent<BulletsComponent> = {
               renderEmphasisText(
                 segments,
                 {
-                  accent: emphasisRunInk(ctx.colors),
+                  // A marked run reads on the ground it is set on, and keeps its own ink.
+                  accent: liftedInk(emphasisRunInk(ctx.colors), ctx.defaultBg ?? ctx.colors.bg, fontSize),
+                  padFill: emphasisRunInk(ctx.colors),
                   baseFill: ctx.colors.text,
                   emphasis: ctx.emphasis,
                   // Runs are placed in the face they are painted in, so a
