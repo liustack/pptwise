@@ -14,10 +14,13 @@ const LINE_RATIO = 1.4
  * stays fixed (`LINE_RATIO`), so line height scales automatically with
  * whatever baseline the caller passes.
  */
-function lay(text: string, w: number, fontSize: number) {
+function lay(text: string, w: number, fontSize: number, paintedIn: string) {
   return layoutSvgText(stripEmphasis(text), {
     maxWidth: w,
     fontSize,
+    // The wrap keeps the envelope's widths, and no line runs past the
+    // column in the face it is painted in (`paintedIn`).
+    paintedIn,
     maxLines: 99, // wrap freely; never shrink/truncate a body paragraph
     lineHeightRatio: LINE_RATIO,
   })
@@ -25,11 +28,11 @@ function lay(text: string, w: number, fontSize: number) {
 
 export const paragraph: SvgComponent<ParagraphComponent> = {
   measure(component, w, ctx) {
-    const l = lay(component.text, w, ctx.bodyFontPx)
+    const l = lay(component.text, w, ctx.bodyFontPx, ctx.fonts.body)
     return l.lines.length * l.lineHeight
   },
   render(component, box, ctx) {
-    const l = lay(component.text, box.w, ctx.bodyFontPx)
+    const l = lay(component.text, box.w, ctx.bodyFontPx, ctx.fonts.body)
     const lineSegments = sliceEmphasisForLines(parseEmphasis(component.text), l.lines)
 
     // Truncation budget (visual review 2026-08-15). `layoutContentFit`'s

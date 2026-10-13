@@ -28,6 +28,15 @@ export interface TextWeightHint {
    * said it (a mark that must sit under a specific glyph) keep saying so.
    */
   exact?: boolean
+  /**
+   * The family the text is painted in, for a wrap that measures by the
+   * envelope (no `fontFamily`) and must still fit in the face it is painted
+   * in. Each width is then the wider of the two. The envelope runs wide of
+   * every measured face but one: Microsoft YaHei's digits (0.5864em against
+   * the envelope's 0.56). A paragraph of figures wrapped by the envelope
+   * alone set a line 19px past its column in YaHei.
+   */
+  paintedIn?: string
 }
 
 export interface SvgTextLayoutOptions extends TextWeightHint {
@@ -561,6 +570,10 @@ function classAverageUnits(char: string, table: FaceFactorTable, mode: WeightMod
 }
 
 export function measureTextUnits(text: string, weight?: TextWeightHint): number {
+  if (weight?.paintedIn !== undefined) {
+    const { paintedIn, ...envelope } = weight
+    return Math.max(measureTextUnits(text, envelope), measureTextUnits(text, { ...envelope, fontFamily: paintedIn }))
+  }
   const mode: WeightMode = weight?.bold ? "bold" : "regular"
   const faceKey = classifyFaceKey(weight?.fontFamily)
   const classTable = CLASS_TABLE_FOR[faceKey]
@@ -1863,7 +1876,7 @@ export function layoutSvgText(
   const content = text?.trim() ?? ""
   const maxLines = options.maxLines ?? 2
   const lineHeightRatio = options.lineHeightRatio ?? 1.08
-  const weight: TextWeightHint = { bold: options.bold, fontFamily: options.fontFamily }
+  const weight: TextWeightHint = { bold: options.bold, fontFamily: options.fontFamily, ...(options.paintedIn !== undefined ? { paintedIn: options.paintedIn } : {}) }
   const minPt = options.minPt ?? META_FONT_FLOOR_PX
 
   if (!content) {

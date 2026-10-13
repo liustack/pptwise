@@ -232,3 +232,27 @@ describe("paragraph truncation budget", () => {
     expect(markup).not.toContain("…")
   })
 })
+
+describe("paragraph wrap in the face it is painted in", () => {
+  // Figures and dashes in Microsoft YaHei run wider than the envelope the
+  // wrap measures by: a line the envelope fitted ran past the column.
+  const figures = {
+    type: "paragraph" as const,
+    text: "三险一金 2700 × 12 = 32400，专项附加 (1500 + 1500) × 12 = 36000，已预缴 4240 = 工资全年预扣 2640 + 劳务预扣 1600",
+  }
+
+  it("sets no line wider than its column in the body face", () => {
+    const w = 1152
+    const { container } = svg(paragraph.render(figures, { x: 0, y: 0, w }, ctx))
+    const lines = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "")
+    expect(lines.length).toBeGreaterThan(1)
+    for (const line of lines) expect(measureTextUnits(line, { fontFamily: ctx.fonts.body }) * ctx.bodyFontPx).toBeLessThanOrEqual(w)
+  })
+
+  it("measures the height of the lines it draws", () => {
+    const w = 1152
+    const { container } = svg(paragraph.render(figures, { x: 0, y: 0, w }, ctx))
+    const ys = Array.from(container.querySelectorAll("text")).map((t) => Number(t.getAttribute("y")))
+    expect(paragraph.measure(figures, w, ctx)).toBeCloseTo(ys.length * (ys[1]! - ys[0]!), 5)
+  })
+})
