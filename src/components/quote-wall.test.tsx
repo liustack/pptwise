@@ -6,6 +6,7 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { contrastRatio } from "../render/ink"
 import { quoteWall } from "./quote-wall"
+import { isRuled, paperOf } from "./surfaces"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { CANONICAL_THEME_IDS } from "../themes"
 import type { ComponentCtx } from "./types"
@@ -159,9 +160,11 @@ describe("quote_wall component", () => {
 describe("quote_wall open-quote mark on every theme", () => {
   it("reads at its size on every card and stays quieter than the words", () => {
     for (const id of CANONICAL_THEME_IDS) {
-      const { container } = svg(quoteWall.render(three, box, boundThemeCtx(id, {})))
+      const themeCtx = boundThemeCtx(id, {})
+      const { container } = svg(quoteWall.render(three, box, themeCtx))
       for (const card of Array.from(container.querySelectorAll("g[data-audit-box]"))) {
-        const shell = card.querySelector("rect")!.getAttribute("fill")!
+        // A ruled theme lays no card: the words sit on the paper.
+        const shell = isRuled(themeCtx) ? paperOf(themeCtx) : card.querySelector("rect")!.getAttribute("fill")!
         const texts = Array.from(card.querySelectorAll("text"))
         const mark = texts.find((t) => t.textContent === "\u201c")!
         const body = texts.find((t) => t.textContent!.length > 6)!

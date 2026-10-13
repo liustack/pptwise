@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { harveyBalls, harveyWedgePath } from "./harvey-balls"
+import { isRuled, paperOf } from "./surfaces"
 import { validateIr } from "@/api"
 import type { Component } from "@/ir"
 import type { ComponentCtx } from "./types"
@@ -234,7 +235,9 @@ describe("harvey_balls rendering", () => {
       const { container } = svg(harveyBalls.render(grid(), { x: 0, y: 0, w: 1104, h: 412 }, ctx))
       const label = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "联合共建")!
       const size = Number(label.getAttribute("font-size"))
-      expect(contrastRatio(label.getAttribute("fill")!, ctx.colors.primary), id).toBeGreaterThanOrEqual(
+      // A ruled theme lays no fill under the row: the label sits on the paper.
+      const ground = isRuled(ctx) ? paperOf(ctx) : ctx.colors.primary
+      expect(contrastRatio(label.getAttribute("fill")!, ground), id).toBeGreaterThanOrEqual(
         requiredContrastRatio(size),
       )
     }

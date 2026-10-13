@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { render } from "@testing-library/react"
 import { deviceMockup } from "./device-mockup"
+import { isRuled, paperOf } from "./surfaces"
 import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
@@ -246,7 +247,8 @@ describe("device_mockup caption band on every theme", () => {
         const caption = Array.from(container.querySelectorAll("text")).find((t) => t.textContent === "调度仪表盘")!
         const band = caption.previousElementSibling!
         expect(band.tagName.toLowerCase(), id).toBe("rect")
-        expect(band.getAttribute("fill"), id).toBe(themeCtx.colors.primary)
+        // A ruled theme knocks the band out in the paper.
+        expect(band.getAttribute("fill"), id).toBe(isRuled(themeCtx) ? paperOf(themeCtx) : themeCtx.colors.primary)
         expect(band.getAttribute("fill-opacity"), id).toBeNull()
         const ratio = contrastRatio(caption.getAttribute("fill")!, band.getAttribute("fill")!)
         expect(ratio, id).toBeGreaterThanOrEqual(4.5)

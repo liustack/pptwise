@@ -12,8 +12,9 @@ describe("binderInks", () => {
   it("reads proposal's board colours from its tokens", () => {
     const inks = binderInks(testCtx("proposal").ctx)
     expect(inks.ground).toBe("#FFFFFF")
-    // The card is the paper's own white: proposal lays no cards.
-    expect(inks.card).toBe("#FFFFFF")
+    // The board's warm sand: the shared components lay no card on it
+    // (`shape.surfaces: "ruled"`), so it only stands in for a missing photo.
+    expect(inks.card).toBe("#F3F0EA")
     expect(inks.deep).toBe("#0E3B53")
     // The brick red the maintainer put in place of the board's tangerine: one
     // ink for marks and small words alike.
@@ -68,7 +69,7 @@ describe("reading the author's words", () => {
 })
 
 describe("a missing photograph", () => {
-  it("stands in as a hairline frame, so it reads on a card as white as the paper", () => {
+  it("stands in as the sand inside a hairline frame", () => {
     const { ctx } = testCtx("proposal")
     const inks = binderInks(ctx)
     const { root } = renderNode(paintBinderPhoto("nowhere", { x: 64, y: 176, w: 360, h: 200 }, { ...ctx, images: {} }, inks))

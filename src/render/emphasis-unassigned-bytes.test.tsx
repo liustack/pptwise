@@ -166,6 +166,11 @@ function consultingPadDeck(): PptxIR {
 // under the floor on its panel. The run now takes the least lift toward the
 // readable ink that clears it. Only `thesis|4` moves, and only that run's
 // fill. The other 109 paths stay byte-identical.
+//
+// Recaptured (proposal ruled surfaces, 2026-10-13). proposal declares
+// `shape.surfaces: "ruled"`, so page 4's callout drops its panel for a rule
+// of the variant's ink over it and a hairline under it. Only `proposal|4`
+// moves. The other 109 paths stay byte-identical.
 const fixture = JSON.parse(
   readFileSync(EMPHASIS_UNASSIGNED_BYTES_URL, "utf-8"),
 ) as { pages: Record<string, string> }

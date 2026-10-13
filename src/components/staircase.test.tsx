@@ -7,6 +7,7 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { staircase } from "./staircase"
+import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -137,6 +138,8 @@ describe("staircase component", () => {
   it("keeps the highlighted tread visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
+      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
+      if (isRuled(ctx)) continue
       const { container } = svg(staircase.render(five, { x: 88, y: 96, w: 1104 }, ctx))
       const treads = rects(container)
       const fill = treads.at(-1)!.fill!

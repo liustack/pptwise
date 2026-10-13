@@ -4,6 +4,7 @@ import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { callout } from "./callout"
+import { isRuled, paperOf } from "./surfaces"
 import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS, resolveStyle } from "../themes"
 import { buildCtx } from "../render/full-slide-svg"
@@ -212,7 +213,8 @@ describe("callout icon ink", () => {
       const themeCtx = boundThemeCtx(id, {})
       for (const variant of ["info", "warn", "tip"] as const) {
         const { container } = svg(callout.render({ type: "callout", variant, text: "测试" }, { x: 0, y: 0, w: 800 }, themeCtx))
-        const panel = container.querySelector("rect")!.getAttribute("fill")!
+        // A ruled theme lays no panel: the icon sits on the paper.
+        const panel = isRuled(themeCtx) ? paperOf(themeCtx) : container.querySelector("rect")!.getAttribute("fill")!
         const stroke = container.querySelector("path")!.getAttribute("stroke")!
         expect(contrastRatio(stroke, panel), `${id} ${variant}`).toBeGreaterThanOrEqual(3)
       }

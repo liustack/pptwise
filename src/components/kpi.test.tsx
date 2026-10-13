@@ -9,6 +9,7 @@ import type { ComponentCtx } from "./types"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { accessibleInk } from "../render/ink"
 import { emphasisRunInk } from "../render/emphasis"
+import { isRuled } from "./surfaces"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -391,13 +392,14 @@ describe("kpi card stroke (Task 5d)", () => {
     })
   })
 
-  it("regression lock: only bulletin, runway and proposal's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
+  it("regression lock: only bulletin and runway's real tokens set cardStroke — the other canonical themes stay stroke-free", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const themeCtx = boundThemeCtx(id, {})
+      // A ruled theme (proposal) lays no card to stroke: ruled-surfaces.test.tsx.
+      if (isRuled(themeCtx)) continue
       const { container } = svg(kpi.render(component, { x: 0, y: 0, w: 1120 }, themeCtx))
       const rect = container.querySelector("rect")!
-      // proposal is set as print: its cards are the paper's white inside a hairline.
-      if (id === "bulletin" || id === "runway" || id === "proposal") {
+      if (id === "bulletin" || id === "runway") {
         expect(rect.getAttribute("stroke")).toBe(themeCtx.colors.cardStroke)
       } else {
         expect(rect.getAttribute("stroke")).toBeNull()

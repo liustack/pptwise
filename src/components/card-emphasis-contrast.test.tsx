@@ -25,6 +25,7 @@ import { contrastRatio, requiredContrastRatio } from "../render/ink"
 import { productCards } from "./product-cards"
 import { quoteWall } from "./quote-wall"
 import type { ComponentCtx } from "./types"
+import { isRuled, paperOf } from "./surfaces"
 
 function ctxFor(themeId: string): ComponentCtx {
   const tokens = resolveStyle(themeId)
@@ -74,11 +75,13 @@ const quotes = {
  * reports a failure on white initials that are perfectly readable on their
  * own dark circle.
  */
-function inkFindings(container: Element): { text: string; fill: string; size: number; bg: string }[] {
+function inkFindings(container: Element, ctx: ComponentCtx): { text: string; fill: string; size: number; bg: string }[] {
   const findings: { text: string; fill: string; size: number; bg: string }[] = []
   for (const card of Array.from(container.querySelectorAll("g[data-audit-box]"))) {
-    const shell = card.querySelector("rect")!.getAttribute("fill")!
-    const discs = Array.from(card.querySelectorAll("circle")).map((circle) => ({
+    // A ruled theme lays no shell: every line sits on the paper, and an
+    // initials ring is a hairline, not a ground.
+    const shell = isRuled(ctx) ? paperOf(ctx) : card.querySelector("rect")!.getAttribute("fill")!
+    const discs = Array.from(card.querySelectorAll("circle")).filter((circle) => circle.getAttribute("fill") !== "none").map((circle) => ({
       cx: Number(circle.getAttribute("cx")),
       cy: Number(circle.getAttribute("cy")),
       r: Number(circle.getAttribute("r")),
@@ -117,7 +120,7 @@ describe("emphasised cards keep every line readable on every theme", () => {
         ["quote_wall", quoteWall.render(quotes, box, ctx)],
       ] as const) {
         const { container } = render(<svg>{node}</svg>)
-        for (const found of inkFindings(container)) {
+        for (const found of inkFindings(container, ctx)) {
           const ratio = contrastRatio(found.fill, found.bg)
           const floor = requiredContrastRatio(found.size)
           if (ratio + 0.005 < floor) {
@@ -141,7 +144,7 @@ describe("the accent never carries text on either card family", () => {
         ["quote_wall", quoteWall.render(quotes, box, ctx)],
       ] as const) {
         const { container } = render(<svg>{node}</svg>)
-        for (const found of inkFindings(container)) {
+        for (const found of inkFindings(container, ctx)) {
           if (found.fill.toUpperCase() === accent) offenders.push(`${label} "${found.text}"`)
         }
       }

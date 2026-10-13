@@ -7,6 +7,7 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { journeyMap } from "./journey-map"
+import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { listThemes } from "../api"
@@ -141,6 +142,8 @@ describe("journey_map component", () => {
   it("keeps the dip's opportunity card visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
+      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
+      if (isRuled(ctx)) continue
       const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = Array.from(container.querySelectorAll("rect")).slice(-5)[2]!.getAttribute("fill")!
       expect(fill, theme).not.toBe(ctx.colors.surface)
@@ -164,8 +167,9 @@ describe("journey_map component", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
       const { container } = svg(journeyMap.render(english, { x: 0, y: 0, w: 1104 }, ctx))
-      const card = Array.from(container.querySelectorAll("rect")).slice(-4)[1]!
-      const right = Number(card.getAttribute("x")) + Number(card.getAttribute("width"))
+      // A ruled theme draws each card as the line over it, its right end the card's edge.
+      const card = Array.from(container.querySelectorAll(isRuled(ctx) ? "line" : "rect")).slice(-4)[1]!
+      const right = isRuled(ctx) ? Number(card.getAttribute("x2")) : Number(card.getAttribute("x")) + Number(card.getAttribute("width"))
       const lines = Array.from(card.parentElement!.querySelectorAll("text"))
       expect(lines.length, theme).toBeGreaterThan(0)
       expect(lines.map((t) => t.textContent).join(" "), theme).toBe("Channel partner enablement")

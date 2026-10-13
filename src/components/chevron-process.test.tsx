@@ -7,6 +7,7 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { chevronProcess } from "./chevron-process"
+import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -257,6 +258,8 @@ describe("chevron_process component", () => {
   it("keeps the highlighted chevron visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
+      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
+      if (isRuled(ctx)) continue
       const { container } = svg(chevronProcess.render(five, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = polys(container).at(-1)!.fill!
       expect(fill, theme).not.toBe(ctx.colors.surface)

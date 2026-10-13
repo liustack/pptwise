@@ -294,8 +294,8 @@ export function Lead({ id, children }: { id: string; children: React.ReactNode }
  * A photograph filling `box`, cropped to it, its top corners (or all four)
  * rounded `r` by small pieces of `ground` laid over them, so PowerPoint, which
  * keeps a picture square, shows the same rounded photograph the preview does.
- * Where the deck has no such asset, a frame of the hairline around the
- * card's surface stands in, so the place reads on paper of the same white.
+ * Where the deck has no such asset, the card's surface inside a frame of
+ * the hairline stands in for it.
  */
 export function paintBinderPhoto(assetId: string, box: Box, ctx: ComponentCtx, inks: BinderInks, opts: { r?: number; ground?: string; corners?: "top" | "all"; key?: string | number } = {}): React.ReactElement {
   const asset = ctx.images?.[assetId]

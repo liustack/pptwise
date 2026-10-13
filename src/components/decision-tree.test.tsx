@@ -7,6 +7,7 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { decisionTree } from "./decision-tree"
+import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -139,6 +140,8 @@ describe("decision_tree component", () => {
   it("keeps the recommended outcome visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
+      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
+      if (isRuled(ctx)) continue
       const { container } = svg(decisionTree.render(routing, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = rects(container).slice(3)[1]!.fill!
       expect(fill, theme).not.toBe(ctx.colors.surface)

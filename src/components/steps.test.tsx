@@ -5,6 +5,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { steps } from "./steps"
+import { isRuled } from "./surfaces"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, readableOn } from "../render/ink"
 
@@ -175,6 +176,8 @@ describe("steps on every theme", () => {
     }
     const baseline = shapesOf("runway")
     for (const id of CANONICAL_THEME_IDS) {
+      // A ruled theme draws no disc: ruled-surfaces.test.tsx.
+      if (isRuled(boundThemeCtx(id, {}))) continue
       expect(shapesOf(id), id).toBe(baseline)
     }
   })
@@ -185,6 +188,8 @@ describe("steps on every theme", () => {
   it("sets every number in an ink its own disc can read", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const ctx = boundThemeCtx(id, {})
+      // A ruled theme sets the number on the paper, no disc: ruled-surfaces.test.tsx.
+      if (isRuled(ctx)) continue
       const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, ctx))
       const discs = Array.from(container.querySelectorAll("circle"))
       const numbers = Array.from(container.querySelectorAll("text")).filter((t) => /^\d{2}$/.test(t.textContent ?? ""))

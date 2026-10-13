@@ -6,6 +6,7 @@ import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { iconCards } from "./icon-cards"
+import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { PPTX_ICON_NAMES } from "@/icons/catalog"
@@ -115,6 +116,8 @@ describe("icon_cards component", () => {
     }
     const baseline = shapesOf("almanac")
     for (const id of CANONICAL_THEME_IDS) {
+      // A ruled theme draws a line where the others lay a disc: ruled-surfaces.test.tsx.
+      if (isRuled(themeCtx(id))) continue
       expect(shapesOf(id), id).toBe(baseline)
     }
   })

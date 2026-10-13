@@ -13,16 +13,20 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 什么」，再算账、给方案、讲落地、请客户定事。版式照印刷品做（2026-10 印刷版
  * 定稿）：内容页顶上一行书眉，左边是方案名，右边是这一页所在的段落（「算账」，
  * 只写段落名，不带序号），下面一条细线。表格、数字和条目之间只用细线和 2px
- * 墨线分隔，不铺卡片、不用胶囊签和索引签。封面是一张白色提案页加一张满高照片，
+ * 墨线分隔，不铺卡片、不用胶囊签和索引签。用户写的通用组件（kpi、编号卡、
+ * 表格之类）走共享渲染器，主题声明 `shape.surfaces: "ruled"`，渲染器就照
+ * 印刷品画：不铺卡底、不画圆角，细线和留白撑结构，编号是数字本身，强调靠
+ * 字重、墨色和一条砖红细线（`components/surfaces.ts`）。封面是一张白色提案页加一张满高照片，
  * 结尾是一行一件要客户定的事，右边留空方框勾选，最后一行留空让客户填日子。
  *
  * **色板来历**（设计稿 `proposal-pvess-design-gen.py` 的常量，强调色、灰和红
  * 三处按下文改过）：
  *   - `bg` `#FFFFFF` 白纸。
- *   - `surface` `#FFFFFF` 白，和纸同色，`cardStroke` 取线色 `#E2DDD4`，
- *     `shape.radius` 取 0。设计稿的卡面是暖沙 `#F3F0EA`（SURF），印刷版不铺
- *     卡：proposal 自己的构图不画卡，用户写的通用组件（kpi、编号卡、表格
- *     之类）走共享渲染器，卡面跟纸一样白，只剩一圈细线方框，最多一层。
+ *   - `surface` `#F3F0EA` 暖沙，照设计稿（SURF）。不设 `cardStroke`，
+ *     `shape.radius` 取 0。印刷版不铺卡，这件事由 `shape.surfaces: "ruled"`
+ *     交给共享渲染器去做，卡面不必再装成纸白、也不必再靠一圈线色细框假装
+ *     没有卡，所以两者都退回设计稿：暖沙只在缺照片时垫底，热力图最浅一格从
+ *     它起色。圆角 0 不退，印刷品本来就是直角。
  *   - `primary` `#0E3B53` 石油蓝（PET）：标题、大数、书眉的段落名、章节页左半。
  *   - `accent` `#B8412C` 砖红：每页只亮一处，结果数、领头的一行、决定的编号。设计稿
  *     是橘 `#F26B3A`（TANG），2026-10-06 维护者拍板改成砖红，原因是石油蓝配橘
@@ -33,18 +37,16 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *     自己就能承小字，`**…**` 标记的字也走它，不再另设一档。
  *   - `text` `#14212B` 墨（INK），`border` `#E2DDD4` 线（LINE）。
  *   - `muted` 暗灰 `#55606A`：设计稿是 `#5D6A74`（MUTED），按原色相整体压暗
- *     9%。共享渲染器 matrix 会把卡面和强调色混成格底（`mixHex(surface, accent,
- *     0.16)`），卡面改白后砖红混出来是 `#F4E1DD`，设计稿的灰压上去只有 4.41，
- *     过不了 `full-matrix-contrast.test.ts` 给每个主题 muted 定的 4.5，所以仍要
- *     压暗。当初卡面是暖沙，格底 `#EAD4CC`，要压暗 9% 才到 4.53。卡面改白后
- *     压暗 5% 的 `#58656E` 就有 4.76，这里沿用 9% 的值没再改色，那一格 5.10。
+ *     9%。`full-matrix-contrast.test.ts` 给每个主题量 muted 压在卡面混强调色的
+ *     格底上（`mixHex(surface, accent, 0.16)`，暖沙配砖红是 `#EAD4CC`），要
+ *     4.5。设计稿的灰在那里只有 3.91，压暗 9% 才到 4.53。印刷版的 matrix
+ *     自己不再铺这层格底，但这把尺子量的是主题本身，不分画法，所以不退。
  *   - `danger` `#812920` 深红：事故的图标。设计稿的红 `#B83A2E`（RED）和砖红
  *     几乎是同一个颜色（CIE76 ΔE 3.9），事故图标会被读成本页亮的那一处。按原
  *     色相压深到设计稿的 70%，和砖红拉开 ΔE 20.6（原来红和橘差 23.9）。
- *     `success` 设计稿是 `#2E7D5B`（GREEN），当初压暖沙卡面只有 4.40:1，不够 kpi
- *     箭头当字的 4.5，压深一档到 `#2A7554`，色相不动。卡面改白后设计稿的绿也有
- *     5.00，压深已不是必需，沿用 `#2A7554`（5.57）没再改色。`warning` 取
- *     砖红，只作线与图标。
+ *     `success` 设计稿是 `#2E7D5B`（GREEN），压暖沙卡面只有 4.40:1，不够 kpi
+ *     箭头当字的 4.5，压深一档到 `#2A7554`（4.90），色相不动。卡面退回暖沙，
+ *     这一档仍是必需。`warning` 取砖红，只作线与图标。
  *   - `chartPalette` 石油蓝 `#2F6A8A`（PET2）/ 砖红 `#B8412C` / 天青 `#8DBBD3`
  *     （SKY）/ 沙 `#B0956A`。石油蓝和天青照设计稿，沙色设计稿没给，取设计稿卡面
  *     SURF 那一族的暖沙压深到能当色块。砖红和另外三格的 ΔE 是 82.8、83.9、48.3。构图里
@@ -55,8 +57,9 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *   - 压白纸：primary 11.87、text 16.38、muted 6.43、accent / emphasisInk
  *     5.48、danger 9.25、success 5.57、chart 石油蓝 5.92 / 砖红 5.48 / 天青
  *     2.06 / 沙 2.86。
- *   - 卡面就是白纸，数同上。matrix 的砖红格底 `#F4E1DD`：primary 9.42、text
- *     12.99、muted 5.10、danger 7.33。
+ *   - 压暖沙卡面：primary 10.44、text 14.40、muted 5.65、success 4.90。
+ *     卡面混砖红的格底 `#EAD4CC`：primary 8.36、text 11.53、muted 4.53、
+ *     danger 6.51。
  *   - 章节页的大号章号压石油蓝：砖红只有 2.17，不够大字的 3:1，`binderText`
  *     往白挪最小一步到 `#C66756`（3.10:1）。
  *   - 天青压白纸 2.06、沙 2.86，低于 3.0 装饰线：这两格只当色块（参照组的
@@ -69,8 +72,7 @@ export const PROPOSAL_TOKENS: StyleTokens = {
   id: "proposal",
   colors: {
     bg: "#FFFFFF", // 白纸。页底，正文墨压它 16.38:1，答 4.5
-    surface: "#FFFFFF", // 卡面同纸白，印刷版不铺卡，见上
-    cardStroke: "#E2DDD4", // 卡只剩一圈线色细框
+    surface: "#F3F0EA", // 暖沙（SURF），只在缺照片处垫底，组件不铺卡，见上
     primary: "#0E3B53", // 石油蓝（11.87:1），色块承白字 11.87:1
     accent: "#B8412C", // 砖红（5.48:1），色块上的字用白（5.48:1）
     text: "#14212B", // 墨（16.38:1）
@@ -91,6 +93,7 @@ export const PROPOSAL_TOKENS: StyleTokens = {
   shape: {
     radius: 0, // 印刷品不圆角
     gapScale: 1.0,
+    surfaces: "ruled", // 共享组件照印刷品画：无卡底、细线分隔，见上
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#FFFFFF" },
