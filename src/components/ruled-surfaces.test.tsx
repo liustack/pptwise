@@ -33,12 +33,14 @@ beforeAll(async () => {
 /**
  * proposal's colours with the shared components set as print. The surface is
  * a warm sand distinct from the paper, so a card the renderer still lays
- * cannot hide by being as white as the page.
+ * cannot hide by being as white as the page, and the radius is a rounded
+ * theme's, so a corner the renderer still takes from the theme shows. A
+ * plotted mark keeps the theme's corner, as a chart keeps its marks.
  */
 function ruledTokens(): StyleTokens {
   const base = resolveStyle("proposal")
   const { cardStroke: _cardStroke, ...colors } = base.colors
-  return { ...base, colors: { ...colors, surface: "#F3F0EA" }, shape: { ...base.shape, surfaces: "ruled" } }
+  return { ...base, colors: { ...colors, surface: "#F3F0EA" }, shape: { ...base.shape, radius: 8, surfaces: "ruled" } }
 }
 
 function ruledCtx(component: Component): ComponentCtx {
@@ -165,7 +167,7 @@ function inIcon(el: Element): boolean {
 function rounded(markup: string, type: string): string[] {
   const doc = new DOMParser().parseFromString(markup, "image/svg+xml")
   return [...doc.querySelectorAll("rect")]
-    .filter((el) => Number(el.getAttribute("rx") ?? "0") > 0 && !inIcon(el) && !ROUNDED_SYMBOLS[type]?.(el))
+    .filter((el) => Number(el.getAttribute("rx") ?? "0") > 0 && !inIcon(el) && !plotMark(el) && !ROUNDED_SYMBOLS[type]?.(el))
     .map((el) => el.outerHTML.slice(0, 160))
 }
 
