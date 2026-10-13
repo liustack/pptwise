@@ -376,3 +376,24 @@ describe("from_to rows with an icon and a note", () => {
     expect(contrastRatio(note.getAttribute("fill")!, ctx.colors.bg)).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+describe("from_to marked row", () => {
+  it("holds the starting value and its unit to the marked row's tint, not the page", () => {
+    // clinic's muted unit read 4.45:1 on its marked row's tint.
+    const component = {
+      type: "from_to" as const,
+      from: { title: "Before" },
+      to: { title: "After" },
+      rows: [
+        { label: "Invoice received", from: "Special VAT invoice", to: "Ordinary invoice" },
+        { label: "Credit per 100 yuan of gold", from: "About 11.50", to: "6.00", unit: "yuan", change: "About 5.50 yuan less", emphasis: true },
+      ],
+    }
+    const ctx = themed("clinic")
+    const root = parseSvgRoot(renderToStaticMarkup(<svg>{fromTo.render(component, { x: 0, y: 0, w: 1152 }, ctx)}</svg>))
+    const row = root.querySelector("[data-row-marked]")!
+    const tint = row.querySelector("rect")!.getAttribute("fill")!
+    const unit = Array.from(row.querySelectorAll("text")).find((t) => t.textContent === "yuan")!
+    expect(contrastRatio(unit.getAttribute("fill")!, tint)).toBeGreaterThanOrEqual(4.5)
+  })
+})

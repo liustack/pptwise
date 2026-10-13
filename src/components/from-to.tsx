@@ -114,9 +114,9 @@ export const fromTo: SvgComponent<FromToComponent> = {
       )
     }
 
-    /** Ink on the arriving column, which is filled, or on the page, which is not. */
-    const ink = (preferred: string, size: number, filled: boolean) =>
-      accessibleInk(filled ? ctx.colors.surface : preferred, filled ? highlight : pageBg, size)
+    /** Ink on the arriving column, which is filled, or on `ground` (the page, or a marked row's tint), which is not. */
+    const ink = (preferred: string, size: number, filled: boolean, ground: string = pageBg) =>
+      accessibleInk(filled ? ctx.colors.surface : preferred, filled ? highlight : ground, size)
 
     const header = (side: "from" | "to"): ReactElement => {
       const filled = side === "to"
@@ -172,6 +172,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
       baseline: number,
       filled: boolean,
       key: string,
+      ground: string = pageBg,
     ): ReactElement => {
       const unitSize = Math.max(FORM_BODY_FLOOR, Math.round(g.valueSize * 0.5))
       // Fitted to the room left beside the number, with headroom for what the
@@ -194,7 +195,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
             fontFamily={ctx.fonts.heading}
             fontSize={fit.fontSize}
             fontWeight="700"
-            fill={ink(ctx.colors.primary, fit.fontSize, filled)}
+            fill={ink(ctx.colors.primary, fit.fontSize, filled, ground)}
           >
             {fit.text}
           </text>
@@ -205,7 +206,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
               y={baseline}
               fontFamily={ctx.fonts.body}
               fontSize={unitFit.fontSize}
-              fill={ink(ctx.colors.muted, unitFit.fontSize, filled)}
+              fill={ink(ctx.colors.muted, unitFit.fontSize, filled, ground)}
             >
               {unitFit.text}
             </text>
@@ -355,7 +356,8 @@ export const fromTo: SvgComponent<FromToComponent> = {
               >
                 {labelFit.text}
               </text>
-              {value(row.from, unit, g.fromX + PAD, g.colW - PAD * 2, baseline, false, `from-${i}`)}
+              {/* The starting value of a marked row sits on the row's tint. */}
+              {value(row.from, unit, g.fromX + PAD, g.colW - PAD * 2, baseline, false, `from-${i}`, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg)}
               {value(row.to, unit, g.toX + PAD, g.colW - PAD * 2 - changeW - tagRoom, baseline, true, `to-${i}`)}
               {tag &&
                 paintTag({
