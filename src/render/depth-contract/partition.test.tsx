@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import { renderSvgMarkup, parseSvgRoot } from "../serialize"
 import { DecorPiece } from "../../motifs/decor-piece"
 import { partitionSvgDepth } from "./partition"
+import { CroppedImage } from "../cropped-image"
 
 function keyed(nodes: ReactNode[]) {
   return nodes.map((node, index) => <Fragment key={index}>{node}</Fragment>)
@@ -107,5 +108,30 @@ describe("partitionSvgDepth three-tier decor roles", () => {
       "A",
       "B",
     ])
+  })
+})
+
+describe("partitionSvgDepth cropped pictures", () => {
+  // A real picture, so the crop is placed from its own size.
+  const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+  it("keeps a tight crop in a small frame with the page, though its whole picture outsizes the canvas", () => {
+    // A crop zoomed into a 1104×222 frame draws the picture 3933×1420 and
+    // cuts it by the frame. Read by its <image>, it was taken for the page's
+    // background and painted under the page, apart from its frame.
+    const root = renderLayers(
+      <g data-probe="frame" transform="translate(88,171)">
+        <CroppedImage src={PNG} box={{ x: 0, y: 0, w: 1104, h: 222 }} crop={[0.2733, 0, 0.2807, 1]} assetKey="front" />
+        <rect x={0.5} y={0.5} width={1103} height={221} fill="none" stroke="#DDDCD4" />
+      </g>,
+    )
+    const image = root.querySelector("image")!
+    expect(Number(image.getAttribute("width"))).toBeGreaterThan(1280)
+    expect(image.closest("[data-depth]")?.getAttribute("data-depth")).toBe("fg")
+    expect(root.querySelector('[data-depth="bg"]')!.children).toHaveLength(0)
+  })
+
+  it("still lays a crop that fills the canvas under the page", () => {
+    const root = renderLayers(<CroppedImage src={PNG} box={{ x: 0, y: 0, w: 1280, h: 720 }} crop={[0, 0.19, 1, 0.38]} assetKey="hero" />, "cover")
+    expect(root.querySelector("image")!.closest("[data-depth]")?.getAttribute("data-depth")).toBe("bg")
   })
 })

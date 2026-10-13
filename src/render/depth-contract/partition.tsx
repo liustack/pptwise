@@ -56,6 +56,26 @@ function isFullCanvasPaint(type: string, props: ElementProps): boolean {
   )
 }
 
+/**
+ * Whether a cropped picture (`../cropped-image.tsx`) paints the whole canvas.
+ * The picture is drawn whole, scaled and shifted so its crop fills the frame,
+ * and cut by the clip's one shape: a tight crop of a picture in a small frame
+ * draws an `<image>` far larger than the canvas that paints only the frame.
+ * Read by its `<image>`, such a frame was taken for the page's background and
+ * painted under the page, apart from its own border. What it paints is its
+ * clip, so the clip is what decides.
+ */
+function cropPaintsCanvas(props: ElementProps): boolean {
+  const clip = Children.toArray(props.children).find((child) => isValidElement<ElementProps>(child) && child.type === "clipPath") as ReactElement<ElementProps> | undefined
+  if (clip === undefined) return false
+  return Children.toArray(clip.props.children).some((child) => {
+    if (!isValidElement<ElementProps>(child)) return false
+    // The clip's shape is drawn by a component of its own (`ClipShape`).
+    const shape = executeFunctionElement(child) ?? child
+    return isValidElement<ElementProps>(shape) && typeof shape.type === "string" && isFullCanvasPaint(shape.type, shape.props)
+  })
+}
+
 function textContent(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node)
   if (!isValidElement<ElementProps>(node)) return ""
@@ -131,6 +151,10 @@ function inspectPaintCluster(node: ReactNode, evidence: PaintClusterEvidence): v
     return
   }
   if (typeof node.type !== "string") return
+  if (node.props["data-crop"] !== undefined) {
+    if (cropPaintsCanvas(node.props)) evidence.hasFullCanvasPaint = true
+    return
+  }
   if (node.type === "text") evidence.hasText = true
   if (isFullCanvasPaint(node.type, node.props)) evidence.hasFullCanvasPaint = true
   Children.forEach(node.props.children, (child) => inspectPaintCluster(child, evidence))
@@ -233,6 +257,10 @@ function partitionNode(
   }
   if (isFullCanvasPaint(node.type, node.props)) {
     push(layers, "bg", node)
+    return layers
+  }
+  if (node.props["data-crop"] !== undefined) {
+    push(layers, cropPaintsCanvas(node.props) ? "bg" : defaultDepth, node)
     return layers
   }
   if (node.type === "text" && isGhostText(node.props, options.slideType)) {
