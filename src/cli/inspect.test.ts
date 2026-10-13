@@ -101,8 +101,10 @@ describe("runInspect --page", () => {
     for (const page of SPEC.pages) {
       const report = await inspectJson(dir, page.id)
       const { file: _file, ...fromCli } = report.page
+      // Which drawing draws the page is read off the drawn page, which the contract alone does not draw.
+      const { drawnBy: _drawnBy, ...signature } = report.signature ?? {}
       const whole = pageContract(ir, page.id, { theme, pageSpec: spec.pages.find((p) => p.id === page.id) })
-      expect({ ...report, page: fromCli }, page.id).toEqual(JSON.parse(JSON.stringify(whole)))
+      expect({ ...report, page: fromCli, ...(report.signature !== undefined ? { signature } : {}) }, page.id).toEqual(JSON.parse(JSON.stringify(whole)))
     }
   })
 
@@ -157,6 +159,45 @@ describe("runInspect --page", () => {
     await expect(runInspect(dir, { page: "nope" })).rejects.toThrow(/no page "nope" in this deck\. Pages: open, growth, number, later, close/)
     await expect(runInspect(dir, { page: "../deck.spec" })).rejects.toThrow(/not a safe file name/)
     await expect(runInspect(join(dir, "deck.spec.json"), { page: "growth" })).rejects.toThrow(/deck project directory/)
+  })
+})
+
+describe("runInspect --page: signature layouts", () => {
+  const KPIS = { type: "kpi_cards", items: [{ value: "62%", label: "Expansion share" }, { value: "38%", label: "New logos" }] }
+  const PROSE = { type: "paragraph", text: "Expansion was concentrated in two segments." }
+
+  it("lists the theme's drawings for the page's kind with their recipes, and marks the one drawing it", async () => {
+    const dir = await deck({ growth: { components: [KPIS] } })
+    const report = await inspectJson(dir, "growth")
+    expect(report.signature.face).toBe("gauge-sheet")
+    expect(report.signature.drawnBy).toBe("figures")
+    const figures = report.signature.forPage.find((entry: { id: string }) => entry.id === "figures")
+    expect(figures).toMatchObject({ written: true, write: ["kpi_cards (2 to 4 items) + blockquote (optional)"] })
+    expect(figures.look.length).toBeGreaterThan(0)
+    const { output } = await runInspect(dir, { page: "growth" })
+    expect(output).toMatch(/^signature layouts \(the theme's own drawings on face gauge-sheet, the ones its samples are made of\):$/m)
+    expect(output).toMatch(/^ {2}figures, draws this page now: .+$/m)
+    expect(output).toMatch(/^ {4}write: kpi_cards \(2 to 4 items\) \+ blockquote \(optional\)$/m)
+    expect(output).toMatch(/^ {2}also on this face, made for other kinds: .*rows \(points\)/m)
+  })
+
+  it("says when the face draws the page plain", async () => {
+    const dir = await deck({ growth: { components: [KPIS, PROSE] } })
+    expect((await inspectJson(dir, "growth")).signature.drawnBy).toBeNull()
+    const { output } = await runInspect(dir, { page: "growth" })
+    expect(output).toContain("  drawn now: none of them, the face's plain layout. Write to one where the content holds it, never add content to fit")
+  })
+
+  it("lists the recipes for a page not written yet, without drawing it", async () => {
+    const report = await inspectJson(await deck({}), "later")
+    expect(report.signature.forPage.length).toBeGreaterThan(0)
+    expect(report.signature).not.toHaveProperty("drawnBy")
+  })
+
+  it("leaves the section out on a face with no signature drawing", async () => {
+    const dir = await deck({})
+    expect(await inspectJson(dir, "number")).not.toHaveProperty("signature")
+    expect((await runInspect(dir, { page: "number" })).output).not.toContain("signature layouts")
   })
 })
 

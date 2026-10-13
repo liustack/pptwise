@@ -69,6 +69,26 @@ const PAGE_KEY_GLOSS: Readonly<Record<string, string>> = {
   notes: "speaker notes, never drawn",
 }
 
+/**
+ * The theme's signature drawings for the page: each with its look and the
+ * ways to write for it, the one drawing the page marked, then the face's
+ * drawings for other kinds by name.
+ */
+export function formatSignature(signature: NonNullable<PageContract["signature"]>): string[] {
+  const lines = [`signature layouts (the theme's own drawings on face ${signature.face}, the ones its samples are made of):`]
+  for (const entry of signature.forPage) {
+    const mark = signature.drawnBy === entry.id ? ", draws this page now" : entry.written ? ", the page is written to it" : ""
+    lines.push(`  ${entry.id}${mark}: ${entry.look}`)
+    for (const write of entry.write) lines.push(`    write: ${write}`)
+  }
+  if (signature.others.length > 0) {
+    lines.push(`  also on this face, made for other kinds: ${signature.others.map((other) => `${other.id} (${other.kinds.join(", ")}${signature.drawnBy === other.id ? ", draws this page now" : ""})`).join(", ")}`)
+  }
+  if (signature.subheadingDeclines) lines.push("  a page with a subheading gets none of them")
+  if (signature.drawnBy === null) lines.push("  drawn now: none of them, the face's plain layout. Write to one where the content holds it, never add content to fit")
+  return lines
+}
+
 /** The whole-page report `pptwise inspect <deck> --page <id>` prints without `--json`. */
 export function formatPageContract(contract: PageContract, file: string): string {
   const { components } = contract
@@ -91,6 +111,7 @@ export function formatPageContract(contract: PageContract, file: string): string
   for (const note of components.notes) lines.push(`  note: ${note}`)
   if (components.legal.length > 0) lines.push("  expand one with --component <type>")
   lines.push("")
+  if (contract.signature !== undefined) lines.push(...formatSignature(contract.signature), "")
   const errors = contract.limits.filter((limit) => limit.level === "error")
   const warnings = contract.limits.filter((limit) => limit.level === "warning")
   if (errors.length > 0) {

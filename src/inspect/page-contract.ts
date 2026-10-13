@@ -37,6 +37,7 @@ import { FULL_BODY_TYPES } from "../render/component-traits"
 import { contentPageDensity } from "../render/ir-quality"
 import { writesHeading } from "../layouts/boundary-content"
 import { getLayout, type LayoutDefinition } from "../layouts/registry"
+import { pageSignature, type PageSignature } from "../layouts/signature"
 import { landingCandidates } from "../render/kind-landing"
 import { componentFace, faceAcceptedComponentTypes, resolveEffectiveFace } from "../render/layout-selection"
 import type { PageSpec } from "../spec"
@@ -132,6 +133,14 @@ export interface PageContract {
   /** Each field the page file may fill on this page's face, with its JSON Schema. */
   fields: Record<string, unknown>
   components: PageComponents
+  /**
+   * The theme's signature drawings this page can be written for: the
+   * compositions its face offers, each with its recipe, or the photograph a
+   * cover's face draws over (`../layouts/signature.ts`). Absent when the
+   * face has none. `drawnBy`, set when the page was drawn, names the one
+   * that draws it now, or null when the face draws it the ordinary way.
+   */
+  signature?: PageSignature & { drawnBy?: string | null }
   limits: PageLimit[]
   errors: PageIssue[]
   warnings: PageIssue[]
@@ -447,6 +456,7 @@ export function pageContract(ir: PptxIR, pageId: string, opts: PageContractOptio
   const schema = irJsonSchema()
   const effective = resolveEffectiveFace(ir, slide, theme)
   const drawnAs = slide.type === "content" && effective.servedKind !== undefined && effective.servedKind !== slide.kind ? effective.servedKind : undefined
+  const signature = pageSignature(ir, slide, theme)
   return {
     page: inspectedPage(ir, index, pageSpec),
     theme: theme.id,
@@ -454,6 +464,7 @@ export function pageContract(ir: PptxIR, pageId: string, opts: PageContractOptio
     ...(drawnAs !== undefined ? { drawnAs } : {}),
     fields: pageFields(schema, slide, componentFace(ir, slide, theme)),
     components,
+    ...(signature !== undefined ? { signature } : {}),
     limits: pageLimits(schema, ir, slide, theme, pacing, components.legal),
     errors: pageIssues(validation.errors, index),
     warnings: pageIssues(validation.warnings ?? [], index),

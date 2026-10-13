@@ -20,7 +20,7 @@ import { PPTX_ICON_NAMES } from "../icons/catalog"
 import { kindJsonSchema } from "../kind-components"
 import { disassembleDeck, type PageContent } from "../spec/assemble"
 import { formatInvalidSpecError, specJsonSchema, resolveSpecThemeId, validateSpec, type DeckSpec, type SpecValidationIssue } from "../spec"
-import { pageComponentContract, pageContract } from "../inspect/page-contract"
+import { pageComponentContract, pageContract, pageIndex } from "../inspect/page-contract"
 import { pageFit } from "../inspect/page-fit"
 import { AUDIENCE_VALUES, PACING_BUDGETS, STRATEGY_DEFINITIONS, STRATEGY_VALUES, NARRATIVE_PRESETS, resolveNarrative, type NarrativeProfile } from "../narrative"
 import { auditDeck, type AuditChecks, type AuditFinding, type AuditReport } from "../audit/deck-audit"
@@ -34,6 +34,7 @@ import { themeShortlist } from "../themes/select"
 import { CANONICAL_THEME_IDS } from "../themes/index"
 import { RETIRED_THEME_IDS, foldedThemeTarget } from "../themes/retired-ids"
 import { LAYOUT_REGISTRY } from "../layouts/registry"
+import { pageSignatureUse } from "../layouts/signature"
 import { CONFIG_FILENAME, findConfig, findUserConfig } from "./config"
 import {
   assertSafeFileSegment,
@@ -792,6 +793,14 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
       output: opts.json ? JSON.stringify(report) : formatPageFitReport(report, contract.theme),
       failed: contract.errors.length > 0 || (fit.checked && !fit.fits),
     }
+  }
+  if (contract.signature !== undefined && contract.page.filled && validation.ok) {
+    // Which drawing draws the page now: the page drawn as the export draws it.
+    await resolveLocalAssets(validation.ir!, loaded.baseDir, loaded.workspaceAssetsDir)
+    const index = pageIndex(validation.ir!, opts.page)
+    const svg = renderSlideSvg(validation.ir!, index, { theme })
+    // The page has a signature section, so its face offers drawings and the use is defined.
+    contract.signature = { ...contract.signature, drawnBy: pageSignatureUse(validation.ir!, validation.ir!.slides[index]!, theme, svg)!.drawnBy }
   }
   const output = opts.json
     ? JSON.stringify({ ...contract, page: { ...contract.page, file } })

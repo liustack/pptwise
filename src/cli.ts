@@ -190,7 +190,7 @@ program
 program
   .command("inspect")
   .description(
-    "Show one page's fill contract: the spec's locked fields, the page file's fields, the components its face draws, the counts validate holds it to, and validate's findings on it. Exits 1 when the page has an error",
+    "Show one page's fill contract: the spec's locked fields, the page file's fields, the components its face draws, the theme's signature layouts for the page with the recipe to write for each, the counts validate holds it to, and validate's findings on it. Exits 1 when the page has an error",
   )
   .argument("<deck>", "deck project directory")
   .requiredOption("--page <id>", "the page id in deck.spec.json")
