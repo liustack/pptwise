@@ -147,11 +147,25 @@ function naturalHeight(component: GanttComponent): number {
   return n * rows + (n - 1) * ROW_GAP + reservedBottom
 }
 
+/** How many rows, from the first, a box `h` tall holds at their natural height: all of them when it is not bounded, one at least. */
+function rowsHeld(component: GanttComponent, h: number | undefined): number {
+  const n = component.items.length
+  if (h === undefined) return n
+  const row = Math.max(...component.items.map(rowNeed))
+  let shown = n
+  while (shown > 1 && shown * row + (shown - 1) * ROW_GAP + bottomBand(component) > h) shown--
+  return shown
+}
+
 export const gantt: SvgComponent<GanttComponent> = {
   measure(component) {
     return naturalHeight(component)
   },
-  render(component, box, ctx) {
+  render(whole, box, ctx) {
+    // Rows past what the box holds are left off and declared, the way a
+    // list's items are: drawn on, they ran over the page's foot.
+    const shown = rowsHeld(whole, box.h)
+    const component = shown < whole.items.length ? { ...whole, items: whole.items.slice(0, shown) } : whole
     const n = component.items.length
     const hasAxisLabels = (component.axis_labels?.length ?? 0) > 0
     const reservedBottom = bottomBand(component)
@@ -166,7 +180,8 @@ export const gantt: SvgComponent<GanttComponent> = {
     const marked = component.items.some((item) => item.emphasis === true)
     const receded = marked ? recededMarkFill(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg) : ""
 
-    const { min: axisMin, max: axisMax } = axisBounds(component)
+    // The axis is the whole gantt's: rows left off do not shorten it.
+    const { min: axisMin, max: axisMax } = axisBounds(whole)
     const plotX = box.x + LABEL_W + LABEL_GAP
     const plotW = Math.max(1, box.w - LABEL_W - LABEL_GAP - PLOT_RIGHT_PAD)
     const vx = (v: number) => plotX + ((v - axisMin) / (axisMax - axisMin)) * plotW
@@ -314,6 +329,7 @@ export const gantt: SvgComponent<GanttComponent> = {
             </g>
           )
         })}
+        {shown < whole.items.length ? <g data-dropped={whole.items.length - shown} data-dropped-kind="item" /> : null}
         {hasAxisLabels && axisLabels.length > 0 && (
           <>
             <line

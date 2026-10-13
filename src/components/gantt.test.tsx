@@ -291,3 +291,43 @@ describe("a gantt's moments and unsettled stretches", () => {
     for (const t of labels) expect(t.getAttribute("data-truncated")).toBeNull()
   })
 })
+
+describe("gantt rows past its box", () => {
+  const six = {
+    type: "gantt" as const,
+    axis_labels: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+    bands: [{ from: 8, to: 12, label: "Season" }],
+    items: [
+      { label: "One", start: 0, end: 1 },
+      { label: "Two", text: "With a second line", start: 1, end: 4 },
+      { label: "Three", text: "With a second line", start: 2, end: 8 },
+      { label: "Four", text: "With a second line", start: 8, end: 9 },
+      { label: "Five", text: "With a second line", start: 9, end: 12 },
+      { label: "Six", start: 11, end: 12 },
+    ],
+  }
+
+  it("draws every row a box tall enough holds, and declares nothing", () => {
+    const { container } = svg(gantt.render(six, { x: 0, y: 0, w: 1100, h: 700 }, ctx))
+    expect(container.querySelector("[data-dropped]")).toBeNull()
+    expect(Array.from(container.querySelectorAll("text")).map((t) => t.textContent)).toContain("Six")
+  })
+
+  it("leaves off the rows a short box cannot hold and declares them, keeping the whole axis", () => {
+    const box = { x: 0, y: 0, w: 1100, h: 448 }
+    const { container } = svg(gantt.render(six, box, ctx))
+    const marker = container.querySelector("[data-dropped]")
+    expect(marker?.getAttribute("data-dropped-kind")).toBe("item")
+    const shown = 6 - Number(marker?.getAttribute("data-dropped"))
+    expect(shown).toBeGreaterThan(0)
+    expect(shown).toBeLessThan(6)
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent)
+    expect(texts).not.toContain("Six")
+    // Every line stays inside the box.
+    for (const t of Array.from(container.querySelectorAll("text"))) expect(Number(t.getAttribute("y"))).toBeLessThanOrEqual(box.h)
+    // The span still lies on the axis the whole gantt set: from 8 of 12, not past the plot.
+    const span = container.querySelector('[data-gantt-band="Season"] rect')!
+    const right = Number(span.getAttribute("x")) + Number(span.getAttribute("width"))
+    expect(right).toBeLessThanOrEqual(box.w)
+  })
+})
