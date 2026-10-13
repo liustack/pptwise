@@ -17,7 +17,7 @@ Take the colours from `pptwise themes --json`, not from this page. For reading t
 | role | token | value |
 | :-- | :-- | :-- |
 | the paper, every page but a section page | `bg` | `#FFFFFF` |
-| a card or a missing photograph, inside a hairline frame | `surface` | `#FFFFFF`, the paper's own white, with `cardStroke` `#E2DDD4` and `radius` 0 |
+| a missing photograph, inside a hairline frame | `surface` | `#F3F0EA`, the board's warm sand, with `radius` 0. No component lays it as a card (`shape.surfaces: "ruled"`) |
 | claims, figures, the running head's section, a section page's half | `primary` | `#0E3B53`, petrol |
 | words, the 2px rules of a table | `text` | `#14212B`, ink |
 | labels, notes, the source, the running head's label | `muted` | `#55606A`, grey |
@@ -93,4 +93,4 @@ Microsoft YaHei for everything (PingFang on the board). Weight does the work: bo
 
 Before drawing, find the closest part in [Reusable parts](./reusable-parts.md#proposal-rooftop-solar-and-storage-proposal-sample-2026-10). proposal's content pages are `binder-sheet`, which hands its body to a composition in the binder setting: `gains` for what the client gets, `hours` for a day's tariff place by place, `regions` for places side by side, `workings` for a sum worked line by line, `levers` for how a result moves, `cycles` for what a store of energy earns a day, `drift` for measures that moved, `parts` for what a solution is made of, `plans` for ways to pay, `precedents` for public records, `safeguards` for rules, lessons and who answers, `remedies` for a risk register, `checkpoints` for steps closed by papers, `quote` for a price list with blanks, and `papers` for what the client hands over. The cover is `binder-cover`, a section page `binder-chapter`, the close `binder-ending`. A new page is usually a new composition in the binder setting, drawn inside the band from y176 to y640: hairlines and ruled tables on white paper, petrol figures, the brick red once.
 
-A content page none of the compositions takes is drawn by the component renderer in the same band, under the same running head and claim. The tokens keep that renderer's cards to one layer: a card is as white as the paper, framed by a hairline with square corners. Tints and filled marks that the shared renderer mixes from the accent or the petrol are not yet set as print.
+A content page none of the compositions takes is drawn by the component renderer in the same band, under the same running head and claim. proposal declares `shape.surfaces: "ruled"`, so that renderer sets every component as print too: no card ground and no rounded corner, a hairline over each part or between columns, a number set as the figure itself rather than in a disc, a node or block that was solid drawn as an outline, and a table on rules with no tinted row. What the page leads with is set in weight and ink under one 2px rule of the brick red. Charts keep their marks.

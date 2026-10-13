@@ -85,6 +85,8 @@ Fonts express family, weight, and rhythm. Never require a commercial face to exi
 
 `shape.radius`, `shape.gapScale`, and `shape.typeScale` tune the complete theme within their schema bounds. They do not replace face design.
 
+`shape.surfaces: "ruled"` sets every shared component as print instead of as web parts: hairlines and white space in place of cards, figures in place of number discs, outlines in place of solid blocks, rules in place of tinted table rows (see [Themes](./themes.md)). Choose it when the theme's own board is print, a report or a proposal on paper. Then leave `surface` and `cardStroke` at the values the board gives them: no component lays a card for them to imitate paper with.
+
 ### Decoration
 
 Decoration must stay subordinate to content and within audit-safe regions. Keep solid marks out of heading, body, footer metadata, logo, and footnote zones. Hairlines up to 1.5px and background-level marks may cross a reserved zone, but never a line of text. A rule through a line, or within 4px of it, reads as a strikethrough at any contrast, and the gallery's L1 check reports it. Components fill the content area down to about y=648, so content-page rules belong in the margins or below the footer rule, as homeroom's do.
