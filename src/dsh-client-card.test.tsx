@@ -2752,6 +2752,21 @@ describe("the build card's other themes", () => {
     expect(kit.opened).toEqual([])
   })
 
+  it("draws them on the desk under the turn too, where the deck stays once the work group folds", async () => {
+    const { calls, conversation } = composer()
+    const kit = makeTail({ sidebar: true, conversation })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: { ...built(), exportable: true } }))
+    const entry: TailEntry = { callId: "c", tool: "pptwise_build", kind: "deck", id: "new-0001", target: "weekly", version: 1, priorId: null }
+    const { container } = render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [entry]} />)
+    await waitFor(() => expect(container.querySelector("[data-pptwise-desk] [data-pptwise-alternatives]")).not.toBeNull())
+    const strip = container.querySelector("[data-pptwise-alternatives]") as HTMLElement
+    expect([...strip.querySelectorAll("[data-alt-theme]")].map((c) => c.getAttribute("data-alt-theme"))).toEqual(["memo", "swiss"])
+    // The desk's own pages stay three, outside the other themes.
+    expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(3)
+    fireEvent.click(strip.querySelector('[data-alt-theme="memo"] .pw-thumb')!)
+    expect(calls).toEqual(["set:Switch to Memo", "focus"])
+  })
+
   it("asks in the harness's language", async () => {
     const { calls, conversation } = composer()
     const kit = makeTail({ sidebar: true, conversation })

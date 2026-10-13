@@ -2313,6 +2313,9 @@ window.__ModuleLoader__.load({
               )
             }),
           ),
+          // The desk is what stays in view once the turn's work group folds,
+          // so the other themes go here as well as on the build card.
+          h(Alternatives, { themes: bundle.alternatives, slide: slide }),
           layer
             ? h(
                 Layer,
