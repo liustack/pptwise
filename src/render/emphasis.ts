@@ -575,6 +575,8 @@ export function headingEmphasisPaint(
     accent?: string
     fontWeight?: string
     fontFamily?: string
+    /** The family the line is painted in, when it is measured by the envelope (`TextWeightHint.paintedIn`). */
+    paintedIn?: string
     bold?: boolean
     bg?: string
   },
@@ -586,7 +588,7 @@ export function headingEmphasisPaint(
     baseFill: style.baseFill,
     fontWeight: style.fontWeight ?? "700",
     emphasis: ctx.emphasis,
-    measureWeight: { bold: style.bold ?? true, fontFamily: style.fontFamily },
+    measureWeight: { bold: style.bold ?? true, fontFamily: style.fontFamily, ...(style.paintedIn !== undefined ? { paintedIn: style.paintedIn } : {}) },
   }
 }
 

@@ -197,7 +197,9 @@ function renderDefault(component: ImageGridComponent, box: Parameters<SvgCompone
                     minFontSize: 16,
                   })
                   if (!fitted) return null
-                  const paint = headingEmphasisPaint(ctx, fitted, { baseFill: ctx.colors.text, bold: false, bg: ctx.defaultBg ?? ctx.colors.bg })
+                  // A marked run is placed by the wider of the envelope and the face
+                  // the caption is painted in, so the words after it start after it.
+                  const paint = headingEmphasisPaint(ctx, fitted, { baseFill: ctx.colors.text, bold: false, bg: ctx.defaultBg ?? ctx.colors.bg, paintedIn: ctx.fonts.body })
                   const ruleY = inset ? cell.y + cell.h - inset + 10 : cell.y + cell.h + 10
                   return (
                     // caption 左对齐 + accent 短线前缀（杂志图注惯例），

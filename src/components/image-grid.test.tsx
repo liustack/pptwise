@@ -4,6 +4,7 @@ import { render } from "@testing-library/react"
 import { imageGrid } from "./image-grid"
 import { imageCompare } from "./image-compare"
 import type { ComponentCtx } from "./types"
+import { measureTextUnits } from "../lib/svg-text-layout"
 
 const ctx: ComponentCtx = {
   colors: {
@@ -234,5 +235,28 @@ describe("a picture's tag", () => {
     const wide = { ...grid, items: grid.items.map((it, i) => (i === 1 ? { ...it, tag: { text: "一个比这张小图宽得多的标签，放不下就声明" } } : it)) }
     const { container } = svg(imageGrid.render(wide, { x: 0, y: 0, w: 420 }, ctx))
     expect(container.querySelector("[data-dropped]")).not.toBeNull()
+  })
+})
+
+describe("image_grid caption marked run placement", () => {
+  it("starts the words after a marked run after the run, in the face the caption is painted in", () => {
+    // brief's body face is Georgia, whose bold figures run wider than the
+    // envelope: the words after "45%" were set over its last glyph.
+    const georgia: ComponentCtx = { ...ctx, fonts: { ...ctx.fonts, body: "Georgia, Songti SC, STSong, serif" }, emphasis: "pad" }
+    const component = {
+      type: "image_grid" as const,
+      items: [
+        { asset_id: "a", caption: "Heritage: heavy, hand-made" },
+        { asset_id: "b", caption: "Design: light, distinctive" },
+        { asset_id: "c", caption: "Light: Under 10 g, **45%** of units sold" },
+      ],
+    }
+    const { container } = svg(imageGrid.render(component, { x: 0, y: 0, w: 1088 }, georgia))
+    const runs = Array.from(container.querySelectorAll("tspan"))
+    const marked = runs.find((t) => t.textContent === "45%")!
+    const after = runs[runs.indexOf(marked) + 1]!
+    const size = Number(marked.closest("text")!.getAttribute("font-size"))
+    const markedEnd = Number(marked.getAttribute("x")) + measureTextUnits("45%", { bold: true, fontFamily: georgia.fonts.body }) * size
+    expect(Number(after.getAttribute("x"))).toBeGreaterThanOrEqual(markedEnd - 0.01)
   })
 })
