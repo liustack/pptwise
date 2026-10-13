@@ -5,6 +5,7 @@ import { renderSlideSvg } from "../api"
 import { installNodePlatform } from "../platform/node"
 import { parseSvgRoot } from "../render/serialize"
 import { validateIr } from "../validate-core"
+import { findContrastIssues } from "../audit/deck-audit"
 import { contrastRatio } from "../render/ink"
 import { resolveStyle } from "../themes"
 import { crayonSectionIndex } from "./compositions/crayonbox"
@@ -135,6 +136,17 @@ describe("crayon's faces", () => {
     expect(texts(root)).toEqual(expect.arrayContaining(["孩子会长成什么样", "示意图：搭积木（AI 生成）"]))
     // No page number off the content pages.
     expect(root.querySelector('[data-field="slidenum"]')).toBeNull()
+  })
+
+  it("the chapter's low star stands clear of a subtitle that runs under it", () => {
+    // A title of two lines brings the subtitle down to the star.
+    const long = { ...chapter, heading: "Where it helps, and where it backfires", subheading: "First, the research: work it makes faster and better, and work it gets wrong" } as unknown as Slide
+    const stars = (root: Element) => Array.from(root.querySelectorAll("[data-crayon-star]")).map((star) => star.getAttribute("points"))
+    const ir = deck([cover, contents, long])
+    expect(svg(ir, 2).querySelectorAll("[data-crayon-subtitle] text").length).toBe(2)
+    expect(findContrastIssues(renderSlideSvg(ir, 2))).toEqual([])
+    // A short subtitle leaves the star where the board put it.
+    expect(stars(svg(deck([cover, contents, chapter]), 2))).not.toEqual(stars(svg(ir, 2)))
   })
 
   it("the close wears the last section's crayon, a card a way to reach the school, and the line to remember on a tangerine pill", () => {

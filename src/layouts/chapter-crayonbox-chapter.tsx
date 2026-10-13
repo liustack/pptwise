@@ -1,7 +1,7 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
 import { chapterNumberFor } from "../lib/derive"
-import { CrayonLine, CrayonPhoto, PhotoNote, Star, Sun, crayonBaseline, crayonInks, crayonSectionColor, crayonText, fitCrayon, fitPhotoNote, inkOn, paintCrayon } from "./compositions/crayonbox"
+import { CrayonLine, CrayonPhoto, PhotoNote, Star, Sun, crayonBaseline, crayonInks, crayonSectionColor, crayonText, crayonWidth, fitCrayon, fitPhotoNote, inkOn, paintCrayon } from "./compositions/crayonbox"
 import { CrayonClaimText, fitCrayonClaim, crayonClaimSet, CLAIM } from "./crayonbox-frame"
 
 /**
@@ -23,6 +23,8 @@ const UNDERLINE = { x1: 90, x2: 270, y: 420, stroke: 9 } as const
 const TITLE = { x: 80, top: 450, w: 560, size: 46, lineHeight: 64 } as const
 const SUB = { gap: 6, w: 560, size: 20, lineHeight: 30, maxLines: 2 } as const
 const PHOTO = { x: 680, y: 170, w: 520, h: 380, r: 30, note: 14 } as const
+/** The low star, in the air past the subtitle's first line; past the subtitle's column when a line runs under it. */
+const LOW_STAR = { cx: 580, cy: 600, r: 9, clear: 8, aside: TITLE.x + SUB.w + 24 } as const
 
 export function CrayonboxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const inks = crayonInks(ctx)
@@ -33,6 +35,13 @@ export function CrayonboxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
   const title = fitCrayonClaim(slide.heading, ctx, TITLE.w, TITLE.size, TITLE.lineHeight)
   const foot = TITLE.top + title.lines.length * TITLE.lineHeight
   const sub = slide.subheading?.trim() ? fitCrayon(slide.subheading, { width: SUB.w, size: SUB.size, lineHeight: SUB.lineHeight, maxLines: SUB.maxLines, weight: 600 }, ctx) : undefined
+  // A title of two lines brings the subtitle down to the low star, and a long
+  // subtitle line ran under it. The star then stands past the column.
+  const subTop = foot + SUB.gap
+  const underStar = (sub?.lines ?? []).some((line, i) => {
+    const top = subTop + i * SUB.lineHeight
+    return top < LOW_STAR.cy + LOW_STAR.r && top + SUB.lineHeight > LOW_STAR.cy - LOW_STAR.r && TITLE.x + crayonWidth(line, SUB.size, ctx, { weight: 600 }) > LOW_STAR.cx - LOW_STAR.r - LOW_STAR.clear
+  })
   const cx = TILE.x + TILE.w / 2
   const cy = TILE.y + TILE.h / 2
   const note = fitPhotoNote(slide.footnote, PHOTO.w, ctx)
@@ -44,7 +53,7 @@ export function CrayonboxChapter({ ir, slide, index, ctx }: SvgTemplateProps) {
       </g>
       <g data-decor-piece="stars">
         <Star cx={620} cy={140} r={12} color={inks.purple} />
-        <Star cx={580} cy={600} r={9} color={inks.sky} />
+        <Star cx={underStar ? LOW_STAR.aside : LOW_STAR.cx} cy={LOW_STAR.cy} r={LOW_STAR.r} color={inks.sky} />
       </g>
       <g data-crayon-number={n} transform={`rotate(${TILE.turn} ${cx} ${cy})`}>
         <rect x={TILE.x} y={TILE.y} width={TILE.w} height={TILE.h} rx={TILE.r} fill={color} />
