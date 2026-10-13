@@ -12,7 +12,7 @@ import { cutLines, type CutLine } from "../render/cut-fields"
 import { sourceLineElements, sourceLineMissing } from "./source-line"
 import { printedMarks } from "./printed-marks"
 import { inkDescentEm } from "./ink-descent"
-import { auditSvgMarkup, findRunMisfits, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
+import { auditSvgMarkup, boxOnPage, findRunMisfits, pageAffine, parseNums, parseTransform, type OverflowIssue, type RunMisfit } from "./svg-audit"
 
 /**
  * `pptwise audit` finding shape (v0.3 W6, spec §7 workflow ④). `page` is
@@ -1762,6 +1762,42 @@ function runUnits(el: Element, content: string): number {
   return measureTextUnits(content, { bold: isBold(inheritedAttribute(el, "font-weight")), fontFamily })
 }
 
+/**
+ * The page box of the whole line a run set a quarter turn round belongs to,
+ * or null for any other line.
+ *
+ * The walk carries positions as a translate and a scale (`parseTransform`),
+ * which places a line turned about a point where it would stand unturned.
+ * For a slight tilt (a stamp, a pinned note) that is near enough. A line
+ * set up the page's edge is a quarter turn away, and read unturned it lies
+ * across the page from where it is painted: the ink theme's section name,
+ * set up the left margin, was graded against the hairline it runs beside
+ * and never touches. Here the owning `<text>`'s own box, at its declared
+ * size and anchor, is carried to the page through every transform above it
+ * (`pageAffine`), where a quarter turn keeps it a box, and the line's runs
+ * are graded against what lies under it. A tspan inside the line takes the
+ * whole line's box: under a turn the walk does not know where along the
+ * line it starts.
+ */
+function quarterTurnedLineBox(
+  el: Element,
+  fontSize: number,
+  anchor: string,
+  content: string,
+): { left: number; right: number; top: number; bottom: number } | null {
+  let line: Element = el
+  while (line.tagName.toLowerCase() !== "text" && line.parentElement !== null) line = line.parentElement
+  const m = pageAffine(line)
+  if (Math.abs(m[0]) > 1e-9 || Math.abs(m[3]) > 1e-9) return null
+  const x = Number(line.getAttribute("x") ?? 0)
+  const y = Number(line.getAttribute("y") ?? 0)
+  const width = runUnits(line, line.textContent ?? content) * fontSize
+  const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x
+  const top = y - fontSize * TEXT_INK_ASCENT_RATIO
+  const box = boxOnPage(m, left, top, width, y + fontSize * inkDescentEm(content) - top)
+  return { left: box.x, right: box.x + box.w, top: box.y, bottom: box.y + box.h }
+}
+
 function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: BgRegion[]; imageBackedRuns: ImageBackedTextRun[] } {
   const root = parseSvg(markup)
   const issues: ContrastIssue[] = []
@@ -2154,7 +2190,12 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
       if (content && !inMidgroundSubtree && ink !== "none") {
         const pairedPadFill = resolveCandidateFill(el.getAttribute("data-emphasis-pad-fill"))
         const explicitPadBackground = typeof pairedPadFill === "string" ? pairedPadFill : null
-        const background = explicitPadBackground ?? backgroundAt(tx, ty)
+        // A line turned about a point (a name set up the page's edge) is
+        // painted where its turned box lands, not where `tx`/`ty` would put
+        // it unturned (`turnedLineBox`).
+        const turned = unmodelledTransformHere ? quarterTurnedLineBox(el, currentFontSize, currentAnchor, content) : null
+        const background =
+          explicitPadBackground ?? (turned ? backgroundAt((turned.left + turned.right) / 2, (turned.top + turned.bottom) / 2) : backgroundAt(tx, ty))
         // `alpha` moved out of the `background !== null` branch (bench-
         // driven-fix-round-style additive change, audit-v2 phase B): the
         // `background !== null` branch below is byte-for-byte the same
@@ -2186,15 +2227,17 @@ function runContrastWalk(markup: string): { issues: ContrastIssue[]; regions: Bg
             const left =
               currentAnchor === "end" ? tx - width : currentAnchor === "middle" ? tx - width / 2 : tx
             const candidates =
-              explicitPadBackground === null
-                ? backgroundsUnderRun(
-                    left,
-                    left + width,
-                    ty - renderedFontSize * TEXT_INK_ASCENT_RATIO,
-                    ty + renderedFontSize * inkDescentEm(content),
-                    renderedFontSize * BG_SAMPLE_STRIDE_EM,
-                  )
-                : []
+              explicitPadBackground !== null
+                ? []
+                : turned
+                  ? backgroundsUnderRun(turned.left, turned.right, turned.top, turned.bottom, renderedFontSize * BG_SAMPLE_STRIDE_EM)
+                  : backgroundsUnderRun(
+                      left,
+                      left + width,
+                      ty - renderedFontSize * TEXT_INK_ASCENT_RATIO,
+                      ty + renderedFontSize * inkDescentEm(content),
+                      renderedFontSize * BG_SAMPLE_STRIDE_EM,
+                    )
             const required = requiredRatioFor(currentTier, renderedFontSize)
             // `background` (the anchor point's own answer) is always in the
             // running, even for a zero-width run the grid would otherwise

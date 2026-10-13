@@ -1600,6 +1600,30 @@ describe("findContrastIssues — circle/ellipse containment and paint-order safe
     </svg>`
     expect(findContrastIssues(markup)).toEqual([])
   })
+
+  it("grades a line set a quarter turn up the page's edge where it is painted, not where it would stand unturned", () => {
+    // ink's section name runs down the left margin, turned about its own
+    // first letter, beside a hairline. Read unturned it lay across the
+    // hairline, which it never touches.
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <rect x="0" y="0" width="1280" height="720" fill="#F5F0E6"/>
+      <g data-decor="true"><rect x="69.5" y="40" width="1" height="640" fill="#DCD2BD"/></g>
+      <g transform="rotate(90 60 48)"><text x="60" y="68" font-size="15" fill="#C3272B">Reasons</text></g>
+    </svg>`
+    expect(findContrastIssues(markup)).toEqual([])
+  })
+
+  it("still grades a quarter-turned line against what it is painted over", () => {
+    // Turned about (60, 48), the line runs down from there, over x 36 to 51.
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+      <rect x="20" y="40" width="35" height="200" fill="#202020"/>
+      <g transform="rotate(90 60 48)"><text x="60" y="68" font-size="15" fill="#000000">Reasons</text></g>
+    </svg>`
+    const issues = findContrastIssues(markup)
+    expect(issues).toHaveLength(1)
+    expect(issues[0]!.background).toBe("#202020")
+  })
 })
 
 // fix/donut-annulus-attribution: closes docs/contrast-system.md's own

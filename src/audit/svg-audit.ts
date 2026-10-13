@@ -41,7 +41,7 @@ export function parseTransform(el: Element): { dx: number; dy: number; scale: nu
 }
 
 /** A 2D affine map in SVG's `matrix(a b c d e f)` order: x' = a·x + c·y + e, y' = b·x + d·y + f. */
-type Affine = readonly [number, number, number, number, number, number]
+export type Affine = readonly [number, number, number, number, number, number]
 
 const IDENTITY: Affine = [1, 0, 0, 1, 0, 0]
 
@@ -93,11 +93,18 @@ function parseAffine(el: Element): Affine {
   return m
 }
 
+/** Where an element's own coordinates land on the page: its transform list under every ancestor's. */
+export function pageAffine(el: Element): Affine {
+  const chain: Element[] = []
+  for (let node: Element | null = el; node !== null; node = node.parentElement) chain.unshift(node)
+  return chain.reduce<Affine>((m, node) => compose(m, parseAffine(node)), IDENTITY)
+}
+
 /**
  * A box declared in a frame, carried to the page: exact under a translate
  * and scale, else the axis-aligned bounds of its turned corners.
  */
-function boxOnPage(m: Affine, x: number, y: number, w: number, h: number): Rect {
+export function boxOnPage(m: Affine, x: number, y: number, w: number, h: number): Rect {
   if (axisAligned(m)) return { x: m[4] + m[0] * x, y: m[5] + m[3] * y, w: m[0] * w, h: m[3] * h }
   const corners = [apply(m, x, y), apply(m, x + w, y), apply(m, x, y + h), apply(m, x + w, y + h)]
   const xs = corners.map((c) => c[0])
