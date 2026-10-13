@@ -143,6 +143,7 @@ describe("runInspect --page", () => {
     expect(failed).toBe(false)
     expect(output).toContain('page growth (2 of 5): content, kind "data", theme "brief"')
     expect(output).toContain("file: pages/growth.json")
+    expect(output).toContain("page file keys (the top-level keys of pages/growth.json): components, background, image_side, footnote (the source line), notes (speaker notes, never drawn)")
     expect(output).toContain("recommended: chart (spec focus)")
     expect(output).toContain("advice (validate warns past these):\n  at most 3 components on the page (spacious pacing allows 3")
     expect(output).toContain("errors: none")

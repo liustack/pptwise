@@ -184,12 +184,22 @@ describe("pageContract: page facts and fields", () => {
 
   it("lists the page file's fields with their IR schema, and drops footnote on a boundary page", () => {
     const content = contractOf("brief", { type: "content", kind: "data" }).fields
-    expect(Object.keys(content).filter((key) => key !== "$defs")).toEqual([...PAGE_FILL_FIELDS])
+    expect(Object.keys(content).filter((key) => key !== "$defs")).toEqual(["components", "background", "image_side", "footnote", "notes"])
     expect(content.image_side).toEqual({ type: "string", enum: ["left", "right"] })
     expect(content.footnote).toEqual({ type: "string" })
     const cover = contractOf("brief", { type: "cover" }).fields
     expect(Object.keys(cover)).not.toContain("footnote")
     expect(Object.keys(cover)).toContain("background")
+  })
+
+  it("lists a field a face places only on a face that has a place for it", () => {
+    const fillable = (theme: string, page: PageShape) => Object.keys(contractOf(theme, page).fields).filter((key) => key !== "$defs")
+    const placed = ["fields", "stamp", "tag", "ballot", "years", "stage"]
+    const lesson = fillable("homeroom", { type: "content", kind: "points" })
+    expect(lesson.filter((key) => placed.includes(key))).toEqual(["ballot", "stage"])
+    expect(fillable("recap", { type: "cover" })).toContain("fields")
+    expect(fillable("brief", { type: "cover" }).filter((key) => placed.includes(key))).toEqual([])
+    for (const key of [...lesson, ...fillable("recap", { type: "cover" })]) expect(PAGE_FILL_FIELDS).toContain(key)
   })
 })
 

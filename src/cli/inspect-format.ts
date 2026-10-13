@@ -53,6 +53,22 @@ function issueBlock(label: string, issues: readonly PageIssue[]): string[] {
   return [`${label}:`, ...issues.map((issue) => `  ${formatIssue(issue)}`)]
 }
 
+/**
+ * What a page file key holds, beside its name where the name alone reads as
+ * something else: `fields` is one key among the others, a form's header
+ * lines, not a heading over the list.
+ */
+const PAGE_KEY_GLOSS: Readonly<Record<string, string>> = {
+  fields: "a form's header lines, such as To and From",
+  stamp: "a stamp pressed on the page",
+  tag: "a small tag beside the heading",
+  ballot: "the boxes ticked beside each item",
+  years: "a strip of years with this page's lit",
+  stage: "the course stage this page lights",
+  footnote: "the source line",
+  notes: "speaker notes, never drawn",
+}
+
 /** The whole-page report `pptwise inspect <deck> --page <id>` prints without `--json`. */
 export function formatPageContract(contract: PageContract, file: string): string {
   const { components } = contract
@@ -60,7 +76,8 @@ export function formatPageContract(contract: PageContract, file: string): string
   if (contract.drawnAs !== undefined) {
     lines.push(`drawn as: "${contract.drawnAs}", the nearest kind theme "${contract.theme}" draws this page as`, "")
   }
-  lines.push(`fields: ${Object.keys(contract.fields).filter((key) => key !== "$defs").join(", ")}`)
+  const keys = Object.keys(contract.fields).filter((key) => key !== "$defs")
+  lines.push(`page file keys (the top-level keys of ${file}): ${keys.map((key) => (PAGE_KEY_GLOSS[key] !== undefined ? `${key} (${PAGE_KEY_GLOSS[key]})` : key)).join(", ")}`)
   lines.push(`components (${components.legal.length}): ${components.legal.length > 0 ? components.legal.join(", ") : "none"}`)
   if (components.fullBody.length > 0) {
     lines.push(`  full-body, each must be the page's only component: ${components.fullBody.join(", ")}`)

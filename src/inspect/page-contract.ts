@@ -36,7 +36,7 @@ import { PACING_BUDGETS, resolveNarrative, type Pacing } from "../narrative"
 import { FULL_BODY_TYPES } from "../render/component-traits"
 import { contentPageDensity } from "../render/ir-quality"
 import { writesHeading } from "../layouts/boundary-content"
-import { getLayout } from "../layouts/registry"
+import { getLayout, type LayoutDefinition } from "../layouts/registry"
 import { landingCandidates } from "../render/kind-landing"
 import { componentFace, faceAcceptedComponentTypes, resolveEffectiveFace } from "../render/layout-selection"
 import type { PageSpec } from "../spec"
@@ -129,7 +129,7 @@ export interface PageContract {
    * what the page holds (`../render/kind-landing.ts`).
    */
   drawnAs?: string
-  /** Each field the page file may fill, with its JSON Schema. */
+  /** Each field the page file may fill on this page's face, with its JSON Schema. */
   fields: Record<string, unknown>
   components: PageComponents
   limits: PageLimit[]
@@ -205,18 +205,25 @@ function slideSchema(full: JsonSchemaDocument, type: Slide["type"]): { propertie
   return variant
 }
 
+/** Page-file fields a face draws only when it lists them (`LayoutDefinition.pageFields`). */
+const FACE_PLACED_FIELDS: readonly string[] = ["fields", "stamp", "tag", "ballot", "years", "stage"]
+
 /**
- * The page file's fields and their JSON Schema, cut from the IR slide schema
- * for this page type. `components` points at the component list instead of
- * repeating the whole union. A boundary page leaves out the fields no
- * boundary face draws.
+ * The page file's fields this page's face draws, and their JSON Schema, cut
+ * from the IR slide schema for this page type. `components` points at the
+ * component list instead of repeating the whole union. A field a face draws
+ * only when it has a place for it (header lines, a stamp, a ballot, a strip
+ * of years, a course stage, a page tag, and a cover, chapter or ending
+ * page's source line) is listed only when this face has one: listing it
+ * otherwise invites a page validate then refuses.
  */
-function pageFields(full: JsonSchemaDocument, slide: Slide): Record<string, unknown> {
+function pageFields(full: JsonSchemaDocument, slide: Slide, face: LayoutDefinition | undefined): Record<string, unknown> {
   const variant = slideSchema(full, slide.type)
-  const skipped: readonly string[] = isBoundary(slide) ? BOUNDARY_UNRENDERED_FIELDS : []
+  const placed = face?.pageFields ?? []
   const fields: Record<string, unknown> = {}
   for (const field of PAGE_FILL_FIELDS) {
-    if (skipped.includes(field)) continue
+    if (FACE_PLACED_FIELDS.includes(field) && !(placed as readonly string[]).includes(field)) continue
+    if (isBoundary(slide) && (BOUNDARY_UNRENDERED_FIELDS as readonly string[]).includes(field) && !(placed as readonly string[]).includes(field)) continue
     fields[field] =
       field === "components"
         ? {
@@ -445,7 +452,7 @@ export function pageContract(ir: PptxIR, pageId: string, opts: PageContractOptio
     theme: theme.id,
     face: effective.layoutId,
     ...(drawnAs !== undefined ? { drawnAs } : {}),
-    fields: pageFields(schema, slide),
+    fields: pageFields(schema, slide, componentFace(ir, slide, theme)),
     components,
     limits: pageLimits(schema, ir, slide, theme, pacing, components.legal),
     errors: pageIssues(validation.errors, index),
