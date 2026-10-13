@@ -33,6 +33,7 @@ import {
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { columnsChart, columnsPanel } from "./columns-panel"
 import { columnsSeal } from "./plot-seal"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Point = Chart["series"][number]["data"][number]
@@ -264,6 +265,13 @@ function gridCaption(chart: Chart, chinese: boolean): string {
 interface Placed {
   nodes: React.ReactNode[]
   boxes: InkBox[]
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const columnsRecipe: Recipe = {
+  look: "An upright bar chart set by hand with no value axis",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 12], needs: ["chart_type=bar|stacked"] }] }],
 }
 
 export const columnsComposition: Composition = ({ components, ctx, rect, setting }) => {

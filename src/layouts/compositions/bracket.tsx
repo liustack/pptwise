@@ -23,6 +23,7 @@ import {
   periodicalWidth,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -80,6 +81,13 @@ function readGroups(components: readonly Component[]): { chart: Chart; callout?:
   const firstLength = first === chartAt ? 1 + (callout ? 1 : 0) : 1 + (paragraph ? 1 : 0)
   if (first !== 0 || Math.max(chartAt, kpiAt) !== firstLength || components.length !== used) return null
   return { chart: components[chartAt] as Chart, callout, comment, kpis: components[kpiAt] as Kpis, paragraph }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const bracketRecipe: Recipe = {
+  look: "A run of bars with its change bracketed, beside a column of figures",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[].tag"] }, { type: "paragraph", optional: true }, { type: "chart", count: [7, 7], needs: ["chart_type=bar", "title", "changes", "changes[*].from~figure", "changes[*].to~figure"] }, { type: "callout", optional: true }] }],
 }
 
 export const bracketComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

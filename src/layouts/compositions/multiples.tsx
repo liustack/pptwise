@@ -19,6 +19,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type RowCards = Extract<Component, { type: "row_cards" }>
@@ -102,6 +103,13 @@ function pairsOf(t: DataTable): { pairs: Pair[]; controlName: string } | null {
   }
   if (pairs.some((p) => p.name === controlName)) return null
   return { pairs, controlName: controlName! }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const multiplesRecipe: Recipe = {
+  look: "How often each thing happens on each drug, against its control, beside the risks to watch",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "data_table", count: [6, 6] }, { type: "row_cards", count: [3, 4], needs: ["items[*].icon"], optional: true }] }],
 }
 
 export const multiplesComposition: Composition = ({ components, ctx, rect, setting }) => {

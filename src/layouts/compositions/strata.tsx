@@ -14,6 +14,7 @@ import {
   scrollWidth,
   uprightText,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Pyramid = Extract<Component, { type: "pyramid" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -49,6 +50,13 @@ function tierWords(layer: Pyramid["layers"][number]): string {
   const note = layer.note ? stripEmphasis(layer.note).trim() : ""
   if (!note) return name
   return uprightText(name) ? `${name}\u3000${note}` : `${name} · ${note}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const strataRecipe: Recipe = {
+  look: "A system of tiers and what stands beside it",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "pyramid", count: [3, 6] }, { type: "icon_cards", count: [2, 4] }, { type: "paragraph", optional: true }] }],
 }
 
 export const strataComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

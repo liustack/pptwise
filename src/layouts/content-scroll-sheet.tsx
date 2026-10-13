@@ -95,6 +95,7 @@ export const layoutDef = {
   // pages, so several kinds may share it.
   dispatch: "content",
   id: "scroll-sheet",
+  compositions: { setting: "scroll", offer: SCROLL_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Scroll Sheet",

@@ -18,6 +18,7 @@ import {
   placeCrayonClaim,
   placeCrayonSource,
 } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -49,6 +50,13 @@ const PHOTO = { top: 186, w: 420, h: 300, r: 26, note: 496 } as const
 const STUDY = { x: 456, top: 186, w: 330, h: 154, pitch: 170, icon: { x: 22, y: 20, size: 22 }, who: { x: 54, top: 16, w: 260, size: 16, lineHeight: 30 }, what: { x: 22, top: 54, w: 290, size: 14, lineHeight: 23, maxLines: 3 }, where: { x: 22, top: 126, size: 11, lineHeight: 20 } } as const
 const CAUTION = { top: 530, size: 13, lineHeight: 21, maxLines: 2 } as const
 const TODO = { x: 822, w: 330, lead: { top: 186, size: 20, lineHeight: 40 }, line: { y: 232, w: 154, stroke: 6 }, top: 252, pitch: 84, box: { size: 30, r: 7, stroke: 3 }, tick: 4, text: { x: 44, dy: -2, size: 16, lineHeight: 26, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const backingRecipe: Recipe = {
+  look: "What the studies found, beside what to do about it",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "icon_cards", count: [2, 2], needs: ["items[*].tag"] }, { type: "callout", optional: true }, { type: "paragraph" }, { type: "bullets", count: [2, 5], needs: ["style=checklist"] }] }],
+}
 
 export const backingComposition: Composition = ({ components, ctx, rect, setting, claim, source, inks: given }) => {
   if (setting !== "crayonbox") return null

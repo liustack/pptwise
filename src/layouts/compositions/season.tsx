@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blendOver } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeIcon, paintMarqueeLine, splitName, type MarqueeInks } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Heatmap = Extract<Component, { type: "heatmap" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -75,6 +76,13 @@ export function rowInks(n: number, inks: MarqueeInks): string[] {
     out.push(pool.splice(best, 1)[0]!)
   }
   return out
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const seasonRecipe: Recipe = {
+  look: "Where in the year things peak",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "heatmap" }, { type: "callout", needs: ["text~colon"], optional: true }, { type: "callout", needs: ["text~colon"], optional: true }, { type: "callout", optional: true }] }],
 }
 
 export const seasonComposition: Composition = ({ components, ctx, rect, setting }) => {

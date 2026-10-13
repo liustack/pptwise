@@ -8,6 +8,7 @@ import { accessibleInk } from "../../render/ink"
 import { markedFigure, plainFigure, type KpiItem } from "./figure"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
@@ -97,6 +98,13 @@ function paintBillboardFigure(opts: { ctx: ComponentCtx; value: string; unit?: s
       ) : null}
     </text>
   )
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const billboardRecipe: Recipe = {
+  look: "One figure set as large as the page allows, bulletin's 2026-10 fact",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 4] }] }],
 }
 
 export const billboardComposition: Composition = ({ components, ctx, rect, setting }) => {

@@ -16,6 +16,7 @@ import {
   wholeLit,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -41,6 +42,13 @@ const ROW = { left: 64, right: 1216, gap: 30 } as const
 const RULE = { y: 420, w: 1 } as const
 const FIGURE = { top: 436, size: 50, lineHeight: 64, unit: 18 } as const
 const LABEL = { top: 512, size: 13, lineHeight: 22, maxLines: 2, inset: 20 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const standfirstRecipe: Recipe = {
+  look: "An editor's standfirst over one figure",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4] }] }],
+}
 
 export const standfirstComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

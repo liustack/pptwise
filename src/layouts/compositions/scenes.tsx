@@ -15,6 +15,7 @@ import {
   scrollText,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Grid = Extract<Component, { type: "image_grid" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -40,6 +41,13 @@ type Kpi = Extract<Component, { type: "kpi_cards" }>
 const PHOTOS = { top: 130, h: 220, gap: 20, pitch: 360 } as const
 const NAME = { top: 358, icon: { dy: 4, size: 18 }, dx: 26, size: 18, lineHeight: 26 } as const
 const FIGS = { gap: 20, pitch: 270, figure: { top: 410, lineHeight: 60, size: 46, unit: 15 }, label: { top: 474, size: 13, lineHeight: 22 }, note: { top: 498, size: 11, lineHeight: 20 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const scenesRecipe: Recipe = {
+  look: "Where a thing lives now, in pictures and figures",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4], needs: ["items[*].caption"] }, { type: "kpi_cards", count: [2, 4] }] }],
+}
 
 export const scenesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

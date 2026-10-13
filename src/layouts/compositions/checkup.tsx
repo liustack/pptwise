@@ -20,6 +20,7 @@ import {
   placeCrayonClaim,
   placeCrayonSource,
 } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Panel = Extract<Component, { type: "insight_panel" }>
@@ -64,6 +65,13 @@ function valueText(v: number, unit: string | undefined, chinese: boolean): strin
   const figure = frac ? `${groupDigits(whole!, chinese)}.${frac}` : groupDigits(whole!, chinese)
   const u = unit?.trim() ?? ""
   return u === "%" || u === "％" ? `${figure}${u}` : u ? `${figure} ${u}` : figure
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const checkupRecipe: Recipe = {
+  look: "A rate over a few years in fat bars beside what to do about it",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=bar", "title", "series[*].name~figure", "title~figure"] }, { type: "insight_panel", count: [1, 3] }] }],
 }
 
 export const checkupComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

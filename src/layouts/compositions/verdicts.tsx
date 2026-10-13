@@ -17,6 +17,7 @@ import {
   portraitWidth,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Row = Comparison["rows"][number]
@@ -71,6 +72,13 @@ export function verdictIcon(tag: NonNullable<Row["tag"]>): string | undefined {
   if (tag.tone === "warning") return "circle-dashed"
   if (tag.tone === "danger") return "circle-x"
   return undefined
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const verdictsRecipe: Recipe = {
+  look: "What a role asks for against what the speaker has done, with a verdict a row",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 5], needs: ["rows[*].tag"] }] }],
 }
 
 export const verdictsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

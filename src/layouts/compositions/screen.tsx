@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitMono, paintCard, paintIcon, paintMono, toneInk } from "./console"
+import type { Recipe } from "./recipe"
 
 type Device = Extract<Component, { type: "device_mockup" }>
 type RowCards = Extract<Component, { type: "row_cards" }>
@@ -32,6 +33,13 @@ type RowCards = Extract<Component, { type: "row_cards" }>
 
 const WINDOW = { top: 4, share: 640 / 1152, h: 420, radius: 8, bar: 34, url: { top: 7, box: 20, size: 12 }, pad: 20, caption: { gap: 10, box: 20, size: 12 } } as const
 const LIST = { gap: 24, pitch: 106, h: 96, icon: { top: 22, size: 22, x: 20 }, name: { top: 18, box: 22, size: 13, x: 54 }, text: { top: 44, box: 24, size: 17, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const screenRecipe: Recipe = {
+  look: "A browser window beside its log lines",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "device_mockup" }, { type: "row_cards", count: [3, 5] }] }],
+}
 
 export const screenComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "console" || components.length !== 2) return null

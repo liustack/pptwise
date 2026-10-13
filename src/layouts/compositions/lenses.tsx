@@ -13,6 +13,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Grid = Extract<Component, { type: "image_grid" }>
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -41,6 +42,13 @@ const ROW = { cx: 640, pitch: 400, cy: 330, d: 280, ring: 150, light: 190, stren
 const NAME = { top: 496, size: 22, lineHeight: 30, w: 340 } as const
 const LINE = { top: 530, size: 13, lineHeight: 22, maxLines: 2, w: 340 } as const
 const CLOSE = { top: 590, size: 16, lineHeight: 26, w: 1152 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const lensesRecipe: Recipe = {
+  look: "Small exhibits seen through a microscope",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [3, 3], needs: ["items[*].caption"] }, { type: "bullets", count: [3, 3] }, { type: "paragraph", optional: true }] }],
+}
 
 export const lensesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect)) return null

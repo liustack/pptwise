@@ -16,6 +16,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -71,6 +72,13 @@ function easedPath(points: readonly { x: number; y: number }[]): string {
  * from y230, 800px wide in the middle of the card, the source at the foot.
  */
 const PAGE_BAND = { x: 240, y: 230, w: 800, h: 350 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const descentRecipe: Recipe = {
+  look: "A value falling from its high, drawn as one gold line",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 8], needs: ["chart_type=line"] }] }],
+}
 
 export const descentComposition: Composition = (props) => {
   const { rect, setting, claim, source } = props

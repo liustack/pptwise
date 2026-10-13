@@ -7,6 +7,7 @@ import { SEAL_HEADER_RULE, SEAL_TYPE, sealInks, sealSmall, sealTagSpec, sealText
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { inkToward } from "../../components/tag"
+import type { Recipe } from "./recipe"
 
 type Scorecard = Extract<Component, { type: "scorecard" }>
 type ScoreRow = Scorecard["rows"][number]
@@ -50,6 +51,13 @@ const WORDS = {
 
 function readsChinese(card: Scorecard): boolean {
   return /[㐀-鿿]/.test(card.rows.map((row) => row.label + row.target + row.actual + row.gap).join(""))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const scoresRecipe: Recipe = {
+  look: "A scorecard as an open table",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "scorecard", count: [3, 6] }] }],
 }
 
 export const scoresComposition: Composition = ({ components, ctx, rect, setting }) => {

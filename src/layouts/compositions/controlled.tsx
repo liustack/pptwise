@@ -14,6 +14,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -99,6 +100,13 @@ function rowsOf(chart: Chart, kpis: KpiCards): { rows: Row[]; header: string } |
     rows.push({ name: name!, drug: drugName, detail: detail.join(" · "), value: point.y, control: other.y, figure: text, unit: unit?.trim() ?? "" })
   }
   return { rows, header: notes[0]! }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const controlledRecipe: Recipe = {
+  look: "Each trial's result against its control",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [4, 4], needs: ["chart_type=bar", "direction=horizontal", "series[].emphasis"] }, { type: "kpi_cards", count: [4, 4], needs: ["items[].label~figure"] }] }],
 }
 
 export const controlledComposition: Composition = ({ components, ctx, rect, setting }) => {

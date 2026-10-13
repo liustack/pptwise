@@ -24,6 +24,7 @@ import {
   splitNote,
   type ConsoleInks,
 } from "./console"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
@@ -381,6 +382,18 @@ function paintClosing(note: Callout, f: FittedClosing, box: { x: number; y: numb
       })}
     </g>
   )
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cardsRecipe: Recipe = {
+  look: "Findings as cards in a grid, each with its symbol",
+  kinds: ["points", "list"],
+  shapes: [
+    { parts: [{ type: "row_cards", count: [3, 6] }], settings: ["console"] },
+    { parts: [{ type: "icon_cards", count: [2, 5] }, { type: "callout", optional: true }], settings: ["console"] },
+    { parts: [{ type: "icon_cards", count: [2, 6] }], settings: ["console"] },
+    { parts: [{ type: "icon_cards", count: [2, 4] }], settings: ["dossier"] },
+  ],
 }
 
 export const cardsComposition: Composition = (props) => {

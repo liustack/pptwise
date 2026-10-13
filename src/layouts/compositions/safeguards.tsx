@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { binderInks, binderText, binderTrackedWidth, fitBinder, paintBinder, paintBinderIcon, paintBinderTracked, paintBinderLine, splitName, splitSentence, binderBaseline } from "./binder"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Panel = Extract<Component, { type: "insight_panel" }>
@@ -35,6 +36,13 @@ type Panel = Extract<Component, { type: "insight_panel" }>
 
 const COL = { w: 344, gap: 36, head: { top: 2, size: 13, lineHeight: 20, tracking: 1 }, rule: 28, card: { top: 44, h: 176, step: 192 }, icon: { dy: 3, size: 22 }, name: { dx: 32, dy: 0, size: 16, lineHeight: 28 }, chip: { dy: 32, size: 13, lineHeight: 20 }, text: { size: 14, lineHeight: 22, maxLines: 3, plain: 34, under: 58 }, lesson: { what: 34, doing: 68 } } as const
 const PANEL = { x: 760, top: 0, h: 408, icon: { dy: 0, size: 22 }, title: { dx: 32, dy: 0, size: 18, lineHeight: 26 }, rows: { top: 44, step: 84, label: { dy: 12, size: 13, lineHeight: 20 }, value: { dy: 34, size: 18, lineHeight: 28 } }, foot: { dy: 384, size: 13, lineHeight: 18 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const safeguardsRecipe: Recipe = {
+  look: "What a risk is held to, what went wrong before and who answers for it",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 2], needs: ["title"] }, { type: "icon_cards", count: [2, 2], needs: ["title", "items[*].text~colon"] }, { type: "insight_panel", count: [2, 4] }] }],
+}
 
 export const safeguardsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

@@ -17,6 +17,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Grid = Extract<Component, { type: "image_grid" }>
 
@@ -49,6 +50,13 @@ const LINE = { top: 528, size: 13, lineHeight: 22, lit: 16 } as const
 function splitCaption(caption: string): { name: string; sep: string; line: string } | null {
   const m = /^([^：:]+?)\s*(：|:\s)\s*(.+)$/u.exec(caption.trim())
   return m ? { name: m[1]!.trim(), sep: m[2]!, line: m[3]!.trim() } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const triptychRecipe: Recipe = {
+  look: "Two to four pieces of a range shown as a catalogue spread",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4], needs: ["items[*].caption", "items[*].caption~colon"] }] }],
 }
 
 export const triptychComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

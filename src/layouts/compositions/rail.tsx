@@ -16,6 +16,7 @@ import { fitFixed, paintLines } from "./type"
 import { railPanel } from "./rail-panel"
 import { railSeal } from "./rail-seal"
 import { railConsole } from "./rail-console"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Series = Chart["series"][number]
@@ -247,6 +248,21 @@ function changeFits(change: { figure: string; unit?: string }, size: number, wid
 function swatchIsLine(chart: Chart, series: Series): boolean {
   if (chart.chart_type === "line" || chart.chart_type === "area") return true
   return chart.chart_type === "combo" && series.plot === "line"
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const railRecipe: Recipe = {
+  look: "A trend chart with a column of figures beside it",
+  kinds: ["comparison", "data"],
+  shapes: [
+    { parts: [{ type: "chart", count: [1, 12], needs: ["chart_type=bar|stacked|line"] }, { type: "kpi_cards", count: [1, 3] }], settings: ["notice", "seal", "grid"] },
+    { parts: [{ type: "chart", count: [2, 12], needs: ["chart_type=bar"] }, { type: "kpi_cards", count: [1, 3] }], settings: ["panel"] },
+    { parts: [{ type: "chart", count: [1, 12], needs: ["chart_type=bar"] }, { type: "kpi_cards", count: [1, 2] }], settings: ["board"] },
+    { parts: [{ type: "waterfall", count: [3, 8] }, { type: "kpi_cards", count: [1, 3] }], settings: ["notice"] },
+    { parts: [{ type: "kpi_cards", count: [1, 3] }, { type: "chart", count: [2, 6], needs: ["chart_type=dumbbell"] }], settings: ["panel"] },
+    { parts: [{ type: "chart", count: [1, 7], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 2] }], settings: ["console"] },
+    { parts: [{ type: "chart", count: [1, 12], needs: ["chart_type=stacked"] }, { type: "kpi_cards", count: [1, 1] }, { type: "blockquote", optional: true }], settings: ["board"] },
+  ],
 }
 
 export const railComposition: Composition = (props) => {

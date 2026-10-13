@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blendOver } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchIcon, paintPitchLine, pitchInks, pitchText, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -32,6 +33,13 @@ const TINT = 0.1
 const NAME_SHARE = 0.205
 /** A last column whose every cell is at most this wide is the short one (when, who), set bold. */
 const SHORT_MAX = 96
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const registerRecipe: Recipe = {
+  look: "A risk register as an open table",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6] }] }],
+}
 
 export const registerComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "pitch") return null

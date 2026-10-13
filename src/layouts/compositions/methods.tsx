@@ -13,6 +13,7 @@ import {
   glossBreak,
   splitLead,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -39,6 +40,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const PHOTOS = { h: 200, gap: 24, disc: { top: 230, dx: 30, r: 20, size: 18 }, icon: { top: 218, size: 24 }, name: { x: 62, top: 216, size: 21, lineHeight: 30 }, how: { top: 252, size: 15, lineHeight: 24, maxLines: 2 } } as const
 const NOTE = { top: 324, w: 560, padX: 22, padY: 16, size: 18, lineHeight: 30, maxLines: 2, angle: -1 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const methodsRecipe: Recipe = {
+  look: "A few methods, each under its photograph, and the one line to remember on a sticky note",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4], needs: ["items[*].caption"] }, { type: "callout", optional: true }] }],
+}
 
 export const methodsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

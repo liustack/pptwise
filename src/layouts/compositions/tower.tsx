@@ -18,6 +18,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -48,6 +49,13 @@ const COL = { x: 700, w: 516 } as const
 const ROWS = { top: 230, step: 128 } as const
 const FIGURE = { dy: 14, size: 52, lineHeight: 64, unit: 30, tracking: -1 } as const
 const LABEL = { dy: 82, size: 14, lineHeight: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const towerRecipe: Recipe = {
+  look: "A photograph beside three figures",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 3] }] }],
+}
 
 export const towerComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

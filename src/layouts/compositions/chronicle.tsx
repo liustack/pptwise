@@ -15,6 +15,7 @@ import {
   withUnitText,
 } from "./periodical"
 import { cutRule, inkBox, type InkBox } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -57,6 +58,13 @@ export function zeroAxis(max: number, intervals = 3): { top: number; step: numbe
     if (n <= intervals && n * step > max) return { top: n * step, step }
   }
   return null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const chronicleRecipe: Recipe = {
+  look: "Years of a reading on one line",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 12], needs: ["chart_type=line", "title"] }, { type: "callout", optional: true }] }],
 }
 
 export const chronicleComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

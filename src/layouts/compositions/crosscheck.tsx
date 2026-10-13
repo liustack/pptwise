@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { boardY, crayonInks, crayonText, crayonTint, crayonWidth, fitCrayon, inkOn, paintCrayon, paintCrayonIcon, paintCrayonLine, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -36,6 +37,13 @@ const DOTS = { dy: 61, stroke: 2, dash: "2 6" } as const
 const CLOSE = { top: 622, size: 13, lineHeight: 22 } as const
 
 const hasFigure = (text: string) => /\d/u.test(text)
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const crosscheckRecipe: Recipe = {
+  look: "What several bodies say about the same few things, side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6], needs: ["rows[*].icon", "rows[].emphasis"] }] }],
+}
 
 export const crosscheckComposition: Composition = ({ components, ctx, rect, setting, claim, source, inks: given }) => {
   if (setting !== "crayonbox") return null

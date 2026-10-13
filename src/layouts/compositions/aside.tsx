@@ -14,6 +14,7 @@ import {
   portraitText,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -45,6 +46,13 @@ type IconCards = Extract<Component, { type: "icon_cards" }>
 const PHOTO = { x: 0, y: 0, w: 560, h: 720 } as const
 const COLUMN = { x: 640, w: 560, top: 64, gap: 18 } as const
 const ROWS = { top: 290, minGap: 40, pad: 22, icon: 28, stroke: 1.6, textX: 56, title: { size: 22, lineHeight: 32 }, between: 6, text: { size: 16, lineHeight: 25.6, maxLines: 2 }, bottom: 650 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const asideRecipe: Recipe = {
+  look: "Who the speaker is, in a few labelled lines beside a photograph of where they work",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image" }, { type: "icon_cards", count: [2, 3] }] }],
+}
 
 export const asideComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "portrait" || !wholePage(rect) || components.length !== 2) return null

@@ -2,7 +2,7 @@ import type { SvgTemplateProps } from "./types"
 import type { LayoutDefinition } from "./registry"
 import { stepAside } from "../render/step-aside"
 import { GAUGE_HEAD_FIT } from "./gauge-shared"
-import { GaugeSheetPage, composeSheet } from "./gauge-sheet/sheet"
+import { GaugeSheetPage, SHEET_COMPOSITIONS, composeSheet } from "./gauge-sheet/sheet"
 
 /*
  * gauge-sheet: the brief board's ordinary content page. The claim sits on the
@@ -28,6 +28,7 @@ export const layoutDef = {
   // column: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "gauge-sheet",
+  compositions: { setting: "board", offer: SHEET_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Gauge Sheet",

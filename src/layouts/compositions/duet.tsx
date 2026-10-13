@@ -16,6 +16,7 @@ import {
   wholeLit,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -45,6 +46,13 @@ const FIGURE = { top: 236, size: 150, lineHeight: 170, unit: 28, tracking: -3 } 
 const LABEL = { top: 420, size: 17, lineHeight: 28, maxLines: 2, w: 520 } as const
 const ORIGIN = { gap: 4, size: 12, lineHeight: 20, maxLines: 2, w: 520 } as const
 const CLOSE = { top: 560, size: 13, lineHeight: 22, maxLines: 2, w: 1100 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const duetRecipe: Recipe = {
+  look: "Two figures set huge side by side and never added",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 2] }, { type: "paragraph", optional: true }] }],
+}
 
 export const duetComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

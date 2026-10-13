@@ -12,6 +12,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Steps = Extract<Component, { type: "steps" }>
 type Comparison = Extract<Component, { type: "comparison" }>
@@ -40,6 +41,13 @@ type Comparison = Extract<Component, { type: "comparison" }>
 
 const STEP = { top: 10, h: 168, gap: 20, pad: 20, number: { base: 32, size: 14 }, icon: { top: 14, right: 44, size: 24 }, title: { top: 44, size: 19, lineHeight: 30 }, text: { top: 80, size: 14, lineHeight: 22, maxLines: 3 }, arrow: { at: 78, w: 12, h: 12, inset: 4 } } as const
 const TABLE = { head: 206, size: 13, lineHeight: 20, rule: 230, ruleW: 2, row: 60, labelX: 12, cell: { size: 16, lineHeight: 24, top: 18 }, cols: [316, 716], pad: 20 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const procedureRecipe: Recipe = {
+  look: "What has to be done, in order, over the table that says what doing it changes",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "steps", count: [2, 5] }, { type: "comparison", count: [2, 3], needs: ["recommended"] }] }],
+}
 
 export const procedureComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

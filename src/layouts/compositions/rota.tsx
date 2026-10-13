@@ -4,6 +4,7 @@ import { blendOver } from "../../render/ink"
 import { paintIcon } from "./console"
 import { fitMemo, memoInks, memoMeta, memoText, memoWidth, paintMemo, paintMemoLine } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Row = DataTable["rows"][number]
@@ -42,6 +43,13 @@ const ON_MIX = 0.82
 function cellText(row: Row, key: string): string {
   const v = row.cells[key]
   return v === undefined ? "" : stripEmphasis(String(v)).trim()
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rotaRecipe: Recipe = {
+  look: "Who is on and who is off, day by day",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "data_table", count: [3, 11], needs: ["rows[].emphasis"] }] }],
 }
 
 export const rotaComposition: Composition = ({ components, ctx, rect, setting }) => {

@@ -18,6 +18,7 @@ import {
   portraitWidth,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Harvey = Extract<Component, { type: "harvey_balls" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -80,6 +81,13 @@ function at(i: number, n: number, level: number): [number, number] {
 
 function polygon(levels: readonly number[]): string {
   return levels.map((l, i) => at(i, levels.length, l).join(",")).join(" ")
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const appraisalRecipe: Recipe = {
+  look: "A self-assessment against what a role asks, drawn as a radar beside a table of dots",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "harvey_balls", count: [3, 5], needs: ["options[].highlight"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const appraisalComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

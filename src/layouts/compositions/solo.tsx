@@ -15,6 +15,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -55,6 +56,13 @@ function drawingBand(component: Component): { w: number; right: number } {
   if (component.type === "chart" && component.chart_type === "line") return { w: 530, right: 1170 }
   if (component.type === "chart" && component.chart_type === "bar") return { w: 630, right: 1200 }
   return { w: 600, right: 1200 }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const soloRecipe: Recipe = {
+  look: "One figure is the page, and a drawing beside it says how it came about",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }, { type: "chart", count: [2, 8], needs: ["chart_type=line"] }] }],
 }
 
 export const soloComposition: Composition = ({ components, ctx, rect, setting, claim, source, handOn }) => {

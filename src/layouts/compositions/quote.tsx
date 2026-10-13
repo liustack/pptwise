@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, binderWidth, blankToFill, fitBinder, paintBinder, paintBinderIcon, paintBinderTracked, paintBinderLine, binderBaseline } from "./binder"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -35,6 +36,13 @@ const GROUP = { h: 28, top: 4, size: 12, lineHeight: 22, tracking: 1 } as const
 const ROW = { h: 34, icon: { dy: 8, size: 18 }, text: { dx: 30, dy: 6, lineHeight: 22 }, name: { size: 15 }, cell: { size: 14 }, blank: { tracking: 4 }, chip: { gap: 16, size: 13 } } as const
 /** Where each column starts, from the sheet's left, for three and for four columns. */
 const COLUMNS: Record<3 | 4, readonly number[]> = { 3: [0, 380, 780], 4: [0, 320, 720, 940] }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const quoteRecipe: Recipe = {
+  look: "A price list set as one table",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "data_table", count: [1, 3], needs: ["title", "rows[*].icon"] }, { type: "data_table", count: [1, 4], needs: ["title", "rows[*].icon", "rows[].emphasis"] }, { type: "data_table", count: [1, 1], needs: ["title", "rows[].icon"] }] }],
+}
 
 export const quoteComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

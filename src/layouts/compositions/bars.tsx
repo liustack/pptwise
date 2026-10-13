@@ -28,6 +28,7 @@ import {
 } from "./plot"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { barsChart, barsPanel } from "./bars-panel"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -92,6 +93,16 @@ function barsShape(components: readonly Component[]): Chart | null {
   for (const s of chart.series) for (const point of s.data) if (typeof point.x !== "string" || !(point.y >= 0)) return null
   if ((chart.changes ?? []).some((change) => change.at === undefined)) return null
   return chart
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const barsRecipe: Recipe = {
+  look: "A horizontal bar chart set by hand as grouped rows",
+  kinds: ["data"],
+  shapes: [
+    { parts: [{ type: "chart", count: [2, 12], needs: ["chart_type=bar", "direction=horizontal"] }], settings: ["notice"] },
+    { parts: [{ type: "chart", count: [2, 8], needs: ["chart_type=bar", "direction=horizontal"] }], settings: ["panel"] },
+  ],
 }
 
 export const barsComposition: Composition = ({ components, ctx, rect, setting }) => {

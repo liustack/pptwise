@@ -14,6 +14,7 @@ import {
   pillWidth,
 } from "./lesson"
 import { fitLine, paintLine, plainCallout } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -41,6 +42,13 @@ type IconCards = Extract<Component, { type: "icon_cards" }>
 const PHOTO = { w: 470, h: 400, caption: { gap: 6, size: 12, lineHeight: 18 } } as const
 const CARDS = { x: 510, pitch: 136, gap: 12, box: { x: 24, top: 24, size: 26 }, icon: { x: 78, top: 24, size: 26 }, title: { x: 120, top: 20, size: 23, lineHeight: 34 }, text: { x: 120, top: 60, size: 15, lineHeight: 24, maxLines: 2, w: 500 }, pill: { right: 20, top: 24 } } as const
 const CLOSE = { top: 412, size: 13, lineHeight: 22 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const objectivesRecipe: Recipe = {
+  look: "What the class will be able to do by the end",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image" }, { type: "icon_cards", count: [2, 4] }, { type: "callout", optional: true }] }],
+}
 
 export const objectivesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

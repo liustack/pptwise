@@ -61,6 +61,8 @@ import type { DesignStory } from "@/design-story"
 import type { Component } from "@/ir"
 import type { STRATEGY_VALUES } from "@/ir/narrative-values"
 import type { HeadingSet } from "./heading-set"
+import type { CompositionId, CompositionSetting } from "./compositions/shared"
+import type { FaceParams } from "./face-params"
 import type { ComponentCtx } from "../components/types"
 
 // layoutDef imports (src domain reorg wave 1, task T1d): 113 layout files
@@ -333,6 +335,13 @@ export interface CoverMarkAnchor {
   y: number
 }
 
+/** The signature drawings a content face offers (`LayoutDefinition.compositions`). */
+export interface FaceCompositions {
+  setting: CompositionSetting
+  offer: readonly CompositionId[]
+  subheading?: "declines"
+}
+
 export interface LayoutDefinition {
   id: string
   /**
@@ -431,6 +440,16 @@ export interface LayoutDefinition {
    *   one there.
    */
   subheading?: "in-body" | { none: string; beside?: "bullets" }
+  /**
+   * The theme's signature drawings this content face offers its body
+   * (`compositions/`), in the setting it sets them in, or a function of the
+   * menu entry's params for a face whose params decide. `offer` is the list
+   * the face hands `compose`. `subheading: "declines"` says a page with a
+   * subheading is set by the ordinary renderer instead, as the face's own
+   * code does. `pptwise inspect` prints the recipes of what it offers, and
+   * `pptwise build` checks each page against them (`./signature.ts`).
+   */
+  compositions?: FaceCompositions | ((params: FaceParams) => FaceCompositions | undefined)
   /**
    * Structural fact of a cover or chapter face: it draws its own page over a
    * photograph background (`background.kind: "asset"`).

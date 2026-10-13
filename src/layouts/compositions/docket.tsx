@@ -14,6 +14,7 @@ import {
   paintDossierLine,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
@@ -44,6 +45,13 @@ const NOTE = { top: 30, size: 16, lineHeight: 26, maxLines: 2 } as const
 const LABEL = { top: 4, size: 12, lineHeight: 20 } as const
 const FIGURE = { top: 26, size: 30, lineHeight: 44, minW: 256, gap: 20 } as const
 const RULE = 8
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const docketRecipe: Recipe = {
+  look: "Cases on file, one a row",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[*].icon", "items[*].source"] }] }],
+}
 
 export const docketComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "dossier") return null

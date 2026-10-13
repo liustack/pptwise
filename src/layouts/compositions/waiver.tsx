@@ -20,6 +20,7 @@ import {
   placeCrayonClaim,
   placeCrayonSource,
 } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -61,6 +62,13 @@ function sumFigure(value: number, unit: string | undefined, chinese: boolean): s
   const v = Math.abs(value)
   const whole = Number.isInteger(v) ? groupDigits(String(v), chinese) : String(v)
   return unit?.trim() ? `${whole} ${unit.trim()}` : whole
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const waiverRecipe: Recipe = {
+  look: "What a rule covers and what it does not, with its reach and a worked example",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 2] }, { type: "kpi_cards", count: [1, 1] }, { type: "waterfall", count: [3, 3], needs: ["title", "items[].kind"] }] }],
 }
 
 export const waiverComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

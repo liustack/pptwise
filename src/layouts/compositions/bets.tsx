@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, pitchInks, pitchNumeral, pitchText, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Gantt = Extract<Component, { type: "gantt" }>
 
@@ -27,6 +28,13 @@ type Gantt = Extract<Component, { type: "gantt" }>
 
 const ROW = { h: 124, gap: 16, edge: 4, number: { x: 24, top: 18, size: 48, lineHeight: 60 }, icon: { x: 84, top: 24, size: 24 }, claim: { x: 120, top: 20, size: 22, lineHeight: 32 }, ref: { x: 86, top: 64, size: 14, lineHeight: 22, maxLines: 2 } } as const
 const WINDOW = { x: 696, right: 24, track: { top: 56, h: 10 }, end: { baseline: 44, size: 11 }, period: { baseline: 90, size: 13 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const betsRecipe: Recipe = {
+  look: "What a plan has to prove and when",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "gantt", count: [2, 3], needs: ["items[*].period", "axis_labels", "range"] }] }],
+}
 
 export const betsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "pitch") return null

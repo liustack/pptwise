@@ -14,6 +14,7 @@ import {
   scrollText,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -42,6 +43,13 @@ const FIGURE = { top: 190, lineHeight: 120, big: 120, size: 110, short: 2, unit:
 const LABEL = { top: 322, size: 19, lineHeight: 26 } as const
 const NOTE = { top: 352, size: 12, lineHeight: 22 } as const
 const LINE = { top: 450, pad: 18, size: 22, lineHeight: 38, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const openingRecipe: Recipe = {
+  look: "The figures a lecture opens on",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4] }, { type: "paragraph", optional: true }] }],
+}
 
 export const openingComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

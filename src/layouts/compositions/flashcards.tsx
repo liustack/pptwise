@@ -17,6 +17,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Card = IconCards["items"][number]
@@ -51,6 +52,13 @@ const AMOUNT = { dx: 20, dy: 62, lineHeight: 40 } as const
 const DETAIL = { dx: 20, dy: 106, size: 13, lineHeight: 22, maxLines: 2 } as const
 const TAG = { dx: 46, dy: 34, rx: 34, ry: 18, size: 14, lineHeight: 22, room: 60 } as const
 const SOURCE = { x: 64, w: 1152, top: 640, foot: 676 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const flashcardsRecipe: Recipe = {
+  look: "What to know, one card a thing",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4] }, { type: "icon_cards", count: [2, 4] }] }],
+}
 
 export const flashcardsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

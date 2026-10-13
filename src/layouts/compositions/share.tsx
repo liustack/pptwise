@@ -5,6 +5,7 @@ import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
 import { gridData, gridMark, gridQuiet, gridRule } from "./grid"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -47,6 +48,16 @@ function shareShape(components: readonly Component[]): { chart: Chart; rest: rea
   const [first, ...rest] = components
   if (first?.type !== "chart" || !shareParts(first)) return null
   return { chart: first, rest }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const shareRecipe: Recipe = {
+  look: "A page that opens on one whole cut into its parts",
+  kinds: ["data"],
+  shapes: [
+    { parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal"] }] },
+    { parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal"] }, { type: "chart", count: [1, 12], needs: ["chart_type=bar"], optional: true }, { type: "kpi_cards", count: [1, 2], optional: true }], settings: ["grid"] },
+  ],
 }
 
 export const shareComposition: Composition = ({ components, ctx, rect, setting, handOn }) => {

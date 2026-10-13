@@ -5,6 +5,7 @@ import { SvgContent } from "../../render/svg-content"
 import { bodySlotDropsContent } from "../../render/step-aside"
 import { dossierInks, dossierMeta, fitDossier, paintDossier } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 
@@ -54,6 +55,17 @@ export function paintPhoto(image: Image, box: { x: number; y: number; w: number;
   ) : (
     <rect key={key} x={box.x} y={box.y} width={box.w} height={box.h} fill={inks.tint} />
   )
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const insetRecipe: Recipe = {
+  look: "A photograph set beside the page's body",
+  kinds: ["photo", "hierarchy"],
+  shapes: [
+    { parts: [{ type: "image" }, { type: "kpi_cards", count: [1, 9] }] },
+    { parts: [{ type: "row_cards", count: [3, 6] }, { type: "image" }] },
+    { parts: [{ type: "image" }, { type: "icon_cards", count: [2, 4], optional: true }, { type: "icon_cards", count: [2, 4] }] },
+  ],
 }
 
 export const insetComposition: Composition = ({ components, ctx, rect, setting, handOn }) => {

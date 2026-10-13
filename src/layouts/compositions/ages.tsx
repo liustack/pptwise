@@ -22,6 +22,7 @@ import {
   nameAndCount,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -59,6 +60,13 @@ const FIGS = { pitch: 360, icon: { dy: 344, size: 20 }, figure: { dx: 30, top: 3
 function countText(value: string, unit: string | undefined): string {
   const u = unit?.trim()
   return !u ? value : u === "%" ? `${value}%` : `${value} ${u}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const agesRecipe: Recipe = {
+  look: "One whole cut into groups that run from young to old",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis"] }, { type: "kpi_cards", count: [2, 4] }] }],
 }
 
 export const agesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

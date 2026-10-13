@@ -19,6 +19,7 @@ import {
   type InkBox,
 } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Waterfall = Extract<Component, { type: "waterfall" }>
 
@@ -90,6 +91,16 @@ export function bridgeNote(unit: string | undefined, floor: number | null, figur
   const from = plotNumber(floor, figures)
   if (chinese) return u ? `${u}，纵轴从 ${from} 起` : `纵轴从 ${from} 起`
   return u ? `${u}, axis from ${from}` : `Axis from ${from}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const bridgeRecipe: Recipe = {
+  look: "A waterfall set by hand with no value axis",
+  kinds: ["data"],
+  shapes: [
+    { parts: [{ type: "waterfall", count: [3, 6], needs: ["items[].emphasis", "items[].kind"] }], settings: ["grid"] },
+    { parts: [{ type: "waterfall", count: [3, 5] }], settings: ["notice"] },
+  ],
 }
 
 export const bridgeComposition: Composition = ({ components, ctx, rect, setting }) => {

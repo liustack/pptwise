@@ -4,6 +4,7 @@ import { mostlyChinese } from "../../lib/text-script"
 import { contrastRatio } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeLine, paintMarqueePhoto, type MarqueeInks } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Image = Extract<Component, { type: "image" }>
@@ -41,6 +42,13 @@ const FIGURE = { top: 282, size: 72, lineHeight: 80, label: { top: 364, size: 15
 export function originInks(n: number, inks: MarqueeInks): string[] {
   const between = inks.confetti.filter((c) => c.toUpperCase() !== inks.fire.toUpperCase())
   return Array.from({ length: n }, (_, i) => (i === 0 ? inks.dim : i === n - 1 ? inks.fire : between[(i - 1) % between.length]!))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const originsRecipe: Recipe = {
+  look: "Where a crowd comes from",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=percent_stacked"] }, { type: "image" }, { type: "kpi_cards", count: [1, 1] }] }],
 }
 
 export const originsComposition: Composition = ({ components, ctx, rect, setting }) => {

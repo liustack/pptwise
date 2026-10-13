@@ -80,6 +80,7 @@ export const layoutDef = {
   // questions: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "manuscript-sheet",
+  compositions: { setting: "manuscript", offer: MANUSCRIPT_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Manuscript Sheet",

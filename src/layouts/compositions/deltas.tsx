@@ -23,6 +23,7 @@ import {
   placeAccountSource,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -53,6 +54,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const TABLE = { top: 172, head: 13, tracking: 1.04, headPad: 8, rule: 2, row: 56, gap: 20, figureCol: 180, changeCol: 200, icon: 20, iconGap: 12, name: 16, figure: 20, change: 22, litChange: 26, wash: 14 } as const
 const NOTE = { top: 540, icon: 24, gap: 14, size: 18, lineHeight: 29, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const deltasRecipe: Recipe = {
+  look: "What moved between two years, measure by measure, and what the speaker reads into it",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6], needs: ["columns[].align"] }, { type: "callout" }] }],
+}
 
 export const deltasComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 2) return null

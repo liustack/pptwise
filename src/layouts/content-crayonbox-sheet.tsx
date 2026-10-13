@@ -121,6 +121,7 @@ export const layoutDef = {
   // several pages, so several kinds may share it.
   dispatch: "content",
   id: "crayonbox-sheet",
+  compositions: { setting: "crayonbox", offer: CRAYONBOX_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Crayonbox Sheet",

@@ -17,6 +17,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Rows = Extract<Component, { type: "row_cards" }>
 
@@ -51,6 +52,13 @@ const BOX = { x: 292, dy: 4, size: 22, w: 1.2 } as const
 const NAME = { x: 334, size: 20, lineHeight: 30, w: 700 } as const
 const LINE = { dy: 32, size: 13, lineHeight: 22, w: 700 } as const
 const SOURCE = { top: 606 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const replyRecipe: Recipe = {
+  look: "The things a house asks its guests to settle, set as the reply card an invitation carries",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 5], needs: ["items[*].text"] }], page: ["stamp"] }],
+}
 
 export const replyComposition: Composition = ({ components, ctx, rect, setting, claim, source, stamp }) => {
   if (setting !== "invitation" || !wholeCanvas(rect) || !stamp?.text.trim() || stamp.date?.trim()) return null

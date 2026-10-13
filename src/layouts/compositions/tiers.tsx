@@ -16,6 +16,7 @@ import {
   splitLead,
   type LessonInks,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type Pyramid = Extract<Component, { type: "pyramid" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -48,6 +49,13 @@ const CARD = { x: 546, pad: 20, icon: { top: 22, size: 24 }, action: { x: 56, to
 function tierInk(layer: Pyramid["layers"][number], i: number, n: number, inks: LessonInks): string {
   if (layer.tone) return inks[layer.tone]
   return blendOver(inks.ghost, inks.mark, n <= 1 ? 0 : (i / (n - 1)) * 0.6)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tiersRecipe: Recipe = {
+  look: "Levels from the most guarded down, each with what to do with it",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "pyramid", count: [3, 3] }, { type: "icon_cards", count: [3, 3] }] }],
 }
 
 export const tiersComposition: Composition = ({ components, ctx, rect, setting }) => {

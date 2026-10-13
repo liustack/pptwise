@@ -13,6 +13,7 @@ import {
   scrollText,
   scrollWidth,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -62,6 +63,13 @@ interface Placed {
 }
 
 const overlaps = (a: Placed, b: Placed) => a.x0 < b.x1 + NAMES.clear && b.x0 < a.x1 + NAMES.clear && a.y0 < b.y1 && b.y0 < a.y1
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const handscrollRecipe: Recipe = {
+  look: "A long run of years unrolled to scale",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 10], needs: ["milestones[*].date~figure"] }, { type: "chart", count: [1, 12], needs: ["chart_type=scatter", "series[].steps"], optional: true }] }],
+}
 
 export const handscrollComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

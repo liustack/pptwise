@@ -67,6 +67,7 @@ export const layoutDef = {
   // face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "keynote-sheet",
+  compositions: { setting: "keynote", offer: KEYNOTE_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Keynote Sheet",

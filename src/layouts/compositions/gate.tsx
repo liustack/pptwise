@@ -12,6 +12,7 @@ import {
   paintTopEdge,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Steps = Extract<Component, { type: "steps" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -47,6 +48,13 @@ const ARROW = { gap: 4, w: 12, top: 94, h: 12 } as const
 const DROP = { join: 46, stem: 20, head: 8, half: 6 } as const
 const BOX = { top: 296, h: 96, gap: 32, r: 10, pad: 60, icon: { x: 20, size: 24 }, stop: { size: 17, lineHeight: 28, maxLines: 2 }, note: { size: 15, lineHeight: 24, maxLines: 3 } } as const
 const DANGER_TINT = 0.08
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const gateRecipe: Recipe = {
+  look: "A check run in steps, where some steps can stop it",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "steps", count: [2, 5] }, { type: "callout", optional: true }, { type: "callout", optional: true }] }],
+}
 
 export const gateComposition: Composition = ({ components, ctx, rect, setting, tagBand = 0 }) => {
   if (setting !== "dossier") return null

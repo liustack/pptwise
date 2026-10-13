@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CRAYON, boardY, crayonAt, crayonInks, crayonText, crayonTint, crayonWidth, fitCrayon, paintCrayon, paintCrayonIcon, paintCrayonLine, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 
@@ -32,6 +33,13 @@ const WORDS = { x: 24, top: 76, size: 15, lineHeight: 24, maxLines: 2, inset: 20
 const LABEL = { x: 24, top: 150, h: 26, size: 12, pad: 12 } as const
 /** The board's crayon for each note in turn: sky, yellow, green, orange, purple, red. */
 const ORDER = [CRAYON.sky, CRAYON.yellow, CRAYON.green, CRAYON.orange, CRAYON.purple, CRAYON.red] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stickiesRecipe: Recipe = {
+  look: "Rules that concern the reader as sticky notes on a wall",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [3, 6] }] }],
+}
 
 export const stickiesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

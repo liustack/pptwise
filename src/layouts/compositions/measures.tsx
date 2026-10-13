@@ -19,6 +19,7 @@ import {
   placeClaim,
   withUnitText,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Image = Extract<Component, { type: "image" }>
@@ -48,6 +49,13 @@ type Image = Extract<Component, { type: "image" }>
 const ROWS = { top: 126, pitch: 62, max: 5, icon: { dy: 8, size: 20 }, name: { x: 30, dy: 4, w: 130, size: 15, h: 28 }, bar: { x: 166, dy: 6, h: 24, scale: 4.6 }, value: { gap: 10, dy: 4, size: 18, h: 28 } } as const
 const PHOTO = { x: 756, top: 110, w: 396, h: 330, gap: 24 } as const
 const CAPTION = { top: 450, w: 720 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const measuresRecipe: Recipe = {
+  look: "Ways of doing one thing as bars with their symbols",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=bar", "title", "direction=horizontal"] }, { type: "callout", optional: true }, { type: "image", optional: true }] }],
+}
 
 export const measuresComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

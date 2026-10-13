@@ -19,6 +19,7 @@ import {
   skipPath,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -65,6 +66,13 @@ export function dayOf(date: string): number | null {
   const day = Number(m[3])
   if (month < 1 || month > 12 || day < 1 || day > 31) return null
   return Number(m[1]) + (month - 1) / 12 + (day - 1) / 365
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const chronologyRecipe: Recipe = {
+  look: "Dates laid on a chalk line at their true distance",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 6], needs: ["milestones[*].date~figure"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const chronologyComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {

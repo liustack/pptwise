@@ -14,6 +14,7 @@ import {
   yearbookWidth,
   type YearbookInks,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -66,6 +67,16 @@ export function barInks(marked: readonly boolean[], inks: YearbookInks): string[
   const ramp = others <= 3 ? [inks.ghost, inks.quiet, inks.mark].slice(3 - others) : []
   let k = 0
   return marked.map((m) => (m ? inks.accent : others <= 3 ? ramp[k++]! : inks.ghost))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const benchmarkRecipe: Recipe = {
+  look: "A few figures laid as bars against the one value they are read against",
+  kinds: ["data", "photo"],
+  shapes: [
+    { parts: [{ type: "image" }, { type: "chart", count: [2, 3], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 3] }] },
+    { parts: [{ type: "chart", count: [2, 6], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 2] }, { type: "callout", optional: true }] },
+  ],
 }
 
 export const benchmarkComposition: Composition = ({ components, ctx, rect, setting }) => {

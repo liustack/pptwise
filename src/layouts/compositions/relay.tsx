@@ -28,6 +28,7 @@ import {
   placeAccountSource,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Milestone = Timeline["milestones"][number]
@@ -114,6 +115,13 @@ interface Stone {
   /** Where the words start: at the stem, or ending at the measure. */
   left: number
   right: number
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const relayRecipe: Recipe = {
+  look: "A year of work handed between the speaker and the team on one month axis",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 6], needs: ["lanes", "milestones[*].lane", "milestones[].highlight", "milestones[*].date~figure"] }, { type: "callout" }] }],
 }
 
 export const relayComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

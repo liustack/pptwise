@@ -16,6 +16,7 @@ import {
   wholePage,
   type Box,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Grid = Extract<Component, { type: "image_grid" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -51,6 +52,13 @@ const CAPTION = { inset: 8, bottom: 24, size: 10, lineHeight: 18, tracking: 1 } 
 const FADE = { h: 56 } as const
 const LINE = { x: 64, top: 516, w: 640, size: 26, lineHeight: 40, maxLines: 2 } as const
 const SOURCE = { top: 680 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const collageRecipe: Recipe = {
+  look: "A moodboard of six pictures of different sizes",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [6, 6], needs: ["items[*].caption"] }, { type: "paragraph", optional: true }] }],
+}
 
 export const collageComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

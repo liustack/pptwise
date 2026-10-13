@@ -1,7 +1,7 @@
 import type { Component, PptxIR, Slide } from "@/ir"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { compose } from "./compositions"
+import { compose, type CompositionId } from "./compositions"
 import { manuscriptChinese } from "./compositions/manuscript"
 import { NOTICE_HEAD_FIT, NoticeHead, NoticeSource } from "./notice-shared"
 import { noticeBand, noticeSheetPage } from "./content-notice-sheet"
@@ -35,6 +35,9 @@ function exhibitOf(slide: Pick<Slide, "type" | "components"> & { kind?: string }
  * exhibits of its kind on the evidence pages before it, or of either kind
  * outside Chinese.
  */
+
+/** The signature drawings this face offers its body. */
+const EXHIBIT_COMPOSITIONS: readonly CompositionId[] = ["proof"]
 export function noticeExhibitNumber(ir: Pick<PptxIR, "slides">, index: number, chinese: boolean): number {
   const own = exhibitOf(ir.slides[index]!)
   let n = 1
@@ -50,7 +53,7 @@ export function NoticeExhibitContent(props: SvgTemplateProps) {
   if (!slide.subheading?.trim()) {
     const { source, rect } = noticeBand(slide, ctx, page)
     const exhibitNumber = noticeExhibitNumber(ir, index, manuscriptChinese(ctx, [slide.heading ?? ""]))
-    const composed = compose({ components: slide.components, ctx, rect, setting: "notice", exhibitNumber }, ["proof"])
+    const composed = compose({ components: slide.components, ctx, rect, setting: "notice", exhibitNumber }, EXHIBIT_COMPOSITIONS)
     if (composed) {
       return (
         <>
@@ -66,6 +69,7 @@ export function NoticeExhibitContent(props: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "notice-exhibit",
+  compositions: { setting: "notice", offer: EXHIBIT_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Notice Exhibit",

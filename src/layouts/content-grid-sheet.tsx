@@ -122,6 +122,7 @@ export const layoutDef = {
   // two-lane timeline: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "grid-sheet",
+  compositions: { setting: "grid", offer: GRID_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Grid Sheet",

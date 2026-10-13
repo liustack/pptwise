@@ -13,6 +13,7 @@ import {
   scrollText,
   scrollWidth,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Table = Extract<Component, { type: "data_table" }>
@@ -51,6 +52,13 @@ const READING = { gap: 20, size: 17, lineHeight: 30, maxLines: 2 } as const
 const ASIDE = { gap: 22, pad: { x: 20, y: 16 }, size: 14, lineHeight: 24, maxLines: 4, minH: 120 } as const
 
 const FIGURE = /^[−-]?[\d,.]+%?$/u
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const dailyRecipe: Recipe = {
+  look: "A small table that puts unlike periods on the same footing, beside a photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "data_table", count: [1, 3] }, { type: "paragraph", optional: true }, { type: "callout", optional: true }] }],
+}
 
 export const dailyComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

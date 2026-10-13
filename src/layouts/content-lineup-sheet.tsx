@@ -57,6 +57,7 @@ export const layoutDef = {
   // pages, so several kinds may share it.
   dispatch: "content",
   id: "lineup-sheet",
+  compositions: { setting: "lineup", offer: LINEUP_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Lineup Sheet",

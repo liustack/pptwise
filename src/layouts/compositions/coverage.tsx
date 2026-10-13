@@ -8,6 +8,7 @@ import {
   paintManuscript,
   paintManuscriptIcon,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Matrix = Extract<Component, { type: "matrix" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -35,6 +36,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const MAP = { dx: 236, gap: 8, head: { dy: 36, size: 13, h: 24 }, rows: { dy: 68, pitch: 104, h: 96 }, name: { dx: 30, dy: 34, size: 16, h: 30, w: 200 }, icon: { dy: 38, size: 20 }, cell: { pad: 16, top: 14, size: 14, lineHeight: 22, maxLines: 3 }, empty: { size: 16, lineHeight: 24 } } as const
 const GAP = { gap: 8, h: 44, size: 15, pad: 16, r: 4 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const coverageRecipe: Recipe = {
+  look: "A map of the literature with its gaps",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "matrix", count: [9, 9], needs: ["title", "columns", "rows"] }, { type: "callout", optional: true }] }],
+}
 
 export const coverageComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

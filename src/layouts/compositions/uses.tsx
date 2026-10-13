@@ -5,6 +5,7 @@ import { mostlyChinese } from "../../lib/text-script"
 import { readableOn } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, paintPitchTracked, pitchBaseline, pitchInks, pitchText, pitchTrackedWidth, pitchWidth, type PitchInks } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -42,6 +43,13 @@ const CARD = { top: 344, h: 76, icon: { x: 24, size: 24 }, text: { x: 62, size: 
 function partInks(n: number, inks: PitchInks): string[] {
   const steps = [inks.ink, inks.quiet, inks.dim]
   return Array.from({ length: n }, (_, i) => (i === 0 ? inks.fire : steps[(i - 1) % steps.length]!))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const usesRecipe: Recipe = {
+  look: "What a round asks for and where its money goes",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal"] }, { type: "callout", optional: true }] }],
 }
 
 export const usesComposition: Composition = ({ components, ctx, rect, setting }) => {

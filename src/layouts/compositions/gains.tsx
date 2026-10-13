@@ -3,6 +3,7 @@ import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, fitBinder, paintBinder, paintBinderIcon, wholeMark } from "./binder"
 import { stripEmphasis } from "../../render/emphasis"
 import { BinderPlainLine, fitPlainLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Banner = Extract<Component, { type: "verdict_banner" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -30,6 +31,13 @@ type Callout = Extract<Component, { type: "callout" }>
 const HEAD = { icon: { dy: 4, size: 22 }, text: { dx: 32, top: 2, size: 17, lineHeight: 26, w: 1000 } } as const
 const COLS = { top: 46, pad: 28, icon: { dy: 24, size: 24 }, label: { dy: 64, size: 20, lineHeight: 31, maxLines: 2 }, value: { dy: 140, size: 40, lineHeight: 50 }, note: { dy: 198, size: 13, lineHeight: 21, maxLines: 2 }, h: 250 } as const
 const LINE_GAP = 40
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const gainsRecipe: Recipe = {
+  look: "What the client gets",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "verdict_banner", optional: true }, { type: "kpi_cards", count: [2, 3], needs: ["items[*].icon"] }, { type: "callout", optional: true }] }],
+}
 
 export const gainsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

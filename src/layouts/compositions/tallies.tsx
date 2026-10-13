@@ -5,6 +5,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { paintIcon } from "./console"
 import { fitMemo, memoInks, memoText, memoWidth, paintMemo, paintMemoLine } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
@@ -35,6 +36,13 @@ const ICON = { x: 4, top: 6, size: 28 } as const
 const NAME = { x: 50, top: 2, size: 22, lineHeight: 34 } as const
 const FIGURE = { x: 50, top: 40, size: 48, lineHeight: 60, w: 160 } as const
 const NOTE = { x: 220, top: 44, size: 16, lineHeight: 26, maxLines: 3 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const talliesRecipe: Recipe = {
+  look: "The reasons a decision rests on, each with the figure behind it",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[*].note", "items[*].icon"] }] }],
+}
 
 export const talliesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "memo") return null

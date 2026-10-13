@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, fitBinder, paintBinder, paintBinderIcon } from "./binder"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -27,6 +28,13 @@ const HEAD = { top: 2, size: 13, lineHeight: 20 } as const
 const COLS = { risk: 0, record: 266, answer: 722 } as const
 const RULE = 28
 const ROWS = { top: 34, step: 80, h: 74, icon: { dx: 0, dy: 24, size: 22 }, name: { dx: 32, dy: 22, size: 16, lineHeight: 28, w: 226 }, record: { dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 420 }, answer: { icon: { dy: 18, size: 18 }, dx: 28, dy: 14, size: 14, lineHeight: 23, maxLines: 2, w: 370 }, hairline: 77 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const remediesRecipe: Recipe = {
+  look: "A risk register with the remedy for each risk",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 5], needs: ["columns[].icon", "rows[*].icon"] }] }],
+}
 
 export const remediesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

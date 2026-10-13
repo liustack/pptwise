@@ -95,6 +95,7 @@ export const layoutDef = {
   // face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "periodical-sheet",
+  compositions: { setting: "periodical", offer: PERIODICAL_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Periodical Sheet",

@@ -17,6 +17,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Numbered = Extract<Component, { type: "numbered_cards" }>
 
@@ -40,6 +41,13 @@ const ROWS = { top: 166, step: 88, span: 440 } as const
 const NUMBER = { dy: 14, size: 44, lineHeight: 60 } as const
 const TITLE = { x: 150, dy: 16, size: 28, lineHeight: 40 } as const
 const REASON = { right: 1216, dy: 24, size: 16, lineHeight: 30, gap: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const slateRecipe: Recipe = {
+  look: "A short list said one line at a time",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 6] }] }],
+}
 
 export const slateComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

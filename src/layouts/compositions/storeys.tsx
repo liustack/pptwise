@@ -20,6 +20,7 @@ import {
   placeCrayonClaim,
   placeCrayonSource,
 } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -68,6 +69,13 @@ function niceTop(max: number): number {
   const power = 10 ** Math.floor(Math.log10(max))
   for (const step of [1, 2, 2.5, 5, 10]) if (step * power >= max) return step * power
   return 10 * power
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const storeysRecipe: Recipe = {
+  look: "A count in bars with a rate over it on a storey of its own, and two figures beside them",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 8], needs: ["chart_type=combo", "series[].plot", "series[].axis"] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].icon"] }] }],
 }
 
 export const storeysComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

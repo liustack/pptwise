@@ -16,6 +16,7 @@ import {
   withUnit,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -45,6 +46,13 @@ const ROW = { top: 28, pitch: 190, name: { size: 15, h: 24, w: 500 }, figure: { 
 const BAR = { dx: 376, w: 760, dy: 70, h: 16, r: 2, tick: { above: 8, below: 8, label: 56 }, read: 110, size: 12 } as const
 const CLOSE = { dy: 412, h: 40 } as const
 const CLOSE_SPEC: AsideSpec = { size: 15, lineHeight: 40, maxLines: 1, pad: 0 }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const reachRecipe: Recipe = {
+  look: "How far a measure has come against its whole",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 2], needs: ["chart_type=bar", "direction=horizontal", "series[].emphasis"] }, { type: "callout", optional: true }] }],
+}
 
 export const reachComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

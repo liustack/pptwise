@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, binderWidth, fitBinder, paintBinder, paintBinderIcon, paintBinderLine } from "./binder"
 import { BinderPlainLine, fitPlainLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type FromTo = Extract<Component, { type: "from_to" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -31,6 +32,13 @@ const HEAD = { top: 6, size: 12, lineHeight: 18 } as const
 const COLS = { from: 316, arrow: 576, to: 656 } as const
 const ROW = { top: 32, step: 108, icon: { dy: 30, size: 22 }, name: { x: 34, dy: 24, size: 18, lineHeight: 28, w: 270 }, note: { x: 34, dy: 56, size: 12, lineHeight: 17, maxLines: 2, w: 270 }, value: { dy: 22, size: 38, lineHeight: 54, w: 240 }, unit: { size: 14, gap: 10 }, arrow: { dy: 37, size: 26 }, move: { size: 13 } } as const
 const LINE_GAP = 24
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const driftRecipe: Recipe = {
+  look: "How far a few measures have moved",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "from_to", count: [3, 3], needs: ["rows[*].icon"] }, { type: "callout", optional: true }] }],
+}
 
 export const driftComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

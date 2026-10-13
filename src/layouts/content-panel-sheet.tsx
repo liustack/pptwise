@@ -71,6 +71,7 @@ export const layoutDef = {
   // one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "panel-sheet",
+  compositions: { setting: "panel", offer: PANEL_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Panel Sheet",

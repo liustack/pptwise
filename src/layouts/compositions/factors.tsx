@@ -13,6 +13,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Rows = Extract<Component, { type: "row_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -47,6 +48,13 @@ const CLOSE = { gap: 10, size: 16, lineHeight: 30 } as const
 /** Whether a row's `sub` is a factor: written after a multiplication sign. */
 export function isFactor(sub: string | undefined): boolean {
   return /^\s*[×✕x*]\s*\S/u.test(sub ?? "")
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const factorsRecipe: Recipe = {
+  look: "Things each multiplied by its own factor",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 5], needs: ["items[*].icon", "items[*].text", "items[*].sub"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const factorsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {

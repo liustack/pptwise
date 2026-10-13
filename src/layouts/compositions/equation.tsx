@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, paintPitchTracked, pitchBaseline, pitchInks, pitchText, pitchTrackedWidth, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Equation = Extract<Component, { type: "concept_equation" }>
 type Term = Equation["operands"][number]
@@ -30,6 +31,13 @@ const TOP = 4
 const CARD = { h: 220, gap: 44, pad: 22, icon: { top: 22, size: 22 }, name: { x: 54, top: 20, size: 14, lineHeight: 24 }, figure: { top: 62, size: 42, lineHeight: 60 }, note: { top: 136, size: 14, lineHeight: 22, maxLines: 2 }, op: { dy: 120, size: 34 } } as const
 const RESULT = { name: { top: 20, size: 14, lineHeight: 24 }, figure: { top: 52, size: 34, lineHeight: 46, maxLines: 2 }, note: { top: 152, size: 14, lineHeight: 22, maxLines: 2 } } as const
 const OUT = { top: 252, h: 120, icon: { x: 24, top: 30, size: 26 }, x: 72, name: { top: 18, size: 14, lineHeight: 24, tracking: 2 }, why: { x: 456, size: 14 }, thing: { top: 46, size: 22, lineHeight: 34 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const equationRecipe: Recipe = {
+  look: "Where a pitch cuts in, worked out as a sum",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "concept_equation", count: [2, 3], needs: ["operands[*].value", "result.value"] }] }],
+}
 
 export const equationComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "pitch") return null

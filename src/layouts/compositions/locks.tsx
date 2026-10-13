@@ -3,6 +3,7 @@ import { kpiFigure } from "../../components/kpi"
 import { joinUnit } from "../../lib/quantity-format"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, paintPitchTracked, pitchBaseline, pitchInks, pitchText, pitchTrackedWidth, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Chevrons = Extract<Component, { type: "chevron_process" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -35,6 +36,13 @@ const FIGURE = { top: 248, h: 150, gap: 32, pad: 24, label: { top: 20, size: 13,
 /** A gate's number as the deck writes it: 「第 1 关」 in a Chinese deck, "Gate 1" in any other. */
 function gateNumber(i: number, chinese: boolean): string {
   return chinese ? `第 ${i + 1} 关` : `Gate ${i + 1}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const locksRecipe: Recipe = {
+  look: "The gates a pitch has to pass before it can run",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "chevron_process", count: [3, 6] }, { type: "kpi_cards", count: [1, 3], optional: true }] }],
 }
 
 export const locksComposition: Composition = ({ components, ctx, rect, setting }) => {

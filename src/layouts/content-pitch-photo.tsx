@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import type { Component } from "@/ir"
 import { SvgContent } from "../render/svg-content"
 import { bodySlotDropsContent, stepAside } from "../render/step-aside"
-import { compose } from "./compositions"
+import { compose, type CompositionId } from "./compositions"
 import { blockTag } from "./compositions/shared"
 import { fitPitch, paintPitch, paintPitchPhoto, pitchInks, pitchText } from "./compositions/pitch"
 import { fitPitchSource, fitPitchStandfirst, PITCH_RIGHT, PitchRailHead, PitchSource, PitchStandfirst, PitchTitle } from "./pitch-shared"
@@ -31,6 +31,9 @@ type Image = Extract<Component, { type: "image" }>
 const PHOTO = { w: 560, caption: { h: 24, size: 11, x: 16, over: 0.6 } } as const
 const COLUMN = { x: 624, title: { foot: 220 }, rule: 256, top: 280, bottom: 640 } as const
 
+/** The signature drawings this face offers its body. */
+const PHOTO_COMPOSITIONS: readonly CompositionId[] = ["spotlight"]
+
 export function PitchPhotoContent(props: SvgTemplateProps) {
   const { ir, slide, ctx } = props
   const inks = pitchInks(ctx)
@@ -41,7 +44,7 @@ export function PitchPhotoContent(props: SvgTemplateProps) {
   const standfirst = fitPitchStandfirst(slide, ctx, w)
   const top = COLUMN.top + (standfirst?.h ?? 0)
   const rect = { x: COLUMN.x, y: top, w, h: COLUMN.bottom - top }
-  const composed = compose({ components: rest, ctx, rect, setting: "pitch" }, ["spotlight"])
+  const composed = compose({ components: rest, ctx, rect, setting: "pitch" }, PHOTO_COMPOSITIONS)
   if (!composed) {
     // Only what the column carries is probed: the photograph has its own half.
     const aside = stepAside({ face: "pitch-photo", slide, ctx, cramped: bodySlotDropsContent(rest, rect, ctx) })
@@ -73,6 +76,7 @@ export function PitchPhotoContent(props: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "pitch-photo",
+  compositions: { setting: "pitch", offer: PHOTO_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Pitch Photograph",

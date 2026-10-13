@@ -19,6 +19,7 @@ import {
   wholeMark,
   type InkBox,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -50,6 +51,13 @@ const MARK = { over: 2, label: 8, size: 12, stroke: 1.4 } as const
 const LINE = { stroke: 2.6, dot: 4, value: { dx: 8, dy: 8, size: 12 }, name: { dx: 12, size: 13, offsets: [-22, 26] } } as const
 const CARDS = { dx: 886, w: 266, h: 104, top: 28, pitch: 116, pad: 18, label: { dy: 10, size: 12, h: 20 }, value: { dy: 32, size: 32, h: 40, unit: 13 }, note: { dy: 74, size: 12, h: 20 } } as const
 const CAUTION = { dy: 380, size: 12, lineHeight: 18, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const thresholdsRecipe: Recipe = {
+  look: "A line that falls at the ages a rule turns on",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [4, 7], needs: ["chart_type=line", "title", "markers", "markers[*].before~figure"] }, { type: "kpi_cards", count: [1, 3], needs: ["items[*].note"] }, { type: "paragraph", optional: true }] }],
+}
 
 export const thresholdsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

@@ -4,7 +4,7 @@ import { SvgContent } from "../render/svg-content"
 import { stepAside } from "../render/step-aside"
 import { accessibleInk } from "../render/ink"
 import { fitEmphasisHeading, fitEmphasisText } from "../render/emphasis"
-import { compose } from "./compositions"
+import { compose, type CompositionId } from "./compositions"
 import { centredBaseline } from "./compositions/type"
 import { FittedLines, GRID_LEFT, GRID_W, GridSource, fitGridSource, gridBodyRect } from "./grid-shared"
 
@@ -36,6 +36,9 @@ const HEAD_FIT = {
   lineHeightRatio: HEAD.lineHeight / HEAD.size,
 } as const
 
+/** The signature drawings this face offers its body. */
+const STATEMENT_COMPOSITIONS: readonly CompositionId[] = ["figures"]
+
 export function GridStatementContent({ slide, ctx, page }: SvgTemplateProps) {
   const { colors, fonts } = ctx
   const bg = ctx.defaultBg ?? colors.bg
@@ -55,7 +58,7 @@ export function GridStatementContent({ slide, ctx, page }: SvgTemplateProps) {
   const standfirstTop = BODY_TOP - 8
   const top = standfirst ? standfirstTop + standfirst.lines.length * STANDFIRST.box + STANDFIRST.gap : BODY_TOP
   const rect = gridBodyRect(source, page, top)
-  const composed = compose({ components: slide.components, ctx, rect, setting: "grid" }, ["figures"])
+  const composed = compose({ components: slide.components, ctx, rect, setting: "grid" }, STATEMENT_COMPOSITIONS)
   if (!composed) {
     const aside = stepAside({ face: "grid-statement", slide, ctx, bodyRect: rect })
     if (aside) return aside
@@ -86,6 +89,7 @@ export function GridStatementContent({ slide, ctx, page }: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "grid-statement",
+  compositions: { setting: "grid", offer: STATEMENT_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Grid Statement",

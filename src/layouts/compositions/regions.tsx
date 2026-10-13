@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderBaseline, binderInks, binderText, binderWidth, fitBinder, paintBinder, paintBinderLine, splitAside, wholeMark } from "./binder"
 import { BinderPlainLine, fitPlainLine, noteHeight } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -34,6 +35,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const COL = { top: 4, pad: 28, name: { top: 18, size: 24, lineHeight: 32 }, sub: { top: 52, size: 12, lineHeight: 20 }, rule: 86, first: 100, row: { label: 18, value: 24, step: 60 }, label: { size: 12, lineHeight: 18 }, value: { size: 16, lineHeight: 24 }, figure: { size: 36, lineHeight: 46, step: 78 }, aside: { gap: 10, size: 13 }, verdict: { size: 14, lineHeight: 22 }, bottom: 18 } as const
 const NOTE_GAP = 28
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const regionsRecipe: Recipe = {
+  look: "Places set side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [1, 4], needs: ["rows[].emphasis"] }, { type: "callout", needs: ["title"], optional: true }] }],
+}
 
 export const regionsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

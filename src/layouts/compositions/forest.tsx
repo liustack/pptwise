@@ -14,6 +14,7 @@ import {
   DOSSIER_SPEC,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -82,6 +83,13 @@ export function readRatio(cell: string): Ratio | null {
   const text = note ? cell.slice(0, cell.search(/[)）]/u) + 1).trim() : cell.trim()
   const glossBreak = note ? cell.trim().slice(text.length, cell.trim().length - note.length).trim() : ""
   return { text, hr, lo, hi, note, glossBreak }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const forestRecipe: Recipe = {
+  look: "An outcome trial's endpoints as a table with its forest plot",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 4] }, { type: "callout", needs: ["icon"], optional: true }] }],
 }
 
 export const forestComposition: Composition = ({ components, ctx, rect, setting, tagBand = 0 }) => {

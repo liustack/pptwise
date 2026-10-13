@@ -8,6 +8,7 @@ import { gridMark } from "./grid"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { figuresPanel } from "./figures-panel"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -88,6 +89,17 @@ function figuresShape(components: readonly Component[]): { kpis: KpiCards; quote
   if (remark.type === "blockquote") return { kpis, quote: remark }
   const callout = closingCallout(remark)
   return callout ? { kpis, callout } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const figuresRecipe: Recipe = {
+  look: "Two to four headline figures set large in an open row, hairlines between them",
+  kinds: ["data", "photo", "statement"],
+  shapes: [
+    { parts: [{ type: "kpi_cards", count: [2, 4] }] },
+    { parts: [{ type: "kpi_cards", count: [2, 4] }, { type: "blockquote", optional: true }], settings: ["board"] },
+    { parts: [{ type: "kpi_cards", count: [2, 4] }, { type: "kpi_cards", count: [1, 1] }, { type: "paragraph" }], settings: ["panel"] },
+  ],
 }
 
 export const figuresComposition: Composition = (props) => {

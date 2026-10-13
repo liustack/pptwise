@@ -18,6 +18,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Cards = Extract<Component, { type: "icon_cards" }>
@@ -54,6 +55,13 @@ const RING = { cx: 636, dy: 24, r: 22, icon: 24 } as const
 const NAME = { x: 680, size: 20, lineHeight: 30, w: 520 } as const
 const LINE = { dy: 34, size: 14, lineHeight: 24, w: 520, maxLines: 2 } as const
 const SOURCE = { top: 600 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const vitrineRecipe: Recipe = {
+  look: "A photograph down the left half of the page beside what the page asks",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "icon_cards", count: [2, 3] }] }],
+}
 
 export const vitrineComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

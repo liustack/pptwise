@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { accessibleInk, readableOn } from "../../render/ink"
 import { blockTag, compositionTag, quietInkOn, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type OrgTree = Extract<Component, { type: "org_tree" }>
 
@@ -68,6 +69,13 @@ function treeShape(components: readonly Component[]): OrgTree | null {
   if (only.children.length < MIN_CHILDREN || only.children.length > MAX_CHILDREN) return null
   if (only.children.some((child) => (child.children?.length ?? 0) > 0)) return null
   return only
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const treeRecipe: Recipe = {
+  look: "A two-level team",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "org_tree", count: [2, 4] }] }],
 }
 
 export const treeComposition: Composition = ({ components, ctx, rect, inks }) => {

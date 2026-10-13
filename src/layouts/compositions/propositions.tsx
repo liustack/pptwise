@@ -18,6 +18,7 @@ import {
   splitLabel,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Cards = Extract<Component, { type: "icon_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -56,6 +57,13 @@ function splitLast(text: string): { say: string; sep: string; basis: string } | 
   const say = t.slice(0, at).trim()
   const basis = t.slice(at + sep.length).trim()
   return say && basis ? { say, sep, basis } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const propositionsRecipe: Recipe = {
+  look: "The hypotheses a study tests",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 3], needs: ["items[*].tag", "items[*].title~colon"] }, { type: "image" }, { type: "callout", optional: true }] }],
 }
 
 export const propositionsComposition: Composition = ({ components, ctx, rect, setting }) => {

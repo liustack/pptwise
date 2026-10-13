@@ -13,6 +13,7 @@ import {
   scrollValue,
   scrollWidth,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -45,6 +46,13 @@ const COLS = [
 ] as const
 const NOTE = { x: 650, top: 552, w: 410, size: 16, lineHeight: 30, maxLines: 2 } as const
 const GAP = 6
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const genresRecipe: Recipe = {
+  look: "Two counts of the same categories side by side",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 10], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "callout", optional: true }] }],
+}
 
 export const genresComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

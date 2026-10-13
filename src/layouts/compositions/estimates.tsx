@@ -15,6 +15,7 @@ import {
   paintPill,
   pillWidth,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -49,6 +50,13 @@ const CARD = { x: 886, h: 300, pad: 20, icon: { top: 20, size: 24 }, value: { to
 function signed(v: number, unit: string | undefined): string {
   const n = String(Number(Math.abs(v).toPrecision(12)))
   return joinUnit(v > 0 ? `+${n}` : v < 0 ? `−${n}` : n, unit)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const estimatesRecipe: Recipe = {
+  look: "What people expected against what was measured",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 5], needs: ["chart_type=bar", "direction=horizontal", "series[].data[].emphasis"] }, { type: "kpi_cards", count: [1, 1], optional: true }] }],
 }
 
 export const estimatesComposition: Composition = ({ components, ctx, rect, setting }) => {

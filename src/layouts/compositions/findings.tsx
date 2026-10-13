@@ -18,6 +18,7 @@ import {
   stripMarks,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Kpis = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -45,6 +46,13 @@ const GRID = { pitchX: 584, pitchY: 196, w: 568, h: 182 } as const
 const CARD = { pad: 22, icon: { dy: 22, size: 22 }, topic: { dx: 54, dy: 18, size: 19, h: 30, w: 300 }, chip: { dy: 22, size: 11, h: 22 }, source: { dy: 58, size: 14, h: 22 }, note: { dy: 82, size: 13, h: 22 }, result: { dy: 116, size: 26, h: 44 } } as const
 const CLOSE = { gap: 22, h: 44 } as const
 const CLOSE_SPEC: AsideSpec = { size: 15, lineHeight: 44, maxLines: 1, pad: 0 }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const findingsRecipe: Recipe = {
+  look: "Studies side by side, each in its own unit",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[*].note", "items[*].tag", "items[*].icon", "items[*].source"] }, { type: "callout", optional: true }] }],
+}
 
 export const findingsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

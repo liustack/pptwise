@@ -22,6 +22,7 @@ import {
   placeClaim,
   withUnitText,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Kpis = Extract<Component, { type: "kpi_cards" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -61,6 +62,13 @@ const LINE = { stroke: 2.4, dot: 3 } as const
 const ENDS = { size: 12, first: { dx: -4, dy: -8 }, last: { dx: 6, dy: 4 } } as const
 const GAP = { size: 10, lift: 6 } as const
 const CAPTION = { top: 436, w: 476 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const headlineRecipe: Recipe = {
+  look: "One figure set huge beside the small trend it ends",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }, { type: "chart", count: [4, 12], needs: ["chart_type=line", "title"] }, { type: "callout", optional: true }] }],
+}
 
 export const headlineComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

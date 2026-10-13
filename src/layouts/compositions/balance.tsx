@@ -21,6 +21,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -59,6 +60,13 @@ const PERIOD = { size: 12, lineHeight: 20, tracking: 2 } as const
 const FIGURE = { dy: 22, lineHeight: 70, sizes: [56, 40], symbol: 28, word: 18 } as const
 const PILL = { dy: 94, h: 22, minW: 100, pad: 12, size: 12 } as const
 const BASIS = { rule: 558, left: 160, right: 1120, top: 568, size: 12, lineHeight: 20, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const balanceRecipe: Recipe = {
+  look: "Two quantities weighed against each other",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [4, 4], needs: ["items[*].note", "items[*].tag"] }, { type: "callout", optional: true }] }],
+}
 
 export const balanceComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

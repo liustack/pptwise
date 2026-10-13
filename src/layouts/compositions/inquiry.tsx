@@ -15,6 +15,7 @@ import {
   manuscriptBaseline,
   splitLabel,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -42,6 +43,13 @@ const PHOTO = { dy: 2, w: 470, h: 360 } as const
 const CAP = { dy: 370 } as const
 const QUESTION = { dx: 516, dy: 2, w: 636, size: 26, lineHeight: 42, maxLines: 2 } as const
 const ROWS = { dx: 516, dy: 118, pitch: 60, label: { dy: 14, h: 30, size: 13, tracking: 1, w: 120 }, value: { dx: 120, dy: 12, h: 34, size: 18, w: 516 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const inquiryRecipe: Recipe = {
+  look: "The research question beside its figure",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "paragraph" }, { type: "bullets", count: [2, 5], needs: ["items[*]~colon"] }] }],
+}
 
 export const inquiryComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

@@ -25,6 +25,7 @@ import {
   wholePage,
   type AccountMarkKind,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Rows = Extract<Component, { type: "row_cards" }>
@@ -67,6 +68,13 @@ const CASE = { top: 176, rule: 2, row: 72, pad: 12, titleW: 130, gap: 20, title:
 export function caseMarks(items: readonly { highlight?: boolean; tone?: "danger" | "warning" | "success" }[]): (AccountMarkKind | null)[] {
   const lit = items.findIndex((it) => it.highlight)
   return items.map((it, i) => (it.tone ? markOfRow(it) : lit < 0 || i < lit ? null : i === lit ? "lead" : "quiet"))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const casefileRecipe: Recipe = {
+  look: "One piece of work told as a case, who did which part and what it came to, beside its photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "row_cards", count: [3, 4], needs: ["items[*].text"] }, { type: "kpi_cards", count: [2, 4] }] }],
 }
 
 export const casefileComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

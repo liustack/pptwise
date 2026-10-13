@@ -16,6 +16,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -100,6 +101,13 @@ interface RowPlan {
   dashed: boolean
   tag: Comparison["rows"][number]["tag"]
   tagInk: string
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rulerRecipe: Recipe = {
+  look: "Who qualifies where on one scale",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 5], needs: ["rows[*].cells[]~figure"] }, { type: "callout", optional: true }] }],
 }
 
 export const rulerComposition: Composition = ({ components, ctx, rect, setting }) => {

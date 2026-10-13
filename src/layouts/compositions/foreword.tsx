@@ -15,6 +15,7 @@ import {
   figureWidth,
 } from "./periodical"
 import { wholeMark } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -65,6 +66,13 @@ export function fitDropCap(text: string, ctx: ComponentCtx): { cap: string; capW
   const under = fitPeriodical(rest.slice(at).trim(), { ...spec, width: NOTE.w, maxLines: NOTE.maxLines - CAP.lines }, ctx)
   if (!under) return null
   return { cap, capW, lines: [...held, ...under.lines] }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const forewordRecipe: Recipe = {
+  look: "The editor's note, set as a letter beside its figures",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "paragraph" }, { type: "kpi_cards", count: [2, 3], needs: ["items[*].note", "items[*].icon"] }] }],
 }
 
 export const forewordComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

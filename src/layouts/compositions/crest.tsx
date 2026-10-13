@@ -3,6 +3,7 @@ import { figureStyleOf, groupDigits, wholeValueDecimals, writtenFigure } from ".
 import { mostlyChinese } from "../../lib/text-script"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeTrackedWidth, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeLine, paintMarqueeTracked, marqueeBaseline } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -34,6 +35,13 @@ const UNIT = { top: 162, size: 26, lineHeight: 40, w: 640 } as const
 const NOTE = { top: 212, size: 16, lineHeight: 26, maxLines: 2, w: 600 } as const
 const CARD = { top: 312, h: 110, w: 600, pad: 24, title: { top: 16, size: 17, lineHeight: 28 }, text: { top: 48, size: 14, lineHeight: 22, maxLines: 2 } } as const
 const BARS = { x: 696, caption: { baseline: 26, size: 13 }, plotTop: 48, base: 372, pitch: 112, w: 80, r: 6, value: { gap: 10, size: 16 }, year: { drop: 24, size: 14 }, axis: { x: 680, w: 1.5 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const crestRecipe: Recipe = {
+  look: "One figure at its crest",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }, { type: "chart", count: [2, 6], needs: ["chart_type=bar"] }, { type: "callout", needs: ["title"], optional: true }] }],
+}
 
 export const crestComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

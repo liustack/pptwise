@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CRAYON, boardY, crayonAt, crayonInks, crayonMark, crayonText, crayonTint, fitCrayon, inkOn, paintCrayon, paintCrayonIcon, paintCrayonLine, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type FromTo = Extract<Component, { type: "from_to" }>
 
@@ -39,6 +40,13 @@ function stageName(stage: { kicker?: string; title: string }): string {
   const title = stripEmphasis(stage.title).trim()
   if (!kicker) return title
   return /\p{Script=Han}/u.test(kicker + title) ? `${kicker} ${title}` : `${kicker} · ${title}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const swatchesRecipe: Recipe = {
+  look: "How several things change from one stage to the next, a card of its own colour each",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "from_to", count: [3, 6], needs: ["rows[*].icon"] }] }],
 }
 
 export const swatchesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

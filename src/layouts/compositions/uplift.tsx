@@ -21,6 +21,7 @@ import {
 } from "./portrait"
 import { wholeLit } from "./lineup"
 import { keynoteDecimals, keynoteNumber } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -61,6 +62,13 @@ export function upliftScale(max: number): number {
   if (max <= 0) return 1
   const step = 10 ** Math.floor(Math.log10(max)) / 5
   return Math.ceil(max / step - 1e-9) * step
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const upliftRecipe: Recipe = {
+  look: "What a change did against a control group, as bars on their side beside the result in figures",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 6], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 2] }] }],
 }
 
 export const upliftComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

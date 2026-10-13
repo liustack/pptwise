@@ -10,6 +10,7 @@ import { centredBaseline, fitFixed, paintLines } from "./type"
 import { recordsPanel } from "./records-panel"
 import { recordsConsole } from "./records-console"
 import { recordsMemo } from "./records-memo"
+import type { Recipe } from "./recipe"
 
 type DataTable = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -98,6 +99,21 @@ function recordsShape(components: readonly Component[]): { table: DataTable; cal
 function cell(row: DataTable["rows"][number], key: string): string {
   const v = row.cells[key]
   return v === undefined ? "" : String(v)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const recordsRecipe: Recipe = {
+  look: "A data table set open, the way a report prints one",
+  kinds: ["list", "comparison", "data", "hierarchy"],
+  shapes: [
+    { parts: [{ type: "data_table", count: [1, 7] }], settings: ["memo"] },
+    { parts: [{ type: "data_table", count: [1, 7] }, { type: "callout", optional: true }], settings: ["grid"] },
+    { parts: [{ type: "data_table", count: [1, 9] }], settings: ["console"] },
+    { parts: [{ type: "data_table", count: [1, 6] }], settings: ["panel"] },
+    { parts: [{ type: "data_table", count: [1, 6] }, { type: "callout", optional: true }], settings: ["notice"] },
+    { parts: [{ type: "data_table", count: [1, 5] }, { type: "callout", optional: true }], settings: ["panel"] },
+    { parts: [{ type: "data_table", count: [1, 6] }, { type: "kpi_cards", count: [1, 3], optional: true }], settings: ["console"] },
+  ],
 }
 
 export const recordsComposition: Composition = (props) => {

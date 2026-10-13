@@ -16,6 +16,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -58,6 +59,13 @@ export function yearOf(date: string): number | null {
   const month = m[2] ? Number(m[2]) : 1
   if (month < 1 || month > 12) return null
   return Number(m[1]) + (month - 1) / 12
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const datelineRecipe: Recipe = {
+  look: "Events laid on one line at their true distance in time",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 8], needs: ["milestones[*].date~figure"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const datelineComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

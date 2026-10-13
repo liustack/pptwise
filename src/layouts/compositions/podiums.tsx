@@ -23,6 +23,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -58,6 +59,13 @@ const RANK = { size: 44, lineHeight: 60, w: 70 } as const
 const NAME = { dy: 4, lineHeight: 34, size: 22, lit: 26 } as const
 const BAR = { dy: 48, h: 8, w: 400, gap: 12 } as const
 const VALUE = { dy: 36, lineHeight: 32, size: 18, lit: 22 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const podiumsRecipe: Recipe = {
+  look: "Two leaderboards side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=bar", "title", "direction=horizontal"] }, { type: "chart", count: [2, 3], needs: ["chart_type=bar", "title", "direction=horizontal"] }] }],
+}
 
 export const podiumsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

@@ -23,6 +23,7 @@ import {
   wholePage,
   KEYNOTE_META,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -61,6 +62,13 @@ export function fallStart(values: readonly number[], at: number): number {
   let start = at
   while (start > 0 && values[start - 1]! > values[start]!) start -= 1
   return start
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const contourRecipe: Recipe = {
+  look: "A decade as one line",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 12], needs: ["chart_type=line"] }, { type: "kpi_cards", count: [1, 1] }] }],
 }
 
 export const contourComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

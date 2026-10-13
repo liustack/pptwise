@@ -20,6 +20,7 @@ import {
   portraitWidth,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Timeline = Extract<Component, { type: "timeline" }>
@@ -84,6 +85,13 @@ export function stationFigure(desc: string | undefined): { value: string; unit?:
   const after = words.slice(last.index + last[0].length)
   const unit = /^\s?(\p{Script=Han}{1,2}|[A-Za-z]+)(?=$|[\s]*[，。、；：,.;:!?！？])/u.exec(after)?.[1]
   return { value: last[0], ...(unit ? { unit } : {}), words }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stationsRecipe: Recipe = {
+  look: "A career told as a few dated posts, each with the one result it left",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "image" }, { type: "timeline", count: [2, 5], needs: ["milestones[*].desc", "milestones[].highlight", "milestones[*].desc~figure"] }] }],
 }
 
 export const stationsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

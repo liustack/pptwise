@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitMono, paintCard, paintIcon, paintMono, paintPanel } from "./console"
+import type { Recipe } from "./recipe"
 
 type IssueTree = Extract<Component, { type: "issue_tree" }>
 
@@ -36,6 +37,13 @@ const ROWS = { top: 32, h: 96, gap: 14, minH: 72 } as const
 const ARROW = { zone: 52, size: 24 } as const
 const LEFT = { pad: 20, icon: 26, iconTop: 20, textX: 62, label: { top: 16, box: 28, size: 19 }, note: { top: 50, box: 24, size: 14 } } as const
 const RIGHT = { pad: 24, size: 19, lineHeight: 30 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const pathsRecipe: Recipe = {
+  look: "An issue tree read as failure points and what each one takes",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "issue_tree", count: [2, 4], needs: ["children_column", "branches[*].children"] }] }],
+}
 
 export const pathsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "console" || components.length !== 1) return null

@@ -23,6 +23,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -55,6 +56,13 @@ const BAR = { dy: 40, h: 28, w: 880, min: 1.5 } as const
 const VALUE = { dy: 36, gap: 16, size: 28, lineHeight: 36 } as const
 const SAY = { top: 540, size: 18, lineHeight: 30, w: 1152 } as const
 const ASIDE = { top: 580, size: 14, lineHeight: 24, w: 1152 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const gulfRecipe: Recipe = {
+  look: "The gap is the point",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "paragraph", optional: true }, { type: "paragraph" }] }],
+}
 
 export const gulfComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

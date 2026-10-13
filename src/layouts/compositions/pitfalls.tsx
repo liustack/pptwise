@@ -15,6 +15,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Rows = Extract<Component, { type: "row_cards" }>
 
@@ -39,6 +40,13 @@ const CROSS = { x: 70, dy: 8, size: 28 } as const
 const ICON = { x: 120, dy: 8, size: 26 } as const
 const TITLE = { x: 162, dy: 2, w: 1054, size: 24, lineHeight: 36 } as const
 const TEXT = { x: 162, dy: 42, w: 1054, size: 15, lineHeight: 26 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const pitfallsRecipe: Recipe = {
+  look: "The mistakes to avoid, each struck with a cross of yellow chalk",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 5], needs: ["items[*].icon", "items[*].text", "items[*].tone"] }] }],
+}
 
 export const pitfallsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

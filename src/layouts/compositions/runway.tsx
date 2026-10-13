@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, pitchInks, pitchText, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -50,6 +51,13 @@ function tickStep(total: number): number {
 
 function gateRule(component: Component | undefined): component is Callout {
   return component?.type === "callout" && component.title === undefined && component.tag === undefined
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const runwayRecipe: Recipe = {
+  look: "What a round's money buys, phase by phase, with the gate that can stop it",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4], needs: ["items[*].duration", "duration_unit"] }, { type: "callout", optional: true }] }],
 }
 
 export const runwayComposition: Composition = ({ components, ctx, rect, setting }) => {

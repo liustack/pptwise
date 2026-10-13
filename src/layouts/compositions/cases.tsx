@@ -14,6 +14,7 @@ import {
   paintLessonLine,
 } from "./lesson"
 import { fitTip, paintTip, plainCallout, type TipSpec } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -45,6 +46,13 @@ const CARD = { gap: 24, h: 330, pad: 20, icon: { top: 22, size: 26 }, name: { x:
 const LOW = { top: 350, h: 70, quoteW: 760, gap: 24 } as const
 const TIP_SPEC: TipSpec = { size: 15, lineHeight: 23, maxLines: 2, textX: 56, icon: { x: 16, size: 22 } }
 const FIGURE = { pad: 20, value: { size: 30, top: 6, lineHeight: 40 }, label: { top: 10, size: 13, lineHeight: 20, maxLines: 2, minX: 136 }, gap: 16 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const casesRecipe: Recipe = {
+  look: "What happened and who paid, case by case",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 4], needs: ["rows[*].icon"] }, { type: "callout", optional: true }, { type: "kpi_cards", count: [1, 1], optional: true }] }],
+}
 
 export const casesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

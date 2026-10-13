@@ -19,6 +19,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Steps = Extract<Component, { type: "steps" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -55,6 +56,13 @@ const AMOUNT = { top: 330, size: 16, lineHeight: 26, maxLines: 2, under: 362 } a
 const DETAIL = { top: 386, size: 13, lineHeight: 22 } as const
 const WARN = { x: 64, y: 460, w: 1152, h: 70, icon: { x: 84, y: 482, size: 26 }, text: { x: 124, top: 474, w: 1060, size: 18, lineHeight: 40 } } as const
 const CLOSE = { size: 14, lineHeight: 24, gap: 26 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const subtractionsRecipe: Recipe = {
+  look: "What is taken off, one after another, written as a row of minus signs",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "steps", count: [2, 4], needs: ["items[*].icon"] }, { type: "callout", needs: ["icon"], optional: true }, { type: "paragraph", optional: true }] }],
+}
 
 export const subtractionsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

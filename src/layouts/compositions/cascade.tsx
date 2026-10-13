@@ -20,6 +20,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Waterfall = Extract<Component, { type: "waterfall" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -50,6 +51,13 @@ const PLOT = { x0: 140, x1: 1100, centre: 620, base: 560, height: 260, maxStep: 
 const FIGURE = { size: 40, rise: 16 } as const
 const LABEL = { dy: 30, size: 15 } as const
 const CLOSE = { top: 608, size: 15, lineHeight: 26, w: 1000 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cascadeRecipe: Recipe = {
+  look: "A sum bridged as bars drawn in chalk",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "waterfall", count: [3, 4] }, { type: "paragraph", optional: true }] }],
+}
 
 export const cascadeComposition: Composition = ({ components, ctx, setting, rect, claim, source, stamp }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

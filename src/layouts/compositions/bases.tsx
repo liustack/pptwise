@@ -14,6 +14,7 @@ import {
   scrollValue,
   scrollWidth,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Table = Extract<Component, { type: "data_table" }>
@@ -50,6 +51,13 @@ const WIDTHS = { first: 140, four: [170, 130], three: [300] } as const
 const NOTE = { top: 432, size: 17, lineHeight: 30, maxLines: 3 } as const
 
 const FIGURE = /^[−-]?[\d,.]+%?$/u
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const basesRecipe: Recipe = {
+  look: "Counts made one at a time beside the totals that must not be joined into a line",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 8], needs: ["chart_type=bar", "title"] }, { type: "data_table", count: [2, 5] }, { type: "paragraph", optional: true }] }],
+}
 
 export const basesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

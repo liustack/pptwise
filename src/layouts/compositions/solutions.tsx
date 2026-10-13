@@ -19,6 +19,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 
@@ -48,6 +49,13 @@ const RESULT = { label: { top: 330, size: 12, lineHeight: 18 }, top: 352, size: 
 const WHY = { top: 452, step: 50, size: 15, lineHeight: 25, maxLines: 2 } as const
 
 const LETTERS = "ABCD"
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const solutionsRecipe: Recipe = {
+  look: "The answers worked down the board",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 5], needs: ["rows[].emphasis"] }] }],
+}
 
 export const solutionsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

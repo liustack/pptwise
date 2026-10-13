@@ -19,6 +19,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -49,6 +50,13 @@ type Callout = Extract<Component, { type: "callout" }>
 const PHOTOS = { top: 10, h: 190, gap: 24, caption: { gap: 6, size: 12, lineHeight: 18 } } as const
 const BARS = { top: 234, title: { size: 14, lineHeight: 22 }, rows: 266, pitch: 42, bar: 26, barTop: 4, label: { size: 14, base: 20 }, barX: 146, value: { size: 14, base: 22, gap: 8 }, room: 80 } as const
 const CARD = { w: 416, top: 234, h: 160, pad: 20, icon: 22, title: { top: 18, size: 16, lineHeight: 24 }, text: { top: 52, size: 14, lineHeight: 22, maxLines: 3 }, stroke: 1.5 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const surveyRecipe: Recipe = {
+  look: "The ways a thing can be done, each under its photograph, measured on one scale",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4] }, { type: "chart", count: [2, 4], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "callout" }] }],
+}
 
 export const surveyComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

@@ -58,6 +58,7 @@ export const layoutDef = {
   // look for: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "placard-sheet",
+  compositions: { setting: "placard", offer: PLACARD_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Placard Sheet",

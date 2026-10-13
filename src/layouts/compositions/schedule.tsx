@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { fitMemo, memoInks, memoMeta, memoOn, memoQuietInks, memoText, memoWidth, paintMemo, paintMemoLine } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Gantt = Extract<Component, { type: "gantt" }>
 type Timeline = Extract<Component, { type: "timeline" }>
@@ -45,6 +46,13 @@ export function splitYear(label: string): { year?: string; rest: string; yearFir
   const trail = /^(.+?)\s+(\d{4})$/u.exec(label.trim())
   if (trail) return { year: trail[2], rest: trail[1]!.trim(), yearFirst: false }
   return { rest: label.trim(), yearFirst: false }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const scheduleRecipe: Recipe = {
+  look: "A calendar over its dates",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "gantt", count: [2, 8], needs: ["axis_labels", "axis_labels[*]~figure"] }, { type: "timeline", count: [2, 6], optional: true }] }],
 }
 
 export const scheduleComposition: Composition = ({ components, ctx, rect, setting }) => {

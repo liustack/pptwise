@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, fitBinder, paintBinder, paintBinderIcon } from "./binder"
 import { BinderPlainLine, fitPlainLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -41,6 +42,13 @@ const NUMBER = /(\d[\d.,%]*)/gu
 /** The figure with its numbers marked to be set bold, unless the author marked runs of their own. */
 function boldNumbers(text: string): string {
   return text.includes("**") ? text : text.replace(NUMBER, "**$1**")
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const precedentsRecipe: Recipe = {
+  look: "Public records a client can check",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6], needs: ["rows[*].icon"] }, { type: "callout", optional: true }] }],
 }
 
 export const precedentsComposition: Composition = ({ components, ctx, rect, setting }) => {

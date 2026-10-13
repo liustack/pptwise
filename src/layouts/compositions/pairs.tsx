@@ -5,6 +5,7 @@ import { drawableItems } from "../boundary-content"
 import { splitRow } from "./rows"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 
@@ -52,6 +53,16 @@ function pairsShape(components: readonly Component[]): Bullets | null {
   if (components.length !== 1) return null
   const only = components[0]!
   return only.type === "bullets" ? only : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const pairsRecipe: Recipe = {
+  look: "A short list of label and value pairs, set as ruled rows",
+  kinds: ["photo"],
+  shapes: [
+    { parts: [{ type: "image" }, { type: "bullets", count: [2, 6], needs: ["items[*]~colon"] }], settings: ["notice"] },
+    { parts: [{ type: "image" }, { type: "bullets", count: [2, 4], needs: ["items[*]~colon"] }], settings: ["board"] },
+  ],
 }
 
 export const pairsComposition: Composition = (props) => {

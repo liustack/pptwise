@@ -23,6 +23,7 @@ import {
   wholeCanvas,
   INVITATION_META,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type FromTo = Extract<Component, { type: "from_to" }>
 
@@ -62,6 +63,13 @@ const NOTE = { size: 11, lineHeight: 16 } as const
 const CHANGE = { top: 524, size: 13, lineHeight: 22 } as const
 const ARROW = { from: 690, to: 736, y: 386, head: 8, w: 1.4 } as const
 const COLUMN = { right: 284, top: 186, size: 11, lineHeight: 20, w: 220 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const facingRecipe: Recipe = {
+  look: "One rule before and after a change, as two invitation cards side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "from_to", count: [3, 3], needs: ["rows[].emphasis"] }] }],
+}
 
 export const facingComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

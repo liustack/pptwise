@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, fitBinder, glossBreak, paintBinder, paintBinderIcon, splitName, splitSentence } from "./binder"
 import { BinderPlainLine, fitPlainLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -38,6 +39,13 @@ const CHAIN = { top: 8, h: 24, gap: 24, size: 15, rule: 40 } as const
 const CARD = { top: 44, h: 300, pad: 0, icon: { dy: 18, size: 22 }, name: { dy: 50, size: 17, lineHeight: 28 }, what: { dy: 80, size: 14, lineHeight: 22, maxLines: 3 }, rule: 158, label: { dy: 168, size: 12, lineHeight: 18 }, paper: { dy: 188, size: 14, lineHeight: 22, maxLines: 2 }, source: { dy: 238, size: 12, lineHeight: 18, maxLines: 2 } } as const
 const BAR_TOP = 376
 const BAR_H = 24
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const checkpointsRecipe: Recipe = {
+  look: "How a project runs step by step, each step closed by a paper the client signs off",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 6], needs: ["milestones[*].desc", "milestones[*].icon", "milestones[*].desc~colon"] }, { type: "callout", optional: true }] }],
+}
 
 export const checkpointsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

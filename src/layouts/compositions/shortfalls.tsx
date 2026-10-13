@@ -17,6 +17,7 @@ import {
   portraitWidth,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -60,6 +61,13 @@ export function colonSplit(text: string): { lead: string; rest: string } | null 
   const plain = stripEmphasis(text).trim()
   const m = /^([^：:]+)[：:]\s*(.+)$/u.exec(plain)
   return m ? { lead: m[1]!.trim(), rest: m[2]!.trim() } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const shortfallsRecipe: Recipe = {
+  look: "The gaps the speaker names, how each will close and when the proof is due",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 2], needs: ["rows[*].cells[]~colon", "rows[*].label~colon"] }, { type: "callout", needs: ["title"], optional: true }] }],
 }
 
 export const shortfallsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

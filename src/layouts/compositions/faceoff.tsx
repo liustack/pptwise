@@ -21,6 +21,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -49,6 +50,13 @@ const NAME = { top: 236, size: 20, lineHeight: 30, tracking: 8 } as const
 /** A figure may reach a little past its half (560 of 512), short of the hairline, as the board's 30.22% does. */
 const FIGURE = { top: 280, size: 150, lineHeight: 180, unit: 50, tracking: -4, reach: 560 } as const
 const NOTE = { top: 476, size: 16, lineHeight: 26, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const faceoffRecipe: Recipe = {
+  look: "Two figures face to face",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 2] }] }],
+}
 
 export const faceoffComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

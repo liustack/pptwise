@@ -3,7 +3,7 @@ import type { SvgTemplateProps } from "./types"
 import { stripEmphasis } from "../render/emphasis"
 import { stepAside } from "../render/step-aside"
 import { SvgContent } from "../render/svg-content"
-import { compose } from "./compositions"
+import { compose, type CompositionId } from "./compositions"
 import { fitScroll, fitVertical, paintScroll, paintVertical, scrollInks, scrollText, uprightText } from "./compositions/scroll"
 import { ScrollClaim, ScrollSource, ScrollVolume, fitScrollSource, scrollBodyRect, SCROLL_BAND_TOP } from "./scroll-shared"
 
@@ -30,6 +30,9 @@ const LEAD_ACROSS = { x: 110, top: 90, w: 220, size: 22, lineHeight: 34, maxLine
 /** The band the passage is set in: from x240 in Chinese, x356 across. */
 const BAND = { upright: 240, across: 356, right: 1170, bottom: 640 } as const
 
+/** The signature drawings this face offers its body. */
+const QUOTE_COMPOSITIONS: readonly CompositionId[] = ["statute"]
+
 export function ScrollQuoteContent({ slide, ctx }: SvgTemplateProps) {
   const inks = scrollInks(ctx)
   const ground = inks.ground
@@ -42,7 +45,7 @@ export function ScrollQuoteContent({ slide, ctx }: SvgTemplateProps) {
   const leadAcross = !upright && heading ? fitScroll(slide.heading, { width: LEAD_ACROSS.w, size: LEAD_ACROSS.size, lineHeight: LEAD_ACROSS.lineHeight, maxLines: LEAD_ACROSS.maxLines, serif: true }, ctx) : null
   const leadFits = !heading || (upright ? leadColumns !== null : leadAcross !== null)
   const left = upright ? BAND.upright : BAND.across
-  const passage = quote && leadFits ? compose({ components: slide.components, ctx, rect: { x: left, y: SCROLL_BAND_TOP, w: BAND.right - left, h: BAND.bottom - SCROLL_BAND_TOP }, setting: "scroll" }, ["statute"]) : null
+  const passage = quote && leadFits ? compose({ components: slide.components, ctx, rect: { x: left, y: SCROLL_BAND_TOP, w: BAND.right - left, h: BAND.bottom - SCROLL_BAND_TOP }, setting: "scroll" }, QUOTE_COMPOSITIONS) : null
   if (!passage) {
     // Not one passage it can hold: the claim over the page and the body under
     // it, as the scroll sheet sets a page none of its compositions takes.
@@ -72,6 +75,7 @@ export function ScrollQuoteContent({ slide, ctx }: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "scroll-quote",
+  compositions: { setting: "scroll", offer: QUOTE_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Scroll Quote",

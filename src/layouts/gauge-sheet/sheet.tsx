@@ -19,7 +19,7 @@ const SHEET_INKS: CompositionInks = { quietOnPrimary: GAUGE_DARK_META }
  * beside a photograph, and across the whole page it would take a list that
  * `rows` turned down.
  */
-const SHEET_COMPOSITIONS: readonly CompositionId[] = ["rows", "table", "waves", "tree", "rail", "figures", "track"]
+export const SHEET_COMPOSITIONS: readonly CompositionId[] = ["rows", "table", "waves", "tree", "rail", "figures", "track"]
 
 export interface SheetBody {
   /** The subheading, painted, or `null`. */

@@ -22,6 +22,7 @@ import {
   periodicalWidth,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -59,6 +60,13 @@ const KEY = { top: 132, square: 12, size: 12, gap: 6, pitch: 70 } as const
 const GAP = { size: 11, first: 40, second: 56, dash: "4 3" } as const
 const CAPTION = { left: 6, top: 450, w: 690 } as const
 const CARD = { x: 756, top: 126, w: 396, h: 330, pad: 26, icon: { dy: 24, size: 22 }, title: { dx: 34, dy: 20, size: 15, h: 28 }, first: { dy: 64, h: 70, size: 60 }, firstLabel: { dy: 138, size: 13, h: 22 }, second: { dy: 184, h: 44, size: 34, unit: 14 }, secondLabel: { dy: 232, size: 13, h: 22 }, note: { dy: 270, size: 12, h: 20, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const contrastRecipe: Recipe = {
+  look: "Two groups year by year as pairs of bars, beside a card about a third",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 12], needs: ["chart_type=bar", "title"] }, { type: "callout", optional: true }, { type: "kpi_cards", count: [2, 2], needs: ["items[].tag", "items[].icon", "items[].note"] }] }],
+}
 
 export const contrastComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

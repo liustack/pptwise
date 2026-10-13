@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import type { CompositionProps } from "./compositions"
+import type { CompositionId, CompositionProps } from "./compositions"
 import type { ComponentCtx } from "../components/types"
 import { accessibleInk } from "../render/ink"
 import { compose } from "./compositions"
@@ -31,6 +31,10 @@ const BAND = { top: 110, bottom: 610 } as const
 const SOURCE_CLEARANCE = 16
 
 /** The claim placed for `sentence`: kept whole word by word, bold, its marked run in the theme's emphasis. */
+
+/** The signature drawings this face offers its body. */
+const STATEMENT_COMPOSITIONS: readonly CompositionId[] = ["sentence"]
+
 export function noticeStatementClaim(heading: string, ctx: ComponentCtx): NonNullable<CompositionProps["claim"]> {
   return (column) => {
     const size = column.size ?? 60
@@ -68,7 +72,7 @@ export function NoticeStatementContent(props: SvgTemplateProps) {
     const bottom = Math.min(BAND.bottom, foot)
     const composed = compose(
       { components: support, ctx, rect: { x: NOTICE_LEFT, y: BAND.top, w: NOTICE_RIGHT - NOTICE_LEFT, h: bottom - BAND.top }, setting: "notice", claim: noticeStatementClaim(slide.heading!, ctx) },
-      ["sentence"],
+      STATEMENT_COMPOSITIONS,
     )
     if (composed) {
       return (
@@ -84,6 +88,7 @@ export function NoticeStatementContent(props: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "notice-statement",
+  compositions: { setting: "notice", offer: STATEMENT_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Notice Statement",

@@ -18,6 +18,7 @@ import {
   portraitWidth,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -66,6 +67,13 @@ export function tenureMark(n: number, unit: string, chinese: boolean): string | 
   if (/^weeks?$/iu.test(u)) return `Week ${n}`
   if (/^months?$/iu.test(u)) return `Month ${n}`
   return null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tenureRecipe: Recipe = {
+  look: "The first days in a new post as phases on a ruler",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4], needs: ["items[*].rows", "items[*].duration", "items[*].points", "duration_unit"] }, { type: "callout", needs: ["title"], optional: true }] }],
 }
 
 export const tenureComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

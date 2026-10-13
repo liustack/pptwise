@@ -14,6 +14,7 @@ import {
   paintManuscriptChip,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -46,6 +47,13 @@ const BAND = { pad: 10 } as const
 const CHIP = { size: 11, h: 20, gap: 10 } as const
 const CAVEAT: AsideSpec = { size: 14, lineHeight: 21, maxLines: 2, pad: 6, tint: true }
 const CAVEAT_GAP = 16
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tabulationRecipe: Recipe = {
+  look: "A table of comparable studies",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 7], needs: ["title", "columns[].align"] }, { type: "callout", optional: true }] }],
+}
 
 export const tabulationComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

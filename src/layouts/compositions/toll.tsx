@@ -25,6 +25,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -60,6 +61,13 @@ const COL = { x: 720, w: 496 } as const
 const TITLE = { top: 220, size: 16, lineHeight: 30, tracking: 2 } as const
 const SAY = { top: 270, size: 26, lineHeight: 42, maxLines: 3 } as const
 const QUOTE = { top: 450, size: 15, lineHeight: 26, rule: 2, minRule: 80, pad: 18, maxLines: 3 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tollRecipe: Recipe = {
+  look: "Two bars and one sentence",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=bar"] }, { type: "paragraph" }, { type: "callout", needs: ["title"] }] }],
+}
 
 export const tollComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect)) return null

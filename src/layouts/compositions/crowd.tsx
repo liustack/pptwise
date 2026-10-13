@@ -17,6 +17,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -85,6 +86,13 @@ export function litDots(value: string, label: string): number | null {
   const stated = stripEmphasis(label).match(/\d+(?:\.\d+)?\s*[%％]/gu) ?? []
   const share = stated.length === 1 ? shareOf(stated[0]!) : fraction
   return share === null ? null : Math.round(share * 100)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const crowdRecipe: Recipe = {
+  look: "A share as a hundred people",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }] }],
 }
 
 export const crowdComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

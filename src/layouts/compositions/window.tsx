@@ -4,6 +4,7 @@ import { plainFigure } from "./figure"
 import { panelFill } from "./notice"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Gantt = Extract<Component, { type: "gantt" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -72,6 +73,13 @@ function windowShape(components: readonly Component[]): { gantt: Gantt; kpis: Kp
     if (i > 0 && item.start < sorted[i - 1]!.end) return null
   }
   return { gantt, kpis }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const windowRecipe: Recipe = {
+  look: "A short calendar set as one band, and the facts that make it matter in columns under it",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "gantt", count: [2, 2], needs: ["axis_labels"] }, { type: "kpi_cards", count: [2, 3] }] }],
 }
 
 export const windowComposition: Composition = ({ components, ctx, rect }) => {

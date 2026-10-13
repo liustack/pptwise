@@ -16,6 +16,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -64,6 +65,13 @@ export function termNote(item: string): { term: string; note: string } | null {
   const m = /^(.+?)(?:：|:\s)\s*([\s\S]+)$/u.exec(item.trim())
   if (!m) return null
   return { term: stripEmphasis(m[1]!).trim(), note: m[2]!.trim() }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const bracesRecipe: Recipe = {
+  look: "One formula written across the board",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "paragraph" }, { type: "bullets", count: [1, 3], needs: ["items[*]~colon"] }] }],
 }
 
 export const bracesComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {

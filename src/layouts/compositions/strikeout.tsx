@@ -20,6 +20,7 @@ import {
   wholePage,
   chalkboardSmall,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -55,6 +56,13 @@ const BOX = { x: 64, y: 388, w: 1152, h: 96 } as const
 const STRUCK = { x: 88, top: 404, w: 340, size: 44, lineHeight: 60 } as const
 const BESIDE = { x: 440, top: 408, w: 760, size: 16, lineHeight: 28, maxLines: 2 } as const
 const CLOSE = { top: 520, size: 15, lineHeight: 26, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const strikeoutRecipe: Recipe = {
+  look: "Figures written large, and the figure people quote wrongly struck out under them",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4] }, { type: "callout", needs: ["title", "title~figure"] }, { type: "paragraph", optional: true }] }],
+}
 
 export const strikeoutComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

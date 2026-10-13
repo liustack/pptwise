@@ -15,6 +15,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -69,6 +70,13 @@ export function checksOf(text: string | undefined): { text: string; glossBreak: 
       return { text: s.slice(0, s.length - stop.length).trim(), glossBreak: stop }
     })
     .filter((c) => c.text.length > 0)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const watchRecipe: Recipe = {
+  look: "What to check, and when to look again",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 3], needs: ["items[*].icon", "items[*].text"] }, { type: "image" }, { type: "timeline", count: [3, 6] }] }],
 }
 
 export const watchComposition: Composition = ({ components, ctx, rect, setting }) => {

@@ -14,6 +14,7 @@ import {
   splitMiddleDot,
 } from "./manuscript"
 import { graphicInk } from "../../render/ink"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Sketch = Extract<Component, { type: "sketch" }>
@@ -52,6 +53,13 @@ function sketchInks(inks: ReturnType<typeof manuscriptInks>, ground: string): Sk
     ink: inks.ink,
     muted: manuscriptText(inks.muted, ground, SKETCH.size),
   }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const designsRecipe: Recipe = {
+  look: "Two research designs side by side, each with the sketch of how it tells its effect apart",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 5] }, { type: "sketch" }, { type: "sketch" }] }],
 }
 
 export const designsComposition: Composition = ({ components, ctx, rect, setting }) => {

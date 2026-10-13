@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { basisUnsettled } from "../../components/tag"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderIcon, paintBinderLine, paintBinderPhoto, splitName } from "./binder"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 
@@ -27,6 +28,13 @@ type ImageGrid = Extract<Component, { type: "image_grid" }>
  */
 
 const CARD = { top: 4, gap: 24, h: 400, photo: { h: 236 }, dash: "6 5", number: { dy: 250, size: 15, lineHeight: 24 }, tag: { size: 13 }, rule: 282, icon: { x: 0, dy: 298, size: 22 }, name: { x: 32, dy: 294, size: 19, lineHeight: 30 }, text: { x: 0, dy: 332, size: 14, lineHeight: 23, maxLines: 3 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const partsRecipe: Recipe = {
+  look: "What a solution is made of",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4], needs: ["items[*].caption", "items[*].icon", "items[*].caption~colon"] }] }],
+}
 
 export const partsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

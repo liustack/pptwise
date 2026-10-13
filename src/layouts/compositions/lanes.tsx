@@ -9,6 +9,7 @@ import { centredBaseline, fitFixed, paintLines } from "./type"
 import { lanesPanel } from "./lanes-panel"
 import { lanesSeal } from "./lanes-seal"
 import { lanesDossier } from "./lanes-dossier"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -89,6 +90,17 @@ function lanesShape(components: readonly Component[]): { timeline: Timeline; cal
   if (second === undefined) return { timeline }
   const callout = noticeClosingCallout(second)
   return callout ? { timeline, callout } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const lanesRecipe: Recipe = {
+  look: "A timeline on one axis, its milestones hanging from it as equal columns of cards",
+  kinds: ["process"],
+  shapes: [
+    { parts: [{ type: "timeline", count: [2, 8] }, { type: "callout", optional: true }], settings: ["notice", "panel", "grid"] },
+    { parts: [{ type: "timeline", count: [5, 12], needs: ["milestones[*].lane"] }], settings: ["dossier"] },
+    { parts: [{ type: "timeline", count: [2, 8], needs: ["lanes"] }, { type: "callout", optional: true }], settings: ["seal"] },
+  ],
 }
 
 export const lanesComposition: Composition = (props) => {

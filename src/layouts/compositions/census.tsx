@@ -21,6 +21,7 @@ import {
   periodicalWidth,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -56,6 +57,13 @@ const YEAR = { size: 12, baseline: 420 } as const
 const GAP = { size: 11, gap: 8, dash: "4 3" } as const
 const CAPTION = { left: 16, top: 444, w: 740 } as const
 const CARDS = { x: 816, top: 126, pitch: 180, w: 336, h: 160, rule: 3, pad: 22, value: { dy: 16, h: 56, size: 46 }, label: { dy: 80, size: 15, h: 24 }, note: { dy: 108, size: 12, h: 20 }, max: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const censusRecipe: Recipe = {
+  look: "A run of years as bars with the years nobody published, beside two cards",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 12], needs: ["chart_type=bar", "title"] }, { type: "callout", optional: true }, { type: "kpi_cards", count: [1, 2], needs: ["items[*].note"] }] }],
+}
 
 export const censusComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

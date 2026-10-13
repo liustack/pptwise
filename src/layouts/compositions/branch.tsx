@@ -4,6 +4,7 @@ import { mostlyChinese } from "../../lib/text-script"
 import { paintTag, tagInks, tagWidth } from "../../components/tag"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, MARQUEE_SPEC, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeIcon, paintMarqueeLine } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -48,6 +49,13 @@ function signedFigure(v: number, unit: string | undefined, chinese: boolean): st
   const sign = v > 0 ? "+" : v < 0 ? "−" : ""
   const body = groupDigits(writtenFigure(Math.abs(v)), figureStyleOf(chinese))
   return `${sign}${body}${unit ?? ""}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const branchRecipe: Recipe = {
+  look: "Two things that started level and went separate ways",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 2], needs: ["chart_type=line", "series[].emphasis"] }, { type: "callout", needs: ["title"] }, { type: "callout", needs: ["title"] }] }],
 }
 
 export const branchComposition: Composition = ({ components, ctx, rect, setting }) => {

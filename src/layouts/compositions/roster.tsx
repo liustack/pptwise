@@ -5,6 +5,7 @@ import { fitSealNote, paintSealNote } from "./note-seal"
 import { paintNumeral, sealInks, sealText } from "./seal"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 
@@ -34,6 +35,13 @@ const SQUARE = { size: 40, inset: 12 }
 const TITLE = { size: 19, lineHeight: 30, inset: 66, trail: 12 }
 const NOTE_GAP = 22
 const MIN_CELL_W = 440
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rosterRecipe: Recipe = {
+  look: "A long numbered list set in two columns of cells",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [6, 10] }, { type: "callout", optional: true }] }],
+}
 
 export const rosterComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "seal") return null

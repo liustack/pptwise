@@ -70,6 +70,7 @@ export const layoutDef = {
   // several pages, so several kinds may share it.
   dispatch: "content",
   id: "marquee-sheet",
+  compositions: { setting: "marquee", offer: MARQUEE_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Marquee Sheet",

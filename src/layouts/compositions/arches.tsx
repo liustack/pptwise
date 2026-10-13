@@ -21,6 +21,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -53,6 +54,13 @@ const NOTE = { top: 410, size: 14, lineHeight: 24, pad: 32, maxLines: 4 } as con
 export function doorPath(x: number, w: number): string {
   const mid = x + w / 2
   return `M ${x} ${DOOR.bottom} L ${x} ${DOOR.shoulder} Q ${x} ${DOOR.crown} ${mid} ${DOOR.crown} Q ${x + w} ${DOOR.crown} ${x + w} ${DOOR.shoulder} L ${x + w} ${DOOR.bottom}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const archesRecipe: Recipe = {
+  look: "The gates a plan has to pass",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[*].note", "items[*].icon"] }] }],
 }
 
 export const archesComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

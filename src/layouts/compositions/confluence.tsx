@@ -17,6 +17,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Equation = Extract<Component, { type: "concept_equation" }>
@@ -47,6 +48,13 @@ const MEET = { x: 970, y: 323 } as const
 const RESULT = { x: 980, y: 250, w: 236, h: 150, pad: 20 } as const
 const RESULT_NAME = { top: 268, size: 26, lineHeight: 36 } as const
 const RESULT_NOTE = { top: 312, size: 15, lineHeight: 25, maxLines: 3 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const confluenceRecipe: Recipe = {
+  look: "Two paths that meet in one result",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image" }, { type: "concept_equation", count: [2, 2], needs: ["operands[*].note", "result.note"] }] }],
+}
 
 export const confluenceComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

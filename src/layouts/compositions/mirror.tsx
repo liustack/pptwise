@@ -18,6 +18,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -52,6 +53,13 @@ const QUESTION = { size: 11, lineHeight: 20, tracking: 2, pad: 10 } as const
 const ANSWER = { dy: 24, size: 15, lineHeight: 26, left: 600, right: 680, w: 440 } as const
 const RULE = { y: 548, left: 240, right: 1040 } as const
 const CLOSE = { top: 560, size: 14, lineHeight: 24, w: 960 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const mirrorRecipe: Recipe = {
+  look: "Two ways of doing one thing set either side of a gold hairline",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 4] }, { type: "callout", optional: true }] }],
+}
 
 export const mirrorComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

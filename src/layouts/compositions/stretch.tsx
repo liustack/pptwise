@@ -30,6 +30,7 @@ import {
   wholeLit,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -64,6 +65,13 @@ const PLOT = { x: 80, w: 600, top: 200, bottom: 530, rise: 285, bar: 56, gap: 10
 const HEAD = { top: 172, size: 13, box: 12, boxGap: 6, between: 18 } as const
 const NAMES = { top: 538, size: 15, lineHeight: 22 } as const
 const SIDE = { x: 760, w: 440, top: 186, rule: 2, pad: 22, between: 6, hero: { size: 72, unit: 20, gap: 6, weight: 700 as const, unitWeight: 700 as const }, plain: { size: 48, unit: 16, gap: 6 }, label: 16, labelH: 24, note: 14, noteH: 20 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stretchRecipe: Recipe = {
+  look: "Next year's target line by line against what this year did",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 4], needs: ["chart_type=bar", "series[].data[].status"] }, { type: "kpi_cards", count: [2, 3] }] }],
+}
 
 export const stretchComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 2) return null

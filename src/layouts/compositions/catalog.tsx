@@ -3,6 +3,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { exhibitCaptionLayout, paintExhibit, type ExhibitSpec } from "./exhibit"
 import { MEMO_TAG, fitMemo, memoInks, memoMeta, memoTagWidth, memoText, memoWidth, paintMemo, paintMemoLine, paintMemoTag } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 type Comparison = Extract<Component, { type: "comparison" }>
@@ -30,6 +31,13 @@ const GAP = 20
 const PRINT_H = 196
 const NAME = { top: 212, size: 22, lineHeight: 32, tagGap: 16 } as const
 const ROWS = { top: 252, rule: 0, label: { top: 6, size: 12, lineHeight: 18 }, cell: { top: 24, size: 15, lineHeight: 22, maxLines: 2 }, foot: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const catalogRecipe: Recipe = {
+  look: "Options shown each under its photograph",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "image_grid", count: [3, 3] }, { type: "comparison", count: [1, 3] }] }],
+}
 
 export const catalogComposition: Composition = ({ components, ctx, rect, setting, exhibitNumber }) => {
   if (setting !== "memo") return null

@@ -14,6 +14,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -51,6 +52,13 @@ const VALUE_ROOM = 90
  * from y230, 800px wide in the middle of the card, the source at the foot.
  */
 const PAGE_BAND = { x: 240, y: 230, w: 800, h: 350 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const doublesRecipe: Recipe = {
+  look: "Two quantities side by side in each of one or two periods, as pairs of bars on their side",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 2], needs: ["chart_type=bar", "direction=horizontal"] }] }],
+}
 
 export const doublesComposition: Composition = (props) => {
   const { rect, setting, claim, source } = props

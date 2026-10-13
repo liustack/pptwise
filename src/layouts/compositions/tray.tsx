@@ -21,6 +21,7 @@ import {
   placeCrayonClaim,
   placeCrayonSource,
 } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -47,6 +48,13 @@ const CARDS = { x: 476, top: 186, w: 316, h: 196, pitch: { x: 336, y: 214 } } as
 const CARD = { inset: 22, icon: { y: 22, size: 28 }, figure: { top: 60, lineHeight: 56, size: 40, unit: 16 }, label: { top: 120, size: 17, lineHeight: 26 }, note: { top: 148, size: 13, lineHeight: 22 } } as const
 /** The board's crayon for each card in turn: sky, green, orange, purple. */
 const ORDER = [CRAYON.sky, CRAYON.green, CRAYON.orange, CRAYON.purple] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const trayRecipe: Recipe = {
+  look: "A photograph in a yellow crayon frame beside a few figures to remember",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 4], needs: ["items[*].icon"] }] }],
+}
 
 export const trayComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

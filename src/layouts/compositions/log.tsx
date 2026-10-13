@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitMono, monoWidth, paintIcon, paintMono, paintPanel, toneInk } from "./console"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 
@@ -35,6 +36,13 @@ const SIDE = { w: 428, gap: 24 } as const
 const PANEL = { pad: 24, header: { top: 14, box: 20, size: 13 }, first: 52, foot: 20 } as const
 const ROW = { pitch: 66, minPitch: 56, date: { top: 4, box: 24, size: 17 }, dot: { y: 16, r: 6 }, title: { top: 2, box: 26, size: 18 }, desc: { top: 28, box: 22, size: 14 }, band: { inset: 6, top: 6, h: 62 } } as const
 const AXIS = { min: 94, gap: 24, stroke: 1.5, textGap: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const logRecipe: Recipe = {
+  look: "A timeline set as an incident log",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].value~figure"] }, { type: "callout", optional: true }, { type: "callout", optional: true }] }],
+}
 
 export const logComposition: Composition = ({ components, ctx, rect, setting, handOn }) => {
   if (setting !== "console") return null

@@ -16,6 +16,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -50,6 +51,13 @@ type KpiCards = Extract<Component, { type: "kpi_cards" }>
 const PHOTO = { w: 520, h: 260, top: 10, caption: { gap: 6, size: 12, lineHeight: 18 } } as const
 const SIDE = { gap: 40, title: { top: 10, size: 14, lineHeight: 22 }, bar: { top: 50, h: 52, gap: 3, inset: 12, name: { base: 24, size: 14 }, value: { base: 44, size: 14 } }, line: { drop: 14, label: 34, size: 13 }, note: { top: 158, size: 13, lineHeight: 20, maxLines: 3 } } as const
 const CARDS = { top: 298, h: 132, gap: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const segmentsRecipe: Recipe = {
+  look: "A whole cut in two or three, and what each part means, beside a photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "series[].emphasis"] }, { type: "callout", optional: true }, { type: "kpi_cards", count: [2, 4] }] }],
+}
 
 export const segmentsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

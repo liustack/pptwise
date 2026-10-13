@@ -120,6 +120,7 @@ export const layoutDef = {
   // roadmap: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "console-sheet",
+  compositions: { setting: "console", offer: CONSOLE_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Console Sheet",

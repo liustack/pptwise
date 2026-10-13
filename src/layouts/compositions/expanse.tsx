@@ -3,6 +3,7 @@ import { kpiFigure } from "../../components/kpi"
 import { joinUnit } from "../../lib/quantity-format"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchLine, pitchBaseline, pitchInks, pitchText, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type KpiItem = KpiCards["items"][number]
@@ -41,6 +42,13 @@ const SIDE = { x: 696, ratio: { size: 64, lineHeight: 76 }, measure: { top: 94, 
 
 function plainFigure(item: KpiItem): boolean {
   return item.note === undefined && item.source === undefined && item.tag === undefined && item.delta === undefined && item.tone === undefined && item.icon === undefined
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const expanseRecipe: Recipe = {
+  look: "How small one thing is beside another",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [3, 3] }, { type: "paragraph", optional: true }] }],
 }
 
 export const expanseComposition: Composition = ({ components, ctx, rect, setting }) => {

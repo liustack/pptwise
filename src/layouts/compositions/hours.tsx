@@ -3,6 +3,7 @@ import { contrastRatio, blendOver } from "../../render/ink"
 import { heatmapLabelShown, heatmapStepOf } from "../../components/heatmap"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderMeta, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderIcon, paintBinderLine, splitName, type BinderInks } from "./binder"
+import type { Recipe } from "./recipe"
 
 type Heatmap = Extract<Component, { type: "heatmap" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -48,6 +49,13 @@ function stepFill(i: number, n: number, inks: BinderInks): string {
   const at = Math.min(ramp.length - 2, Math.floor(t))
   const frac = t - at
   return frac < 1e-9 ? ramp[at]! : blendOver(ramp[at + 1]!, ramp[at]!, frac)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const hoursRecipe: Recipe = {
+  look: "A day's tariff bands",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "heatmap", needs: ["steps", "y_labels[*]~colon"] }, { type: "kpi_cards", count: [3, 3] }] }],
 }
 
 export const hoursComposition: Composition = ({ components, ctx, rect, setting }) => {

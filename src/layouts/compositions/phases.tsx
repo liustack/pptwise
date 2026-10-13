@@ -15,6 +15,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 
@@ -42,6 +43,13 @@ type Roadmap = Extract<Component, { type: "roadmap" }>
 
 const LINE = { y: 28, stroke: 2, dot: 7, marked: 9, inset: 12 } as const
 const CARD = { gap: 20, top: 70, bottom: 54, pad: 20, period: { top: 42, size: 13, lineHeight: 22 }, title: { top: 16, size: 20, lineHeight: 30 }, rows: { top: 60, pitch: 62, box: 14, x: 22, label: { size: 12, lineHeight: 20 }, value: { size: 14, lineHeight: 20, maxLines: 2 } }, foot: { up: 46, size: 12, lineHeight: 22, gap: 8, pillX: 60 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const phasesRecipe: Recipe = {
+  look: "The work in phases on one line, each with its open items and the budget line it still needs",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4], needs: ["items[*].period"] }] }],
+}
 
 export const phasesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

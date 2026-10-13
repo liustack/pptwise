@@ -12,6 +12,7 @@ import {
   paintPill,
   pillWidth,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 
@@ -33,6 +34,13 @@ type IconCards = Extract<Component, { type: "icon_cards" }>
  */
 
 const CARD = { gap: 24, rowGap: 16, h: 196, pad: 20, disc: { cx: 42, cy: 42, r: 22 }, icon: { at: 30, size: 24 }, title: { x: 78, top: 28, size: 20, lineHeight: 30 }, text: { top: 80, size: 15, lineHeight: 24, maxLines: 2 }, basis: { top: 150, size: 12, lineHeight: 22, gap: 16 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rulesRecipe: Recipe = {
+  look: "The house rules, each with what it rests on",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [3, 6], needs: ["items[*].tag"] }] }],
+}
 
 export const rulesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

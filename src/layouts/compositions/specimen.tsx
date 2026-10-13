@@ -20,6 +20,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -66,6 +67,13 @@ const SOURCE = { up: 40, lineHeight: 15 } as const
 export function ledLine(text: string): { label: string; line: string } | null {
   const m = /^([^：:。.!?！？\n]{1,24})[：:]\s*([\s\S]+)$/u.exec(text.trim())
   return m ? { label: m[1]!.trim(), line: m[2]!.trim() } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const specimenRecipe: Recipe = {
+  look: "One exhibit in its pool of light beside its label",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [1, 1] }, { type: "bullets", count: [1, 3], optional: true }, { type: "paragraph", optional: true }] }],
 }
 
 export const specimenComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

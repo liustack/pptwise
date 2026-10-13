@@ -16,6 +16,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -47,6 +48,13 @@ const SEAM = { y: 420, w: 120 } as const
 const CLAIM = { x: 240, w: 800, size: 22, lineHeight: 32, foot: 476 } as const
 const LABEL = { top: 486, size: 14, lineHeight: 26, w: 800, maxLines: 2 } as const
 const SOURCE = { top: 600, lineHeight: 20 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const haloRecipe: Recipe = {
+  look: "One figure in a pool of light",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }] }],
+}
 
 export const haloComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect)) return null

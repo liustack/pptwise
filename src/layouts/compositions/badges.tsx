@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CRAYON, boardY, crayonAt, crayonInks, crayonText, fitCrayon, inkOn, paintCrayon, paintCrayonIcon, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 
@@ -27,6 +28,13 @@ const NAME = { top: 360, size: 26, lineHeight: 40 } as const
 const WORDS = { top: 410, inset: 6, size: 15, lineHeight: 25, maxLines: 5 } as const
 /** The board's crayon for each badge in turn: sky, yellow, green, red, purple. */
 const ORDER = [CRAYON.sky, CRAYON.yellow, CRAYON.green, CRAYON.red, CRAYON.purple, CRAYON.orange] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const badgesRecipe: Recipe = {
+  look: "A few safety reminders as round badges",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [5, 6] }] }],
+}
 
 export const badgesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

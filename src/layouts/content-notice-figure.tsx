@@ -1,6 +1,6 @@
 import type { LayoutDefinition } from "./registry"
 import type { SvgTemplateProps } from "./types"
-import { compose } from "./compositions"
+import { compose, type CompositionId } from "./compositions"
 import { NOTICE_HEAD_FIT, NoticeHead, NoticeSource } from "./notice-shared"
 import { noticeBand, noticeSheetPage } from "./content-notice-sheet"
 import { stepAside } from "../render/step-aside"
@@ -17,11 +17,14 @@ import { stepAside } from "../render/step-aside"
  * figure can be set from, goes to the notice sheet.
  */
 
+/** The signature drawings this face offers its body. */
+const FIGURE_COMPOSITIONS: readonly CompositionId[] = ["billboard"]
+
 export function NoticeFigureContent(props: SvgTemplateProps) {
   const { slide, ctx, page } = props
   if (!slide.subheading?.trim()) {
     const { source, rect } = noticeBand(slide, ctx, page)
-    const composed = compose({ components: slide.components, ctx, rect, setting: "notice" }, ["billboard"])
+    const composed = compose({ components: slide.components, ctx, rect, setting: "notice" }, FIGURE_COMPOSITIONS)
     if (composed) {
       return (
         <>
@@ -37,6 +40,7 @@ export function NoticeFigureContent(props: SvgTemplateProps) {
 
 export const layoutDef = {
   id: "notice-figure",
+  compositions: { setting: "notice", offer: FIGURE_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Notice Figure",

@@ -3,6 +3,7 @@ import { kpiFigure } from "../../components/kpi"
 import { joinUnit } from "../../lib/quantity-format"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchLine, pitchInks, pitchText, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type KpiItem = KpiCards["items"][number]
@@ -30,6 +31,13 @@ const REST = { top: 190, gap: 32, size: 52, lineHeight: 66, label: { top: 260, s
 
 function plainFigure(item: KpiItem): boolean {
   return item.note === undefined && item.delta === undefined && item.tone === undefined && item.icon === undefined && item.source === undefined && item.tag === undefined
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const spotlightRecipe: Recipe = {
+  look: "One figure lit and two beside it",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 3] }] }],
 }
 
 export const spotlightComposition: Composition = ({ components, ctx, rect, setting }) => {

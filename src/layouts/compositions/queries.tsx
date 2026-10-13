@@ -13,6 +13,7 @@ import {
   paintManuscriptPhoto,
   splitLabel,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Cards = Extract<Component, { type: "icon_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -37,6 +38,13 @@ type Image = Extract<Component, { type: "image" }>
 const GRID = { pitchX: 410, pitchY: 214, w: 398, h: 202 } as const
 const CARD = { pad: 22, label: { dy: 18, size: 30, h: 40, w: 120 }, icon: { right: 46, dy: 24, size: 22 }, question: { dy: 70, size: 20, h: 32, w: 360 }, text: { dy: 112, size: 14, h: 23, w: 354, maxLines: 3 } } as const
 const PHOTO = { dx: 840, w: 312, gap: 4 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const queriesRecipe: Recipe = {
+  look: "Questions put to a committee",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4], needs: ["items[*].title~colon"] }, { type: "image" }] }],
+}
 
 export const queriesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

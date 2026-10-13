@@ -11,6 +11,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -46,6 +47,13 @@ const FIGURE = { size: 48, lineHeight: 60 } as const
 const LAST = { size: 13, lineHeight: 24, gap: 12 } as const
 const BAND = { top: 334, pad: 28, size: 17, lineHeight: 28, maxLines: 2, padY: 20 } as const
 const FIRST_ROW = 72
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const errataRecipe: Recipe = {
+  look: "A sum worked the wrong way beside the right way",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 3], needs: ["rows[].emphasis", "recommended"] }, { type: "callout", optional: true }] }],
+}
 
 export const errataComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

@@ -63,6 +63,7 @@ export const layoutDef = {
   // may share it.
   dispatch: "content",
   id: "memo-sheet",
+  compositions: { setting: "memo", offer: MEMO_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Memo Sheet",

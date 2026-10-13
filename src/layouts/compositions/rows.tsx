@@ -9,6 +9,7 @@ import { centredBaseline, fitFixed, paintLines } from "./type"
 import { rowsSeal } from "./rows-seal"
 import { rowsMemo } from "./rows-memo"
 import { rowsDossier } from "./rows-dossier"
+import type { Recipe } from "./recipe"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -84,6 +85,18 @@ function rowsShape(components: readonly Component[]): { bullets: Bullets; callou
   if (second === undefined) return { bullets: first }
   const callout = closingCallout(second)
   return callout ? { bullets: first, callout } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rowsRecipe: Recipe = {
+  look: "A short list as ruled numbered rows, each a bold label and its gloss",
+  kinds: ["points"],
+  shapes: [
+    { parts: [{ type: "numbered_cards", count: [3, 4] }], settings: ["seal", "memo"] },
+    { parts: [{ type: "numbered_cards", count: [3, 5] }], settings: ["notice"] },
+    { parts: [{ type: "numbered_cards", count: [3, 3] }], settings: ["dossier"] },
+    { parts: [{ type: "bullets", count: [2, 3] }, { type: "callout", optional: true }], settings: ["board"] },
+  ],
 }
 
 export const rowsComposition: Composition = (props) => {

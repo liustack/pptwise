@@ -20,6 +20,7 @@ import {
   yearbookWidth,
   type YearbookInks,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Image = Extract<Component, { type: "image" }>
@@ -72,6 +73,13 @@ export function noteLook(c: Callout, inks: YearbookInks): { ink: string; dashed:
   const dashed = c.tag !== undefined && pillUnsettled(c.tag)
   if (c.variant === "warn") return { ink: inks.accent, dashed }
   return { ink: dashed ? inks.quiet : inks.line, dashed }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const pairedRecipe: Recipe = {
+  look: "Two ways of counting the same cost, side by side year by year",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=bar", "series[].emphasis"] }, { type: "image" }, { type: "callout" }] }],
 }
 
 export const pairedComposition: Composition = ({ components, ctx, rect, setting }) => {

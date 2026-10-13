@@ -17,6 +17,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Tree = Extract<Component, { type: "decision_tree" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -49,6 +50,13 @@ const OUTCOME = { end: 700, label: { dx: 14, size: 13 }, x: 716, w: 480, size: 2
 // The ring hugs the outcome's title and its detail steps down below the ring.
 const RING = { pad: 24, dx: 6, ry: 18, detail: 24 } as const
 const CLOSE = { top: 580, size: 15, lineHeight: 26, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const boughsRecipe: Recipe = {
+  look: "A decision drawn in chalk the way a teacher branches it on the board",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "decision_tree", count: [2, 2] }, { type: "paragraph", optional: true }] }],
+}
 
 export const boughsComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

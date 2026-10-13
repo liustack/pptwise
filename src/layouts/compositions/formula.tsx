@@ -22,6 +22,7 @@ import {
   yearbookTrackedWidth,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Waterfall = Extract<Component, { type: "waterfall" }>
 type Code = Extract<Component, { type: "code" }>
@@ -57,6 +58,13 @@ const LABEL = { drop: 24, size: 15 } as const
 const NOTE = { drop: 44, size: 12 } as const
 const CARD = { w: 276, top: 10, bottom: 12, pad: 24, title: { top: 20, size: 13, lineHeight: 20, tracking: 2 }, lines: { top: 48, size: 15, lineHeight: 26, max: 5, box: 120 }, rule: 12, rows: { pitch: 36, size: 14, lineHeight: 24, symbol: 64, max: 8 } } as const
 const TAG = { top: 414 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const formulaRecipe: Recipe = {
+  look: "Where a figure comes from, step by step beside the formula that makes it",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "waterfall", count: [3, 5], needs: ["items[].kind"] }, { type: "code" }, { type: "bullets", count: [1, 7], needs: ["items[*]~colon"] }] }],
+}
 
 export const formulaComposition: Composition = ({ components, ctx, rect, setting, pageTag }) => {
   if (setting !== "yearbook") return null

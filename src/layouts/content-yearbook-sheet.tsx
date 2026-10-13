@@ -95,6 +95,7 @@ export const layoutDef = {
   // their budget lines: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "yearbook-sheet",
+  compositions: { setting: "yearbook", offer: YEARBOOK_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Yearbook Sheet",

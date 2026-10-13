@@ -16,6 +16,7 @@ import {
   scrollText,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -49,6 +50,13 @@ const LABEL = { top: 274, size: 12, lineHeight: 20, maxLines: 2 } as const
 const ARROW = { y: 224, from: 140, to: 240, head: 8, stroke: 1.4 } as const
 const STORY = { rule: 344, pad: 18, size: 20, lineHeight: 34, maxLines: 3 } as const
 const CAUTION = { top: 484, size: 12, lineHeight: 22, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const revivalRecipe: Recipe = {
+  look: "A figure then and a figure now beside a photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 2] }, { type: "paragraph" }, { type: "callout", optional: true }] }],
+}
 
 export const revivalComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

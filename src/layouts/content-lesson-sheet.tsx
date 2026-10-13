@@ -69,6 +69,7 @@ export const layoutDef = {
   // the blackboard: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "lesson-sheet",
+  compositions: { setting: "lesson", offer: LESSON_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Lesson Sheet",

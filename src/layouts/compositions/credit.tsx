@@ -33,6 +33,7 @@ import {
   wholePage,
   type AccountMarkKind,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Waterfall = Extract<Component, { type: "waterfall" }>
 type Item = Waterfall["items"][number]
@@ -109,6 +110,13 @@ function stepMark(it: Item): AccountMarkKind {
 function stepFigure(it: Item, signed: boolean): string {
   const decimals = Number.isInteger(it.value) ? 0 : 1
   return it.kind === "total" ? formatFigure(it.value, { decimals }) : formatFigure(it.value, { signed, decimals })
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const creditRecipe: Recipe = {
+  look: "Where the year's growth came from and whose it was",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "waterfall", count: [6, 6], needs: ["items[].kind", "items[].emphasis", "emphasis_label"] }] }],
 }
 
 export const creditComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

@@ -97,6 +97,7 @@ export const layoutDef = {
   // several pages, so several kinds may share it.
   dispatch: "content",
   id: "chalkboard-sheet",
+  compositions: { setting: "chalkboard", offer: CHALKBOARD_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Chalkboard Sheet",

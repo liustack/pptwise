@@ -12,6 +12,7 @@ import {
   placeLineupSource,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Grid = Extract<Component, { type: "image_grid" }>
 
@@ -56,6 +57,13 @@ export function paradeLeftOut(block: Component): string | undefined {
     return wrong.length > 0 ? [`item ${i + 1} has ${wrong.join(" and ")}`] : []
   })
   return found.length === 0 ? undefined : `the row labels each look with its caption under its window, so give every picture a caption and leave out icon and tag (${found.join(", ")})`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const paradeRecipe: Recipe = {
+  look: "The looks in the order they walk",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [7, 8], needs: ["items[*].caption"] }] }],
 }
 
 export const paradeComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

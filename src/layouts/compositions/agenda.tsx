@@ -19,6 +19,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -51,6 +52,13 @@ const TEXT = { dx: 28, top: 392, size: 16, lineHeight: 28, maxLines: 3 } as cons
 const CLOSE = { top: 560, size: 15, lineHeight: 26 } as const
 
 const CHINESE_NUMERALS = ["一", "二", "三", "四"] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const agendaRecipe: Recipe = {
+  look: "What tonight's class covers, written on the board",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4] }, { type: "paragraph", optional: true }] }],
+}
 
 export const agendaComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

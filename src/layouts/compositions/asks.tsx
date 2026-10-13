@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, TICKET, fitMarquee, glossBreak, marqueeBaseline, marqueeInks, marqueeText, marqueeTrackedWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, paintMarqueeTracked, splitName } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 
@@ -29,6 +30,13 @@ type NumberedCards = Extract<Component, { type: "numbered_cards" }>
  */
 
 const TICKETS = { top: 8, col: 584, row: 214, w: 568, h: 198, seam: 440, hole: 7, icon: { x: 24, y: 24, size: 26 }, label: { x: 62, top: 22, size: 15, lineHeight: 30, tracking: 2 }, title: { x: 24, top: 66, size: 22, lineHeight: 32, maxLines: 2, w: 400 }, text: { x: 24, top: 136, size: 14, lineHeight: 22, maxLines: 2, w: 400 }, box: { x: 462, top: 50, pitch: 56, size: 22, w: 2, r: 4 }, choice: { x: 494, size: 15, lineHeight: 26 }, ref: { x: 452, top: 160, size: 11, lineHeight: 22, w: 112 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const asksRecipe: Recipe = {
+  look: "What a proposal asks the room to decide",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 4], needs: ["items[*].icon", "items[*].title~colon"] }], page: ["ballot"] }],
+}
 
 export const asksComposition: Composition = ({ components, ctx, rect, setting, ballot }) => {
   // Every stub holds the same two boxes.

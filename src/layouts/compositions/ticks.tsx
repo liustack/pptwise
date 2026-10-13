@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CrayonPhoto, PhotoNote, boardY, crayonInks, crayonMark, crayonText, crayonTint, fitCrayon, fitPhotoNote, paintCrayon, paintCrayonIcon, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Rows = Extract<Component, { type: "row_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -32,6 +33,13 @@ const THING = { x: 128, dy: 6, w: 720, size: 22, lineHeight: 36 } as const
 const WHERE = { x: 128, dy: 44, w: 700, size: 12, lineHeight: 20 } as const
 const PHOTO = { x: 866, top: 186, w: 286, h: 400, r: 26, note: 596 } as const
 const CLOSE = { x: 16, top: 606, w: 820, h: 36, pad: 20, size: 16 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const ticksRecipe: Recipe = {
+  look: "A few things to do, each with a big box to tick",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 6], needs: ["items[*].icon", "items[*].text"] }, { type: "image" }, { type: "callout", optional: true }] }],
+}
 
 export const ticksComposition: Composition = ({ components, ctx, rect, setting, claim, source, inks: given }) => {
   if (setting !== "crayonbox") return null

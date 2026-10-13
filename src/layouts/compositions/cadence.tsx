@@ -15,6 +15,7 @@ import {
   splitLabel,
   type InkBox,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -50,6 +51,13 @@ const SPAN = { top: 38, bottom: 270, line: { top: 32, bottom: 272, stroke: 2.2 }
 const GATE = { dy: 312, h: 104, icon: { dx: 24, dy: 24, size: 26 }, title: { dx: 68, dy: 16, size: 20, h: 34 }, text: { dx: 68, dy: 54, size: 15, h: 22, w: 1060, maxLines: 2 } } as const
 
 const year = (s: string) => (/^\d{4}$/u.test(s.trim()) ? Number(s.trim()) : null)
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cadenceRecipe: Recipe = {
+  look: "Rounds of two surveys against the day a reform began",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "timeline", count: [15, 15], needs: ["title", "lanes", "periods", "milestones[*].date~figure", "periods[*].from~figure", "periods[*].to~figure"] }, { type: "callout", needs: ["title", "icon"] }] }],
+}
 
 export const cadenceComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

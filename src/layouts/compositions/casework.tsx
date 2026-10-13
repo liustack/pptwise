@@ -22,6 +22,7 @@ import {
   splitFigure,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Callout = Extract<Component, { type: "callout" }>
 type FromTo = Extract<Component, { type: "from_to" }>
@@ -81,6 +82,13 @@ function sentenceCase(title: string, chinese: boolean): string {
 function noteLine(row: Shift, chinese: boolean, lit: boolean): string {
   const change = row.change?.trim() ? (lit ? `**${stripEmphasis(row.change).trim()}**` : row.change.trim()) : ""
   return [row.note?.trim() ?? "", change].filter(Boolean).join(chinese ? "，" : ", ")
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const caseworkRecipe: Recipe = {
+  look: "One piece of work told as a case",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "callout", needs: ["title"] }, { type: "from_to", count: [3, 4], needs: ["rows[].emphasis", "label_column"] }] }],
 }
 
 export const caseworkComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

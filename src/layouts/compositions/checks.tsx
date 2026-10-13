@@ -3,6 +3,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { CALLOUT_ICON, paintIcon, splitNote } from "./console"
 import { fitMemo, memoInks, memoOn, memoText, memoWidth, paintMemo, paintMemoLine } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -38,6 +39,13 @@ const MEASURE = { w: 230, size: 17, lineHeight: 28, top: 23 } as const
 /** The typed 「IF」 and its threshold, past the measure's column. */
 const RULE = { after: 10, size: 17, lineHeight: 28, top: 23, gap: 16, word: "IF" } as const
 const BANNER = { h: 84, foot: 8, pad: 28, icon: 30, gap: 14, size: 19, lineHeight: 24, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const checksRecipe: Recipe = {
+  look: "The conditions that stop a pilot, as a checklist",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 4], needs: ["items[*].text"] }, { type: "callout", optional: true }] }],
+}
 
 export const checksComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "memo") return null

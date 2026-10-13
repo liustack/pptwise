@@ -15,6 +15,7 @@ import {
   periodicalText,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -44,6 +45,13 @@ const PHOTO = { w: 380, h: 548 } as const
 const COLUMN = { x: 426, w: 726 } as const
 const FIGURES = { pitch: 244, w: 230, icon: { top: 126, size: 20 }, value: { top: 158, h: 56, size: 46, unit: 16 }, label: { top: 220, size: 13, h: 22 }, note: { top: 244, size: 12, h: 20 } } as const
 const QUOTE = { top: 310, h: 200, mark: { dy: 4, size: 80 }, text: { dx: 56, dy: 26, size: 24, lineHeight: 40, maxLines: 4 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const witnessRecipe: Recipe = {
+  look: "Figures over a pull quote beside a photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 3] }, { type: "blockquote" }] }],
+}
 
 export const witnessComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical" || !claim) return null

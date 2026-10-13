@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fireTint, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeIcon, paintMarqueeLine } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Gantt = Extract<Component, { type: "gantt" }>
 
@@ -27,6 +28,13 @@ type Gantt = Extract<Component, { type: "gantt" }>
 
 const PLOT = { x: 236, right: 1136, top: 12, bottom: 412, tint: 0.1, tick: { size: 12, baseline: 8, dx: 4 }, band: { baseline: 428, size: 13 } } as const
 const ROWS = { top: 28, pitch: 62, label: { top: 4, size: 16, lineHeight: 24, w: 220 }, text: { top: 28, size: 12, lineHeight: 20 }, bar: { dy: 10, h: 30, inset: 2 }, icon: { size: 18, dy: 6 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const timetableRecipe: Recipe = {
+  look: "A plan month by month",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "gantt", count: [2, 6], needs: ["axis_labels"] }] }],
+}
 
 export const timetableComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

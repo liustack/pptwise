@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { kpiFigure } from "../../components/kpi"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, paintPitchTracked, pitchBaseline, pitchInks, pitchText, pitchTrackedWidth, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type KpiItem = KpiCards["items"][number]
@@ -48,6 +49,13 @@ function runs(items: readonly KpiItem[]): KpiItem[][] {
     else out.push([item])
   }
   return out
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const divideRecipe: Recipe = {
+  look: "Two sets of figures that cannot be set against each other",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [3, 4], needs: ["items[*].tag"] }, { type: "verdict_banner", optional: true }] }],
 }
 
 export const divideComposition: Composition = ({ components, ctx, rect, setting }) => {

@@ -18,6 +18,7 @@ import {
   placeLineupClaim,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Panel = Extract<Component, { type: "insight_panel" }>
@@ -80,6 +81,16 @@ function picturePair(components: readonly Component[]): { image: Image; panel: P
   const image = components.find((c) => c.type === "image") as Image | undefined
   const panel = components.find((c) => c.type === "insight_panel") as Panel | undefined
   return image && panel ? { image, panel } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const lookRecipe: Recipe = {
+  look: "One look on a page of its own",
+  kinds: ["photo"],
+  shapes: [
+    { parts: [{ type: "image" }, { type: "insight_panel", count: [1, 4], needs: ["title~figure"] }] },
+    { parts: [{ type: "insight_panel", count: [1, 4], needs: ["title~figure"] }, { type: "image" }] },
+  ],
 }
 
 export const lookComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

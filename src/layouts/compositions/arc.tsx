@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CrayonPhoto, PhotoNote, boardY, crayonAt, crayonInks, crayonText, fitCrayon, fitPhotoNote, inkOn, paintCrayon, paintCrayonIcon, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Grid = Extract<Component, { type: "image_grid" }>
@@ -36,6 +37,13 @@ const SIDE = { w: 170, gap: 12, name: { dy: -34, size: 18, lineHeight: 30 }, wor
 const PHOTOS = { top: 410, w: 170, h: 116, gap: 15, r: 16, note: 534 } as const
 /** The board's crayon for each part of the day in turn: sky, orange, green, purple, red. */
 const ORDER = [0, 2, 1, 4, 3] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const arcRecipe: Recipe = {
+  look: "A day as the sun's path across the sky",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 6], needs: ["milestones[*].icon", "milestones[].highlight"] }, { type: "image_grid", count: [2, 4] }] }],
+}
 
 export const arcComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

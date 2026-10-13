@@ -8,6 +8,7 @@ import {
   paintManuscript,
   paintManuscriptIcon,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 
@@ -31,6 +32,13 @@ type Comparison = Extract<Component, { type: "comparison" }>
 const TABLE = { top: 32, head: { top: 38, size: 12, h: 22 }, headRule: 64, rows: 68, step: 72, heavy: 1.4, bar: 3 } as const
 const COLS = { name: { dx: 48, w: 210 }, why: { dx: 266, w: 440 }, answer: { dx: 726, w: 420 } } as const
 const CELL = { icon: { dx: 18, dy: 24, size: 20 }, name: { dy: 20, size: 16, h: 30 }, text: { dy: 14, size: 14, h: 22, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const hazardsRecipe: Recipe = {
+  look: "Threats to a design and the answer to each",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "comparison", count: [2, 5], needs: ["title", "label_column", "rows[*].icon"] }] }],
+}
 
 export const hazardsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

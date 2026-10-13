@@ -18,6 +18,7 @@ import {
   wholePage,
 } from "./portrait"
 import { wholeLit } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -49,6 +50,13 @@ type Kpis = Extract<Component, { type: "kpi_cards" }>
 const PHOTO = { x: 680, y: 0, w: 600, h: 720 } as const
 const COLUMN = { x: 80, w: 540, top: 64 } as const
 const ROWS = { top: 270, minGap: 40, pad: 22, figureW: 200, gap: 20, figure: { size: 44, lineHeight: 44, unit: 18, gap: 6 }, label: { size: 17, lineHeight: 25 }, between: 4, note: { size: 14, lineHeight: 21, maxLines: 2 }, bottom: 650 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const resultsRecipe: Recipe = {
+  look: "What a piece of work came to, in a few figures beside a photograph of the work",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 4] }] }],
+}
 
 export const resultsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "portrait" || !wholePage(rect) || components.length !== 2) return null

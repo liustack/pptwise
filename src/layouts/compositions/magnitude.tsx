@@ -18,6 +18,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Code = Extract<Component, { type: "code" }>
@@ -47,6 +48,13 @@ type Chart = Extract<Component, { type: "chart" }>
 
 const LEFT = { w: 600, figure: { top: 10, size: 200, lineHeight: 200 }, label: { top: 226, size: 16, lineHeight: 30 }, formula: { top: 260, size: 24, lineHeight: 40 }, note: { top: 310, size: 15, lineHeight: 24, maxLines: 2 }, tag: { top: 380 } } as const
 const CARD = { w: 496, top: 10, bottom: 24, pad: 24, title: { top: 20, size: 14, lineHeight: 22 }, rows: { top: 66, pitch: 80, bar: 34, label: { size: 15, base: 18 }, barX: 116, room: 24, value: { size: 14, base: 23, inset: 10, gap: 8 } }, figure: { top: 236, size: 40, lineHeight: 50 }, label: { top: 290, size: 13, lineHeight: 22, maxLines: 1 }, rule: 326, tag: 344, note: { top: 376, size: 13, lineHeight: 22, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const magnitudeRecipe: Recipe = {
+  look: "One figure set as large as the page allows, and beside it the card that puts it in proportion",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }, { type: "code" }, { type: "chart", count: [2, 2], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 1] }] }],
+}
 
 export const magnitudeComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

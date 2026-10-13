@@ -17,6 +17,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Cards = Extract<Component, { type: "numbered_cards" }>
 
@@ -50,6 +51,13 @@ function rowsOf(n: number): number[] {
   if (n <= 3) return [n]
   if (n === 4) return [2, 2]
   return [3, n - 3]
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const blanksRecipe: Recipe = {
+  look: "The labels still to be written",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 6], needs: ["items[*].sub"] }] }],
 }
 
 export const blanksComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

@@ -20,6 +20,7 @@ import {
   wholeCanvas,
   INVITATION_META,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Rows = Extract<Component, { type: "row_cards" }>
@@ -62,6 +63,13 @@ const NOTE = { x: 1010, dy: 2, size: 13, lineHeight: 22, w: 210, maxLines: 2 } a
 const DOT = { dy: 14, from: 5, to: 6, line: 2, ring: 1.5 } as const
 const FIG = { dy: -2, from: 13, to: 15 } as const
 const READ = { x: 80, top: 590, size: 12, lineHeight: 20, w: 1100 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const swingRecipe: Recipe = {
+  look: "How each of a few houses moved in one stretch and then in the next",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 3], needs: ["items[*].text", "items[*].sub"] }, { type: "chart", count: [1, 12], needs: ["chart_type=dumbbell", "title"] }, { type: "chart", count: [1, 12], needs: ["chart_type=dumbbell", "title"] }, { type: "paragraph", optional: true }] }],
+}
 
 export const swingComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

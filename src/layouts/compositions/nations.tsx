@@ -13,6 +13,7 @@ import {
   scrollValue,
   scrollWidth,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -38,6 +39,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const ROWS = { top: 140, pitch: 44, max: 10, name: { right: 110, size: 18, lineHeight: 30 }, bar: { x: 126, dy: 8, h: 16, max: 495 }, value: { gap: 8, size: 14, dy: 22 } } as const
 const CARD = { x: 710, top: 140, w: 350, h: 300, pad: { x: 24, y: 18 }, title: { size: 20, lineHeight: 30 }, text: { dy: 38, size: 14, lineHeight: 25, maxLines: 9 }, gap: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const nationsRecipe: Recipe = {
+  look: "A count by country beside how it was counted",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 10], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "callout", needs: ["title"] }] }],
+}
 
 export const nationsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

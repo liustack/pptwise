@@ -6,6 +6,7 @@ import { writtenDecimals } from "../../lib/quantity-format"
 import { paintIcon, splitNote } from "./console"
 import { fitMemo, memoInks, memoMeta, memoText, paintMemo, paintMemoLine, type MemoInks } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -87,6 +88,13 @@ function slopeShape(components: readonly Component[]): { charts: SlopeChart[]; m
   const marks = shaped.map((s) => s.values.findIndex((v) => v.marked))
   if (marks.some((m) => m !== marks[0])) return null
   return { charts: shaped, moments: [moments[0]!, moments[1]!], ...(rest[0] ? { note: rest[0] as Callout } : {}) }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const slopesRecipe: Recipe = {
+  look: "Two moments, two groups, a few measures, as slope charts side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 2], needs: ["chart_type=line", "series[].emphasis", "series[*].name~figure"], optional: true }, { type: "chart", count: [2, 2], needs: ["chart_type=line", "series[].emphasis", "series[*].name~figure"] }, { type: "chart", count: [2, 2], needs: ["chart_type=line", "series[].emphasis", "series[*].name~figure"] }, { type: "callout", optional: true }] }],
 }
 
 export const slopesComposition: Composition = ({ components, ctx, rect, setting }) => {

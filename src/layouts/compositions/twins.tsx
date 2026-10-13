@@ -15,6 +15,7 @@ import {
   placeClaim,
   writtenValue,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -54,6 +55,13 @@ function paneName(chart: Chart, chinese: boolean): string {
   const unit = chart.axes?.y_unit?.trim()
   if (!unit) return name
   return chinese ? `${name}（${unit}）` : `${name} (${unit})`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const twinsRecipe: Recipe = {
+  look: "Two small multiples of one run, each on its own axis",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 7], needs: ["chart_type=bar", "title"] }, { type: "chart", count: [3, 7], needs: ["chart_type=bar", "title"] }, { type: "callout", optional: true }] }],
 }
 
 export const twinsComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

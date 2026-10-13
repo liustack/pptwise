@@ -3,6 +3,7 @@ import { accessibleInk } from "../../render/ink"
 import { closingCallout, fitClosing, paintClosing, type ClosingSpec } from "./closing"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -90,6 +91,13 @@ function trackShape(components: readonly Component[]): { timeline: Timeline; cal
   if (second === undefined) return { timeline }
   const callout = closingCallout(second)
   return callout ? { timeline, callout } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const trackRecipe: Recipe = {
+  look: "A timeline as one rule across the page, a dot for each milestone",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 6] }, { type: "callout", optional: true }] }],
 }
 
 export const trackComposition: Composition = ({ components, ctx, rect }) => {

@@ -18,6 +18,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type FromTo = Extract<Component, { type: "from_to" }>
 
@@ -69,6 +70,13 @@ export function spread(ys: readonly number[], gap: number): number[] {
     g.ids.forEach((id, k) => (out[id] = start + k * gap))
   }
   return out
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tiltRecipe: Recipe = {
+  look: "A slope chart from one moment to the next",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "from_to", count: [3, 6], needs: ["rows[*].from~figure", "rows[*].to~figure"] }] }],
 }
 
 export const tiltComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

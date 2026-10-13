@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, glossBreak, paintPitch, paintPitchCard, paintPitchIcon, paintPitchLine, pitchInks, pitchText, pitchWidth, splitSentence, type PitchInks } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Milestone = Timeline["milestones"][number]
@@ -41,6 +42,13 @@ export function plainLine(component: Component | undefined): component is Callou
 
 function stepFits(m: Milestone): boolean {
   return m.tag === undefined && m.source === undefined && m.tone === undefined && m.lane === undefined
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stairsRecipe: Recipe = {
+  look: "Why now, as steps that climb",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 4] }, { type: "callout", optional: true }] }],
 }
 
 export const stairsComposition: Composition = ({ components, ctx, rect, setting }) => {

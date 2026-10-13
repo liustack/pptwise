@@ -5,6 +5,7 @@ import { PANEL, fitPanelBar, paintPanel, panelInks, panelText, serifBaseline, ty
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
 import { tilesSeal } from "./tiles-seal"
+import type { Recipe } from "./recipe"
 
 type NumberedCards = Extract<Component, { type: "numbered_cards" }>
 
@@ -59,6 +60,16 @@ function tilesShape(components: readonly Component[]): NumberedCards | null {
   // A card's icon has no place on these tiles: the ordinary cards draw it.
   if (cards.items.some((item) => item.icon)) return null
   return cards
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tilesRecipe: Recipe = {
+  look: "Numbered cards as numbered panels",
+  kinds: ["points", "list"],
+  shapes: [
+    { parts: [{ type: "numbered_cards", count: [3, 4] }], settings: ["panel"] },
+    { parts: [{ type: "numbered_cards", count: [4, 4] }], settings: ["seal"] },
+  ],
 }
 
 export const tilesComposition: Composition = (props) => {

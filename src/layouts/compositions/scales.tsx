@@ -3,6 +3,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { paintIcon } from "./console"
 import { fitMemo, memoInks, memoOn, memoText, paintMemo } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type ProsCons = Extract<Component, { type: "pros_cons" }>
 
@@ -26,6 +27,13 @@ const COLUMN_GAP = 36
 const HEAD = { size: 15, lineHeight: 24 } as const
 const ITEMS = { top: 34, pitch: 86, icon: { x: 2, top: 16, size: 22 }, textX: 36, label: { top: 12, size: 18, lineHeight: 28 }, note: { top: 42, size: 14, lineHeight: 22 } } as const
 const BANNER = { h: 60, foot: 4, pad: 24, size: 19, lineHeight: 28, maxLines: 2, gap: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const scalesRecipe: Recipe = {
+  look: "A proposal weighed in two columns",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "pros_cons" }] }],
+}
 
 export const scalesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "memo") return null

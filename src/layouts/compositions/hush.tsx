@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CLAIM_HUSH, KICKER_AT, KeynoteSpot, SOURCE_CENTRED, fitKeynote, keynoteInks, keynoteMark, keynoteText, paintKeynote, paintKeynoteRule, placeKeynoteClaim, placeKeynoteKicker, placeKeynoteSource, wholePage } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 
@@ -24,6 +25,13 @@ type Paragraph = Extract<Component, { type: "paragraph" }>
 const SPOT = { cx: 640, cy: 330, r: 420, strength: 0.08 } as const
 const RULE = { gap: 30, w: 80, stroke: 2 } as const
 const LINE = { gap: 54, size: 16, lineHeight: 26, w: 1152, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const hushRecipe: Recipe = {
+  look: "One sentence and the room goes quiet",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "paragraph" }] }],
+}
 
 export const hushComposition: Composition = ({ components, ctx, rect, setting, claim, source, kicker }) => {
   if (setting !== "keynote" || !wholePage(rect) || !claim) return null

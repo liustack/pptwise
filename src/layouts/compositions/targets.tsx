@@ -6,6 +6,7 @@ import { paintTag, tagWidth } from "../../components/tag"
 import { SEAL_HEADER_RULE, SEAL_SPEC, SEAL_TYPE, sealInks, sealSmall, sealTagInks, sealTagSpec, sealText } from "./seal"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type InsightPanel = Extract<Component, { type: "insight_panel" }>
 type FromTo = Extract<Component, { type: "from_to" }>
@@ -80,6 +81,13 @@ function fitStatement(text: string, width: number, fontFamily: string) {
     if (two && two.lines.length === 2) return two
   }
   return fit
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const targetsRecipe: Recipe = {
+  look: "A plan's targets beside the one thing it says instead of a figure",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "insight_panel", count: [1, 1] }, { type: "from_to", count: [3, 6] }] }],
 }
 
 export const targetsComposition: Composition = ({ components, ctx, rect, setting }) => {

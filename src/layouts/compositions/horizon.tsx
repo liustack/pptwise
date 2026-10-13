@@ -15,6 +15,7 @@ import {
   yearbookWidth,
   type YearbookInks,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Timeline = Extract<Component, { type: "timeline" }>
@@ -102,6 +103,13 @@ export function spreadLabels(ys: readonly number[], gap: number): number[] {
   const out = new Array<number>(ys.length)
   order.forEach((o, k) => (out[o.i] = placed[k]!))
   return out
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const horizonRecipe: Recipe = {
+  look: "Costs followed year by year to the end of a run, over a table of what changes each year",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [9, 12], needs: ["chart_type=line"] }, { type: "timeline", count: [1, 12], needs: ["milestones[*].date~figure"] }, { type: "kpi_cards", count: [1, 2] }] }],
 }
 
 export const horizonComposition: Composition = ({ components, ctx, rect, setting }) => {

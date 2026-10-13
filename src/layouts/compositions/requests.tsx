@@ -26,6 +26,7 @@ import {
   placeAccountSource,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -71,6 +72,13 @@ export function markFigures(text: string): string {
 /** Whether a cost cell is a figure and its unit only (「36 万元/年」, 「+260 万元」), set whole in the figure face. */
 function wholeFigure(text: string): boolean {
   return /^[+\-−]?\d[\d.,]*%?\s*\S{0,5}$/u.test(stripEmphasis(text).trim())
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const requestsRecipe: Recipe = {
+  look: "What the speaker asks for, each ask beside what it costs and buys, with boxes to tick",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 4], needs: ["columns[].align", "rows[*].icon"] }, { type: "callout" }], page: ["ballot"] }],
 }
 
 export const requestsComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker, ballot }) => {

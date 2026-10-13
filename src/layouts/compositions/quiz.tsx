@@ -17,6 +17,7 @@ import {
   writtenLines,
   type WrittenLine,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type RowCards = Extract<Component, { type: "row_cards" }>
@@ -62,6 +63,13 @@ export function questionPaper(y: number, h: number, label: EmphasisHeadingLayout
 }
 const PHOTO = { w: 400, h: 420, gap: 30, caption: { gap: 6, size: 12, lineHeight: 18 } } as const
 const CHOICE = { w: 74, right: 8, top: 50, box: 18, label: { dx: 24, baseline: 64, size: 13 }, before: 26 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const quizRecipe: Recipe = {
+  look: "Questions for the room to answer",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "image", optional: true }, { type: "row_cards", count: [3, 3], needs: ["items[*].text"] }], page: ["ballot"] }],
+}
 
 export const quizComposition: Composition = ({ components, ctx, rect, setting, ballot }) => {
   // Every question here is ticked in the same boxes.

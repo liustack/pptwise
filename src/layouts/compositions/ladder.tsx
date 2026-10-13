@@ -13,6 +13,7 @@ import {
   stripMarks,
   withUnit,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -39,6 +40,13 @@ const PLOT = { dx: 86, top: 28, right: 756, bottom: 388 } as const
 const AXIS = { size: 12, labelGap: 10, tick: 5, tickLabel: 22, title: 42, step: 5 } as const
 const LINE = { stroke: 2.2, dot: 4 } as const
 const CARDS = { dx: 806, top: 12, pitch: 128, bar: { w: 4, h: 110 }, text: { dx: 22, w: 320 }, name: { size: 13, h: 22 }, range: { dy: 24, size: 30, h: 42 }, note: { dy: 68, size: 13, h: 21 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const ladderRecipe: Recipe = {
+  look: "Schedules that climb in steps",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [92, 92], needs: ["chart_type=scatter", "title", "series[*].steps"] }, { type: "kpi_cards", count: [3, 3], needs: ["items[*].note"] }] }],
+}
 
 export const ladderComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

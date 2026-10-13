@@ -14,6 +14,7 @@ import {
   periodicalText,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Cards = Extract<Component, { type: "icon_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -41,6 +42,13 @@ type Image = Extract<Component, { type: "image" }>
 const ROWS = { top: 122, pitch: 92, max: 4, numeral: { h: 60, size: 40 }, icon: { x: 66, dy: 18, size: 22 }, title: { x: 102, dy: 8, w: 560, size: 22, h: 32 }, why: { x: 102, dy: 44, w: 560, size: 14, h: 22 }, rule: { dy: 82, w: 696 } } as const
 const PHOTO = { x: 736, top: 122, w: 416, h: 360 } as const
 const CLOSE = { top: 498, w: 700, size: 14, lineHeight: 26 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const pledgesRecipe: Recipe = {
+  look: "What an editorial team plans to do, each with why, beside a photograph",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4] }, { type: "image" }, { type: "callout", optional: true }] }],
+}
 
 export const pledgesComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

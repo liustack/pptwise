@@ -4,6 +4,7 @@ import { joinUnit } from "../../lib/quantity-format"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitBanner, fitMono, monoWidth, paintBanner, paintIcon, paintMono, toneInk } from "./console"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -40,6 +41,13 @@ const FIGURE = { gap: 6, box: 52, size: 44 } as const
 const LABEL = { gap: 6, size: 17, lineHeight: 26, maxLines: 2 } as const
 const BANNER_BOX = { gap: 24, h: 64, foot: 8 } as const
 const MIN_IMAGE_H = 160
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const platesRecipe: Recipe = {
+  look: "Pictures in a row, each over its figure",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [3, 3] }, { type: "kpi_cards", count: [3, 3] }, { type: "callout", optional: true }] }],
+}
 
 export const platesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "console") return null

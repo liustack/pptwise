@@ -23,6 +23,7 @@ import {
   placeKeynoteSource,
   wholePage,
 } from "./keynote"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 
@@ -62,6 +63,13 @@ export function climbEnds(label: string): { from: string; to: string } | null {
   if (parts.length !== 2) return null
   const [from, to] = parts.map((p) => p.trim())
   return from && to ? { from, to } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const giantRecipe: Recipe = {
+  look: "One figure owns the page",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [1, 1] }] }],
 }
 
 export const giantComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

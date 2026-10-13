@@ -20,6 +20,7 @@ import {
   placeLineupSource,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Steps = Extract<Component, { type: "steps" }>
 type Grid = Extract<Component, { type: "image_grid" }>
@@ -53,6 +54,13 @@ const TEXT = { top: 312, size: 12, lineHeight: 20, maxLines: 2, inset: 14 } as c
 const PHOTO = { top: 380, h: 230, gap: 12 } as const
 const CAPTION = { top: 616 } as const
 const SOURCE = { top: 680 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const threadRecipe: Recipe = {
+  look: "Steps along one hairline",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "steps", count: [3, 5] }, { type: "image_grid", count: [2, 5], optional: true }] }],
+}
 
 export const threadComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

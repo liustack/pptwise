@@ -95,6 +95,7 @@ export const layoutDef = {
   // face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "account-sheet",
+  compositions: { setting: "account", offer: ACCOUNT_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Account Sheet",

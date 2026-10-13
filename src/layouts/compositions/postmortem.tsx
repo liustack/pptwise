@@ -28,6 +28,7 @@ import {
   wholeLit,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Kpis = Extract<Component, { type: "kpi_cards" }>
 type Rows = Extract<Component, { type: "row_cards" }>
@@ -60,6 +61,13 @@ type Rows = Extract<Component, { type: "row_cards" }>
 
 const STRIP = { top: 170, rule: 2, pad: 16, inset: 20, label: 13, labelH: 19, between: 4, figure: { size: 40, unit: 14, gap: 4 }, note: 13, noteH: 19 } as const
 const GRID = { top: 330, gap: 40, rowGap: 26, rule: 1, lead: 3, pad: 12, number: 18, numberGap: 10, title: 18, titleH: 27, chip: 12, chipGap: 6, between: 8, text: { size: 15, lineHeight: 25.5, maxLines: 3 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const postmortemRecipe: Recipe = {
+  look: "A mistake the speaker owns, told as before, during, after and the cost",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [4, 4] }, { type: "row_cards", count: [4, 4], needs: ["items[*].text"] }] }],
+}
 
 export const postmortemComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 2) return null

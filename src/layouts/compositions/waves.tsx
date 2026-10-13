@@ -5,6 +5,7 @@ import { accessibleInk } from "../../render/ink"
 import { wavesConsole } from "./waves-console"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 
@@ -90,6 +91,16 @@ function wavesShape(components: readonly Component[]): Roadmap | null {
   // A phase's icon has no place over these columns: the ordinary roadmap draws it.
   if (only.items.some((item) => item.icon !== undefined)) return null
   return only
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const wavesRecipe: Recipe = {
+  look: "A roadmap as open columns, one per phase, each under a colour bar",
+  kinds: ["process"],
+  shapes: [
+    { parts: [{ type: "roadmap", count: [2, 4] }] },
+    { parts: [{ type: "roadmap", count: [2, 4] }, { type: "callout", optional: true }], settings: ["console"] },
+  ],
 }
 
 export const wavesComposition: Composition = (props) => {

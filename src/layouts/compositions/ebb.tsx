@@ -18,6 +18,7 @@ import {
   wholeCanvas,
   INVITATION_META,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -59,6 +60,13 @@ const FIGURE = { dy: 20, size: 14, gap: 8 } as const
 function splitDetail(category: string): { name: string; detail?: string; open?: string; close?: string } {
   const m = /^(.+?)\s*([（(])([^（()）]+)([）)])\s*$/u.exec(category.trim())
   return m ? { name: m[1]!.trim(), open: m[2]!, detail: m[3]!.trim(), close: m[4]! } : { name: category.trim() }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const ebbRecipe: Recipe = {
+  look: "What each house closed and what it opened, as bars that run left and right from one line",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [6, 7], needs: ["chart_type=bar", "direction=horizontal"] }] }],
 }
 
 export const ebbComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

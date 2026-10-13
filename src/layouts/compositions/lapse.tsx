@@ -19,6 +19,7 @@ import {
   wholeCanvas,
   INVITATION_META,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -61,6 +62,13 @@ function when(date: string): number | null {
   const m = /^(\d{4})(?:[-./年](\d{1,2}))?/u.exec(date.trim())
   if (!m) return null
   return Number(m[1]) + (m[2] ? (Number(m[2]) - 1) / 12 : 0)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const lapseRecipe: Recipe = {
+  look: "A rule's dates on one gold hairline, the long quiet years cut short",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 7] }, { type: "callout", optional: true }] }],
 }
 
 export const lapseComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

@@ -14,6 +14,7 @@ import {
   paintPill,
   pillWidth,
 } from "./lesson"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -52,6 +53,13 @@ function simpleBars(c: Component | undefined, min: number, max: number): c is Ch
 
 function figure(v: number, unit: string | undefined): string {
   return joinUnit(String(Number(v.toPrecision(12))), unit)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rankingRecipe: Recipe = {
+  look: "How many do each thing, and one of them broken down",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 6], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "callout", needs: ["title"] }, { type: "chart", count: [2, 3], needs: ["chart_type=bar", "direction=horizontal"] }] }],
 }
 
 export const rankingComposition: Composition = ({ components, ctx, rect, setting }) => {

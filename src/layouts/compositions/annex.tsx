@@ -10,6 +10,7 @@ import { paintIcon } from "./console"
 import { exhibitCaptionLayout, paintExhibit, type ExhibitSpec } from "./exhibit"
 import { fitMemo, memoInks, memoMeta, memoStepped, memoText, memoWidth, paintMemo, paintMemoLine, type MemoInks } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -91,6 +92,17 @@ function followerKind(follower: Component | undefined): FollowerKind | null {
 /** How many exhibits a list of components pastes in before the annex's own. */
 function exhibitsIn(components: readonly Component[]): number {
   return components.reduce((n, c) => n + (c.type === "image" ? 1 : c.type === "image_grid" ? c.items.length : 0), 0)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const annexRecipe: Recipe = {
+  look: "A page's body beside a column that holds an exhibit",
+  kinds: ["evidence", "hierarchy"],
+  shapes: [
+    { parts: [{ type: "kpi_cards", count: [1, 9] }, { type: "image" }, { type: "callout", optional: true }] },
+    { parts: [{ type: "data_table", count: [1, 11], needs: ["rows[].emphasis"] }, { type: "image" }, { type: "kpi_cards", count: [2, 4], needs: ["items[*].icon"], optional: true }] },
+    { parts: [{ type: "numbered_cards", count: [3, 8] }, { type: "image" }, { type: "kpi_cards", count: [2, 2], optional: true }] },
+  ],
 }
 
 export const annexComposition: Composition = ({ components, ctx, rect, setting, handOn, exhibitNumber }) => {

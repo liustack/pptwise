@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitLesson, lessonInks, lessonText, paintBoard, paintLesson, paintLessonIcon, Squiggle } from "./lesson"
 import { fitLine, paintLine, plainCallout } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 
@@ -26,6 +27,13 @@ type RowCards = Extract<Component, { type: "row_cards" }>
 
 const BOARD = { h: 400, frame: 8, r: 6, pad: { x: 40, top: 40 }, col: 540, row: 170, icon: { dy: 6, size: 30 }, words: { x: 48, size: 34, lineHeight: 48, w: 460 }, squiggle: { dy: 58, w: 300 }, text: { dy: 70, size: 15, lineHeight: 24, maxLines: 2 } } as const
 const CLOSE = { top: 414, size: 14, lineHeight: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const blackboardRecipe: Recipe = {
+  look: "What to copy down before the class ends, written on the board",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 4], needs: ["items[*].icon", "items[*].text"] }, { type: "callout", optional: true }] }],
+}
 
 export const blackboardComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

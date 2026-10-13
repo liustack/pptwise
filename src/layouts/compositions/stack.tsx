@@ -3,6 +3,7 @@ import { accessibleInk } from "../../render/ink"
 import { fitFigure, markedFigure, paintBoldFigure, plainFigure } from "./figure"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type InsightPanel = Extract<Component, { type: "insight_panel" }>
@@ -59,6 +60,13 @@ function stackShape(components: readonly Component[]): { kpis: KpiCards; panel: 
   if (kpis.items.length < MIN_FIGURES || kpis.items.length > MAX_FIGURES || !kpis.items.every(plainFigure)) return null
   if (panel.footnote?.trim() || panel.icon) return null
   return { kpis, panel }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stackRecipe: Recipe = {
+  look: "Two or three headline figures stacked on the left, a titled list of points beside them",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 2] }, { type: "insight_panel", count: [1, 4] }] }],
 }
 
 export const stackComposition: Composition = ({ components, ctx, rect }) => {

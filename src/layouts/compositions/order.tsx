@@ -17,6 +17,7 @@ import {
   placeLineupSource,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Cards = Extract<Component, { type: "numbered_cards" }>
 
@@ -42,6 +43,13 @@ const NUMERAL = { top: 298, size: 96, lineHeight: 110 } as const
 const ICON = { top: 430, size: 22, stroke: 1.4 } as const
 const NAME = { top: 464, size: 24, lineHeight: 32 } as const
 const LINE = { top: 502, size: 13, lineHeight: 22, maxLines: 2, inset: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const orderRecipe: Recipe = {
+  look: "The running order of a show",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 6] }] }],
+}
 
 export const orderComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

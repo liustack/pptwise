@@ -18,6 +18,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -56,6 +57,13 @@ export function workedLine(item: string): { what: string; work: string; result: 
   const parts = item.split(/\s+([=＝])\s+/u).map((p) => p.trim())
   if (parts.length !== 5 || [parts[0], parts[2], parts[4]].some((p) => !stripEmphasis(p ?? "").trim())) return null
   return { what: parts[0]!, work: parts[2]!, result: parts[4]!, signs: [parts[1]!, parts[3]!] }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const derivationRecipe: Recipe = {
+  look: "A sum worked down the board",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "bullets", count: [2, 6] }, { type: "paragraph", optional: true }] }],
 }
 
 export const derivationComposition: Composition = ({ components, ctx, setting, rect, claim, source, stamp }) => {

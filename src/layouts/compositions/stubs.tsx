@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { resolveSemanticColor } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, TICKET, fitMarquee, glossBreak, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, splitName } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -32,6 +33,13 @@ type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
 const TICKETS = { top: 8, col: 432, row: 200, w: 410, h: 180, seam: 300, hole: 7, icon: { x: 22, y: 22, size: 24 }, place: { x: 56, top: 20, size: 14, lineHeight: 28 }, offer: { x: 22, top: 60, size: 24, lineHeight: 34, w: 270 }, line: { x: 22, top: 104, size: 14, lineHeight: 22, maxLines: 2, w: 268 }, stub: { x: 312, top: 60, w: 86, size: 13, lineHeight: 20, maxLines: 3 } } as const
 const SIDE = { x: 880, top: 8, w: 272, h: 380, pad: 20, icon: { y: 20, size: 24 }, value: { top: 56, size: 56, lineHeight: 70 }, label: { top: 130, size: 14, lineHeight: 22, maxLines: 2 }, rule: { y: 190 }, note: { top: 204, size: 14, lineHeight: 22, maxLines: 6 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const stubsRecipe: Recipe = {
+  look: "Offers a ticket earns",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4], needs: ["items[*].tag", "items[*].title~colon"] }, { type: "kpi_cards", count: [1, 1] }] }],
+}
 
 export const stubsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

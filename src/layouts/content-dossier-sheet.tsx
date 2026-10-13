@@ -87,6 +87,7 @@ export const layoutDef = {
   // kinds may share it.
   dispatch: "content",
   id: "dossier-sheet",
+  compositions: { setting: "dossier", offer: DOSSIER_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Dossier Sheet",

@@ -47,6 +47,7 @@ export const layoutDef = {
   // so several kinds may share it.
   dispatch: "content",
   id: "pitch-sheet",
+  compositions: { setting: "pitch", offer: PITCH_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Pitch Sheet",

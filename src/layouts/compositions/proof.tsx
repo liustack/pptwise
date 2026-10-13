@@ -10,6 +10,7 @@ import { chartFigures, forecastWords, markPaint, niceCeil, paintMark, plotNumber
 import { statusWords } from "../../render/mark-status"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitFixed, fitKeepAll, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Point = Chart["series"][number]["data"][number]
@@ -323,6 +324,16 @@ function drawTable(table: DataTable, ctx: ComponentCtx, card: Card): Drawn | nul
     </g>
   )
   return { node, ring: { x: left, y: markedTop, w: right - left, h: T.row }, title: table.title.trim() }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const proofRecipe: Recipe = {
+  look: "One exhibit and how to read it, bulletin's 2026-10 evidence",
+  kinds: ["evidence"],
+  shapes: [
+    { parts: [{ type: "chart", count: [2, 4], needs: ["chart_type=bar", "title", "series[].data[].emphasis"] }, { type: "paragraph", optional: true }, { type: "paragraph", optional: true }, { type: "paragraph" }] },
+    { parts: [{ type: "data_table", count: [2, 6], needs: ["title", "rows[].emphasis"] }, { type: "paragraph", optional: true }, { type: "paragraph", optional: true }, { type: "paragraph" }] },
+  ],
 }
 
 export const proofComposition: Composition = ({ components, ctx, rect, setting, exhibitNumber }) => {

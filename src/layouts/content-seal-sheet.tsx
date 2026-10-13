@@ -125,6 +125,7 @@ export const layoutDef = {
   // may share it.
   dispatch: "content",
   id: "seal-sheet",
+  compositions: (params) => ({ setting: "seal", offer: sealCompositions(faceParam<"rows" | "tiles">(params, "cards", "rows")) }),
   kind: "standard",
   story: {
     name: "Seal Sheet",

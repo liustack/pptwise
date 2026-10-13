@@ -19,6 +19,7 @@ import {
   yearbookText,
   yearOf,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -54,6 +55,13 @@ const SPAN = { rise: 18, h: 10, label: { rise: 24, size: 12, inset: 6 } } as con
 const NODE = { r: 7, stem: 202 } as const
 const CARD = { top: 206, h: 168, gap: 24, pad: 20, icon: { top: 20, size: 22 }, year: { x: 52, top: 16, size: 24, lineHeight: 30 }, tag: { top: 20 }, title: { top: 58, size: 17, lineHeight: 26 }, desc: { top: 86, size: 14, lineHeight: 22, maxLines: 2 }, source: { top: 132, size: 12, lineHeight: 20 } } as const
 const CLOSE = { top: 394, size: 15, lineHeight: 24, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const outlookRecipe: Recipe = {
+  look: "The rules ahead on a run of years, which are law and which are only proposed",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "timeline", count: [3, 4], needs: ["milestones[*].date~figure"] }, { type: "callout", optional: true }] }],
+}
 
 export const outlookComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

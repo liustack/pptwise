@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { accessibleInk } from "../../render/ink"
 import { blockTag, compositionTag, ruleInk, type Composition } from "./shared"
 import { centredBaseline, fitKeepAll, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 
@@ -43,6 +44,13 @@ const BAR = { w: 96, h: 6, gap: 30 } as const
 const RULE = { gap: 30, h: 1 } as const
 const SUPPORT = { gap: 22, w: 960, size: 22, lineHeight: 34, maxLines: 3 } as const
 const MIN_W = 1120
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const sentenceRecipe: Recipe = {
+  look: "The sentence is the page, bulletin's 2026-10 statement",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "paragraph" }] }],
+}
 
 export const sentenceComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "notice" || !claim || rect.w < MIN_W) return null

@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitPeriodical, paintPeriodical, periodicalBaseline, periodicalInks, periodicalText, placeClaim } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 type Quote = Extract<Component, { type: "blockquote" }>
@@ -28,6 +29,13 @@ const GUTTER = { x: 576, top: 120, bottom: 330 } as const
 const RULES = { top: 350, bottom: 498, w: 1.2 } as const
 const MARK = { top: 360, size: 90 } as const
 const QUOTE = { x: 86, top: 382, w: 1000, size: 32, lineHeight: 50, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const longformRecipe: Recipe = {
+  look: "A long read in two columns under its pull quote",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "paragraph" }, { type: "paragraph" }, { type: "blockquote" }] }],
+}
 
 export const longformComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

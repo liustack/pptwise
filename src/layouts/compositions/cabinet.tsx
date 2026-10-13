@@ -15,6 +15,7 @@ import {
   wholePage,
 } from "./placard"
 import { ledLine } from "./specimen"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Bullets = Extract<Component, { type: "bullets" }>
@@ -46,6 +47,13 @@ const NUMERAL = { size: 36, lineHeight: 50, w: 60 } as const
 const NAME = { x: 130, dy: 2, size: 20, lineHeight: 28, w: 560 } as const
 const LINE = { x: 130, dy: 32, size: 13, lineHeight: 22, w: 560 } as const
 const SOURCE = { top: 600 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cabinetRecipe: Recipe = {
+  look: "A case photographed tall beside what to look for in it",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "bullets", count: [3, 5] }] }],
+}
 
 export const cabinetComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect) || components.length !== 2) return null

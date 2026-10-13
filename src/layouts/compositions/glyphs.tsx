@@ -16,6 +16,7 @@ import {
   uprightText,
   verticalLength,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 
@@ -42,6 +43,13 @@ const COLS = { top: 140, bottom: 564, max: 6 } as const
 const WORD = { top: 140, lineHeight: 130, size: { one: 110, two: 80, latin: 56 }, inset: 20 } as const
 const UPRIGHT = { top: 294, length: 270, inset: 60, w: 110, size: 17, tracking: 2, pitch: 34 } as const
 const ACROSS = { top: 294, inset: 20, size: 17, lineHeight: 28, maxLines: 9 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const glyphsRecipe: Recipe = {
+  look: "A few things to do, each in one word",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 6], needs: ["items[*].text"] }] }],
+}
 
 export const glyphsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

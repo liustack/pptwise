@@ -8,6 +8,7 @@ import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { splitNote } from "./console"
 import { fitMemo, memoInks, memoMeta, memoText, memoWidth, paintMemo, paintMemoLine, type MemoInks } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Blockquote = Extract<Component, { type: "blockquote" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -82,6 +83,13 @@ function quoteMark(x: number, y: number, fill: string): React.ReactElement {
     } ${cy} Z`
   }
   return <path data-memo-quote-mark="" d={`${one(x + r)} ${one(x + r + MARK.gap)}`} fill={fill} />
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const citationRecipe: Recipe = {
+  look: "A quoted original typed as written, then what it means",
+  kinds: ["quote"],
+  shapes: [{ parts: [{ type: "blockquote" }, { type: "callout", optional: true }, { type: "kpi_cards", count: [2, 2] }, { type: "callout", optional: true }] }],
 }
 
 export const citationComposition: Composition = ({ components, ctx, rect, setting }) => {

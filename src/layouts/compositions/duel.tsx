@@ -17,6 +17,7 @@ import {
   DOSSIER_SPEC,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -63,6 +64,13 @@ function numberOf(text: string): number | null {
   if (!m) return null
   const v = Number(m[2]!.replace(/,/g, ""))
   return m[1] === "-" || m[1] === "−" ? -v : v
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const duelRecipe: Recipe = {
+  look: "Two options head to head in one trial",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 2], needs: ["items[*].value~figure"] }, { type: "chart", count: [2, 5], needs: ["chart_type=bar"] }, { type: "data_table", count: [1, 3] }] }],
 }
 
 export const duelComposition: Composition = ({ components, ctx, rect, setting, tagBand = 0 }) => {

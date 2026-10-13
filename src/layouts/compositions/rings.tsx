@@ -5,6 +5,7 @@ import { donutArcPath } from "../../components/progress-donuts"
 import { SEAL_TYPE, sealInks, sealSmall, sealText } from "./seal"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
+import type { Recipe } from "./recipe"
 
 type ProgressDonuts = Extract<Component, { type: "progress_donuts" }>
 
@@ -29,6 +30,13 @@ const RATE = { size: 40 }
 const NAME = { size: 19, lineHeight: 28, drop: 140 }
 const DETAIL = { size: 16, lineHeight: 24, drop: 168 }
 const SOURCE = { size: SEAL_TYPE.label, lineHeight: 22, drop: 192 }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const ringsRecipe: Recipe = {
+  look: "Completion rates as large rings in a row",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "progress_donuts", count: [2, 4] }] }],
+}
 
 export const ringsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "seal") return null

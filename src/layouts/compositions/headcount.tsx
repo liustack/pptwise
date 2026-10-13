@@ -21,6 +21,7 @@ import {
   placeAccountSource,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -81,6 +82,13 @@ export function roleMove(role: string): { from: string; to: string } | null {
   const from = parts[0]!.trim()
   const to = parts[1]!.trim()
   return from && to ? { from, to } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const headcountRecipe: Recipe = {
+  look: "How the speaker's team changed over the year and who grew in it, beside a photograph of the team",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [3, 4] }, { type: "people_cards", count: [2, 2] }] }],
 }
 
 export const headcountComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

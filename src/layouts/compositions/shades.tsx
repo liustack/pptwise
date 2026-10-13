@@ -19,6 +19,7 @@ import {
   placeLineupSource,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Rows = Extract<Component, { type: "row_cards" }>
@@ -56,6 +57,13 @@ function picturePair(components: readonly Component[]): { image: Image; rows: Ro
   const image = components.find((c) => c.type === "image") as Image | undefined
   const rows = components.find((c) => c.type === "row_cards") as Rows | undefined
   return image && rows ? { image, rows } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const shadesRecipe: Recipe = {
+  look: "One picture across the page, bracketed into the grades it is sorted by",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "row_cards", count: [3, 4], needs: ["items[*].text"] }] }],
 }
 
 export const shadesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

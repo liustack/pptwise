@@ -24,6 +24,7 @@ import {
   placeAccountSource,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 
@@ -66,6 +67,13 @@ export function figureUnit(value: string): string {
 const GRID = { x: 280, w: 920, top: 176, head: 14, headH: 20, headPad: 8, padX: 10, rule: 2 } as const
 const WORK = { x: 80, w: 190, first: 16, pitch: 70, h: 48, inset: 4, name: 16, words: 14, wordsH: 19, wordsPad: 12, rows: 300 } as const
 const AIM = { gap: 0, label: 14, labelH: 20, sub: 12, subH: 18, h: 100, bar: 28, barGap: 10, figure: 24, padTop: 14 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const sequenceRecipe: Recipe = {
+  look: "The order next year's work goes in and what each period has to bring in",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4], needs: ["items[*].period", "items[*].rows", "items[*].points", "items[*].rows[*].value~figure"] }] }],
+}
 
 export const sequenceComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 1 || components[0]!.type !== "roadmap") return null

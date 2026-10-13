@@ -4,6 +4,7 @@ import { blockTag, compositionTag, type Composition } from "./shared"
 import { graphicInk } from "../../render/ink"
 import { binderInks, binderText, binderWidth, fitBinder, paintBinder, paintBinderIcon, paintBinderLine, paintCheckbox } from "./binder"
 import { BinderClosingLine, fitClosingLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -28,6 +29,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const ROW = { top: 6, gap: 48, h: 80, step: 92, box: { x: 0, dy: 22, size: 18 }, icon: { x: 30, dy: 20, size: 22 }, name: { x: 64, dy: 16, size: 18, lineHeight: 30 }, text: { x: 64, dy: 50, size: 14, lineHeight: 22 }, tag: { dy: 20, size: 13, lineHeight: 22, gap: 12 } } as const
 const CLOSING_GAP = 24
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const papersRecipe: Recipe = {
+  look: "What a client is asked to hand over, as a checklist",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 6], needs: ["items[*].tag"] }, { type: "callout", optional: true }] }],
+}
 
 export const papersComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

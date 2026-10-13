@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CONSOLE_SPEC, baselineIn, consoleInks, consoleMeta, consoleSmall, consoleText, monoWidth, paintPanel } from "./console"
+import type { Recipe } from "./recipe"
 
 type Code = Extract<Component, { type: "code" }>
 
@@ -44,6 +45,13 @@ function lineKind(line: string): LineKind {
 function namedLanguage(code: Code): string | null {
   const language = code.language.trim()
   return language && !/^(text|plain|plaintext|txt)$/iu.test(language) ? language : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const listingRecipe: Recipe = {
+  look: "A code block as a terminal window",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "code" }] }],
 }
 
 export const listingComposition: Composition = ({ components, ctx, rect, setting }) => {

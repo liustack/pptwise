@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, binderWidth, fitBinder, leadGap, paintBinder, paintBinderIcon, paintBinderLine } from "./binder"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -46,6 +47,13 @@ function axisStep(max: number): number {
 
 /** The places after the point a value was written with, at most two. */
 const placesOf = (v: number) => Math.min(2, (String(v).split(".")[1] ?? "").length)
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const leversRecipe: Recipe = {
+  look: "How a result moves with what it rests on",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 6], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "icon_cards", count: [2, 2] }, { type: "callout", optional: true }] }],
+}
 
 export const leversComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

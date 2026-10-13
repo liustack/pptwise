@@ -13,6 +13,7 @@ import {
   uprightText,
   verticalLength,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Quote = Extract<Component, { type: "blockquote" }>
 
@@ -40,6 +41,13 @@ const UPRIGHT = { first: 612, top: 28, size: 34, tracking: 4, pitch: 84, capacit
 const SOURCE_UPRIGHT = { x: 30, top: 34, size: 18, tracking: 4, length: 300 } as const
 /** The passage across the band, its bar at its left. */
 const ACROSS = { x: 24, top: 34, size: 28, lineHeight: 46, maxLines: 9, bar: { w: 4, h: 120 }, source: { gap: 22, size: 18, lineHeight: 28, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const statuteRecipe: Recipe = {
+  look: "A passage of law set the way it was written",
+  kinds: ["quote"],
+  shapes: [{ parts: [{ type: "blockquote", needs: ["attribution"] }] }],
+}
 
 export const statuteComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "scroll") return null

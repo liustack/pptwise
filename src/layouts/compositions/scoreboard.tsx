@@ -3,6 +3,7 @@ import { basisInk } from "../../components/tag"
 import { resolveSemanticColor } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, paintMarquee, paintMarqueeCard, paintMarqueeIcon } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -34,6 +35,13 @@ type Callout = Extract<Component, { type: "callout" }>
 const PANELS = { top: 4, col: 392, row: 214, w: 368, h: 198, pad: 20, line: 1, icon: { y: 20, size: 22 }, name: { x: 54, top: 18, size: 17, lineHeight: 26, w: 290 }, slot: { top: 88.5, x: 20, pitch: 69.5, w: 29, h: 5 }, tag: { top: 120, size: 12, lineHeight: 18 }, text: { top: 144, size: 13, lineHeight: 20, maxLines: 2, w: 328 } } as const
 /** The closing line sits on the band's floor (y624 on the board's 648), at least `gap` under the panels. */
 const CLOSE = { size: 14, lineHeight: 24, gap: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const scoreboardRecipe: Recipe = {
+  look: "The measures a plan will be judged by, before anyone has a figure for them",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [3, 6], needs: ["items[*].tag"] }, { type: "callout", optional: true }] }],
+}
 
 export const scoreboardComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

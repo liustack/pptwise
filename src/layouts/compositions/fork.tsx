@@ -20,6 +20,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -92,6 +93,13 @@ function places(ticks: readonly string[]): number[] {
     return numbers.map((n) => (n! - first) / (last - first))
   }
   return ticks.map((_, i) => i / (ticks.length - 1))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const forkRecipe: Recipe = {
+  look: "Two groups that walk one road and then part",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [3, 3], needs: ["chart_type=line", "series[].emphasis"] }, { type: "callout" }, { type: "kpi_cards", count: [2, 3], optional: true }, { type: "callout", needs: ["icon"], optional: true }] }],
 }
 
 export const forkComposition: Composition = ({ components, ctx, rect, setting, tagBand = 0 }) => {

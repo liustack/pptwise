@@ -4,6 +4,7 @@ import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure
 import { mostlyChinese } from "../../lib/text-script"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, lighter, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, type MarqueeInks } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type IconCards = Extract<Component, { type: "icon_cards" }>
@@ -59,6 +60,13 @@ function withHue(hex: string, s: number, l: number): string {
 export function shareInks(n: number, inks: MarqueeInks): string[] {
   const pale = [lighter(inks.fire, PALE.fire), withHue(inks.muted, PALE.lavender.s, PALE.lavender.l)]
   return Array.from({ length: n }, (_, i) => (i < inks.confetti.length ? inks.confetti[i]! : pale[(i - inks.confetti.length) % pale.length]!))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const allotmentRecipe: Recipe = {
+  look: "A whole cut into shares",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis"] }, { type: "icon_cards", count: [2, 3], optional: true }] }],
 }
 
 export const allotmentComposition: Composition = ({ components, ctx, rect, setting }) => {

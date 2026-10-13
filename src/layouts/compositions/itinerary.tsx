@@ -11,6 +11,7 @@ import {
   paintManuscriptLine,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Gantt = Extract<Component, { type: "gantt" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -41,6 +42,13 @@ const ROWS = { top: 38, pitch: 62, icon: { dy: 8, size: 18 }, name: { dx: 28, dy
 const GATE = { stroke: 1.6, diamond: { dy: 372, half: 12 }, label: { dx: 20, dy: 360, size: 15, h: 26 } } as const
 const CLOSE = { dy: 406, h: 40 } as const
 const CLOSE_SPEC: AsideSpec = { size: 14, lineHeight: 40, maxLines: 1, pad: 0 }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const itineraryRecipe: Recipe = {
+  look: "A schedule with the gate it turns on",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "gantt", count: [2, 5], needs: ["items[*].icon", "items[*].period", "axis_labels", "range", "milestones"] }, { type: "callout", optional: true }] }],
+}
 
 export const itineraryComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

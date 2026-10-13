@@ -31,6 +31,7 @@ import {
   wholePage,
   type AccountMarkKind,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Scorecard = Extract<Component, { type: "scorecard" }>
 type Row = Scorecard["rows"][number]
@@ -105,6 +106,13 @@ export function markSignedFigure(note: string): string {
 /** The verdict mark a row's status asks for. */
 function verdictMark(status: Row["status"]): AccountMarkKind {
   return status === "off_track" ? "miss" : status === "watch" ? "pending" : "done"
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const reckoningRecipe: Recipe = {
+  look: "What was promised against what came in, quarter by quarter",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "scorecard", count: [3, 5], needs: ["rows[*].status_label", "rows[*].actual~figure", "rows[*].target~figure"] }] }],
 }
 
 export const reckoningComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {

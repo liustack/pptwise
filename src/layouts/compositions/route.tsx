@@ -3,6 +3,7 @@ import { figureStyleOf, groupDigits, joinUnit, wholeValueDecimals, writtenFigure
 import { mostlyChinese } from "../../lib/text-script"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, glossBreak, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, splitSentence } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Steps = Extract<Component, { type: "steps" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -37,6 +38,13 @@ const ROUTE = { y: 82, x0: 36, x1: 1116, first: 56, span: 1040, w: 4, dash: "2 1
 const CARDS = { top: 204, h: 220, gap: 20, left: 300 } as const
 const FIGURE = { pad: 24, label: { top: 18, size: 13, lineHeight: 22 }, value: { top: 44, size: 64, lineHeight: 76 }, note: { top: 124, size: 14, lineHeight: 22, maxLines: 3 } } as const
 const BARS = { pad: 24, caption: { top: 18, size: 13, lineHeight: 22 }, top: 56, pitch: 30, h: 18, r: 4, name: { right: 146, size: 14, baseline: 16 }, bar: { x: 162 }, value: { gap: 10, size: 14, baseline: 17 }, full: 560 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const routeRecipe: Recipe = {
+  look: "A weekend walked stop by stop",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "steps", count: [2, 5], needs: ["items[*].icon", "items[].tone"] }, { type: "kpi_cards", count: [1, 1] }, { type: "chart", count: [2, 5], needs: ["chart_type=bar", "direction=horizontal"] }] }],
+}
 
 export const routeComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

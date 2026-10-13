@@ -10,6 +10,7 @@ import { tablePanel } from "./table-panel"
 import { tableSeal } from "./table-seal"
 import { tableConsole } from "./table-console"
 import { tableDossier } from "./table-dossier"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -341,6 +342,17 @@ function layoutAt(
   const foot = closing ? bottom + CLOSING_GAP + closing.height : bottom
   if (foot > rect.y + rect.h) return null
   return { scale, columns, headers, rows, bottom, ...(closing ? { closing } : {}) }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const tableRecipe: Recipe = {
+  look: "A comparison set as an open ruled table",
+  kinds: ["comparison"],
+  shapes: [
+    { parts: [{ type: "comparison", count: [1, 5] }], settings: ["board", "notice", "panel", "console", "seal"] },
+    { parts: [{ type: "comparison", count: [1, 5] }, { type: "callout", optional: true }], settings: ["board"] },
+    { parts: [{ type: "comparison", count: [2, 5], needs: ["rows[*].tag"] }], settings: ["dossier"] },
+  ],
 }
 
 export const tableComposition: Composition = (props) => {

@@ -12,6 +12,7 @@ import {
   yearbookText,
   yearbookTrackedWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 type Panel = Extract<Component, { type: "insight_panel" }>
@@ -43,6 +44,13 @@ const ASK = { top: 104, pitch: 150, number: { size: 52, lineHeight: 60 }, x: 68,
 /** The pale words on the filled card: the readable ink over the mark at 88%, and the numbers at 70%. */
 const PALE = 0.88
 const NUMBER = 0.7
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const motionRecipe: Recipe = {
+  look: "What the committee is asked to decide, beside why",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 4] }, { type: "insight_panel", count: [1, 3] }] }],
+}
 
 export const motionComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "yearbook") return null

@@ -19,6 +19,7 @@ import {
   periodicalWidth,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Image = Extract<Component, { type: "image" }>
@@ -54,6 +55,13 @@ const ROWS = { top: 126, pitch: 130, max: 3, icon: { dy: 2, size: 20 }, name: { 
 const CLOSE = { top: 400, pad: 14, size: 16, lineHeight: 28, maxLines: 3 } as const
 /** The key to the two years, on the first row's line at the column's right: a swatch for now, a dashed cut for then. */
 const KEY = { size: 12, swatch: 10, gap: 6, air: 18, tick: 14 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const elapsedRecipe: Recipe = {
+  look: "How long a day's habits run now against an earlier year",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "chart", count: [1, 3], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "paragraph" }] }],
+}
 
 export const elapsedComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical" || !claim) return null

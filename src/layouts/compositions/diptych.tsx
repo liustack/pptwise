@@ -17,6 +17,7 @@ import {
   type LessonInks,
 } from "./lesson"
 import { fitTip, paintTip, plainCallout, type TipSpec } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type Panel = Extract<Component, { type: "insight_panel" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -163,6 +164,13 @@ function chartShape(c: Component | undefined): c is Chart {
   if (c.series.length !== 1 || c.reference || c.changes || c.bands || c.series[0]!.tone) return false
   const points = c.series[0]!.data
   return points.length >= 2 && points.length <= 3 && points.every((p) => !p.status && !p.note && p.y >= 0) && points.filter((p) => p.emphasis).length <= 1
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const diptychRecipe: Recipe = {
+  look: "Two studies side by side, each a card with its own figures",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "insight_panel", count: [1, 2] }, { type: "chart", count: [2, 3], needs: ["chart_type=bar", "direction=horizontal"] }, { type: "insight_panel", count: [1, 2] }, { type: "chart", count: [2, 3], needs: ["chart_type=bar", "direction=horizontal", "series[].data[].upper"] }, { type: "callout", optional: true }] }],
 }
 
 export const diptychComposition: Composition = ({ components, ctx, rect, setting }) => {

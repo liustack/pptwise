@@ -4,6 +4,7 @@ import { percentShares } from "../../components/chart-svg"
 import type { EmphasisHeadingLayout } from "../../render/emphasis"
 import { fitMemo, memoInks, memoMeta, memoText, memoWidth, paintMemo, paintMemoLine } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -49,6 +50,13 @@ const COLUMN = {
   note: { top: 84, size: 15, lineHeight: 24, maxLines: 3 },
   rule: 300,
 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const divergingRecipe: Recipe = {
+  look: "Who got better and who got worse, as bars that run left and right from the middle",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=percent_stacked", "series[].tone"] }, { type: "kpi_cards", count: [1, 1], optional: true }] }],
+}
 
 export const divergingComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "memo") return null

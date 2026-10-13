@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Chevron = Extract<Component, { type: "chevron_process" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -36,6 +37,13 @@ type Table = Extract<Component, { type: "data_table" }>
 const STAGES = { top: 8, h: 160, run: 1160, gap: 20, pad: 20, number: { baseline: 34, size: 14 }, icon: { right: 44, top: 16, size: 26 }, name: { top: 48, size: 22, lineHeight: 32 }, text: { top: 88, size: 14, lineHeight: 22, maxLines: 2, w: 176 }, arrow: { dy: 74, w: 12, h: 12 } } as const
 const RETURN = { from: 174, back: 212, left: 66, rightIn: 178, r: 40, w: 2, dash: "5 5", head: 6, label: { baseline: 204, size: 13 } } as const
 const TABLE = { header: { top: 236, size: 12, lineHeight: 20 }, rule: { y: 260, h: 2 }, top: 262, row: 54, inset: 8, gutter: 96, icon: { x: 8, size: 20, dy: 16 }, iconRoom: 38, cell: { top: 14, size: 15, lineHeight: 26 }, first: { size: 16 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const loopRecipe: Recipe = {
+  look: "A chain of steps whose last brings its results back to the first",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "chevron_process", count: [3, 6] }, { type: "callout", optional: true }, { type: "data_table", count: [2, 3] }] }],
+}
 
 export const loopComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

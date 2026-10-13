@@ -18,7 +18,7 @@ import {
 import { accessibleInk, blendOver, liftedInk } from "./ink"
 import { showsDocumentMeta } from "./document-meta"
 import { footnoteBaselineFor } from "./branding-geometry"
-import { compose } from "../layouts/compositions"
+import { compose, type CompositionId } from "../layouts/compositions"
 import { faceParam, type FaceParams } from "../layouts/face-params"
 import { SvgContent } from "./svg-content"
 import type { PageRenderContext } from "./page-context"
@@ -444,6 +444,9 @@ interface SplitColumn {
   sourceBaseline: number
 }
 
+/** The signature drawing the report and notice columns offer the components beside the photograph. */
+const PAIRS_COMPOSITIONS: readonly CompositionId[] = ["pairs"]
+
 const SPLIT_COLUMNS: Record<"standard" | "report", SplitColumn> = {
   standard: {
     imageW: SPLIT_IMG_W,
@@ -572,7 +575,7 @@ export function ImageSplitPage({
   const pairs = column.pairs
     ? compose(
         { components: rest, ctx, rect: { x: textX, y: componentsTop, w: textW, h: componentsBottom - componentsTop } },
-        ["pairs"],
+        PAIRS_COMPOSITIONS,
       )
     : null
   const { placed, dropped } = pairs
@@ -701,7 +704,7 @@ function NoticeSplitPage({
   const standfirst = noticeStandfirst(slide.subheading, ctx, { x: textX, w: textW, top: NOTICE_BODY_TOP })
   const top = NOTICE_BODY_TOP + (standfirst?.h ?? 0)
   const rect = { x: textX, y: top, w: textW, h: bottom - top }
-  const pairs = compose({ components: rest, ctx, rect, setting: "notice" }, ["pairs"])
+  const pairs = compose({ components: rest, ctx, rect, setting: "notice" }, PAIRS_COMPOSITIONS)
   const { placed, dropped } = pairs ? { placed: [], dropped: 0 } : layoutContentFit("single", rest, rect, ctx)
   return (
     <g data-split-column="notice">
@@ -1129,6 +1132,11 @@ export const imageSplitLayoutDef: LayoutDefinition = {
   // as ruled pairs.
   params: {
     column: { type: "string", values: ["standard", "report", "notice", "panel", "seal"] },
+  },
+  // The report and notice columns set "Label: value" facts as ruled pairs.
+  compositions: (params) => {
+    const column = faceParam<string>(params, "column", "standard")
+    return column === "report" ? { setting: "board", offer: PAIRS_COMPOSITIONS } : column === "notice" ? { setting: "notice", offer: PAIRS_COMPOSITIONS } : undefined
   },
   slots: [
     { name: "image", accepts: ["image", "image_grid", "image_compare", "device_mockup"], required: true, selection: "first" },

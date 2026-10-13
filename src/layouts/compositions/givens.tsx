@@ -17,6 +17,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Rows = Extract<Component, { type: "row_cards" }>
 type Grid = Extract<Component, { type: "image_grid" }>
@@ -50,6 +51,13 @@ const PHOTOS = [
   { x: 730, y: 384, w: 486, h: 200 },
 ] as const
 const CAPTION = { right: 1216, top: 592, w: 486 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const givensRecipe: Recipe = {
+  look: "What an example gives you, written down the board",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 5], needs: ["items[*].text"] }, { type: "image_grid", count: [2, 2] }] }],
+}
 
 export const givensComposition: Composition = ({ components, ctx, setting, rect, claim, source, stamp }) => {
   if (setting !== "chalkboard" || !wholePage(rect)) return null

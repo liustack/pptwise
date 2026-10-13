@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { paintTag, tagInks, tagWidth } from "../../components/tag"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, MARQUEE_SPEC, fitMarquee, glossBreak, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, splitDot, splitSentence } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -34,6 +35,13 @@ type KpiCards = Extract<Component, { type: "kpi_cards" }>
 const WALL = { pitch: 300, row: 210, top: 4, w: 284, h: 194, pad: 18 } as const
 const CASE = { icon: { y: 18, size: 22 }, name: { x: 50, top: 16, size: 17, lineHeight: 26, w: 220 }, trade: { top: 48, size: 12, lineHeight: 20 }, deed: { top: 74, size: 14, lineHeight: 22, maxLines: 2 }, rule: { top: 128, w: 1.5, dash: "4 3" }, result: { top: 138, size: 14, lineHeight: 24 }, tag: { top: 164, size: 12, height: 22, padX: 10 } } as const
 const COUNT = { x: 916, top: 4, w: 236, h: 404, pad: 24, label: { top: 24, size: 15, lineHeight: 24, maxLines: 2 }, value: { top: 58, size: 140, lineHeight: 150 }, unit: { top: 218, size: 15, lineHeight: 22 }, note: { top: 258, size: 15, lineHeight: 24, maxLines: 5 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const wallRecipe: Recipe = {
+  look: "What peers have done and what they could show for it",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 6], needs: ["items[*].tag"] }, { type: "kpi_cards", count: [1, 1] }] }],
+}
 
 export const wallComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

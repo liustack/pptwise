@@ -18,6 +18,7 @@ import {
   splitFigure,
   wholePage,
 } from "./portrait"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -52,6 +53,13 @@ const QUOTE = { top: 250, h: 56, size: 110, base: 80 } as const
 const BOTTOM = 650
 const SAYING = { size: 38, lineHeight: 58.9, maxLines: 4 } as const
 const FIGURE = { top: 548, pad: 18, figure: { size: 44, lineHeight: 44, unit: 18, gap: 6 }, gap: 22, label: { size: 16, lineHeight: 23 }, between: 2, note: { size: 14, lineHeight: 20 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const credoRecipe: Recipe = {
+  look: "Why this person, in one sentence in their own words beside their portrait",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [1, 1] }, { type: "paragraph" }] }],
+}
 
 export const credoComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "portrait" || !wholePage(rect) || components.length !== 3) return null

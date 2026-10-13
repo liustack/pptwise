@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { boardY, crayonInks, crayonText, fitCrayon, paintCrayon, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Quote = Extract<Component, { type: "blockquote" }>
 
@@ -26,6 +27,13 @@ const STRIKE = { x1: 6, y1: 236, x2: 406, y2: 160, stroke: 10, alpha: 0.9 } as c
 const CLAIM = { top: 270, w: 900, size: 56, lineHeight: 78, underline: 456, gap: 22, stroke: 10 } as const
 const QUOTE = { gap: 30, w: 860, size: 20, lineHeight: 32, maxLines: 2 } as const
 const BY = { gap: 56, size: 14, lineHeight: 26 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const yardstickRecipe: Recipe = {
+  look: "One thing the page refuses to do, said large, with the words it rests on",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "blockquote", needs: ["attribution"] }] }],
+}
 
 export const yardstickComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

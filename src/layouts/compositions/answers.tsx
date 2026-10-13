@@ -18,6 +18,7 @@ import {
   writtenLines,
 } from "./lesson"
 import { fitLine, paintLine, plainCallout } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type RowCards = Extract<Component, { type: "row_cards" }>
 
@@ -53,6 +54,13 @@ const STAMP_AT = { right: 150, top: 20 } as const
 const ANGLES = [-6, 4, -3] as const
 const REASON = { top: 100, size: 13, lineHeight: 22 } as const
 const CLOSE = { top: 422, size: 14, lineHeight: 22 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const answersRecipe: Recipe = {
+  look: "A quiz's questions marked",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 3], needs: ["items[*].text", "items[*].sub", "items[*].tone", "items[*].title~colon"] }, { type: "callout", optional: true }] }],
+}
 
 export const answersComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

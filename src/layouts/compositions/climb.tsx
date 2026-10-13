@@ -25,6 +25,7 @@ import {
   INVITATION_META,
   INVITATION_SPEC,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -81,6 +82,13 @@ function tickStep(max: number): number {
   const mag = 10 ** Math.floor(Math.log10(raw))
   for (const k of [1, 2, 2.5, 5, 10]) if (k * mag >= raw) return k * mag
   return 10 * mag
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const climbRecipe: Recipe = {
+  look: "A run of yearly figures as gold bars beside the figure the run comes to",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 8], needs: ["chart_type=bar"] }, { type: "kpi_cards", count: [1, 1] }] }],
 }
 
 export const climbComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

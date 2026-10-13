@@ -19,6 +19,7 @@ import {
   placeInvitationSource,
   wholeCanvas,
 } from "./invitation"
+import type { Recipe } from "./recipe"
 
 type Numbered = Extract<Component, { type: "numbered_cards" }>
 
@@ -48,6 +49,13 @@ const LINE = { dy: 38, size: 14, lineHeight: 22, w: 560 } as const
 const PAGE = { right: 1030, dy: 4, size: 18, lineHeight: 32, w: 70 } as const
 const LEADER = { gap: 24, end: 950, dy: 24 } as const
 const RULE = { from: 250, to: 1030, w: 0.8 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const programmeRecipe: Recipe = {
+  look: "The order of the day set like a gala's programme",
+  kinds: ["points"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 5] }] }],
+}
 
 export const programmeComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "invitation" || !wholeCanvas(rect)) return null

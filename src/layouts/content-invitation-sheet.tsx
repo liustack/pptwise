@@ -77,6 +77,7 @@ export const layoutDef = {
   // one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "invitation-sheet",
+  compositions: { setting: "invitation", offer: INVITATION_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Invitation Sheet",

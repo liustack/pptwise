@@ -14,6 +14,7 @@ import {
   periodicalWidth,
   placeClaim,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -48,6 +49,13 @@ const MARKS = { dot: 7, diamond: 12, size: 12, above: -4, below: 34 } as const
 const TICK = { baseline: 470, size: 12 } as const
 const POLES = { baseline: 492, size: 12 } as const
 const CLOSE = { top: 510, size: 15, lineHeight: 30 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const effectsRecipe: Recipe = {
+  look: "Effect sizes from two studies on one scale",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=bar", "direction=horizontal", "bands"] }, { type: "callout", optional: true }] }],
+}
 
 export const effectsComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

@@ -23,6 +23,7 @@ import {
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import type { ComponentCtx } from "../../components/types"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Chart = Extract<Component, { type: "chart" }>
@@ -135,6 +136,13 @@ function planShare(chart: Chart, x: number, w: number, ctx: ComponentCtx, inks: 
     totalText = chinese ? `${run}合计 ${sum}` : `${run} together ${sum}`
   }
   return { caption: shareCaption(chart), parts: planned, total: totalText }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const readingsRecipe: Recipe = {
+  look: "Why now, in two or four figures and the whole they sit in",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4], needs: ["items[*].icon"] }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal"], optional: true }] }],
 }
 
 export const readingsComposition: Composition = ({ components, ctx, rect, setting }) => {

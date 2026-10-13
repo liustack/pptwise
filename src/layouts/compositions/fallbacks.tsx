@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fireTint, fitMarquee, glossBreak, marqueeInks, marqueeText, paintMarquee, paintMarqueeCard, paintMarqueeIcon, splitName } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -29,6 +30,13 @@ type Table = Extract<Component, { type: "data_table" }>
 
 const HEAD = { top: 2, size: 12, lineHeight: 20, plan: 696 } as const
 const ROWS = { top: 28, pitch: 70, h: 62, r: 10, tint: 0.18, icon: { x: 20, dy: 19, size: 24 }, name: { x: 56, top: 18, size: 17, lineHeight: 26, w: 120 }, event: { x: 180, top: 10, size: 14, lineHeight: 22, maxLines: 2, w: 480 }, arrow: { x: 666, dy: 25, w: 12, h: 12 }, plan: { x: 696, top: 10, size: 14, lineHeight: 22, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const fallbacksRecipe: Recipe = {
+  look: "A plan B for every risk",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6], needs: ["rows[*].icon"] }] }],
+}
 
 export const fallbacksComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

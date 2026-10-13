@@ -10,6 +10,7 @@ import {
   placeClaim,
   type PeriodicalTextSpec,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -47,6 +48,13 @@ const COLUMNS = [
   { x: 966, w: 186, dy: 18, spec: { size: 13, lineHeight: 26 } },
 ] as const
 const CLOSE = { top: 498, size: 16, lineHeight: 30 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const parallelRecipe: Recipe = {
+  look: "Findings that answer different questions, set side by side and never ranked",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 5] }, { type: "callout" }] }],
+}
 
 export const parallelComposition: Composition = ({ components, ctx, rect, setting, claim }) => {
   if (setting !== "periodical") return null

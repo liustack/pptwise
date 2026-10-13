@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderLine, wholeMark, binderBaseline } from "./binder"
 import { BinderPlainLine, fitPlainLine } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -48,6 +49,13 @@ const FIGURE = /^([+−-]?[\d.,]+)\s+(\S.*)$/su
 function splitFormula(note: string | undefined): { formula: string; figures: string } | null {
   const m = /^(.+?)\s+=\s+(.+)$/su.exec(note?.trim() ?? "")
   return m ? { formula: m[1]!.trim(), figures: m[2]!.trim() } : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const workingsRecipe: Recipe = {
+  look: "A sum worked out on one page",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 4], needs: ["columns[].align"] }, { type: "kpi_cards", count: [2, 2] }, { type: "callout", optional: true }] }],
 }
 
 export const workingsComposition: Composition = ({ components, ctx, rect, setting }) => {

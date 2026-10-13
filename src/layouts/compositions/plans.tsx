@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, binderInks, binderText, fitBinder, glossBreak, paintBinder, splitDot, wholeMark } from "./binder"
 import { BinderPlainLine, fitPlainLine, noteHeight } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -36,6 +37,13 @@ type Callout = Extract<Component, { type: "callout" }>
 
 const CARD = { top: 4, pad: 24, name: { top: 16, size: 21, lineHeight: 30 }, fit: { top: 48, size: 13, lineHeight: 20 }, chip: { top: 74, size: 14, lineHeight: 24 }, figureLabel: { top: 116, size: 12, lineHeight: 18 }, figure: { top: 136, size: 34, small: 28, lineHeight: 46, long: 9 }, figureNote: { top: 184, size: 12, lineHeight: 20 }, rows: { top: 218, step: 46, label: { dy: 6, size: 12, lineHeight: 18 }, value: { dy: 24, size: 14, lineHeight: 20 } }, bottom: 4 } as const
 const NOTE_GAP = 28
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const plansRecipe: Recipe = {
+  look: "The ways a client can pay, side by side",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [3, 5], needs: ["rows[].emphasis"] }, { type: "callout", optional: true }] }],
+}
 
 export const plansComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "binder") return null

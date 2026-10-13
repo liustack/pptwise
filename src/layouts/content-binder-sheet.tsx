@@ -66,6 +66,7 @@ export const layoutDef = {
   // what to hand over: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "binder-sheet",
+  compositions: { setting: "binder", offer: BINDER_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Binder Sheet",

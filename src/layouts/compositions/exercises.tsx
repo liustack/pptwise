@@ -21,6 +21,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Rows = Extract<Component, { type: "row_cards" }>
@@ -59,6 +60,13 @@ const LETTERS = "ABCD"
 /** Whether a line asks something: it holds a question mark. */
 export function asks(text: string | undefined): boolean {
   return /[?？]/u.test(text ?? "")
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const exercisesRecipe: Recipe = {
+  look: "Questions set on the board",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "row_cards", count: [3, 4], needs: ["items[*].text"] }, { type: "image" }] }],
 }
 
 export const exercisesComposition: Composition = ({ components, ctx, setting, rect, claim, source, stamp }) => {

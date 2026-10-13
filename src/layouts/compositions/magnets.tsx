@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blendOver } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { CRAYON, boardY, crayonAt, crayonInks, crayonText, crayonWidth, fitCrayon, paintCrayon, paintCrayonIcon, paintCrayonLine, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Numbered = Extract<Component, { type: "numbered_cards" }>
 
@@ -35,6 +36,13 @@ const WORDS = { x: 30, top: 124, w: 260, size: 17, lineHeight: 28, maxLines: 3 }
 const NOTE = { x: 30, top: 250, w: 262, size: 13, lineHeight: 21, maxLines: 3 } as const
 /** The board's crayon for each card in turn: sky, orange, green, purple. */
 const ORDER = [CRAYON.sky, CRAYON.orange, CRAYON.green, CRAYON.purple] as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const magnetsRecipe: Recipe = {
+  look: "A few things to remember at home, pinned to a fridge door",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 3], needs: ["items[*].text", "items[*].icon"] }] }],
+}
 
 export const magnetsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

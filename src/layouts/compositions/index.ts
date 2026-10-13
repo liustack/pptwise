@@ -1,278 +1,280 @@
 import type React from "react"
-import { barsComposition } from "./bars"
-import { bridgeComposition } from "./bridge"
-import { columnsComposition } from "./columns"
-import { figuresComposition } from "./figures"
-import { lanesComposition } from "./lanes"
-import { pairsComposition } from "./pairs"
-import { railComposition } from "./rail"
-import { recordsComposition } from "./records"
-import { rowsComposition } from "./rows"
-import { shareComposition } from "./share"
-import { shiftsComposition } from "./shifts"
+import { barsComposition, barsRecipe } from "./bars"
+import { bridgeComposition, bridgeRecipe } from "./bridge"
+import { columnsComposition, columnsRecipe } from "./columns"
+import { figuresComposition, figuresRecipe } from "./figures"
+import { lanesComposition, lanesRecipe } from "./lanes"
+import { pairsComposition, pairsRecipe } from "./pairs"
+import { railComposition, railRecipe } from "./rail"
+import { recordsComposition, recordsRecipe } from "./records"
+import { rowsComposition, rowsRecipe } from "./rows"
+import { shareComposition, shareRecipe } from "./share"
+import { shiftsComposition, shiftsRecipe } from "./shifts"
 import type { Composition, CompositionId, CompositionProps } from "./shared"
-import { crayonsComposition } from "./crayons"
-import { stickiesComposition } from "./stickies"
-import { waiverComposition } from "./waiver"
-import { storeysComposition } from "./storeys"
-import { swatchesComposition } from "./swatches"
-import { yardstickComposition } from "./yardstick"
-import { arcComposition } from "./arc"
-import { magnetsComposition } from "./magnets"
-import { crosscheckComposition } from "./crosscheck"
-import { trayComposition } from "./tray"
-import { checkupComposition } from "./checkup"
-import { backingComposition } from "./backing"
-import { badgesComposition } from "./badges"
-import { ticksComposition } from "./ticks"
-import { stackComposition } from "./stack"
-import { tilesComposition } from "./tiles"
-import { tableComposition } from "./table"
-import { trackComposition } from "./track"
-import { treeComposition } from "./tree"
-import { wavesComposition } from "./waves"
-import { windowComposition } from "./window"
-import { rosterComposition } from "./roster"
-import { scoresComposition } from "./scores"
-import { targetsComposition } from "./targets"
-import { trendComposition } from "./trend"
-import { ringsComposition } from "./rings"
-import { cardsComposition } from "./cards"
-import { listingComposition } from "./listing"
-import { logComposition } from "./log"
-import { spanComposition } from "./span"
-import { platesComposition } from "./plates"
-import { pathsComposition } from "./paths"
-import { screenComposition } from "./screen"
-import { annexComposition } from "./annex"
-import { talliesComposition } from "./tallies"
-import { slopesComposition } from "./slopes"
-import { divergingComposition } from "./diverging"
-import { citationComposition } from "./citation"
-import { scalesComposition } from "./scales"
-import { catalogComposition } from "./catalog"
-import { rotaComposition } from "./rota"
-import { sumComposition } from "./sum"
-import { scheduleComposition } from "./schedule"
-import { checksComposition } from "./checks"
-import { readingsComposition } from "./readings"
-import { insetComposition } from "./inset"
-import { docketComposition } from "./docket"
-import { controlledComposition } from "./controlled"
-import { duelComposition } from "./duel"
-import { forestComposition } from "./forest"
-import { multiplesComposition } from "./multiples"
-import { forkComposition } from "./fork"
-import { rulerComposition } from "./ruler"
-import { dumbbellsComposition } from "./dumbbells"
-import { gateComposition } from "./gate"
-import { watchComposition } from "./watch"
-import { motionComposition } from "./motion"
-import { calendarComposition } from "./calendar"
-import { horizonComposition } from "./horizon"
-import { formulaComposition } from "./formula"
-import { errataComposition } from "./errata"
-import { breakdownComposition } from "./breakdown"
-import { benchmarkComposition } from "./benchmark"
-import { pairedComposition } from "./paired"
-import { procedureComposition } from "./procedure"
-import { magnitudeComposition } from "./magnitude"
-import { segmentsComposition } from "./segments"
-import { surveyComposition } from "./survey"
-import { outlookComposition } from "./outlook"
-import { phasesComposition } from "./phases"
-import { objectivesComposition } from "./objectives"
-import { syllabusComposition } from "./syllabus"
-import { studiesComposition } from "./studies"
-import { cohortsComposition } from "./cohorts"
-import { diptychComposition } from "./diptych"
-import { estimatesComposition } from "./estimates"
-import { quizComposition } from "./quiz"
-import { answersComposition } from "./answers"
-import { casesComposition } from "./cases"
-import { rankingComposition } from "./ranking"
-import { rulesComposition } from "./rules"
-import { tiersComposition } from "./tiers"
-import { methodsComposition } from "./methods"
-import { blackboardComposition } from "./blackboard"
-import { expanseComposition } from "./expanse"
-import { stairsComposition } from "./stairs"
-import { funnelComposition } from "./funnel"
-import { rivalsComposition } from "./rivals"
-import { equationComposition } from "./equation"
-import { spotlightComposition } from "./spotlight"
-import { betsComposition } from "./bets"
-import { divideComposition } from "./divide"
-import { locksComposition } from "./locks"
-import { registerComposition } from "./register"
-import { runwayComposition } from "./runway"
-import { usesComposition } from "./uses"
-import { crestComposition } from "./crest"
-import { branchComposition } from "./branch"
-import { seasonComposition } from "./season"
-import { makeupComposition } from "./makeup"
-import { originsComposition } from "./origins"
-import { routeComposition } from "./route"
-import { spotsComposition } from "./spots"
-import { wallComposition } from "./wall"
-import { loopComposition } from "./loop"
-import { stubsComposition } from "./stubs"
-import { fallbacksComposition } from "./fallbacks"
-import { timetableComposition } from "./timetable"
-import { scoreboardComposition } from "./scoreboard"
-import { allotmentComposition } from "./allotment"
-import { asksComposition } from "./asks"
-import { gainsComposition } from "./gains"
-import { hoursComposition } from "./hours"
-import { regionsComposition } from "./regions"
-import { workingsComposition } from "./workings"
-import { leversComposition } from "./levers"
-import { cyclesComposition } from "./cycles"
-import { driftComposition } from "./drift"
-import { partsComposition } from "./parts"
-import { plansComposition } from "./plans"
-import { precedentsComposition } from "./precedents"
-import { safeguardsComposition } from "./safeguards"
-import { remediesComposition } from "./remedies"
-import { checkpointsComposition } from "./checkpoints"
-import { quoteComposition } from "./quote"
-import { papersComposition } from "./papers"
-import { inquiryComposition } from "./inquiry"
-import { ladderComposition } from "./ladder"
-import { reachComposition } from "./reach"
-import { backdropComposition } from "./backdrop"
-import { thresholdsComposition } from "./thresholds"
-import { tabulationComposition } from "./tabulation"
-import { partitionComposition } from "./partition"
-import { findingsComposition } from "./findings"
-import { coverageComposition } from "./coverage"
-import { propositionsComposition } from "./propositions"
-import { cadenceComposition } from "./cadence"
-import { designsComposition } from "./designs"
-import { hazardsComposition } from "./hazards"
-import { itineraryComposition } from "./itinerary"
-import { queriesComposition } from "./queries"
-import { forewordComposition } from "./foreword"
-import { chronicleComposition } from "./chronicle"
-import { measuresComposition } from "./measures"
-import { elapsedComposition } from "./elapsed"
-import { headlineComposition } from "./headline"
-import { witnessComposition } from "./witness"
-import { censusComposition } from "./census"
-import { contrastComposition } from "./contrast"
-import { bracketComposition } from "./bracket"
-import { mixComposition } from "./mix"
-import { twinsComposition } from "./twins"
-import { parallelComposition } from "./parallel"
-import { effectsComposition } from "./effects"
-import { longformComposition } from "./longform"
-import { pledgesComposition } from "./pledges"
-import { openingComposition } from "./opening"
-import { strataComposition } from "./strata"
-import { handscrollComposition } from "./handscroll"
-import { programmeComposition } from "./programme"
-import { climbComposition } from "./climb"
-import { soloComposition } from "./solo"
-import { descentComposition } from "./descent"
-import { doublesComposition } from "./doubles"
-import { balanceComposition } from "./balance"
-import { swingComposition } from "./swing"
-import { ebbComposition } from "./ebb"
-import { facingComposition } from "./facing"
-import { lapseComposition } from "./lapse"
-import { triptychComposition } from "./triptych"
-import { mirrorComposition } from "./mirror"
-import { vitrineComposition } from "./vitrine"
-import { replyComposition } from "./reply"
-import { orderComposition } from "./order"
-import { standfirstComposition } from "./standfirst"
-import { duetComposition } from "./duet"
-import { collageComposition } from "./collage"
-import { threadComposition } from "./thread"
-import { lengthsComposition } from "./lengths"
-import { shadesComposition } from "./shades"
-import { atelierComposition } from "./atelier"
-import { paradeComposition } from "./parade"
-import { lookComposition } from "./look"
-import { boundsComposition } from "./bounds"
-import { floorplanComposition } from "./floorplan"
-import { jarsComposition } from "./jars"
-import { squaresComposition } from "./squares"
-import { specimenComposition } from "./specimen"
-import { decadesComposition } from "./decades"
-import { lensesComposition } from "./lenses"
-import { haloComposition } from "./halo"
-import { datelineComposition } from "./dateline"
-import { sliceComposition } from "./slice"
-import { blanksComposition } from "./blanks"
-import { cabinetComposition } from "./cabinet"
-import { revivalComposition } from "./revival"
-import { nationsComposition } from "./nations"
-import { genresComposition } from "./genres"
-import { basesComposition } from "./bases"
-import { agesComposition } from "./ages"
-import { archiveComposition } from "./archive"
-import { scenesComposition } from "./scenes"
-import { dailyComposition } from "./daily"
-import { excerptsComposition } from "./excerpts"
-import { glyphsComposition } from "./glyphs"
-import { statuteComposition } from "./statute"
-import { hushComposition } from "./hush"
-import { giantComposition } from "./giant"
-import { contourComposition } from "./contour"
-import { faceoffComposition } from "./faceoff"
-import { tiltComposition } from "./tilt"
-import { podiumsComposition } from "./podiums"
-import { gulfComposition } from "./gulf"
-import { crowdComposition } from "./crowd"
-import { towerComposition } from "./tower"
-import { tollComposition } from "./toll"
-import { archesComposition } from "./arches"
-import { slateComposition } from "./slate"
-import { agendaComposition } from "./agenda"
-import { confluenceComposition } from "./confluence"
-import { bracesComposition } from "./braces"
-import { boughsComposition } from "./boughs"
-import { factorsComposition } from "./factors"
-import { subtractionsComposition } from "./subtractions"
-import { flashcardsComposition } from "./flashcards"
-import { risersComposition } from "./risers"
-import { givensComposition } from "./givens"
-import { derivationComposition } from "./derivation"
-import { cascadeComposition } from "./cascade"
-import { exercisesComposition } from "./exercises"
-import { solutionsComposition } from "./solutions"
-import { pitfallsComposition } from "./pitfalls"
-import { strikeoutComposition } from "./strikeout"
-import { chronologyComposition } from "./chronology"
-import { sentenceComposition } from "./sentence"
-import { billboardComposition } from "./billboard"
-import { proofComposition } from "./proof"
-import { asideComposition } from "./aside"
-import { stationsComposition } from "./stations"
-import { verdictsComposition } from "./verdicts"
-import { caseworkComposition } from "./casework"
-import { resultsComposition } from "./results"
-import { upliftComposition } from "./uplift"
-import { appraisalComposition } from "./appraisal"
-import { shortfallsComposition } from "./shortfalls"
-import { tenureComposition } from "./tenure"
-import { credoComposition } from "./credo"
-import { gistComposition } from "./gist"
-import { reckoningComposition } from "./reckoning"
-import { creditComposition } from "./credit"
-import { casefileComposition } from "./casefile"
-import { relayComposition } from "./relay"
-import { drawdownComposition } from "./drawdown"
-import { headcountComposition } from "./headcount"
-import { postmortemComposition } from "./postmortem"
-import { deltasComposition } from "./deltas"
-import { stretchComposition } from "./stretch"
-import { sequenceComposition } from "./sequence"
-import { requestsComposition } from "./requests"
+import type { Recipe } from "./recipe"
+import { crayonsComposition, crayonsRecipe } from "./crayons"
+import { stickiesComposition, stickiesRecipe } from "./stickies"
+import { waiverComposition, waiverRecipe } from "./waiver"
+import { storeysComposition, storeysRecipe } from "./storeys"
+import { swatchesComposition, swatchesRecipe } from "./swatches"
+import { yardstickComposition, yardstickRecipe } from "./yardstick"
+import { arcComposition, arcRecipe } from "./arc"
+import { magnetsComposition, magnetsRecipe } from "./magnets"
+import { crosscheckComposition, crosscheckRecipe } from "./crosscheck"
+import { trayComposition, trayRecipe } from "./tray"
+import { checkupComposition, checkupRecipe } from "./checkup"
+import { backingComposition, backingRecipe } from "./backing"
+import { badgesComposition, badgesRecipe } from "./badges"
+import { ticksComposition, ticksRecipe } from "./ticks"
+import { stackComposition, stackRecipe } from "./stack"
+import { tilesComposition, tilesRecipe } from "./tiles"
+import { tableComposition, tableRecipe } from "./table"
+import { trackComposition, trackRecipe } from "./track"
+import { treeComposition, treeRecipe } from "./tree"
+import { wavesComposition, wavesRecipe } from "./waves"
+import { windowComposition, windowRecipe } from "./window"
+import { rosterComposition, rosterRecipe } from "./roster"
+import { scoresComposition, scoresRecipe } from "./scores"
+import { targetsComposition, targetsRecipe } from "./targets"
+import { trendComposition, trendRecipe } from "./trend"
+import { ringsComposition, ringsRecipe } from "./rings"
+import { cardsComposition, cardsRecipe } from "./cards"
+import { listingComposition, listingRecipe } from "./listing"
+import { logComposition, logRecipe } from "./log"
+import { spanComposition, spanRecipe } from "./span"
+import { platesComposition, platesRecipe } from "./plates"
+import { pathsComposition, pathsRecipe } from "./paths"
+import { screenComposition, screenRecipe } from "./screen"
+import { annexComposition, annexRecipe } from "./annex"
+import { talliesComposition, talliesRecipe } from "./tallies"
+import { slopesComposition, slopesRecipe } from "./slopes"
+import { divergingComposition, divergingRecipe } from "./diverging"
+import { citationComposition, citationRecipe } from "./citation"
+import { scalesComposition, scalesRecipe } from "./scales"
+import { catalogComposition, catalogRecipe } from "./catalog"
+import { rotaComposition, rotaRecipe } from "./rota"
+import { sumComposition, sumRecipe } from "./sum"
+import { scheduleComposition, scheduleRecipe } from "./schedule"
+import { checksComposition, checksRecipe } from "./checks"
+import { readingsComposition, readingsRecipe } from "./readings"
+import { insetComposition, insetRecipe } from "./inset"
+import { docketComposition, docketRecipe } from "./docket"
+import { controlledComposition, controlledRecipe } from "./controlled"
+import { duelComposition, duelRecipe } from "./duel"
+import { forestComposition, forestRecipe } from "./forest"
+import { multiplesComposition, multiplesRecipe } from "./multiples"
+import { forkComposition, forkRecipe } from "./fork"
+import { rulerComposition, rulerRecipe } from "./ruler"
+import { dumbbellsComposition, dumbbellsRecipe } from "./dumbbells"
+import { gateComposition, gateRecipe } from "./gate"
+import { watchComposition, watchRecipe } from "./watch"
+import { motionComposition, motionRecipe } from "./motion"
+import { calendarComposition, calendarRecipe } from "./calendar"
+import { horizonComposition, horizonRecipe } from "./horizon"
+import { formulaComposition, formulaRecipe } from "./formula"
+import { errataComposition, errataRecipe } from "./errata"
+import { breakdownComposition, breakdownRecipe } from "./breakdown"
+import { benchmarkComposition, benchmarkRecipe } from "./benchmark"
+import { pairedComposition, pairedRecipe } from "./paired"
+import { procedureComposition, procedureRecipe } from "./procedure"
+import { magnitudeComposition, magnitudeRecipe } from "./magnitude"
+import { segmentsComposition, segmentsRecipe } from "./segments"
+import { surveyComposition, surveyRecipe } from "./survey"
+import { outlookComposition, outlookRecipe } from "./outlook"
+import { phasesComposition, phasesRecipe } from "./phases"
+import { objectivesComposition, objectivesRecipe } from "./objectives"
+import { syllabusComposition, syllabusRecipe } from "./syllabus"
+import { studiesComposition, studiesRecipe } from "./studies"
+import { cohortsComposition, cohortsRecipe } from "./cohorts"
+import { diptychComposition, diptychRecipe } from "./diptych"
+import { estimatesComposition, estimatesRecipe } from "./estimates"
+import { quizComposition, quizRecipe } from "./quiz"
+import { answersComposition, answersRecipe } from "./answers"
+import { casesComposition, casesRecipe } from "./cases"
+import { rankingComposition, rankingRecipe } from "./ranking"
+import { rulesComposition, rulesRecipe } from "./rules"
+import { tiersComposition, tiersRecipe } from "./tiers"
+import { methodsComposition, methodsRecipe } from "./methods"
+import { blackboardComposition, blackboardRecipe } from "./blackboard"
+import { expanseComposition, expanseRecipe } from "./expanse"
+import { stairsComposition, stairsRecipe } from "./stairs"
+import { funnelComposition, funnelRecipe } from "./funnel"
+import { rivalsComposition, rivalsRecipe } from "./rivals"
+import { equationComposition, equationRecipe } from "./equation"
+import { spotlightComposition, spotlightRecipe } from "./spotlight"
+import { betsComposition, betsRecipe } from "./bets"
+import { divideComposition, divideRecipe } from "./divide"
+import { locksComposition, locksRecipe } from "./locks"
+import { registerComposition, registerRecipe } from "./register"
+import { runwayComposition, runwayRecipe } from "./runway"
+import { usesComposition, usesRecipe } from "./uses"
+import { crestComposition, crestRecipe } from "./crest"
+import { branchComposition, branchRecipe } from "./branch"
+import { seasonComposition, seasonRecipe } from "./season"
+import { makeupComposition, makeupRecipe } from "./makeup"
+import { originsComposition, originsRecipe } from "./origins"
+import { routeComposition, routeRecipe } from "./route"
+import { spotsComposition, spotsRecipe } from "./spots"
+import { wallComposition, wallRecipe } from "./wall"
+import { loopComposition, loopRecipe } from "./loop"
+import { stubsComposition, stubsRecipe } from "./stubs"
+import { fallbacksComposition, fallbacksRecipe } from "./fallbacks"
+import { timetableComposition, timetableRecipe } from "./timetable"
+import { scoreboardComposition, scoreboardRecipe } from "./scoreboard"
+import { allotmentComposition, allotmentRecipe } from "./allotment"
+import { asksComposition, asksRecipe } from "./asks"
+import { gainsComposition, gainsRecipe } from "./gains"
+import { hoursComposition, hoursRecipe } from "./hours"
+import { regionsComposition, regionsRecipe } from "./regions"
+import { workingsComposition, workingsRecipe } from "./workings"
+import { leversComposition, leversRecipe } from "./levers"
+import { cyclesComposition, cyclesRecipe } from "./cycles"
+import { driftComposition, driftRecipe } from "./drift"
+import { partsComposition, partsRecipe } from "./parts"
+import { plansComposition, plansRecipe } from "./plans"
+import { precedentsComposition, precedentsRecipe } from "./precedents"
+import { safeguardsComposition, safeguardsRecipe } from "./safeguards"
+import { remediesComposition, remediesRecipe } from "./remedies"
+import { checkpointsComposition, checkpointsRecipe } from "./checkpoints"
+import { quoteComposition, quoteRecipe } from "./quote"
+import { papersComposition, papersRecipe } from "./papers"
+import { inquiryComposition, inquiryRecipe } from "./inquiry"
+import { ladderComposition, ladderRecipe } from "./ladder"
+import { reachComposition, reachRecipe } from "./reach"
+import { backdropComposition, backdropRecipe } from "./backdrop"
+import { thresholdsComposition, thresholdsRecipe } from "./thresholds"
+import { tabulationComposition, tabulationRecipe } from "./tabulation"
+import { partitionComposition, partitionRecipe } from "./partition"
+import { findingsComposition, findingsRecipe } from "./findings"
+import { coverageComposition, coverageRecipe } from "./coverage"
+import { propositionsComposition, propositionsRecipe } from "./propositions"
+import { cadenceComposition, cadenceRecipe } from "./cadence"
+import { designsComposition, designsRecipe } from "./designs"
+import { hazardsComposition, hazardsRecipe } from "./hazards"
+import { itineraryComposition, itineraryRecipe } from "./itinerary"
+import { queriesComposition, queriesRecipe } from "./queries"
+import { forewordComposition, forewordRecipe } from "./foreword"
+import { chronicleComposition, chronicleRecipe } from "./chronicle"
+import { measuresComposition, measuresRecipe } from "./measures"
+import { elapsedComposition, elapsedRecipe } from "./elapsed"
+import { headlineComposition, headlineRecipe } from "./headline"
+import { witnessComposition, witnessRecipe } from "./witness"
+import { censusComposition, censusRecipe } from "./census"
+import { contrastComposition, contrastRecipe } from "./contrast"
+import { bracketComposition, bracketRecipe } from "./bracket"
+import { mixComposition, mixRecipe } from "./mix"
+import { twinsComposition, twinsRecipe } from "./twins"
+import { parallelComposition, parallelRecipe } from "./parallel"
+import { effectsComposition, effectsRecipe } from "./effects"
+import { longformComposition, longformRecipe } from "./longform"
+import { pledgesComposition, pledgesRecipe } from "./pledges"
+import { openingComposition, openingRecipe } from "./opening"
+import { strataComposition, strataRecipe } from "./strata"
+import { handscrollComposition, handscrollRecipe } from "./handscroll"
+import { programmeComposition, programmeRecipe } from "./programme"
+import { climbComposition, climbRecipe } from "./climb"
+import { soloComposition, soloRecipe } from "./solo"
+import { descentComposition, descentRecipe } from "./descent"
+import { doublesComposition, doublesRecipe } from "./doubles"
+import { balanceComposition, balanceRecipe } from "./balance"
+import { swingComposition, swingRecipe } from "./swing"
+import { ebbComposition, ebbRecipe } from "./ebb"
+import { facingComposition, facingRecipe } from "./facing"
+import { lapseComposition, lapseRecipe } from "./lapse"
+import { triptychComposition, triptychRecipe } from "./triptych"
+import { mirrorComposition, mirrorRecipe } from "./mirror"
+import { vitrineComposition, vitrineRecipe } from "./vitrine"
+import { replyComposition, replyRecipe } from "./reply"
+import { orderComposition, orderRecipe } from "./order"
+import { standfirstComposition, standfirstRecipe } from "./standfirst"
+import { duetComposition, duetRecipe } from "./duet"
+import { collageComposition, collageRecipe } from "./collage"
+import { threadComposition, threadRecipe } from "./thread"
+import { lengthsComposition, lengthsRecipe } from "./lengths"
+import { shadesComposition, shadesRecipe } from "./shades"
+import { atelierComposition, atelierRecipe } from "./atelier"
+import { paradeComposition, paradeRecipe } from "./parade"
+import { lookComposition, lookRecipe } from "./look"
+import { boundsComposition, boundsRecipe } from "./bounds"
+import { floorplanComposition, floorplanRecipe } from "./floorplan"
+import { jarsComposition, jarsRecipe } from "./jars"
+import { squaresComposition, squaresRecipe } from "./squares"
+import { specimenComposition, specimenRecipe } from "./specimen"
+import { decadesComposition, decadesRecipe } from "./decades"
+import { lensesComposition, lensesRecipe } from "./lenses"
+import { haloComposition, haloRecipe } from "./halo"
+import { datelineComposition, datelineRecipe } from "./dateline"
+import { sliceComposition, sliceRecipe } from "./slice"
+import { blanksComposition, blanksRecipe } from "./blanks"
+import { cabinetComposition, cabinetRecipe } from "./cabinet"
+import { revivalComposition, revivalRecipe } from "./revival"
+import { nationsComposition, nationsRecipe } from "./nations"
+import { genresComposition, genresRecipe } from "./genres"
+import { basesComposition, basesRecipe } from "./bases"
+import { agesComposition, agesRecipe } from "./ages"
+import { archiveComposition, archiveRecipe } from "./archive"
+import { scenesComposition, scenesRecipe } from "./scenes"
+import { dailyComposition, dailyRecipe } from "./daily"
+import { excerptsComposition, excerptsRecipe } from "./excerpts"
+import { glyphsComposition, glyphsRecipe } from "./glyphs"
+import { statuteComposition, statuteRecipe } from "./statute"
+import { hushComposition, hushRecipe } from "./hush"
+import { giantComposition, giantRecipe } from "./giant"
+import { contourComposition, contourRecipe } from "./contour"
+import { faceoffComposition, faceoffRecipe } from "./faceoff"
+import { tiltComposition, tiltRecipe } from "./tilt"
+import { podiumsComposition, podiumsRecipe } from "./podiums"
+import { gulfComposition, gulfRecipe } from "./gulf"
+import { crowdComposition, crowdRecipe } from "./crowd"
+import { towerComposition, towerRecipe } from "./tower"
+import { tollComposition, tollRecipe } from "./toll"
+import { archesComposition, archesRecipe } from "./arches"
+import { slateComposition, slateRecipe } from "./slate"
+import { agendaComposition, agendaRecipe } from "./agenda"
+import { confluenceComposition, confluenceRecipe } from "./confluence"
+import { bracesComposition, bracesRecipe } from "./braces"
+import { boughsComposition, boughsRecipe } from "./boughs"
+import { factorsComposition, factorsRecipe } from "./factors"
+import { subtractionsComposition, subtractionsRecipe } from "./subtractions"
+import { flashcardsComposition, flashcardsRecipe } from "./flashcards"
+import { risersComposition, risersRecipe } from "./risers"
+import { givensComposition, givensRecipe } from "./givens"
+import { derivationComposition, derivationRecipe } from "./derivation"
+import { cascadeComposition, cascadeRecipe } from "./cascade"
+import { exercisesComposition, exercisesRecipe } from "./exercises"
+import { solutionsComposition, solutionsRecipe } from "./solutions"
+import { pitfallsComposition, pitfallsRecipe } from "./pitfalls"
+import { strikeoutComposition, strikeoutRecipe } from "./strikeout"
+import { chronologyComposition, chronologyRecipe } from "./chronology"
+import { sentenceComposition, sentenceRecipe } from "./sentence"
+import { billboardComposition, billboardRecipe } from "./billboard"
+import { proofComposition, proofRecipe } from "./proof"
+import { asideComposition, asideRecipe } from "./aside"
+import { stationsComposition, stationsRecipe } from "./stations"
+import { verdictsComposition, verdictsRecipe } from "./verdicts"
+import { caseworkComposition, caseworkRecipe } from "./casework"
+import { resultsComposition, resultsRecipe } from "./results"
+import { upliftComposition, upliftRecipe } from "./uplift"
+import { appraisalComposition, appraisalRecipe } from "./appraisal"
+import { shortfallsComposition, shortfallsRecipe } from "./shortfalls"
+import { tenureComposition, tenureRecipe } from "./tenure"
+import { credoComposition, credoRecipe } from "./credo"
+import { gistComposition, gistRecipe } from "./gist"
+import { reckoningComposition, reckoningRecipe } from "./reckoning"
+import { creditComposition, creditRecipe } from "./credit"
+import { casefileComposition, casefileRecipe } from "./casefile"
+import { relayComposition, relayRecipe } from "./relay"
+import { drawdownComposition, drawdownRecipe } from "./drawdown"
+import { headcountComposition, headcountRecipe } from "./headcount"
+import { postmortemComposition, postmortemRecipe } from "./postmortem"
+import { deltasComposition, deltasRecipe } from "./deltas"
+import { stretchComposition, stretchRecipe } from "./stretch"
+import { sequenceComposition, sequenceRecipe } from "./sequence"
+import { requestsComposition, requestsRecipe } from "./requests"
 
 export type { Composition, CompositionId, CompositionInks, CompositionProps, CompositionSetting } from "./shared"
 export { compositionTag } from "./shared"
+export { describePart, describeShape, recipeCount, shapeGaps, type Recipe, type RecipePart, type RecipeShape } from "./recipe"
 export { fitFixed, paintLines, type FixedTextSpec, type PaintSpec } from "./type"
 
 /**
@@ -553,6 +555,283 @@ export const COMPOSITIONS: Readonly<Record<CompositionId, Composition>> = {
   stretch: stretchComposition,
   sequence: sequenceComposition,
   requests: requestsComposition,
+}
+
+/**
+ * What an author writes to get each composition (`./recipe.ts`), keyed as
+ * `COMPOSITIONS` is. Each recipe sits in its composition's own file.
+ */
+export const RECIPES: Readonly<Record<CompositionId, Recipe>> = {
+  rows: rowsRecipe,
+  table: tableRecipe,
+  waves: wavesRecipe,
+  tree: treeRecipe,
+  rail: railRecipe,
+  figures: figuresRecipe,
+  track: trackRecipe,
+  pairs: pairsRecipe,
+  columns: columnsRecipe,
+  bars: barsRecipe,
+  bridge: bridgeRecipe,
+  records: recordsRecipe,
+  stack: stackRecipe,
+  window: windowRecipe,
+  lanes: lanesRecipe,
+  share: shareRecipe,
+  tiles: tilesRecipe,
+  shifts: shiftsRecipe,
+  roster: rosterRecipe,
+  scores: scoresRecipe,
+  targets: targetsRecipe,
+  trend: trendRecipe,
+  rings: ringsRecipe,
+  cards: cardsRecipe,
+  listing: listingRecipe,
+  log: logRecipe,
+  span: spanRecipe,
+  plates: platesRecipe,
+  paths: pathsRecipe,
+  screen: screenRecipe,
+  annex: annexRecipe,
+  tallies: talliesRecipe,
+  slopes: slopesRecipe,
+  diverging: divergingRecipe,
+  citation: citationRecipe,
+  scales: scalesRecipe,
+  catalog: catalogRecipe,
+  rota: rotaRecipe,
+  sum: sumRecipe,
+  schedule: scheduleRecipe,
+  checks: checksRecipe,
+  readings: readingsRecipe,
+  inset: insetRecipe,
+  docket: docketRecipe,
+  controlled: controlledRecipe,
+  duel: duelRecipe,
+  forest: forestRecipe,
+  multiples: multiplesRecipe,
+  fork: forkRecipe,
+  ruler: rulerRecipe,
+  dumbbells: dumbbellsRecipe,
+  gate: gateRecipe,
+  watch: watchRecipe,
+  motion: motionRecipe,
+  calendar: calendarRecipe,
+  horizon: horizonRecipe,
+  formula: formulaRecipe,
+  errata: errataRecipe,
+  breakdown: breakdownRecipe,
+  benchmark: benchmarkRecipe,
+  paired: pairedRecipe,
+  procedure: procedureRecipe,
+  magnitude: magnitudeRecipe,
+  segments: segmentsRecipe,
+  survey: surveyRecipe,
+  outlook: outlookRecipe,
+  phases: phasesRecipe,
+  objectives: objectivesRecipe,
+  syllabus: syllabusRecipe,
+  studies: studiesRecipe,
+  cohorts: cohortsRecipe,
+  diptych: diptychRecipe,
+  estimates: estimatesRecipe,
+  quiz: quizRecipe,
+  answers: answersRecipe,
+  cases: casesRecipe,
+  ranking: rankingRecipe,
+  rules: rulesRecipe,
+  tiers: tiersRecipe,
+  methods: methodsRecipe,
+  blackboard: blackboardRecipe,
+  expanse: expanseRecipe,
+  stairs: stairsRecipe,
+  funnel: funnelRecipe,
+  rivals: rivalsRecipe,
+  equation: equationRecipe,
+  spotlight: spotlightRecipe,
+  bets: betsRecipe,
+  divide: divideRecipe,
+  locks: locksRecipe,
+  register: registerRecipe,
+  runway: runwayRecipe,
+  uses: usesRecipe,
+  crest: crestRecipe,
+  branch: branchRecipe,
+  season: seasonRecipe,
+  makeup: makeupRecipe,
+  origins: originsRecipe,
+  route: routeRecipe,
+  spots: spotsRecipe,
+  wall: wallRecipe,
+  loop: loopRecipe,
+  stubs: stubsRecipe,
+  fallbacks: fallbacksRecipe,
+  timetable: timetableRecipe,
+  scoreboard: scoreboardRecipe,
+  allotment: allotmentRecipe,
+  asks: asksRecipe,
+  gains: gainsRecipe,
+  hours: hoursRecipe,
+  regions: regionsRecipe,
+  workings: workingsRecipe,
+  levers: leversRecipe,
+  cycles: cyclesRecipe,
+  drift: driftRecipe,
+  parts: partsRecipe,
+  plans: plansRecipe,
+  precedents: precedentsRecipe,
+  safeguards: safeguardsRecipe,
+  remedies: remediesRecipe,
+  checkpoints: checkpointsRecipe,
+  quote: quoteRecipe,
+  papers: papersRecipe,
+  inquiry: inquiryRecipe,
+  ladder: ladderRecipe,
+  reach: reachRecipe,
+  backdrop: backdropRecipe,
+  thresholds: thresholdsRecipe,
+  tabulation: tabulationRecipe,
+  partition: partitionRecipe,
+  findings: findingsRecipe,
+  coverage: coverageRecipe,
+  propositions: propositionsRecipe,
+  cadence: cadenceRecipe,
+  designs: designsRecipe,
+  hazards: hazardsRecipe,
+  itinerary: itineraryRecipe,
+  queries: queriesRecipe,
+  foreword: forewordRecipe,
+  chronicle: chronicleRecipe,
+  measures: measuresRecipe,
+  elapsed: elapsedRecipe,
+  headline: headlineRecipe,
+  witness: witnessRecipe,
+  census: censusRecipe,
+  contrast: contrastRecipe,
+  bracket: bracketRecipe,
+  mix: mixRecipe,
+  twins: twinsRecipe,
+  parallel: parallelRecipe,
+  effects: effectsRecipe,
+  longform: longformRecipe,
+  pledges: pledgesRecipe,
+  opening: openingRecipe,
+  strata: strataRecipe,
+  handscroll: handscrollRecipe,
+  revival: revivalRecipe,
+  nations: nationsRecipe,
+  genres: genresRecipe,
+  bases: basesRecipe,
+  ages: agesRecipe,
+  archive: archiveRecipe,
+  scenes: scenesRecipe,
+  daily: dailyRecipe,
+  excerpts: excerptsRecipe,
+  glyphs: glyphsRecipe,
+  statute: statuteRecipe,
+  crayons: crayonsRecipe,
+  stickies: stickiesRecipe,
+  waiver: waiverRecipe,
+  storeys: storeysRecipe,
+  swatches: swatchesRecipe,
+  yardstick: yardstickRecipe,
+  arc: arcRecipe,
+  magnets: magnetsRecipe,
+  crosscheck: crosscheckRecipe,
+  tray: trayRecipe,
+  checkup: checkupRecipe,
+  backing: backingRecipe,
+  badges: badgesRecipe,
+  ticks: ticksRecipe,
+  programme: programmeRecipe,
+  climb: climbRecipe,
+  solo: soloRecipe,
+  descent: descentRecipe,
+  doubles: doublesRecipe,
+  balance: balanceRecipe,
+  swing: swingRecipe,
+  ebb: ebbRecipe,
+  facing: facingRecipe,
+  lapse: lapseRecipe,
+  triptych: triptychRecipe,
+  mirror: mirrorRecipe,
+  vitrine: vitrineRecipe,
+  reply: replyRecipe,
+  order: orderRecipe,
+  standfirst: standfirstRecipe,
+  duet: duetRecipe,
+  collage: collageRecipe,
+  thread: threadRecipe,
+  lengths: lengthsRecipe,
+  shades: shadesRecipe,
+  atelier: atelierRecipe,
+  parade: paradeRecipe,
+  look: lookRecipe,
+  bounds: boundsRecipe,
+  floorplan: floorplanRecipe,
+  jars: jarsRecipe,
+  squares: squaresRecipe,
+  specimen: specimenRecipe,
+  decades: decadesRecipe,
+  lenses: lensesRecipe,
+  halo: haloRecipe,
+  dateline: datelineRecipe,
+  slice: sliceRecipe,
+  blanks: blanksRecipe,
+  cabinet: cabinetRecipe,
+  hush: hushRecipe,
+  giant: giantRecipe,
+  contour: contourRecipe,
+  faceoff: faceoffRecipe,
+  tilt: tiltRecipe,
+  podiums: podiumsRecipe,
+  gulf: gulfRecipe,
+  crowd: crowdRecipe,
+  tower: towerRecipe,
+  toll: tollRecipe,
+  arches: archesRecipe,
+  slate: slateRecipe,
+  agenda: agendaRecipe,
+  confluence: confluenceRecipe,
+  braces: bracesRecipe,
+  boughs: boughsRecipe,
+  factors: factorsRecipe,
+  subtractions: subtractionsRecipe,
+  flashcards: flashcardsRecipe,
+  risers: risersRecipe,
+  givens: givensRecipe,
+  derivation: derivationRecipe,
+  cascade: cascadeRecipe,
+  exercises: exercisesRecipe,
+  solutions: solutionsRecipe,
+  pitfalls: pitfallsRecipe,
+  strikeout: strikeoutRecipe,
+  chronology: chronologyRecipe,
+  sentence: sentenceRecipe,
+  billboard: billboardRecipe,
+  proof: proofRecipe,
+  aside: asideRecipe,
+  stations: stationsRecipe,
+  verdicts: verdictsRecipe,
+  casework: caseworkRecipe,
+  results: resultsRecipe,
+  uplift: upliftRecipe,
+  appraisal: appraisalRecipe,
+  shortfalls: shortfallsRecipe,
+  tenure: tenureRecipe,
+  credo: credoRecipe,
+  gist: gistRecipe,
+  reckoning: reckoningRecipe,
+  credit: creditRecipe,
+  casefile: casefileRecipe,
+  relay: relayRecipe,
+  drawdown: drawdownRecipe,
+  headcount: headcountRecipe,
+  postmortem: postmortemRecipe,
+  deltas: deltasRecipe,
+  stretch: stretchRecipe,
+  sequence: sequenceRecipe,
+  requests: requestsRecipe,
 }
 
 export const COMPOSITION_IDS = Object.keys(COMPOSITIONS) as readonly CompositionId[]

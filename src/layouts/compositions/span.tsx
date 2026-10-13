@@ -19,6 +19,7 @@ import {
   splitNote,
   toneInk,
 } from "./console"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -83,6 +84,13 @@ function spanShape(components: readonly Component[]): SpanShape | null {
   const note = info ? callouts[1] : callouts[0]
   if (callouts.length === 2 && !info) return null
   return { kpis, info, note }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const spanRecipe: Recipe = {
+  look: "Two or three lengths of time to scale",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 3], needs: ["items[*].value~figure"] }] }],
 }
 
 export const spanComposition: Composition = ({ components, ctx, rect, setting }) => {

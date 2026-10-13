@@ -15,6 +15,7 @@ import {
   stripMarks,
   wholeMark,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Kpis = Extract<Component, { type: "kpi_cards" }>
 type Image = Extract<Component, { type: "image" }>
@@ -53,6 +54,13 @@ export function frameAxis(min: number, max: number, intervals = 3): { lo: number
     if (Math.round((hi - lo) / step) <= intervals && hi > lo) return { lo, hi, step }
   }
   return null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const backdropRecipe: Recipe = {
+  look: "The figures behind a question beside the trend that frames it",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 2] }, { type: "image" }, { type: "chart", count: [3, 12], needs: ["chart_type=line", "title"] }, { type: "paragraph" }] }],
 }
 
 export const backdropComposition: Composition = ({ components, ctx, rect, setting }) => {

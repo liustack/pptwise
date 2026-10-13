@@ -3,6 +3,7 @@ import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { binderInks, binderText, binderWidth, fitBinder, glossBreak, paintBinder, paintBinderIcon, paintBinderLine, splitDot, splitName } from "./binder"
 import { BinderPlainLine, fitPlainLine, noteHeight } from "./binder-bars"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Callout = Extract<Component, { type: "callout" }>
@@ -57,6 +58,13 @@ function readCycle(name: string, cell: string): Cycle | null {
   const legs = /^(.+?)\s*→\s*(.+)$/su.exec(split.name)
   if (!legs) return null
   return { name, from: legs[1]!.trim(), to: legs[2]!.trim(), value: split.rest, sep: split.sep }
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cyclesRecipe: Recipe = {
+  look: "What a store of energy earns a day, worked out place by place",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "callout", needs: ["tag"] }, { type: "comparison", count: [4, 4], needs: ["title", "rows[].emphasis", "rows[].cells[]~colon"] }, { type: "callout", needs: ["title"] }] }],
 }
 
 export const cyclesComposition: Composition = ({ components, ctx, rect, setting }) => {

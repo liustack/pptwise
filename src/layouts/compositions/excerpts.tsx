@@ -11,6 +11,7 @@ import {
   scrollText,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type IconCards = Extract<Component, { type: "icon_cards" }>
 
@@ -38,6 +39,13 @@ const ICON = { dy: 8, size: 22 } as const
 const NAME = { x: 36, w: 300, size: 24, lineHeight: 36 } as const
 const QUOTE = { x: 350, dy: 4, size: 17, lineHeight: 28, maxLines: 2 } as const
 const SOURCE = { gap: 0, size: 11, lineHeight: 20 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const excerptsRecipe: Recipe = {
+  look: "Findings quoted from the record",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "icon_cards", count: [2, 4] }] }],
+}
 
 export const excerptsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "scroll") return null

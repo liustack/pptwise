@@ -15,6 +15,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Cards = Extract<Component, { type: "icon_cards" }>
@@ -49,6 +50,13 @@ const CARD = { y: 336, h: 220, gap: 24, pad: 24, edge: 2 } as const
 const ICON = { dy: 26, size: 24 } as const
 const NAME = { dy: 64, size: 22, lineHeight: 32 } as const
 const TEXT = { dy: 106, size: 14, lineHeight: 24, maxLines: 4 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const sliceRecipe: Recipe = {
+  look: "A whole drawn as one bar with the part the page is about cut out of it",
+  kinds: ["list"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis"] }, { type: "icon_cards", count: [2, 4] }] }],
+}
 
 export const sliceComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect) || components.length !== 2) return null

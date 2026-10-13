@@ -5,6 +5,7 @@ import { mostlyChinese } from "../../lib/text-script"
 import { blendOver, contrastRatio } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, glossBreak, lighter, marqueeInks, marqueeText, marqueeWidth, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueeLine, splitSentence, type MarqueeInks } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -62,6 +63,13 @@ export function partInks(n: number, from: number, to: number, inks: MarqueeInks)
 function inkOn(fill: string, inks: MarqueeInks, size: number): string {
   const ink = contrastRatio(inks.onFire, fill) > contrastRatio(inks.ink, fill) ? inks.onFire : inks.ink
   return marqueeText(ink, fill, size)
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const makeupRecipe: Recipe = {
+  look: "What a crowd is made of",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis", "series[].name~figure"] }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis", "series[].name~figure"] }, { type: "kpi_cards", count: [1, 1], optional: true }, { type: "callout", optional: true }] }],
 }
 
 export const makeupComposition: Composition = ({ components, ctx, rect, setting }) => {

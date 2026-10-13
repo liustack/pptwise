@@ -169,6 +169,7 @@ export const layoutDef = {
   // two-lane timeline: one face, several pages, so several kinds may share it.
   dispatch: "content",
   id: "notice-sheet",
+  compositions: { setting: "notice", offer: NOTICE_COMPOSITIONS },
   kind: "standard",
   story: {
     name: "Notice Sheet",

@@ -19,6 +19,7 @@ import {
   wholeLit,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -60,6 +61,13 @@ const CLOSE = { top: 580, size: 14, lineHeight: 24, litSize: 18, maxLines: 2, w:
 function amount(value: string): number | null {
   const plain = stripEmphasis(value).trim().replace(/,/g, "")
   return /^\d+(\.\d+)?$/u.test(plain) ? Number(plain) : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const lengthsRecipe: Recipe = {
+  look: "Two or three quantities of one unit drawn as lines to scale",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 3], needs: ["items[].delta", "items[*].value~figure"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const lengthsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

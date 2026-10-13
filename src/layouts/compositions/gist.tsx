@@ -25,6 +25,7 @@ import {
   wholeLit,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Paragraph = Extract<Component, { type: "paragraph" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -53,6 +54,13 @@ type Kpis = Extract<Component, { type: "kpi_cards" }>
 const CLAIM = { top: 140, size: 48, lineHeight: 67, maxLines: 2 } as const
 const PARA = { top: 316, gap: 30, w: 940, size: 19, lineHeight: 34, maxLines: 4 } as const
 const STRIP = { top: 470, gap: 36, rule: 2, pad: 22, inset: 24, figure: { size: 60, unit: 16, gap: 4 }, between: 8, label: { size: 15, lineHeight: 22, maxLines: 2 }, chip: { size: 13, lineHeight: 20 }, bottom: 660 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const gistRecipe: Recipe = {
+  look: "The year in one sentence",
+  kinds: ["statement"],
+  shapes: [{ parts: [{ type: "paragraph" }, { type: "kpi_cards", count: [2, 4] }] }],
+}
 
 export const gistComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 2) return null

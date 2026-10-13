@@ -23,6 +23,7 @@ import {
   wholeLit,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -75,6 +76,16 @@ export function logDomain(lows: readonly number[], highs: readonly number[]): [n
     return s * p
   }
   return [nice(Math.min(...positive) / 1.5, false), nice(Math.max(...highs) * 1.5, true)]
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const decadesRecipe: Recipe = {
+  look: "Ranges that span orders of magnitude, drawn on one log scale",
+  kinds: ["comparison", "data"],
+  shapes: [
+    { parts: [{ type: "chart", count: [4, 5], needs: ["chart_type=bar", "direction=horizontal", "series[].data[].upper"] }, { type: "paragraph" }] },
+    { parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=bar", "direction=horizontal", "series[].data[].upper"] }, { type: "paragraph" }, { type: "kpi_cards", count: [2, 2] }, { type: "paragraph" }] },
+  ],
 }
 
 export const decadesComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

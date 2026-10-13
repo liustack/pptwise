@@ -13,6 +13,7 @@ import {
   placePlacardSource,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 
@@ -55,6 +56,13 @@ export function roomWidths(counts: readonly number[]): number[] {
   const left = plain > 0 ? (room - rich * PLAN.rich) / plain : 0
   if (rich === 0 || plain === 0 || left < 200) return counts.map(() => room / counts.length)
   return counts.map((n) => (n >= 2 ? PLAN.rich : left))
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const floorplanRecipe: Recipe = {
+  look: "The visit drawn as a gallery's floor plan",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4] }] }],
 }
 
 export const floorplanComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

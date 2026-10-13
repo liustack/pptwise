@@ -17,6 +17,7 @@ import {
   splitLead,
 } from "./lesson"
 import { fitTip, paintTip, plainCallout, type TipSpec } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type Comparison = Extract<Component, { type: "comparison" }>
 type Panel = Extract<Component, { type: "insight_panel" }>
@@ -61,6 +62,13 @@ export function cohortFigure(text: string): number | null {
   const m = /^([+\-−]?)(\d+(?:\.\d+)?)\s*%$/u.exec(text.trim())
   if (!m) return null
   return (m[1] === "-" || m[1] === "−" ? -1 : 1) * Number(m[2])
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const cohortsRecipe: Recipe = {
+  look: "Who gains most, the weaker half against the stronger",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "comparison", count: [1, 2], needs: ["rows[*].cells[*]~colon"] }, { type: "callout", optional: true }, { type: "insight_panel", count: [2, 2] }, { type: "callout", optional: true }] }],
 }
 
 export const cohortsComposition: Composition = ({ components, ctx, rect, setting }) => {

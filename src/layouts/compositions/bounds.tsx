@@ -18,6 +18,7 @@ import {
   placeLineupSource,
   wholePage,
 } from "./lineup"
+import type { Recipe } from "./recipe"
 
 type ProsCons = Extract<Component, { type: "pros_cons" }>
 
@@ -43,6 +44,13 @@ const COLUMN_W = 552
 const HEAD = { rule: 200, top: 210, size: 26, lineHeight: 36 } as const
 const ROWS = { top: 268, room: 296, pitch: 92, icon: 20, iconDy: 2, textX: 34, labelSize: 16, labelLineHeight: 28, noteDy: 30, noteSize: 12, noteLineHeight: 22, ruleDy: 74 } as const
 const VERDICT = { top: 568, h: 40, size: 20, tracking: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const boundsRecipe: Recipe = {
+  look: "What a piece of work did and did not do, stated before anyone asks",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "pros_cons" }] }],
+}
 
 export const boundsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "lineup" || !wholePage(rect)) return null

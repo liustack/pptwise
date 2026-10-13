@@ -17,6 +17,7 @@ import {
   type DossierInks,
 } from "./dossier"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type InsightPanel = Extract<Component, { type: "insight_panel" }>
@@ -68,6 +69,13 @@ function niceStep(max: number): number {
   const mag = 10 ** Math.floor(Math.log10(raw))
   const unit = raw / mag
   return (unit <= 1 ? 1 : unit <= 2 ? 2 : unit <= 5 ? 5 : 10) * mag
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const dumbbellsRecipe: Recipe = {
+  look: "What each thing cost before and after",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=dumbbell"] }, { type: "insight_panel", count: [1, 3], optional: true }] }],
 }
 
 export const dumbbellsComposition: Composition = ({ components, ctx, rect, setting }) => {

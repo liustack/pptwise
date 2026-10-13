@@ -21,6 +21,7 @@ import {
   nameAndCount,
   wholeLit,
 } from "./scroll"
+import type { Recipe } from "./recipe"
 
 type Image = Extract<Component, { type: "image" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -64,6 +65,13 @@ const LINE = { rule: 414, pad: 16, size: 19, lineHeight: 32, maxLines: 2 } as co
 function countText(value: string, unit: string | undefined): string {
   const u = unit?.trim()
   return !u ? value : u === "%" ? `${value}%` : `${value} ${u}`
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const archiveRecipe: Recipe = {
+  look: "Two figures and how far a piece of work has gone, beside a photograph",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image" }, { type: "kpi_cards", count: [2, 2] }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "series[].emphasis"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const archiveComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {

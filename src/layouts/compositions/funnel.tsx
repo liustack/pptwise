@@ -4,6 +4,7 @@ import { figureStyleOf, groupDigits, joinUnit, writtenFigure } from "../../lib/q
 import { mostlyChinese } from "../../lib/text-script"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchCard, paintPitchLine, paintPitchTracked, pitchBaseline, pitchInks, pitchText, pitchTrackedWidth, pitchWidth } from "./pitch"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -36,6 +37,13 @@ const SHAPE = { cx: 356, w: 700, power: 0.55, top: 4, pitch: 130, gap: 12, value
 const SIDE = { x: 776, w: 376, pad: 24, label: { top: 20, size: 13, lineHeight: 22, tracking: 2 } } as const
 const FIGURE = { h: 190, value: { top: 50, size: 56, lineHeight: 70 }, note: { top: 124, size: 15, lineHeight: 24, maxLines: 2 } } as const
 const MEANS = { gap: 18, h: 200, text: { top: 50, size: 17, lineHeight: 28, maxLines: 4 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const funnelRecipe: Recipe = {
+  look: "A plan narrowed to the part a pitch is about",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=funnel"] }, { type: "kpi_cards", count: [1, 1], optional: true }, { type: "callout", needs: ["title"], optional: true }] }],
+}
 
 export const funnelComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "pitch") return null

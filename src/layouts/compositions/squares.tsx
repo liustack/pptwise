@@ -23,6 +23,7 @@ import {
   wholeLit,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpi = Extract<Component, { type: "kpi_cards" }>
@@ -61,6 +62,13 @@ const SIDE = { x: 780, w: 436 } as const
 const FIRST = { top: 210, size: 110, lineHeight: 130, unit: 30, label: { top: 344, size: 14, lineHeight: 24 } } as const
 const SEAM = { y: 392, w: 116 } as const
 const SECOND = { top: 412, size: 64, lineHeight: 80, unit: 22, label: { top: 492, size: 14, lineHeight: 24, maxLines: 2 } } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const squaresRecipe: Recipe = {
+  look: "Quantities as squares whose areas are to scale",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=bar", "series[].data[].note"] }, { type: "kpi_cards", count: [1, 2] }] }],
+}
 
 export const squaresComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect) || components.length !== 2) return null

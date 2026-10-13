@@ -19,6 +19,7 @@ import {
   placeClaim,
   type PeriodicalInks,
 } from "./periodical"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Image = Extract<Component, { type: "image" }>
@@ -62,6 +63,13 @@ const NOTE = { x: 576, top: 420, w: 576, size: 12, h: 20, maxLines: 2 } as const
 /** The quiet inks a run of series takes in turn, the marked one aside. */
 function quietInks(inks: PeriodicalInks, order: readonly (keyof PeriodicalInks)[]): string[] {
   return order.map((key) => inks[key])
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const mixRecipe: Recipe = {
+  look: "Shares by column beside a photograph and a share bar",
+  kinds: ["hierarchy"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 5], needs: ["chart_type=percent_stacked", "title"] }, { type: "callout", optional: true }, { type: "image" }, { type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal"] }, { type: "paragraph", optional: true }] }],
 }
 
 export const mixComposition: Composition = ({ components, ctx, rect, setting, claim }) => {

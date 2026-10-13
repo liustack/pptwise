@@ -21,6 +21,7 @@ import {
   wholeLit,
   wholePage,
 } from "./placard"
+import type { Recipe } from "./recipe"
 
 type Kpi = Extract<Component, { type: "kpi_cards" }>
 type Comparison = Extract<Component, { type: "comparison" }>
@@ -61,6 +62,13 @@ const SEAM = { y: 410 } as const
 const ROW = { top: 424, pitch: 28, size: 13, lineHeight: 22, label: 11, gap: 12, max: 3 } as const
 const CLOSE = { top: 520, size: 17, lineHeight: 26, w: 1152 } as const
 const NOTE = { top: 560, size: 12, lineHeight: 22, w: 1152 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const jarsRecipe: Recipe = {
+  look: "Two samples side by side, each as large as what it weighs",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 2], needs: ["items[*].note", "items[*].tag"] }, { type: "comparison", count: [1, 3] }, { type: "paragraph", optional: true }, { type: "paragraph", optional: true }] }],
+}
 
 export const jarsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "placard" || !wholePage(rect)) return null

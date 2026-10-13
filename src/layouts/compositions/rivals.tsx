@@ -3,6 +3,7 @@ import { blendOver } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Fire, fitPitch, paintPitch, paintPitchIcon, paintPitchLine, pitchInks, pitchText, pitchWidth } from "./pitch"
 import { plainLine } from "./stairs"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 
@@ -33,6 +34,13 @@ const RULE = 24
 const ROW = { top: 25, h: 58, icon: { x: 8, size: 20 }, text: { x: 38, size: 16 }, cell: { x: 8, size: 14, fact: 15, lineHeight: 26 } } as const
 const MARK = { w: 216, pad: 20, icon: 20, gap: 10, size: 15, tint: 0.08 } as const
 const LINE = { gap: 12, size: 16, lineHeight: 26, maxLines: 2 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const rivalsRecipe: Recipe = {
+  look: "Who is already in the market and what nobody has said yet",
+  kinds: ["comparison"],
+  shapes: [{ parts: [{ type: "data_table", count: [2, 6], needs: ["columns[].emphasis"] }, { type: "callout", optional: true }] }],
+}
 
 export const rivalsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "pitch") return null

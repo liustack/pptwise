@@ -20,6 +20,7 @@ import {
   placeChalkSource,
   wholePage,
 } from "./chalkboard"
+import type { Recipe } from "./recipe"
 
 type Table = Extract<Component, { type: "data_table" }>
 type Paragraph = Extract<Component, { type: "paragraph" }>
@@ -58,6 +59,13 @@ const SOURCE = { x: 64, w: 1152, top: 644, foot: 676 } as const
 export function percentOf(cell: string | number | undefined): number | null {
   const m = /^\s*(-?\d+(?:\.\d+)?)\s*[%％]\s*$/u.exec(String(cell ?? ""))
   return m ? Number(m[1]) : null
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const risersRecipe: Recipe = {
+  look: "Rates by bracket drawn as a staircase on the board",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "data_table", count: [3, 8] }, { type: "paragraph", optional: true }] }],
 }
 
 export const risersComposition: Composition = ({ components, ctx, setting, rect, claim, source }) => {

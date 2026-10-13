@@ -16,6 +16,7 @@ import {
   yearbookText,
   yearbookWidth,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -54,6 +55,13 @@ function decimalsOf(v: number): number {
   const text = String(Number(v.toPrecision(12)))
   const dot = text.indexOf(".")
   return dot < 0 || /e/i.test(text) ? 0 : text.length - dot - 1
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const breakdownRecipe: Recipe = {
+  look: "One amount cut into the parts it is made of, the parts the page is about bracketed together",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [1, 1], needs: ["chart_type=stacked", "direction=horizontal", "emphasis_label", "series[].emphasis"] }, { type: "kpi_cards", count: [1, 4] }] }],
 }
 
 export const breakdownComposition: Composition = ({ components, ctx, rect, setting }) => {

@@ -27,6 +27,7 @@ import {
   plainBars,
   wholePage,
 } from "./account"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -60,6 +61,13 @@ type Kpis = Extract<Component, { type: "kpi_cards" }>
 const HERO = { x: 80, w: 580, top: 176, chip: 13, chipH: 18, gap: 6, figure: { size: 168, unit: 28, gap: 10, weight: 700 as const, unitWeight: 700 as const }, label: 16, labelH: 24 } as const
 const BARS = { top: 470, nameW: 70, gap: 12, name: 14, h: 24, between: 14, track: 416, value: 20, valueGap: 10 } as const
 const SIDE = { x: 740, w: 460, top: 186, rule: 2, pad: 26, figure: { size: 60, unit: 18, gap: 6 }, between: 6, label: 16, labelH: 24 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const drawdownRecipe: Recipe = {
+  look: "One figure the speaker moved, set as large as the page allows, with the before and after under it",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 3], needs: ["chart_type=bar", "series[].data[].emphasis"] }, { type: "kpi_cards", count: [3, 4] }] }],
+}
 
 export const drawdownComposition: Composition = ({ components, ctx, setting, rect, claim, source, kicker }) => {
   if (setting !== "account" || !wholePage(rect) || components.length !== 2) return null

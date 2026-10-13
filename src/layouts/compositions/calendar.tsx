@@ -20,6 +20,7 @@ import {
   yearbookWidth,
   type YearbookInks,
 } from "./yearbook"
+import type { Recipe } from "./recipe"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -70,6 +71,13 @@ interface Placed {
   anchor: "start" | "end"
   left: number
   right: number
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const calendarRecipe: Recipe = {
+  look: "A stretch of months laid to scale",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 8], needs: ["milestones[*].date~figure"] }, { type: "kpi_cards", count: [1, 3] }, { type: "callout", optional: true }] }],
 }
 
 export const calendarComposition: Composition = ({ components, ctx, rect, setting, pageTag }) => {

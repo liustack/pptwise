@@ -6,6 +6,7 @@ import { accessibleInk } from "../../render/ink"
 import { SmallText, fitPanelBar, paintPanel, panelInks, panelOutlineInk, panelSeriesInk, panelText, type Place } from "./panel"
 import { chartFigures, plotNumber, reportedDecimals, valueDecimals } from "./plot"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 
@@ -184,6 +185,13 @@ export function shiftsPanel(chart: Chart, place: Place, ctx: ComponentCtx): Reac
       <g {...blockTag(ctx, chart)}>{nodes}</g>
     </g>
   )
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const shiftsRecipe: Recipe = {
+  look: "A dumbbell chart in a panel, each row a move from the first value to the last",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "chart", count: [2, 6], needs: ["chart_type=dumbbell"] }] }],
 }
 
 /** The composition: a dumbbell chart alone on the page, in a panel across the band. */

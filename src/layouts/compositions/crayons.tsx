@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { stripEmphasis } from "../../render/emphasis"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { boardY, crayonInks, fitCrayon, inkOn, paintCrayon, paintCrayonIcon, paintCrayonLine, placeCrayonClaim, placeCrayonSource } from "./crayonbox"
+import type { Recipe } from "./recipe"
 
 type Numbered = Extract<Component, { type: "numbered_cards" }>
 
@@ -27,6 +28,13 @@ const NUMBER = { top: 246, size: 26, lineHeight: 36 } as const
 const ICON = { top: 312, size: 32 } as const
 const NAME = { top: 360, inset: 10, size: 20, lineHeight: 28, maxLines: 3 } as const
 const WORDS = { top: 466, inset: 8, size: 14, lineHeight: 21, maxLines: 4 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const crayonsRecipe: Recipe = {
+  look: "What a meeting will cover as a row of crayons",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "numbered_cards", count: [3, 6], needs: ["items[*].text", "items[*].icon"] }] }],
+}
 
 export const crayonsComposition: Composition = ({ components, ctx, rect, setting, claim, source }) => {
   if (setting !== "crayonbox") return null

@@ -17,6 +17,7 @@ import {
   wholeMark,
   type AsideSpec,
 } from "./manuscript"
+import type { Recipe } from "./recipe"
 
 type Chart = Extract<Component, { type: "chart" }>
 type Kpis = Extract<Component, { type: "kpi_cards" }>
@@ -50,6 +51,13 @@ const NOTE = { dy: 184, size: 13, h: 22 } as const
 const FACTS = { dy: 252, pitch: 340, label: { size: 13, h: 20, w: 300 }, value: { dy: 24, size: 40, h: 50 } } as const
 const CLOSE = { dy: 362, h: 50, right: 56 } as const
 const CLOSE_SPEC: AsideSpec = { size: 15, lineHeight: 25, maxLines: 2, pad: 0 }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const partitionRecipe: Recipe = {
+  look: "A whole and where it went",
+  kinds: ["evidence"],
+  shapes: [{ parts: [{ type: "chart", count: [6, 6], needs: ["chart_type=bar", "title", "direction=horizontal"] }, { type: "kpi_cards", count: [1, 4], optional: true }, { type: "callout", optional: true }] }],
+}
 
 export const partitionComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "manuscript") return null

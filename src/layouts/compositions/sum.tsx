@@ -9,6 +9,7 @@ import { splitNote } from "./console"
 import { splitRow } from "./rows"
 import { fitMemo, memoInks, memoText, memoWidth, paintMemo, paintMemoLine, type MemoInks } from "./memo"
 import { blockTag, compositionTag, type Composition } from "./shared"
+import type { Recipe } from "./recipe"
 
 type Bullets = Extract<Component, { type: "bullets" }>
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
@@ -50,6 +51,13 @@ const NOTE = {
   short: { gap: 14, w: 60 },
   then: { gap: 16, size: 15, lineHeight: 24, maxLines: 4 },
 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const sumRecipe: Recipe = {
+  look: "A sum worked on ruled paper",
+  kinds: ["fact"],
+  shapes: [{ parts: [{ type: "bullets", count: [1, 4], needs: ["items[*]~colon"] }, { type: "kpi_cards", count: [1, 1] }, { type: "callout", optional: true }] }],
+}
 
 export const sumComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "memo") return null

@@ -17,6 +17,7 @@ import {
   splitLead,
 } from "./lesson"
 import { fitTip, paintTip, plainCallout, type TipSpec } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type KpiCards = Extract<Component, { type: "kpi_cards" }>
 
@@ -49,6 +50,13 @@ type KpiCards = Extract<Component, { type: "kpi_cards" }>
 const CARD = { h: 320, gap: 20, pad: 20, icon: { top: 22, size: 24 }, field: { x: 54, top: 20, size: 16, lineHeight: 28 }, value: { top: 62, size: 44, lineHeight: 56, unit: 20 }, measure: { top: 122, size: 15, lineHeight: 24 }, note: { top: 150, size: 14, lineHeight: 24 }, rule: 184, sample: { top: 198, size: 13, lineHeight: 22 }, pill: { top: 274 } } as const
 const TIP = { top: 344, h: 56 } as const
 const TIP_SPEC: TipSpec = { size: 16, lineHeight: 24, maxLines: 1, textX: 56, icon: { x: 16, size: 22 } }
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const studiesRecipe: Recipe = {
+  look: "What each study found, side by side",
+  kinds: ["data"],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 4] }, { type: "callout", optional: true }] }],
+}
 
 export const studiesComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "lesson") return null

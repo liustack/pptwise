@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { Lead, fitMarquee, glossBreak, marqueeInks, marqueeText, paintMarquee, paintMarqueeCard, paintMarqueeIcon, paintMarqueePhoto, splitName, splitSentence } from "./marquee"
+import type { Recipe } from "./recipe"
 
 type ImageGrid = Extract<Component, { type: "image_grid" }>
 
@@ -35,6 +36,13 @@ const PHOTO = { w: 260, h: 196, r: 10 } as const
 const CARD = { x: 272, w: 296, h: 196, edge: 2, icon: { x: 20, y: 20, size: 26 }, name: { x: 58, top: 18, size: 24, lineHeight: 32, w: 220 }, job: { x: 20, top: 66, size: 16, lineHeight: 26, maxLines: 2, w: 260 }, note: { x: 20, top: 150, size: 12, lineHeight: 22, w: 260 } } as const
 /** The closing line at y622 as on the board, raised to clear a source line under the band, at least `gap` under the cards. */
 const CLOSE = { top: 434, size: 14, lineHeight: 24, gap: 12 } as const
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const spotsRecipe: Recipe = {
+  look: "Where the plan meets its crowd",
+  kinds: ["photo"],
+  shapes: [{ parts: [{ type: "image_grid", count: [2, 4], needs: ["items[*].caption", "items[*].icon", "items[*].caption~colon"] }, { type: "callout", optional: true }] }],
+}
 
 export const spotsComposition: Composition = ({ components, ctx, rect, setting }) => {
   if (setting !== "marquee") return null

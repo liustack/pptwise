@@ -17,6 +17,7 @@ import {
   type LessonInks,
 } from "./lesson"
 import { fitTip, paintTip, plainCallout, type TipSpec } from "./lesson-tips"
+import type { Recipe } from "./recipe"
 
 type Roadmap = Extract<Component, { type: "roadmap" }>
 type Phase = Roadmap["items"][number]
@@ -51,6 +52,13 @@ const TIP_SPEC: TipSpec = { size: 17, lineHeight: 26, maxLines: 1, textX: 60, ic
 function phaseInk(item: Phase, i: number, n: number, inks: LessonInks): string {
   if (item.emphasis) return inks.pen
   return n >= 3 && i === n - 1 ? inks.quiet : inks.mark
+}
+
+/** What an author writes to get this drawing (`./recipe.ts`). */
+export const syllabusRecipe: Recipe = {
+  look: "A class laid out by the minute",
+  kinds: ["process"],
+  shapes: [{ parts: [{ type: "roadmap", count: [2, 4], needs: ["items[*].duration"] }, { type: "callout", optional: true }] }],
 }
 
 export const syllabusComposition: Composition = ({ components, ctx, rect, setting }) => {

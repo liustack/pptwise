@@ -89,6 +89,7 @@ export const layoutDef = {
   // pages, so several kinds may share it.
   dispatch: "content",
   id: "portrait-sheet",
+  compositions: { setting: "portrait", offer: PORTRAIT_COMPOSITIONS, subheading: "declines" },
   kind: "standard",
   story: {
     name: "Portrait Sheet",
