@@ -5,7 +5,7 @@ import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, readableOn } from "../render/ink"
 import { anyCut } from "./declared-fit"
 import { deriveInitials } from "./people-initials"
-import { HAIRLINE, hairlineInk, isRuled, paperOf } from "./surfaces"
+import { HAIRLINE, hairlineInk, isRuled, markInk, paperOf } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type PeopleCardsComponent = Extract<Component, { type: "people_cards" }>
@@ -254,7 +254,7 @@ function renderBadge(
   fill: string,
   ctx: ComponentCtx,
 ): React.ReactElement {
-  // Ruled: a ring of hairline round the initials, set in the muted ink, as
+  // Ruled: a ring round the initials, both in the muted ink, as
   // a printed roster marks a face it has no photograph for. The palette
   // colour that told the badges apart has nothing to fill.
   const ruled = isRuled(ctx)
@@ -262,7 +262,7 @@ function renderBadge(
   return (
     <>
       {ruled ? (
-        <circle cx={cx} cy={cy} r={BADGE_R - HAIRLINE / 2} fill="none" stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+        <circle cx={cx} cy={cy} r={BADGE_R - HAIRLINE / 2} fill="none" stroke={markInk(ctx)} strokeWidth={HAIRLINE} />
       ) : (
         <circle cx={cx} cy={cy} r={BADGE_R} fill={fill} />
       )}

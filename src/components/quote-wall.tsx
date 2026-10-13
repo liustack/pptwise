@@ -1,7 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { accessibleInk, emphasisFill, graphicInk, liftedInk, readableOn } from "../render/ink"
-import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
+import { HAIRLINE, hairlineInk, isRuled, markInk, paperOf, RULE } from "./surfaces"
 import { mixHex } from "./color-mix"
 import { deriveInitials } from "./people-initials"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -311,7 +311,7 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
                 ))}
                 <rect x={PAD} y={ruleY} width={contentW} height={1} fill={inks.rule} />
                 {inks.top ? (
-                  <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R - HAIRLINE / 2} fill="none" stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                  <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R - HAIRLINE / 2} fill="none" stroke={markInk(ctx)} strokeWidth={HAIRLINE} />
                 ) : (
                   <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R} fill={inks.avatarFill} />
                 )}

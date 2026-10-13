@@ -18,6 +18,7 @@ import { LEXICONS } from "../../evals/gallery/corpus/lexicon"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderComponent, measureComponent } from "./index"
 import { isRuled } from "./surfaces"
+import { contrastRatio } from "../render/ink"
 import type { ComponentCtx } from "./types"
 
 const BOX = { x: 64, y: 176, w: 1152 }
@@ -186,6 +187,23 @@ describe("a ruled theme sets every shared component as print", () => {
       expect(filledFurniture(markup, type, ctx)).toEqual([])
       expect(rounded(markup, type)).toEqual([])
       expect(findContrastIssues(markup)).toEqual([])
+    })
+  }
+})
+
+describe("a ruled face with no photograph", () => {
+  // The ring that stands for a person is a mark, not a divider: drawn in the
+  // hairline it sat at 1.35:1 on white and the roster read as blank space.
+  for (const type of ["people_cards", "quote_wall"] as const) {
+    it(`${type}: draws each face's ring in an ink that reads as a graphic`, () => {
+      const component = COMPONENT_BUILDERS[type]!(LEXICONS.zh)
+      const ctx = ruledCtx(component)
+      const doc = new DOMParser().parseFromString(page(component, ctx), "image/svg+xml")
+      const rings = [...doc.querySelectorAll("circle")].filter((c) => c.getAttribute("fill") === "none")
+      expect(rings.length).toBeGreaterThan(0)
+      for (const ring of rings) {
+        expect(contrastRatio(ring.getAttribute("stroke")!, ctx.defaultBg ?? ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      }
     })
   }
 })

@@ -51,6 +51,16 @@ export function hairlineInk(ctx: Pick<ComponentCtx, "colors" | "defaultBg">): st
   return ctx.colors.border ?? ctx.colors.cardStroke ?? mixHex(paperOf(ctx), ctx.colors.text, 0.2)
 }
 
+/**
+ * The ink of an outline that is a mark in its own right, such as the ring
+ * that stands for a face with no photograph. A hairline only parts things
+ * and may be faint, but a mark has to be seen, so this is the muted ink at
+ * the 3:1 a graphic owes the paper.
+ */
+export function markInk(ctx: Pick<ComponentCtx, "colors" | "defaultBg">): string {
+  return graphicInk(ctx.colors.muted, paperOf(ctx))
+}
+
 /** A hairline's weight. */
 export const HAIRLINE = 1
 /** The ink rule under a table's head, and the accent rule over what a page leads with. */
