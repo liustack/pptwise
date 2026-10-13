@@ -93,6 +93,7 @@ window.__ModuleLoader__.load({
         'card.needsRevision': '待修改',
         'card.findings': '{n} 条检查提示',
         'card.themes': '{n} 个主题',
+        'card.signature': '招牌版式 {x}/{n} 页',
         'card.saving': '正在保存…',
         'card.retryDownload': '重新下载',
         'card.export.gone': '不可用',
@@ -147,6 +148,7 @@ window.__ModuleLoader__.load({
         'card.needsRevision': 'needs revision',
         'card.findings': '{n} audit findings',
         'card.themes': '{n} themes',
+        'card.signature': 'Signature layouts on {x} of {n} pages',
         'card.saving': 'Saving…',
         'card.retryDownload': 'Retry download',
         'card.export.gone': 'Unavailable',
@@ -1669,6 +1671,8 @@ window.__ModuleLoader__.load({
                   )
                 : null,
               findingCount > 0 ? h('span', { key: 'f' }, t('card.findings', { n: findingCount })) : null,
+              // How many of the pages that can take one the theme's signature layouts drew.
+              signatureMeta(bundle),
             ],
             actions: [
               // No viewer without an id, and none for an id the route has
@@ -2191,6 +2195,13 @@ window.__ModuleLoader__.load({
        * nothing else, so a caption never runs into the next tile. "Edit this
        * page" sits over the tile and shows on hover or keyboard focus.
        */
+      /** `Signature layouts on 7 of 9 pages`, for a build that kept the count and has a page that can take one. */
+      function signatureMeta(bundle) {
+        var signature = bundle.signature
+        if (!signature || !(signature.offered > 0)) return null
+        return h('span', { key: 's', 'data-signature': '' }, t('card.signature', { x: signature.drawn, n: signature.offered }))
+      }
+
       function DraftDesk(props) {
         var entry = props.entry
         var got = useRouteBundle(entry.id)
@@ -2231,6 +2242,7 @@ window.__ModuleLoader__.load({
               h('span', { key: 'n' }, t('desk.pages', { n: pages.length })),
               bundle.draft ? h('span', { key: 'w', 'data-desk-written': '' }, t('desk.written', { x: written, n: pages.length })) : null,
               exportable ? null : h(Badge, { key: 'r', tone: 'warning' }, t('desk.needsRevision')),
+              signatureMeta(bundle),
               diff.comparable
                 ? h(
                     'span',

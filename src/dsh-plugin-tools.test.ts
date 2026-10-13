@@ -48,6 +48,7 @@ interface BuildValue {
   errors: Issue[]
   warnings: Issue[]
   alternatives?: { id: string; name: string }[]
+  signature?: { pages: number; offered: number; drawn: number; plain: unknown[] }
 }
 
 interface Tool<A, V> {
@@ -172,7 +173,13 @@ if (argv[0] === "theme" && argv[1] === "try") {
     }) }
   }
   const warnings = existsSync(join(target, "clean")) ? [] : [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }]
-  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings, preview, pptx: errors.length === 0 ? pptx : null, ...(alternatives ? { alternatives } : {}), notes: [] }
+  const signature = existsSync(join(target, "signature"))
+    ? { pages: 2, offered: 2, drawn: 1, perPage: [
+        { page: 1, pageId: "cover", file: "pages/cover.json", drawnBy: "photograph" },
+        { page: 2, pageId: "why", file: "pages/why.json", drawnBy: null, nearest: { id: "figures", look: "Headline figures set large", write: "kpi_cards (2 to 4 items)", changes: ["the recipe has no room for the paragraph"] } },
+      ] }
+    : undefined
+  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings, preview, pptx: errors.length === 0 ? pptx : null, ...(alternatives ? { alternatives } : {}), ...(signature ? { signature } : {}), notes: [] }
   process.stdout.write(JSON.stringify(report, null, 2) + "\\n")
   if (errors.length > 0) process.exitCode = 1
 } else if (argv[0] === "spec" && argv[1] === "validate") {
@@ -417,6 +424,34 @@ describe("pptwise_build", () => {
     expect(text.split("\n")[0]).toBe(`pptwise-preview:${value.previewId} · rendered 2 pages · build passed: every check is clean`)
   })
 
+  it("passes on the signature layout count and a hint for each plain page, and keeps the count with the card", async () => {
+    const { svc, workspace, route, handler } = await setup("build-signature")
+    const target = await deck(workspace, ["signature"])
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    expect(value.signature).toEqual({
+      pages: 2,
+      offered: 2,
+      drawn: 1,
+      plain: [
+        {
+          page: 2,
+          pageId: "why",
+          file: "pages/why.json",
+          nearest: { id: "figures", look: "Headline figures set large", write: "kpi_cards (2 to 4 items)", changes: ["the recipe has no room for the paragraph"] },
+        },
+      ],
+    })
+    matchesSchema(value, svc.buildTool.output.schema)
+    const text = svc.buildTool.output.render({}, value)[0]!.text
+    expect(text).toContain("signature layouts: 1 of the 2 pages that can take one")
+    expect(text).toContain(
+      "- page 2 (why) (pages/why.json): drawn plain, nearest figures (Headline figures set large). write: kpi_cards (2 to 4 items). to change: the recipe has no room for the paragraph",
+    )
+    expect(text).toContain("never add content to fit")
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as Record<string, unknown>
+    expect(bundle.signature).toEqual({ offered: 2, drawn: 1 })
+  })
+
   it("returns each problem with its page, file and field, and shows the pages without a download", async () => {
     const { svc, workspace, route, handler } = await setup("build-revise")
     const target = await deck(workspace, ["broken"])
@@ -493,9 +528,12 @@ describe("pptwise_build", () => {
     const target = await deck(workspace)
     const value = await svc.buildTool.execute({ target }, inSession(workspace))
     expect(value).not.toHaveProperty("alternatives")
+    expect(value).not.toHaveProperty("signature")
     expect(svc.buildTool.output.render({}, value)[0]!.text).not.toContain("other themes")
+    expect(svc.buildTool.output.render({}, value)[0]!.text).not.toContain("signature layouts")
     const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as Record<string, unknown>
     expect(bundle).not.toHaveProperty("alternatives")
+    expect(bundle).not.toHaveProperty("signature")
   })
 
   it("throws when the command fails outright rather than reporting a revision", async () => {

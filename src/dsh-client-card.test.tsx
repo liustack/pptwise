@@ -31,6 +31,7 @@ interface Bundle {
   slide?: { width: number; height: number }
   pages: Page[]
   draft?: boolean
+  signature?: { offered: number; drawn: number }
 }
 
 type CardProps = { block: unknown }
@@ -1211,6 +1212,22 @@ describe("dsh preview card — a deck with unfilled pages", () => {
   })
 })
 
+describe("dsh preview card — signature layouts", () => {
+  it("says how many of the pages that can take one the theme's signature layouts drew", () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const { container } = render(<Card block={blockWith({ ...bundleOf([page(1), page(2)]), signature: { offered: 9, drawn: 7 } }, "abc")} />)
+    expect(container.querySelector("[data-signature]")!.textContent).toBe("Signature layouts on 7 of 9 pages")
+  })
+
+  it("keeps quiet when no page can take one, or the build kept no count", () => {
+    const Card = makeCard({ key: "pptwise_build" })
+    const none = render(<Card block={blockWith({ ...bundleOf([page(1)]), signature: { offered: 0, drawn: 0 } }, "abc")} />)
+    expect(none.container.querySelector("[data-signature]")).toBeNull()
+    const old = render(<Card block={blockWith(bundleOf([page(1)]), "abc")} />)
+    expect(old.container.querySelector("[data-signature]")).toBeNull()
+  })
+})
+
 describe("dsh preview card — a preview whose bookkeeping is damaged", () => {
   /**
    * Every assertion below is about what a person reads on screen.
@@ -2377,7 +2394,7 @@ describe("dsh draft desk — the card under the turn", () => {
 
   it("shows the version, page count and the pages changed since the last version, matched by slide id", async () => {
     const { Tail } = makeTail()
-    const now = { ...bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(4, "d")], "weekly"), exportable: true }
+    const now = { ...bundleOf([hashed(1, "a", "cover"), hashed(2, "B2"), hashed(4, "d")], "weekly"), exportable: true, signature: { offered: 2, drawn: 1 } }
     const before = bundleOf([hashed(1, "a", "cover"), hashed(2, "b"), hashed(3, "c")], "weekly")
     fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("old-0001") ? before : now }))
     const { container } = render(<Tail turn={{ turn: 1 }} useArtifacts={() => [entry()]} editPage={vi.fn()} />)
@@ -2385,6 +2402,7 @@ describe("dsh draft desk — the card under the turn", () => {
     await waitFor(() => expect(container.querySelector("[data-desk-diff]")).not.toBeNull())
     expect(container.querySelector("[data-desk-version]")!.textContent).toBe("Version 2")
     expect(screen.getByText("3 pages")).toBeInTheDocument()
+    expect(container.querySelector("[data-signature]")!.textContent).toBe("Signature layouts on 1 of 2 pages")
     expect(container.querySelector("[data-desk-diff]")!.textContent).toBe("2 pages changed · 1 pages removed")
     const marks = Array.from(container.querySelectorAll("[data-desk-page]")).map((el) => el.getAttribute("data-desk-mark"))
     expect(marks).toEqual([null, "changed", "added"])
@@ -2427,6 +2445,7 @@ describe("dsh draft desk — the card under the turn", () => {
     await waitFor(() => expect(container.querySelector("[data-desk-written]")).not.toBeNull())
     expect(container.querySelector("[data-desk-written]")!.textContent).toBe("2 of 3 pages written")
     expect(screen.getByText("Needs revision, no .pptx yet")).toBeInTheDocument()
+    expect(container.querySelector("[data-signature]")).toBeNull()
     expect(screen.queryByText("Download .pptx")).toBeNull()
   })
 

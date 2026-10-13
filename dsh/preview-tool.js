@@ -536,6 +536,13 @@ const OUTLINE_FILE = 'outline.json'
  */
 const ALTERNATIVES_FILE = 'alternatives.json'
 
+/**
+ * What a build record keeps of how many pages the theme's signature layouts
+ * drew (`build`'s `signature`): `{ offered, drawn }`, the pages whose face
+ * offers one and the pages one drew. The card shows the two numbers.
+ */
+const SIGNATURE_FILE = 'signature.json'
+
 /** The contact sheet `theme try --title` writes beside its manifest. */
 const THEME_SHEET_FILE = 'contact-sheet.html'
 
@@ -1680,6 +1687,66 @@ async function readAlternatives(dir) {
 }
 
 /**
+ * How many pages the theme's signature layouts drew, or undefined when the
+ * build kept no count. Checked like every file here.
+ */
+async function readSignature(dir) {
+  const path = join(dir, SIGNATURE_FILE)
+  let raw
+  try {
+    raw = await readFile(path, 'utf8')
+  } catch (error) {
+    if (isAbsent(error)) return undefined
+    throw error
+  }
+  let value
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    throw new PreviewDamaged(`${path} is present but unreadable`)
+  }
+  if (!value || typeof value !== 'object' || !Number.isInteger(value.offered) || !Number.isInteger(value.drawn)) {
+    throw new PreviewDamaged(`${path} is not in a shape this version understands`)
+  }
+  return { offered: value.offered, drawn: value.drawn }
+}
+
+/**
+ * The part of a build's `signature` the model acts on: the count, and each
+ * page drawn plain with the nearest recipe. Undefined when no page's face
+ * offers a signature layout.
+ */
+function signatureValue(signature) {
+  if (!signature || typeof signature !== 'object' || !Array.isArray(signature.perPage) || !(signature.offered > 0)) return undefined
+  const plain = []
+  for (const entry of signature.perPage) {
+    if (entry.drawnBy !== null) continue
+    const value = { page: Number(entry.page) }
+    for (const key of ['pageId', 'file']) if (typeof entry[key] === 'string') value[key] = entry[key]
+    const near = entry.nearest
+    if (near && typeof near === 'object') {
+      value.nearest = {
+        id: String(near.id),
+        look: String(near.look),
+        write: String(near.write),
+        changes: Array.isArray(near.changes) ? near.changes.map(String) : [],
+      }
+    }
+    plain.push(value)
+  }
+  return { pages: Number(signature.pages), offered: Number(signature.offered), drawn: Number(signature.drawn), plain }
+}
+
+/** One page drawn plain, as the model reads it: where it is, the nearest recipe, and what to change. */
+function signatureHintLine(entry) {
+  const where = entry.pageId ? `page ${entry.page} (${entry.pageId})` : `page ${entry.page}`
+  const near = entry.nearest
+  if (!near) return `- ${where}: drawn plain`
+  const changes = near.changes.length > 0 ? `to change: ${near.changes.join(', ')}` : 'it has the recipe and the drawing still declined it: the words run long, or say something the drawing does not set'
+  return `- ${where}${entry.file ? ` (${entry.file})` : ''}: drawn plain, nearest ${near.id} (${near.look}). write: ${near.write}. ${changes}`
+}
+
+/**
  * Copy the pages a build drew in other themes into the record being built,
  * and write the list the card reads. Returns what the model is told: each
  * theme's id and display name, in the CLI's order.
@@ -1784,6 +1851,16 @@ function buildSummary(value) {
     lines.push('Fix each file named above, then call pptwise_build again.')
   }
   for (const issue of value.warnings) lines.push(`warning: ${buildIssueLine(issue)}`)
+  if (value.signature) {
+    const { drawn, offered, pages, plain } = value.signature
+    lines.push(`signature layouts: ${drawn} of the ${offered} page${offered === 1 ? '' : 's'} that can take one${offered === pages ? '' : ` (${pages} pages in all)`}`)
+    if (plain.length > 0) {
+      lines.push(...plain.map(signatureHintLine))
+      lines.push(
+        'These are hints, not problems. Rewrite a page to its recipe only where its content already holds it, then build again. Leave a page plain where it does not, and never add content to fit.',
+      )
+    }
+  }
   if (value.previewId) lines.push('The user can page through the drawn pages in this card. Do not tell them to open a URL.')
   if (Array.isArray(value.alternatives) && value.alternatives.length > 0) {
     lines.push(
@@ -2041,7 +2118,13 @@ export function createPreviewService(cliPath) {
         // on this, rather than offering one the route would refuse.
         if (record.kind === 'build') {
           const alternatives = await readAlternatives(dir)
-          bundle = { ...bundle, exportable: typeof record.pptxFile === 'string', ...(alternatives ? { alternatives } : {}) }
+          const signature = await readSignature(dir)
+          bundle = {
+            ...bundle,
+            exportable: typeof record.pptxFile === 'string',
+            ...(alternatives ? { alternatives } : {}),
+            ...(signature ? { signature } : {}),
+          }
         }
       }
     } catch (error) {
@@ -2615,11 +2698,46 @@ export function createPreviewService(cliPath) {
     timeoutMs: 120_000,
   }
 
+  const SIGNATURE_SCHEMA = {
+    type: 'object',
+    properties: {
+      pages: { type: 'number' },
+      offered: { type: 'number' },
+      drawn: { type: 'number' },
+      plain: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            page: { type: 'number' },
+            pageId: { type: 'string' },
+            file: { type: 'string' },
+            nearest: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                look: { type: 'string' },
+                write: { type: 'string' },
+                changes: { type: 'array', items: { type: 'string' } },
+              },
+              required: ['id', 'look', 'write', 'changes'],
+              additionalProperties: false,
+            },
+          },
+          required: ['page'],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ['pages', 'offered', 'drawn', 'plain'],
+    additionalProperties: false,
+  }
+
   const buildTool = {
     name: BUILD_TOOL_NAME,
     description:
       'Build a pptwise deck project in one pass: assemble, validate, audit, draw the pages and, only when every check passes, write the deck\'s one .pptx. ' +
-      'Shows the drawn pages to the user in this conversation. Returns either the .pptx path or every problem with the page, file and field to fix. ' +
+      'Shows the drawn pages to the user in this conversation. Returns either the .pptx path or every problem with the page, file and field to fix, and, as hints, the pages the theme drew plain with the nearest of its signature layouts. ' +
       'Use it as the self-check after writing or editing pages, instead of running those steps one by one.',
     parameters: {
       type: 'object',
@@ -2651,6 +2769,7 @@ export function createPreviewService(cliPath) {
               additionalProperties: false,
             },
           },
+          signature: SIGNATURE_SCHEMA,
         },
         required: ['status', 'errors', 'warnings'],
         additionalProperties: false,
@@ -2676,6 +2795,7 @@ export function createPreviewService(cliPath) {
         throw new Error('pptwise build printed a report this plugin cannot read')
       }
       const ok = report.status === 'ok'
+      const signature = signatureValue(report.signature)
       let previewId
       let alternatives
       if (report.preview) {
@@ -2689,6 +2809,7 @@ export function createPreviewService(cliPath) {
           await copyFile(String(report.preview.html), join(stageDir, PREVIEW_HTML_FILE))
           for (const page of manifest.pages) await copyFile(join(fromDir, page.file), join(stageDir, page.file))
           alternatives = await copyAlternatives(report.alternatives, stageDir)
+          if (signature) await writeFile(join(stageDir, SIGNATURE_FILE), JSON.stringify({ offered: signature.offered, drawn: signature.drawn }))
           let pptxFile
           if (ok && typeof report.pptx === 'string' && isSafeFileName(basename(report.pptx))) {
             pptxFile = basename(report.pptx)
@@ -2712,6 +2833,7 @@ export function createPreviewService(cliPath) {
         errors: report.errors.map(buildIssueValue),
         warnings: Array.isArray(report.warnings) ? report.warnings.map(buildIssueValue) : [],
         ...(alternatives ? { alternatives } : {}),
+        ...(signature ? { signature } : {}),
       }
     },
     timeoutMs: 180_000,
