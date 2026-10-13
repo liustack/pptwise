@@ -1,7 +1,8 @@
 import type { ReactElement } from "react"
+import { cardGround, HAIRLINE, hairlineInk, isRuled, leadInk, RULE } from "./surfaces"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
 import { Icon } from "../render/icons"
 import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
@@ -142,10 +143,14 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
         />
       )
     }
-    const noteInk = accessibleInk(ctx.colors.muted, ctx.colors.surface, noteSize)
-    const verdictInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, labelSize)
+    // Ruled: the two columns hang from hairlines on the paper, and the
+    // verdict is set in the primary under a rule of the accent.
+    const ruled = isRuled(ctx)
+    const ground = cardGround(ctx)
+    const noteInk = accessibleInk(ctx.colors.muted, ground, noteSize)
+    const verdictInk = ruled ? leadInk(ctx, labelSize) : accessibleInk(ctx.colors.surface, ctx.colors.primary, labelSize)
 
-    const cardInk = accessibleInk(ctx.colors.text, ctx.colors.surface, labelSize)
+    const cardInk = accessibleInk(ctx.colors.text, ground, labelSize)
     const column = (side: Side, x: number, mark: "check" | "x", key: string): ReactElement => {
       const title = fitFormLine(side.title, {
         maxWidth: innerW,
@@ -158,21 +163,25 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
       // sits next to `colors.surface`, and the tick disappeared on arena.
       const markColor = accessibleInk(
         mark === "check" ? ctx.colors.primary : ctx.colors.muted,
-        ctx.colors.surface,
+        ground,
         MARK,
       )
       return (
         <g key={key}>
-          <rect
-            x={x}
-            y={0}
-            width={g.colW}
-            height={g.cardH}
-            rx={ctx.shape?.radius ?? CARD_RADIUS}
-            fill={ctx.colors.surface}
-            stroke={border}
-            strokeWidth={1}
-          />
+          {ruled ? (
+            <line x1={x} y1={HAIRLINE / 2} x2={x + g.colW} y2={HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          ) : (
+            <rect
+              x={x}
+              y={0}
+              width={g.colW}
+              height={g.cardH}
+              rx={ctx.shape?.radius ?? CARD_RADIUS}
+              fill={ctx.colors.surface}
+              stroke={border}
+              strokeWidth={1}
+            />
+          )}
           <text
             x={x + PAD_X}
             y={PAD_Y + title.fontSize}
@@ -243,14 +252,25 @@ export const prosCons: SvgComponent<ProsConsComponent> = {
       <g transform={`translate(${box.x},${box.y})`}>
         {column(component.pros, 0, "check", "pros")}
         {column(component.cons, g.colW + COL_GAP, "x", "cons")}
-        <rect
-          x={0}
-          y={g.cardH + VERDICT_GAP}
-          width={box.w}
-          height={VERDICT_H}
-          rx={ctx.shape?.radius ?? CARD_RADIUS}
-          fill={ctx.colors.primary}
-        />
+        {ruled ? (
+          <line
+            x1={0}
+            y1={g.cardH + VERDICT_GAP + RULE / 2}
+            x2={box.w}
+            y2={g.cardH + VERDICT_GAP + RULE / 2}
+            stroke={graphicInk(ctx.colors.accent, ground)}
+            strokeWidth={RULE}
+          />
+        ) : (
+          <rect
+            x={0}
+            y={g.cardH + VERDICT_GAP}
+            width={box.w}
+            height={VERDICT_H}
+            rx={ctx.shape?.radius ?? CARD_RADIUS}
+            fill={ctx.colors.primary}
+          />
+        )}
         <text
           x={PAD_X}
           y={g.cardH + VERDICT_GAP + VERDICT_H / 2 + verdict.fontSize * 0.35}

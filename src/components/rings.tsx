@@ -3,6 +3,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
+import { HAIRLINE, isRuled, LEAD_FRAME, leadInk, ruledFrame } from "./surfaces"
 import type { RenderDef, SvgComponent } from "./types"
 
 type RingsComponent = Extract<Component, { type: "rings" }>
@@ -191,11 +192,17 @@ export const rings: SvgComponent<RingsComponent> = {
       box.h,
     )
     if (!fits) return <DroppedContentMarker count={n} kind="item" />
+    const ruled = isRuled(ctx)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {/* 外层环先画（从外到内叠放，内核最后盖顶） */}
         {[...component.items.keys()].reverse().map((idx) => {
           const r = radii[idx]
+          // Ruled: the rings are outlines on the paper, the core a line of
+          // the primary with its name in it.
+          if (ruled) {
+            return <circle key={idx} cx={cx} cy={cy} r={r - (idx === 0 ? LEAD_FRAME : HAIRLINE) / 2} fill="none" {...ruledFrame(ctx, idx === 0)} />
+          }
           if (idx === 0) {
             return <circle key={idx} cx={cx} cy={cy} r={r} fill={ctx.colors.primary} />
           }
@@ -234,7 +241,7 @@ export const rings: SvgComponent<RingsComponent> = {
             textAnchor="middle"
             fontSize={coreLabel.fontSize}
             fontWeight="bold"
-            fill={accessibleInk(ctx.colors.surface, ctx.colors.primary, coreLabel.fontSize)}
+            fill={ruled ? leadInk(ctx, coreLabel.fontSize) : accessibleInk(ctx.colors.surface, ctx.colors.primary, coreLabel.fontSize)}
             fontFamily={ctx.fonts.heading}
             dominantBaseline="alphabetic"
           >

@@ -12,6 +12,7 @@ import {
   formTextClipMarker,
   layoutAtSize,
 } from "./legibility"
+import { isRuled, paperOf, ruledFrame } from "./surfaces"
 import type { RenderDef, SvgComponent } from "./types"
 
 type DecisionTreeComponent = Extract<Component, { type: "decision_tree" }>
@@ -216,6 +217,7 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4
     const highlight = formHighlightFill(ctx.colors)
+    const ruled = isRuled(ctx)
     const line = graphicInk(border, pageBg)
     const edgeSize = FORM_BODY_FLOOR
 
@@ -367,7 +369,9 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       },
     ): ReactElement => {
       const filled = opts.filled === true
-      const fill = filled ? highlight : ctx.colors.surface
+      // Ruled: no card is filled. The chosen outcome keeps its words in the
+      // theme's inks on the paper inside a line of the primary.
+      const fill = ruled ? paperOf(ctx) : filled ? highlight : ctx.colors.surface
       const { valueFit, unitFit, unitW, textW } = figures(node, opts.value, opts.unit)
       const title = layoutAtSize(opts.title, {
         maxWidth: textW,
@@ -382,20 +386,24 @@ export const decisionTree: SvgComponent<DecisionTreeComponent> = {
       const blockH = wordsHeight(title, detailFit)
       const top = node.y + node.h / 2 - blockH / 2
       const ink = (preferred: string, size: number) =>
-        accessibleInk(filled ? ctx.colors.surface : preferred, fill, size)
+        accessibleInk(filled && !ruled ? ctx.colors.surface : preferred, fill, size)
       const valueRight = node.x + node.w - g.pad - unitW
       return (
         <g key={key}>
-          <rect
-            x={node.x}
-            y={node.y}
-            width={node.w}
-            height={node.h}
-            rx={radius}
-            fill={fill}
-            stroke={filled ? highlight : opts.strong ? ctx.colors.primary : border}
-            strokeWidth={opts.strong ? 1.75 : 1}
-          />
+          {ruled ? (
+            <rect x={node.x} y={node.y} width={node.w} height={node.h} fill="none" {...ruledFrame(ctx, filled || opts.strong === true)} />
+          ) : (
+            <rect
+              x={node.x}
+              y={node.y}
+              width={node.w}
+              height={node.h}
+              rx={radius}
+              fill={fill}
+              stroke={filled ? highlight : opts.strong ? ctx.colors.primary : border}
+              strokeWidth={opts.strong ? 1.75 : 1}
+            />
+          )}
           {title.lines.map((line, li) => (
             <text
               key={`title-${li}`}

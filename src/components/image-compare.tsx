@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 /** Tracking on a compare label, budgeted by the fit and set on the text. */
@@ -121,6 +122,8 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
     )
     const half = Math.floor((box.w - GAP) / 2)
     const isVs = (component.style ?? "vs") === "vs"
+    const ruled = isRuled(ctx)
+    const paper = paperOf(ctx)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {renderSide({ asset_id: component.left.asset_id, label: component.left.label, x: 0, w: half, h, ctx })}
@@ -140,15 +143,22 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
           // so contrast must be checked against that circle's own fill, not
           // the ambient page background) — same rally/ledger/homeroom
           // failure, same accessibleInk fix.
+          // Ruled: the badge is knocked out of the photographs in the paper,
+          // a hairline round it, the letters in the text ink, so nothing on
+          // the page is a solid disc of the primary (`./surfaces.ts`).
           <g>
-            <circle
-              cx={box.w / 2}
-              cy={h / 2}
-              r={26}
-              fill={ctx.colors.primary}
-              stroke="#FFFFFF"
-              strokeWidth={2.5}
-            />
+            {ruled ? (
+              <circle cx={box.w / 2} cy={h / 2} r={26} fill={paper} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+            ) : (
+              <circle
+                cx={box.w / 2}
+                cy={h / 2}
+                r={26}
+                fill={ctx.colors.primary}
+                stroke="#FFFFFF"
+                strokeWidth={2.5}
+              />
+            )}
             <text
               x={box.w / 2}
               y={h / 2 + 6}
@@ -156,7 +166,7 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
               fontSize={18}
               fontWeight={700}
               fontFamily={ctx.fonts.heading}
-              fill={accessibleInk(ctx.colors.surface, ctx.colors.primary, 18)}
+              fill={ruled ? ctx.colors.text : accessibleInk(ctx.colors.surface, ctx.colors.primary, 18)}
               dominantBaseline="alphabetic"
             >
               VS
@@ -175,10 +185,15 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
           // theme — accessibleInk is a no-op there, verified byte-identical.
           <>
             {[0, half + GAP].map((x, i) => {
-              const chipFill = i === 0 ? ctx.colors.muted : ctx.colors.accent
+              // Ruled: each chip is a label knocked out in the paper, BEFORE
+              // in the muted ink, AFTER in the text ink over a 2px rule of the
+              // accent, where the filled theme fills the chip with each.
+              const chipFill = ruled ? paper : i === 0 ? ctx.colors.muted : ctx.colors.accent
+              const chipInk = ruled ? (i === 0 ? accessibleInk(ctx.colors.muted, paper, 16) : ctx.colors.text) : accessibleInk(ctx.colors.surface, chipFill, 16)
               return (
                 <g key={i} transform={`translate(${x + 10},10)`}>
                   <rect x={0} y={0} width={i === 0 ? 80 : 64} height={28} fill={chipFill} />
+                  {ruled && i === 1 ? <rect x={0} y={28 - RULE} width={64} height={RULE} fill={graphicInk(ctx.colors.accent, paper)} /> : null}
                   <text
                     x={i === 0 ? 40 : 32}
                     y={20}
@@ -186,7 +201,7 @@ export const imageCompare: SvgComponent<ImageCompareComponent> = {
                     fontSize={16}
                     fontWeight={600}
                     fontFamily={ctx.fonts.body}
-                    fill={accessibleInk(ctx.colors.surface, chipFill, 16)}
+                    fill={chipInk}
                     dominantBaseline="alphabetic"
                   >
                     {i === 0 ? "BEFORE" : "AFTER"}

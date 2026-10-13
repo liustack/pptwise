@@ -3,6 +3,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, graphicInk, readableOn } from "../render/ink"
+import { isRuled, leadInk } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, paintedWidthCeiling } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
@@ -161,6 +162,7 @@ export const harveyBalls: SvgComponent<HarveyBallsComponent> = {
 
   render(component, box, ctx) {
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
+    const ruled = isRuled(ctx)
     const band = bandHeight(component)
     const { labelW, criterionW, totalW } = columns(component, box.w)
     const borderColor = ctx.colors.border ?? ctx.colors.muted
@@ -312,12 +314,15 @@ export const harveyBalls: SvgComponent<HarveyBallsComponent> = {
           const top = HEADER_H + r * rowH
           const mid = top + rowH / 2
           const lift = option.highlight === true
-          const plate = lift ? ctx.colors.primary : pageBg
-          const ink = lift ? readableOn(ctx.colors.primary) : gridInk
-          const textInk = lift ? readableOn(ctx.colors.primary) : ctx.colors.text
+          // Ruled: the lifted row is not filled. It is set bold in the
+          // primary on the paper, its balls in the same ink.
+          const filledLift = lift && !ruled
+          const plate = filledLift ? ctx.colors.primary : pageBg
+          const ink = filledLift ? readableOn(ctx.colors.primary) : lift ? graphicInk(ctx.colors.primary, pageBg) : gridInk
+          const textInk = filledLift ? readableOn(ctx.colors.primary) : lift ? leadInk(ctx, label.fontSize) : ctx.colors.text
           return (
             <g key={`r-${r}`}>
-              {lift ? <rect x={0} y={top} width={box.w} height={rowH} fill={ctx.colors.primary} /> : null}
+              {filledLift ? <rect x={0} y={top} width={box.w} height={rowH} fill={ctx.colors.primary} /> : null}
               <text
                 x={PAD_X}
                 y={mid + Math.round(label.fontSize * 0.35)}
@@ -354,7 +359,7 @@ export const harveyBalls: SvgComponent<HarveyBallsComponent> = {
                   {total.text}
                 </text>
               ) : null}
-              {r < rows.length - 1 && !lift ? (
+              {r < rows.length - 1 && !filledLift ? (
                 <line x1={0} y1={top + rowH} x2={box.w} y2={top + rowH} stroke={borderColor} strokeWidth={1} />
               ) : null}
             </g>

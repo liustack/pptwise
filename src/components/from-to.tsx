@@ -2,7 +2,8 @@ import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk, blendOver, contrastRatio, graphicInk, readableOn } from "../render/ink"
 import { emphasisRunInk } from "../render/emphasis"
-import { ordinaryTagSpec, paintTag, tagWidth } from "./tag"
+import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
+import { isRuled, LEAD_FRAME, ruledFrame } from "./surfaces"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { Icon } from "../render/icons"
@@ -115,8 +116,14 @@ export const fromTo: SvgComponent<FromToComponent> = {
     }
 
     /** Ink on the arriving column, which is filled, or on `ground` (the page, or a marked row's tint), which is not. */
+    // Ruled: the arriving column is outlined in the primary rather than
+    // filled, so its words keep their own inks on the paper; a marked row is
+    // set bold in the emphasis ink rather than tinted; the arrow is drawn in
+    // outline.
+    const ruled = isRuled(ctx)
     const ink = (preferred: string, size: number, filled: boolean, ground: string = pageBg) =>
-      accessibleInk(filled ? ctx.colors.surface : preferred, filled ? highlight : ground, size)
+      ruled ? accessibleInk(preferred, ground, size) : accessibleInk(filled ? ctx.colors.surface : preferred, filled ? highlight : ground, size)
+    const markGround = ruled ? pageBg : blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1)
 
     const header = (side: "from" | "to"): ReactElement => {
       const filled = side === "to"
@@ -252,16 +259,20 @@ export const fromTo: SvgComponent<FromToComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect
-          x={g.toX}
-          y={0}
-          width={g.colW}
-          height={g.h}
-          rx={radius}
-          fill={highlight}
-          stroke={highlight}
-          strokeWidth={1}
-        />
+        {ruled ? (
+          <rect x={g.toX + LEAD_FRAME / 2} y={LEAD_FRAME / 2} width={g.colW - LEAD_FRAME} height={g.h - LEAD_FRAME} fill="none" {...ruledFrame(ctx, true)} />
+        ) : (
+          <rect
+            x={g.toX}
+            y={0}
+            width={g.colW}
+            height={g.h}
+            rx={radius}
+            fill={highlight}
+            stroke={highlight}
+            strokeWidth={1}
+          />
+        )}
         {labelHeader}
         {header("from")}
         {header("to")}
@@ -305,8 +316,8 @@ export const fromTo: SvgComponent<FromToComponent> = {
             <g key={`row-${i}`} data-row-marked={marked ? "1" : undefined}>
               {/* The marked measure: a pale tint of the emphasis colour across
                   its name and its starting value. */}
-              {marked && (
-                <rect x={0} y={top + 1} width={g.fromX + g.colW} height={g.rowH - 1} fill={blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1)} />
+              {marked && !ruled && (
+                <rect x={0} y={top + 1} width={g.fromX + g.colW} height={g.rowH - 1} fill={markGround} />
               )}
               {/* One rule per row across the two unfilled columns, stopping at
                   the gutter so the arrow stands in clear air. */}
@@ -326,7 +337,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
                   x={0}
                   y={labelBase - labelFit.fontSize * 0.35 - ROW_ICON.size / 2}
                   size={ROW_ICON.size}
-                  color={graphicInk(ctx.colors.primary, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg)}
+                  color={graphicInk(ctx.colors.primary, marked ? markGround : pageBg)}
                 />
               ) : null}
               {noteFit ? (
@@ -336,7 +347,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
                   y={labelBase + noteLead}
                   fontFamily={ctx.fonts.body}
                   fontSize={noteFit.fontSize}
-                  fill={accessibleInk(ctx.colors.muted, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg, noteFit.fontSize)}
+                  fill={accessibleInk(ctx.colors.muted, marked ? markGround : pageBg, noteFit.fontSize)}
                 >
                   {noteFit.text}
                 </text>
@@ -350,14 +361,14 @@ export const fromTo: SvgComponent<FromToComponent> = {
                 fontWeight={marked ? "700" : undefined}
                 fill={
                   marked
-                    ? accessibleInk(ctx.colors.text, blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1), labelFit.fontSize)
+                    ? accessibleInk(ruled ? emphasisRunInk(ctx.colors) : ctx.colors.text, markGround, labelFit.fontSize)
                     : ink(ctx.colors.text, labelFit.fontSize, false)
                 }
               >
                 {labelFit.text}
               </text>
               {/* The starting value of a marked row sits on the row's tint. */}
-              {value(row.from, unit, g.fromX + PAD, g.colW - PAD * 2, baseline, false, `from-${i}`, marked ? blendOver(emphasisRunInk(ctx.colors), pageBg, 0.1) : pageBg)}
+              {value(row.from, unit, g.fromX + PAD, g.colW - PAD * 2, baseline, false, `from-${i}`, marked ? markGround : pageBg)}
               {value(row.to, unit, g.toX + PAD, g.colW - PAD * 2 - changeW - tagRoom, baseline, true, `to-${i}`)}
               {tag &&
                 paintTag({
@@ -365,7 +376,9 @@ export const fromTo: SvgComponent<FromToComponent> = {
                   x: g.toX + g.colW - PAD - tagW,
                   y: top + (g.rowH - tagSpec.height) / 2,
                   spec: tagSpec,
-                  inks: marked
+                  inks: ruled
+                    ? tagInks(ctx, tag, marked, pageBg, tagSpec.size)
+                    : marked
                     ? { fill: onColumn, stroke: onColumn, text: accessibleInk(highlight, onColumn, tagSpec.size) }
                     : {
                         fill: null,
@@ -400,7 +413,7 @@ export const fromTo: SvgComponent<FromToComponent> = {
             `${ax + aw - headW},${cy + shaft / 2}`,
             `${ax},${cy + shaft / 2}`,
           ].join(" ")}
-          fill={arrowFill}
+          {...(ruled ? { fill: "none", stroke: arrowFill, strokeWidth: LEAD_FRAME } : { fill: arrowFill })}
         />
         {spanFit ? (
           <text

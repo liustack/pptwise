@@ -1,7 +1,8 @@
 import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
+import { isRuled, leadInk, paperOf, RULE, ruledFrame } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR, fitFormLine, layoutFormTitle, paintedWidthCeiling } from "./legibility"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -123,7 +124,12 @@ export const venn: SvgComponent<VennComponent> = {
     const palette = ctx.colors.chartPalette
     const labelSize = Math.max(FORM_TITLE_FLOOR, Math.round(18 * scale))
     const chipSize = Math.max(FORM_BODY_FLOOR, Math.round(17 * scale))
-    const chipInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, chipSize)
+    // Ruled: each set is the outline of its circle in its own colour, and the
+    // shared ground a label on the paper in a line of the primary, the paper
+    // masking the circles under its words.
+    const ruled = isRuled(ctx)
+    const paper = paperOf(ctx)
+    const chipInk = ruled ? leadInk(ctx, chipSize) : accessibleInk(ctx.colors.surface, ctx.colors.primary, chipSize)
 
     // Every word is fitted before anything is painted. A set called "客户数据"
     // cut to "客户数" is a different set, and the drawing has nowhere to say
@@ -170,16 +176,28 @@ export const venn: SvgComponent<VennComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        {g.discs.map((d, i) => (
-          <circle
-            key={`disc-${i}`}
-            cx={ox + d.cx * scale}
-            cy={oy + d.cy * scale}
-            r={r}
-            fill={palette[i % palette.length] ?? ctx.colors.primary}
-            fillOpacity={0.38}
-          />
-        ))}
+        {g.discs.map((d, i) =>
+          ruled ? (
+            <circle
+              key={`disc-${i}`}
+              cx={ox + d.cx * scale}
+              cy={oy + d.cy * scale}
+              r={r - RULE / 2}
+              fill="none"
+              stroke={graphicInk(palette[i % palette.length] ?? ctx.colors.primary, paper)}
+              strokeWidth={RULE}
+            />
+          ) : (
+            <circle
+              key={`disc-${i}`}
+              cx={ox + d.cx * scale}
+              cy={oy + d.cy * scale}
+              r={r}
+              fill={palette[i % palette.length] ?? ctx.colors.primary}
+              fillOpacity={0.38}
+            />
+          ),
+        )}
         {g.discs.map((d, i) => {
           const label = labels[i]!
           const y = d.labelAbove
@@ -205,8 +223,9 @@ export const venn: SvgComponent<VennComponent> = {
           y={oy - chipH / 2}
           width={chipW}
           height={chipH}
-          rx={ctx.shape?.radius ?? CHIP_RADIUS}
-          fill={ctx.colors.primary}
+          {...(ruled
+            ? { fill: paper, ...ruledFrame(ctx, true) }
+            : { rx: ctx.shape?.radius ?? CHIP_RADIUS, fill: ctx.colors.primary })}
         />
         {chip.lines.map((line, li) => (
           <text

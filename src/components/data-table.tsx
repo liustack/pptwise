@@ -1,6 +1,8 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { mixHex } from "./color-mix"
+import { isRuled, RULE } from "./surfaces"
+import { emphasisRunInk } from "../render/emphasis"
 import { accessibleInk, graphicInk } from "../render/ink"
 import { Icon } from "../render/icons"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -187,9 +189,17 @@ function alignedX(
  * "accent"/"neutral" 两档混色比例，不新造色阶。普通行返回 null（表体本身
  * 不填色，booktabs 惯例）。 */
 function rowFill(emphasis: DataTableRow["emphasis"], ctx: ComponentCtx): string | null {
+  // Ruled: no row is tinted. A highlighted row is set bold in the emphasis
+  // ink, a total row bold under an ink rule (`render` below).
+  if (isRuled(ctx)) return null
   if (emphasis === "highlight") return mixHex(ctx.colors.surface, ctx.colors.accent, 0.16)
   if (emphasis === "total") return mixHex(ctx.colors.surface, ctx.colors.muted, 0.08)
   return null
+}
+
+/** A row whose every cell is set bold: a total, and a ruled theme's highlighted row. */
+function rowSetBold(row: DataTableRow, ctx: ComponentCtx): boolean {
+  return row.emphasis === "total" || (row.emphasis === "highlight" && isRuled(ctx))
 }
 
 /** A cell's words wrapped at the cell size: this ratio between baselines, three lines at most. */
@@ -234,7 +244,7 @@ function layoutRows(
       const text = cellText(row, col.key)
       if (!text) return null
       const room = iconRoom(row, c) + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
-      const bold = row.emphasis === "total" || c === markedColumn
+      const bold = rowSetBold(row, ctx) || c === markedColumn
       const maxWidth = widths[c]! - PAD_X * 2 - room
       const fit = fitSvgLine(text, {
         maxWidth,
@@ -288,7 +298,7 @@ function naturalWidths(component: DataTableComponent, ctx: ComponentCtx): number
       ...component.rows.map((row) => {
         const text = cellText(row, col.key)
         if (!text) return 0
-        const bold = row.emphasis === "total" || c === markedColumn
+        const bold = rowSetBold(row, ctx) || c === markedColumn
         const room = iconRoom(row, c) + columnIconRoom(col, text) + tagRoom(row, c, component.columns.length, ctx)
         return measureTextUnits(text, { bold, fontFamily }) * CELL_FONT_SIZE + room
       }),
@@ -424,6 +434,7 @@ export const dataTable: SvgComponent<DataTableComponent> = {
 
     const tableBottomY = top
     const ground = ctx.defaultBg ?? ctx.colors.bg
+    const ruled = isRuled(ctx)
     const markedColumn = component.columns.findIndex((col) => col.emphasis === true)
     const sourceFit = component.source
       ? fitSvgLine(component.source, {
@@ -482,6 +493,13 @@ export const dataTable: SvgComponent<DataTableComponent> = {
           />
         ))}
         <line x1={0} y1={tableBottomY} x2={box.w} y2={tableBottomY} stroke={borderColor} strokeWidth={1} />
+        {ruled
+          ? rows.map((row, r) =>
+              row.emphasis === "total" && r > 0 ? (
+                <line key={`total-${r}`} x1={0} y1={rowTops[r]} x2={box.w} y2={rowTops[r]} stroke={ctx.colors.text} strokeWidth={RULE} />
+              ) : null,
+            )
+          : null}
 
         {/* The marked column, outlined from its header to the table's foot. */}
         {markedColumn >= 0 ? (
@@ -503,7 +521,8 @@ export const dataTable: SvgComponent<DataTableComponent> = {
             行图标、标签和每格的几行字都在这一行里居中。 */}
         {rows.map((row, r) => {
           const fill = rowFill(row.emphasis, ctx)
-          const bold = row.emphasis === "total"
+          const lead = ruled && row.emphasis === "highlight"
+          const bold = row.emphasis === "total" || lead
           const rowY = rowTops[r]!
           const rowH = laid[r]!.h
           return (
@@ -543,7 +562,13 @@ export const dataTable: SvgComponent<DataTableComponent> = {
                 const { textAnchor } = aligned
                 const x = textAnchor === "start" ? aligned.x + room : aligned.x
                 const cellGround = fill ?? ground
-                const ink = marked ? accessibleInk(ctx.colors.primary, cellGround, fit.fontSize) : fill ? accessibleInk(ctx.colors.text, fill, fit.fontSize) : ctx.colors.text
+                const ink = marked
+                  ? accessibleInk(ctx.colors.primary, cellGround, fit.fontSize)
+                  : lead
+                    ? accessibleInk(emphasisRunInk(ctx.colors), cellGround, fit.fontSize)
+                    : fill
+                      ? accessibleInk(ctx.colors.text, fill, fit.fontSize)
+                      : ctx.colors.text
                 // A wrapped cell's lines centre on the row as a block. A
                 // one-line cell in a one-line row sits where it always has.
                 const first = rowY + rowH / 2 - ((fit.lines.length - 1) * CELL_LINE_H) / 2 + Math.round(fit.fontSize * 0.35)

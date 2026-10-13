@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { FORM_BODY_FLOOR, paintedWidthCeiling } from "./legibility"
+import { cardGround, HAIRLINE, hairlineInk, isRuled } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type WordCloudComponent = Extract<Component, { type: "word_cloud" }>
@@ -165,7 +166,10 @@ export const wordCloud: SvgComponent<WordCloudComponent> = {
 
   render(component, box, ctx) {
     const h = box.h ?? NATURAL_H
-    const panel = ctx.colors.surface
+    // Ruled: the words are set on the paper itself, between a hairline over
+    // the cloud and one under it.
+    const ruled = isRuled(ctx)
+    const panel = cardGround(ctx)
     const panelW = box.w - PANEL_PAD * 2
     const panelH = h - PANEL_PAD * 2
     const radius = ctx.shape?.radius ?? 2
@@ -175,17 +179,24 @@ export const wordCloud: SvgComponent<WordCloudComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect
-          x={0}
-          y={0}
-          width={box.w}
-          height={h}
-          rx={radius}
-          ry={radius}
-          fill={panel}
-          stroke={border ?? undefined}
-          strokeWidth={border ? 1 : undefined}
-        />
+        {ruled ? (
+          <>
+            <line x1={0} y1={HAIRLINE / 2} x2={box.w} y2={HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+            <line x1={0} y1={h - HAIRLINE / 2} x2={box.w} y2={h - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          </>
+        ) : (
+          <rect
+            x={0}
+            y={0}
+            width={box.w}
+            height={h}
+            rx={radius}
+            ry={radius}
+            fill={panel}
+            stroke={border ?? undefined}
+            strokeWidth={border ? 1 : undefined}
+          />
+        )}
         {packing.placed.map((item, i) => (
           <text
             key={`w-${i}`}

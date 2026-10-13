@@ -2,6 +2,7 @@ import type { ReactElement } from "react"
 import type { Component } from "@/ir"
 import { accessibleInk, graphicInk } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, ruledFrame } from "./surfaces"
 import { DroppedContentMarker } from "../render/drop-marker"
 import {
   FORM_BODY_FLOOR,
@@ -116,7 +117,10 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
     const border = ctx.colors.border ?? ctx.colors.muted
     // The lane band is a tint of the page, not a card: it groups the boxes
     // sitting on it without becoming a second surface behind them.
-    const bandFill = mixHex(ctx.colors.bg, border, 0.45)
+    // Ruled: no band. The lanes are parted by hairlines, each box is an
+    // outline on the paper, the last in a line of the primary.
+    const ruled = isRuled(ctx)
+    const bandFill = ruled ? paperOf(ctx) : mixHex(ctx.colors.bg, border, 0.45)
     const highlight = formHighlightFill(ctx.colors)
     const last = component.steps.length - 1
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
@@ -160,9 +164,16 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        {g.lanes.map((lane, i) => (
-          <rect key={`band-${i}`} x={g.labelW + 12} y={lane.y} width={box.w - g.labelW - 12} height={lane.h} fill={bandFill} />
-        ))}
+        {ruled
+          ? g.lanes.flatMap((lane, i) => [
+              <line key={`band-${i}`} x1={0} y1={lane.y} x2={box.w} y2={lane.y} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />,
+              i === g.lanes.length - 1 ? (
+                <line key="band-end" x1={0} y1={lane.y + lane.h} x2={box.w} y2={lane.y + lane.h} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+              ) : null,
+            ])
+          : g.lanes.map((lane, i) => (
+              <rect key={`band-${i}`} x={g.labelW + 12} y={lane.y} width={box.w - g.labelW - 12} height={lane.h} fill={bandFill} />
+            ))}
         {component.lanes.map((lane, i) => {
           const band = g.lanes[i]!
           const role = lane.role?.trim()
@@ -239,7 +250,8 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
         {g.boxes.map((b) => {
           const step = component.steps[b.i]!
           const filled = b.i === last
-          const fill = filled ? highlight : ctx.colors.surface
+          const reversed = filled && !ruled
+          const fill = ruled ? bandFill : filled ? highlight : ctx.colors.surface
           const pad = 12
           const inner = b.w - pad * 2
           // A step box is a node on a track, not a card: seven boxes share one
@@ -260,16 +272,20 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
           const top = b.y + b.h / 2 - blockH / 2
           return (
             <g key={`box-${b.i}`}>
-              <rect
-                x={b.x}
-                y={b.y}
-                width={b.w}
-                height={b.h}
-                rx={radius}
-                fill={fill}
-                stroke={filled ? highlight : border}
-                strokeWidth={1}
-              />
+              {ruled ? (
+                <rect x={b.x} y={b.y} width={b.w} height={b.h} fill={fill} {...ruledFrame(ctx, filled)} />
+              ) : (
+                <rect
+                  x={b.x}
+                  y={b.y}
+                  width={b.w}
+                  height={b.h}
+                  rx={radius}
+                  fill={fill}
+                  stroke={filled ? highlight : border}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 data-truncated={title.truncated ? "1" : undefined}
                 x={b.x + pad}
@@ -277,7 +293,7 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
                 fontFamily={ctx.fonts.body}
                 fontSize={title.fontSize}
                 fontWeight="700"
-                fill={accessibleInk(filled ? ctx.colors.surface : ctx.colors.text, fill, title.fontSize)}
+                fill={accessibleInk(reversed ? ctx.colors.surface : ctx.colors.text, fill, title.fontSize)}
               >
                 {title.text}
               </text>
@@ -288,7 +304,7 @@ export const swimlane: SvgComponent<SwimlaneComponent> = {
                   y={top + title.fontSize + 8 + detailFit.fontSize * 0.9}
                   fontFamily={ctx.fonts.body}
                   fontSize={detailFit.fontSize}
-                  fill={accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, detailFit.fontSize)}
+                  fill={accessibleInk(reversed ? ctx.colors.surface : ctx.colors.muted, fill, detailFit.fontSize)}
                 >
                   {detailFit.text}
                 </text>

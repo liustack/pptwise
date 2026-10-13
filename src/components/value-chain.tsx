@@ -3,6 +3,7 @@ import { measureTextUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { cardGround, HAIRLINE, isRuled, leadInk, ruledFrame } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -88,9 +89,13 @@ export const valueChain: SvgComponent<ValueChainComponent> = {
     }
 
     const rule = hairline(ctx)
-    const surface = ctx.colors.surface
+    // Ruled: the support rows are hairline rows, every link an outlined
+    // chevron (the emphasised one in a line of the primary), the margin an
+    // outlined wedge with its words in the primary.
+    const ruled = isRuled(ctx)
+    const surface = cardGround(ctx)
     const radius = ctx.shape?.radius ?? 2
-    const filledInk = readableOn(ctx.colors.primary)
+    const filledInk = ruled ? leadInk(ctx, LABEL_PX) : readableOn(ctx.colors.primary)
     const chevronY = supportTotal + SECTION_GAP
     const noteX = Math.min(280, mainW * 0.28)
     const inner = cellW - NOTCH - PAD_X - 16
@@ -198,16 +203,23 @@ export const valueChain: SvgComponent<ValueChainComponent> = {
           const y = i * (SUPPORT_H + SUPPORT_GAP)
           return (
             <g key={`s${i}`}>
-              <rect
-                x={0}
-                y={y}
-                width={mainW}
-                height={SUPPORT_H}
-                rx={radius}
-                fill={surface}
-                stroke={rule}
-                strokeWidth={1}
-              />
+              {ruled ? (
+                <>
+                  <line x1={0} y1={y} x2={mainW} y2={y} stroke={rule} strokeWidth={HAIRLINE} />
+                  {i === supports.length - 1 ? <line x1={0} y1={y + SUPPORT_H} x2={mainW} y2={y + SUPPORT_H} stroke={rule} strokeWidth={HAIRLINE} /> : null}
+                </>
+              ) : (
+                <rect
+                  x={0}
+                  y={y}
+                  width={mainW}
+                  height={SUPPORT_H}
+                  rx={radius}
+                  fill={surface}
+                  stroke={rule}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 x={PAD_X}
                 y={y + SUPPORT_H / 2 + title.fontSize * 0.35}
@@ -244,17 +256,21 @@ export const valueChain: SvgComponent<ValueChainComponent> = {
           const labelY = top + label.fontSize
           const valueY = labelY + VALUE_GAP + (value?.fontSize ?? 0)
           const ink = filled ? filledInk : accessibleInk(ctx.colors.primary, surface, LABEL_PX)
-          const softInk = filled
+          const softInk = filled && !ruled
             ? accessibleInk(mixHex(filledInk, ctx.colors.primary, 0.3), ctx.colors.primary, INDEX_PX)
             : accessibleInk(ctx.colors.muted, surface, INDEX_PX)
           return (
             <g key={`p${i}`}>
-              <polygon
-                points={chevronPoints(x, chevronY, cellW, chevronH, i > 0)}
-                fill={filled ? ctx.colors.primary : surface}
-                stroke={filled ? "none" : rule}
-                strokeWidth={filled ? 0 : 1}
-              />
+              {ruled ? (
+                <polygon points={chevronPoints(x, chevronY, cellW, chevronH, i > 0)} fill="none" {...ruledFrame(ctx, filled)} />
+              ) : (
+                <polygon
+                  points={chevronPoints(x, chevronY, cellW, chevronH, i > 0)}
+                  fill={filled ? ctx.colors.primary : surface}
+                  stroke={filled ? "none" : rule}
+                  strokeWidth={filled ? 0 : 1}
+                />
+              )}
               <text
                 x={textX}
                 y={top - 10}
@@ -315,7 +331,7 @@ export const valueChain: SvgComponent<ValueChainComponent> = {
               <g>
                 <polygon
                   points={`${round(mx)},0 ${round(mx + MARGIN_W * MARGIN_TIP)},0 ${round(mx + MARGIN_W)},${round(cy)} ${round(mx + MARGIN_W * MARGIN_TIP)},${round(h)} ${round(mx)},${round(h)}`}
-                  fill={ctx.colors.primary}
+                  {...(ruled ? { fill: "none", ...ruledFrame(ctx, true) } : { fill: ctx.colors.primary })}
                 />
                 {label.lines.map((line, i) => (
                   <text

@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
-import { accessibleInk, emphasisFill, liftedInk, readableOn } from "../render/ink"
+import { accessibleInk, emphasisFill, graphicInk, liftedInk, readableOn } from "../render/ink"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import { mixHex } from "./color-mix"
 import { deriveInitials } from "./people-initials"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -179,6 +180,23 @@ function wallGeometry(component: QuoteWallComponent, w: number, ctx: ComponentCt
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
 function cardInks(featured: boolean, ctx: ComponentCtx) {
+  if (isRuled(ctx)) {
+    // 印刷版：不铺卡，卡顶一条细线；`featured` 那张换成 2px 强调色线，
+    // 引号也用强调色，文字照常压纸。
+    const fill = paperOf(ctx)
+    const accent = graphicInk(ctx.colors.accent, fill)
+    return {
+      fill,
+      text: ctx.colors.text,
+      name: ctx.colors.text,
+      role: accessibleInk(ctx.colors.muted, fill, ROLE_FONT_SIZE),
+      rule: hairlineInk(ctx),
+      mark: featured ? accent : liftedInk(mixHex(fill, ctx.colors.text, 0.22), fill, MARK_FONT_SIZE),
+      avatarFill: fill,
+      stroke: undefined as string | undefined,
+      top: featured ? { ink: accent, width: RULE } : { ink: hairlineInk(ctx), width: HAIRLINE },
+    }
+  }
   const fill = featured ? emphasisFill(ctx.colors.primary, ctx.colors.text, ctx.colors.surface) : ctx.colors.surface
   if (featured) {
     const ink = readableOn(fill)
@@ -194,6 +212,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
       mark: liftedInk(mixHex(fill, ink, 0.42), fill, MARK_FONT_SIZE),
       avatarFill: ink,
       stroke: undefined as string | undefined,
+      top: undefined,
     }
   }
   const stroke = ctx.colors.cardStroke ?? ctx.colors.border
@@ -206,6 +225,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
     mark: liftedInk(mixHex(fill, ctx.colors.text, 0.22), fill, MARK_FONT_SIZE),
     avatarFill: mixHex(fill, ctx.colors.text, 0.14),
     stroke,
+    top: undefined,
   }
 }
 
@@ -244,21 +264,25 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
           // 共用锚点：姓名的基线与头衔第一行的基线在每张卡上都相同，不随
           // 这一张自己有没有头衔、头衔占几行而移动。
           const nameBaselineY = identityTopY + identity.nameOffset
-          const initialsInk = readableOn(inks.avatarFill)
+          const initialsInk = inks.top ? accessibleInk(ctx.colors.muted, inks.fill, AVATAR_FONT_SIZE) : readableOn(inks.avatarFill)
           return (
             // 审计框挂在未平移的外层 g 上（同 people-cards.tsx）：叠在同一个
             // 元素上会让 ink-containment 把 cardX 算两遍。
             <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
               <g transform={`translate(${cardX},${cardY})`}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={cardW}
-                  height={cardH}
-                  rx={radius}
-                  fill={inks.fill}
-                  {...(inks.stroke ? { stroke: inks.stroke, strokeWidth: 1 } : {})}
-                />
+                {inks.top ? (
+                  <line x1={0} y1={inks.top.width / 2} x2={cardW} y2={inks.top.width / 2} stroke={inks.top.ink} strokeWidth={inks.top.width} />
+                ) : (
+                  <rect
+                    x={0}
+                    y={0}
+                    width={cardW}
+                    height={cardH}
+                    rx={radius}
+                    fill={inks.fill}
+                    {...(inks.stroke ? { stroke: inks.stroke, strokeWidth: 1 } : {})}
+                  />
+                )}
                 <text
                   x={PAD}
                   y={PAD + MARK_BASELINE}
@@ -286,7 +310,11 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
                   </text>
                 ))}
                 <rect x={PAD} y={ruleY} width={contentW} height={1} fill={inks.rule} />
-                <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R} fill={inks.avatarFill} />
+                {inks.top ? (
+                  <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R - HAIRLINE / 2} fill="none" stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                ) : (
+                  <circle cx={PAD + AVATAR_R} cy={avatarCy} r={AVATAR_R} fill={inks.avatarFill} />
+                )}
                 <text
                   x={PAD + AVATAR_R}
                   y={avatarCy + Math.round(AVATAR_FONT_SIZE * BASELINE_FUDGE_RATIO)}

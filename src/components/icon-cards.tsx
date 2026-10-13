@@ -1,4 +1,5 @@
 import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
+import { cardGround, HAIRLINE, hairlineInk, isRuled } from "./surfaces"
 import type React from "react"
 import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
@@ -80,6 +81,9 @@ function stackHeight(layout: ReturnType<typeof layoutItemText>, nodeSize: number
     layout.text.lines.length * layout.text.lineHeight
   )
 }
+
+/** How far a ruled column's hairline stops short of the column's edges. */
+const COLUMN_INSET = 12
 
 function renderGlyph(
   name: string,
@@ -223,7 +227,10 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
       </g>
     )
   }
-  const fill = ctx.colors.surface
+  // Ruled: no disc behind the icon. Each item hangs from a hairline over
+  // its column instead.
+  const ruled = isRuled(ctx)
+  const fill = cardGround(ctx)
   const ink = ctx.colors.accent
   const iconSize = Math.round(g.nodeR * 0.85)
   const strokeProps = { stroke: ctx.colors.border ?? ctx.colors.muted, strokeWidth: 1 }
@@ -251,7 +258,11 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         return (
           <g key={i} data-audit-box={`${col * g.colW},${rowY},${g.colW}`}>
             <OmittedText text={formTextOmission(item.text, layout.text)} />
-            <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
+            {ruled ? (
+              <line x1={col * g.colW + COLUMN_INSET} y1={rowY} x2={(col + 1) * g.colW - COLUMN_INSET} y2={rowY} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+            ) : (
+              <circle cx={cx} cy={cy} r={g.nodeR} fill={fill} {...strokeProps} />
+            )}
             {renderGlyph(
               item.icon,
               cx - iconSize / 2,

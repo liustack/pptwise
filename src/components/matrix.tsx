@@ -4,6 +4,8 @@ import { axisTitlePairHeight, renderAxisTitlePair } from "./axis-titles"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { boxTooShort, formTextClipMarker, layoutAtSize } from "./legibility"
 import { mixHex } from "./color-mix"
+import { HAIRLINE, hairlineInk, isRuled, RULE } from "./surfaces"
+import { emphasisRunInk } from "../render/emphasis"
 import { withBlockTitle } from "./block-title"
 import { Icon } from "../render/icons"
 import { accessibleInk, graphicInk, liftedInk } from "../render/ink"
@@ -169,7 +171,8 @@ export const matrix: SvgComponent<MatrixComponent> = {
     const rowH = Math.max(cardH, (availGridH - (rows - 1) * CARD_GAP) / rows)
     const actualGridH = rows * rowH + (rows - 1) * CARD_GAP
     const titleY = gridTop + actualGridH
-    const r = ctx.shape?.radius ?? CARD_RADIUS
+    const ruled = isRuled(ctx)
+    const r = ruled ? 0 : (ctx.shape?.radius ?? CARD_RADIUS)
     const headW = rowHeadW(component, box.w) - (component.rows ? ROW_HEAD.gap : 0)
     return (
       <g>
@@ -261,21 +264,35 @@ export const matrix: SvgComponent<MatrixComponent> = {
           // tint they stand on. Graded against nothing, the theme's text and
           // muted inks fell a hair short on a cell tinted over a page the
           // author painted (clinic, 4.47:1 against 4.5).
-          const cellFill = toneFill(item.tone, ctx)
+          // Ruled: no cell is tinted. Each hangs from a hairline, the accent
+          // cell from a rule of the accent with its title in the emphasis ink.
+          const cellFill = ruled ? ground : toneFill(item.tone, ctx)
+          const lead = ruled && item.tone === "accent"
           return (
             <g key={i} data-audit-box={`${x},${y},${cardW}`}>
-              <rect
-                data-plot-mark="1"
-                x={x}
-                y={y}
-                width={cardW}
-                height={rowH}
-                rx={r}
-                fill={cellFill}
-                {...(ctx.colors.cardStroke
-                  ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
-                  : {})}
-              />
+              {ruled ? (
+                <line
+                  x1={x}
+                  y1={y + (lead ? RULE : HAIRLINE) / 2}
+                  x2={x + cardW}
+                  y2={y + (lead ? RULE : HAIRLINE) / 2}
+                  stroke={lead ? graphicInk(ctx.colors.accent, ground) : item.tone === "info" ? graphicInk(ctx.colors.primary, ground) : hairlineInk(ctx)}
+                  strokeWidth={lead ? RULE : HAIRLINE}
+                />
+              ) : (
+                <rect
+                  data-plot-mark="1"
+                  x={x}
+                  y={y}
+                  width={cardW}
+                  height={rowH}
+                  rx={r}
+                  fill={cellFill}
+                  {...(ctx.colors.cardStroke
+                    ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
+                    : {})}
+                />
+              )}
               {cell.title.lines.map((line, li) => (
                 <text
                   key={`title-${li}`}
@@ -284,7 +301,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
                   y={titleBaseline + li * TITLE_LH}
                   fontSize={cell.title.fontSize}
                   fontWeight="700"
-                  fill={liftedInk(ctx.colors.text, cellFill, cell.title.fontSize)}
+                  fill={lead ? accessibleInk(emphasisRunInk(ctx.colors), cellFill, cell.title.fontSize) : liftedInk(ctx.colors.text, cellFill, cell.title.fontSize)}
                   fontFamily={ctx.fonts.heading}
                   dominantBaseline="alphabetic"
                 >

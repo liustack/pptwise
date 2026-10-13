@@ -5,6 +5,7 @@ import { accessibleInk, graphicInk, readableOn } from "../render/ink"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
+import { cardGround, isRuled, leadInk, ruledFrame } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
 import { orthogonalConnectorRight, tidyTree } from "./tree-layout"
@@ -196,8 +197,11 @@ function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: Compone
 
     const rule = hairline(ctx)
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
-    const surface = ctx.colors.surface
-    const filledInk = readableOn(ctx.colors.primary)
+    // Ruled: every box an outline on the paper, the root and an emphasised
+    // branch in a line of the primary with their words in it.
+    const ruled = isRuled(ctx)
+    const surface = cardGround(ctx)
+    const filledInk = ruled ? leadInk(ctx, 16) : readableOn(ctx.colors.primary)
     const radius = ctx.shape?.radius ?? 2
     const connectorInk = accessibleInk(ctx.colors.muted, pageBg, 64)
     const rootX = 0
@@ -219,14 +223,18 @@ function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: Compone
           <path key={`c${i}`} d={d} fill="none" stroke={connectorInk} strokeWidth={1.5} />
         ))}
 
-        <rect
-          x={rootX}
-          y={rootCy - rootBoxH / 2}
-          width={rootW}
-          height={rootBoxH}
-          rx={radius}
-          fill={ctx.colors.primary}
-        />
+        {ruled ? (
+          <rect x={rootX} y={rootCy - rootBoxH / 2} width={rootW} height={rootBoxH} fill="none" {...ruledFrame(ctx, true)} />
+        ) : (
+          <rect
+            x={rootX}
+            y={rootCy - rootBoxH / 2}
+            width={rootW}
+            height={rootBoxH}
+            rx={radius}
+            fill={ctx.colors.primary}
+          />
+        )}
         {rootFit.lines.map((line, i) => (
           <text
             key={`q${i}`}
@@ -254,23 +262,27 @@ function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: Compone
           const textX = branchX + PAD_X + (branch.icon ? BRANCH_ICON.size + BRANCH_ICON.gap : 0)
           return (
             <g key={`b${i}`}>
-              <rect
-                x={branchX}
-                y={cy - branchBoxH / 2}
-                width={branchW}
-                height={branchBoxH}
-                rx={radius}
-                fill={filled ? ctx.colors.primary : surface}
-                stroke={filled ? "none" : rule}
-                strokeWidth={filled ? 0 : 1}
-              />
+              {ruled ? (
+                <rect x={branchX} y={cy - branchBoxH / 2} width={branchW} height={branchBoxH} fill="none" {...ruledFrame(ctx, filled)} />
+              ) : (
+                <rect
+                  x={branchX}
+                  y={cy - branchBoxH / 2}
+                  width={branchW}
+                  height={branchBoxH}
+                  rx={radius}
+                  fill={filled ? ctx.colors.primary : surface}
+                  stroke={filled ? "none" : rule}
+                  strokeWidth={filled ? 0 : 1}
+                />
+              )}
               {branch.icon ? (
                 <Icon
                   name={branch.icon}
                   x={branchX + PAD_X}
                   y={cy - BRANCH_ICON.size / 2}
                   size={BRANCH_ICON.size}
-                  color={filled ? graphicInk(filledInk, ctx.colors.primary) : graphicInk(ctx.colors.primary, surface)}
+                  color={filled && !ruled ? graphicInk(filledInk, ctx.colors.primary) : graphicInk(ctx.colors.primary, surface)}
                 />
               ) : null}
               <text
@@ -290,7 +302,7 @@ function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: Compone
                   y={cy + note.fontSize + 6}
                   fontSize={note.fontSize}
                   fill={
-                    filled
+                    filled && !ruled
                       ? accessibleInk(
                           mixHex(filledInk, ctx.colors.primary, 0.28),
                           ctx.colors.primary,
@@ -310,16 +322,20 @@ function drawTree(component: IssueTreeComponent, box: ComponentBox, ctx: Compone
 
         {leaves.map(({ key, cy, fit }) => (
           <g key={key}>
-            <rect
-              x={leafX}
-              y={cy - leafBoxH / 2}
-              width={leafW}
-              height={leafBoxH}
-              rx={radius}
-              fill={surface}
-              stroke={rule}
-              strokeWidth={1}
-            />
+            {ruled ? (
+              <rect x={leafX} y={cy - leafBoxH / 2} width={leafW} height={leafBoxH} fill="none" {...ruledFrame(ctx, false)} />
+            ) : (
+              <rect
+                x={leafX}
+                y={cy - leafBoxH / 2}
+                width={leafW}
+                height={leafBoxH}
+                rx={radius}
+                fill={surface}
+                stroke={rule}
+                strokeWidth={1}
+              />
+            )}
             <text
               x={leafX + PAD_X}
               y={cy + fit.fontSize * 0.35}

@@ -1,4 +1,5 @@
 import type React from "react"
+import { cardGround, isRuled, RULE } from "./surfaces"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, graphicInk } from "../render/ink"
@@ -247,19 +248,29 @@ function renderCard(
   let rowY = titleBaseline + (layout.points.length ? GAP_TITLE_POINTS + layout.points.length * POINT_LH : 0) + (layout.checkpoint ? GAP_CHECKPOINT + ORDINARY_TAG_HEIGHT : 0) + GAP_TITLE_ROWS
   const tagSpec = ordinaryTagSpec(ctx)
   const checkpointTag = layout.checkpoint ? { text: layout.checkpoint } : null
+  // Ruled: no card and no disc. The phase hangs from a rule of its bar's
+  // ink, and its number is the figure itself in the primary.
+  const ruled = isRuled(ctx)
+  const ground = cardGround(ctx)
   return (
     <g key={index}>
-      <rect
-        x={x}
-        y={y}
-        width={cardW}
-        height={cardH}
-        rx={r}
-        fill={ctx.colors.surface}
-        {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
-      />
-      <path d={roundedTopBarPath(x, y, cardW, BAR_H, r)} fill={barFill} />
-      <circle cx={cx} cy={cy} r={BADGE_R} fill={ctx.colors.primary} />
+      {ruled ? (
+        <line x1={x} y1={y + RULE / 2} x2={x + cardW} y2={y + RULE / 2} stroke={graphicInk(barFill, ground)} strokeWidth={RULE} />
+      ) : (
+        <>
+          <rect
+            x={x}
+            y={y}
+            width={cardW}
+            height={cardH}
+            rx={r}
+            fill={ctx.colors.surface}
+            {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
+          />
+          <path d={roundedTopBarPath(x, y, cardW, BAR_H, r)} fill={barFill} />
+          <circle cx={cx} cy={cy} r={BADGE_R} fill={ctx.colors.primary} />
+        </>
+      )}
       {/* Bench-driven fix round, defect A reclassification (Task 3
           handoff): same unguarded `fill="#FFFFFF"`-on-`colors.primary`
           pattern as steps.tsx's own badge digit, separate call site — see
@@ -270,7 +281,7 @@ function renderCard(
           would stand: the number is the card's place in the row, the icon
           what the phase is about. */}
       {icon ? (
-        <Icon name={icon} x={cx - BADGE_ICON / 2} y={cy - BADGE_ICON / 2} size={BADGE_ICON} color={graphicInk("#FFFFFF", ctx.colors.primary)} />
+        <Icon name={icon} x={cx - BADGE_ICON / 2} y={cy - BADGE_ICON / 2} size={BADGE_ICON} color={ruled ? graphicInk(ctx.colors.primary, ground) : graphicInk("#FFFFFF", ctx.colors.primary)} />
       ) : (
         <text
           x={cx}
@@ -278,8 +289,8 @@ function renderCard(
           textAnchor="middle"
           fontSize={BADGE_FONT}
           fontWeight="700"
-          fill={accessibleInk("#FFFFFF", ctx.colors.primary, BADGE_FONT)}
-          fontFamily={ctx.fonts.body}
+          fill={ruled ? accessibleInk(ctx.colors.primary, ground, BADGE_FONT) : accessibleInk("#FFFFFF", ctx.colors.primary, BADGE_FONT)}
+          fontFamily={ruled ? ctx.fonts.figure : ctx.fonts.body}
           dominantBaseline="alphabetic"
         >
           {num}
@@ -301,7 +312,7 @@ function renderCard(
           y={cy + Math.round(layout.period.fontSize * BASELINE_FUDGE)}
           fontSize={layout.period.fontSize}
           fontWeight="600"
-          fill={accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.period.fontSize)}
+          fill={accessibleInk(ctx.colors.accent, ground, layout.period.fontSize)}
           fontFamily={ctx.fonts.body}
           dominantBaseline="alphabetic"
         >
@@ -338,7 +349,7 @@ function renderCard(
       {checkpointTag ? (
         tagWidth(checkpointTag.text, tagSpec) <= cardW - PAD_X * 2 ? (
           <g data-roadmap-checkpoint="">
-            {paintTag({ tag: checkpointTag, x: x + PAD_X, y: checkpointTop, spec: tagSpec, inks: tagInks(ctx, checkpointTag, false, ctx.colors.surface, tagSpec.size) })}
+            {paintTag({ tag: checkpointTag, x: x + PAD_X, y: checkpointTop, spec: tagSpec, inks: tagInks(ctx, checkpointTag, false, ground, tagSpec.size) })}
           </g>
         ) : (
           <g data-dropped={1} data-dropped-kind="label" />
@@ -386,7 +397,7 @@ function renderCard(
                 y1={rowTop + VALUE_SIZE + (row.value.lines.length - 1) * row.value.lineHeight + 4}
                 x2={x + PAD_X + layout.labelColW + Math.max(...row.value.lines.map((line) => measureTextUnits(line, { bold: true, fontFamily: ctx.fonts.body }) * row.value.fontSize))}
                 y2={rowTop + VALUE_SIZE + (row.value.lines.length - 1) * row.value.lineHeight + 4}
-                stroke={graphicInk(basisInk(ctx.colors, row.basis!), ctx.colors.surface)}
+                stroke={graphicInk(basisInk(ctx.colors, row.basis!), ground)}
                 strokeWidth={1}
                 strokeDasharray={TAG_DASH}
               />
@@ -414,8 +425,16 @@ export const roadmap: SvgComponent<RoadmapComponent> = {
     // 均分密度拉伸：box.h 由布局分配时，卡高吃满（内容顶对齐，底部留白）。
     const cardH = Math.max(measuredH, box.h ?? measuredH)
     const marked = component.items.some((item) => item.emphasis === true)
+    // Ruled, the accent goes only to the phase the author marked: every
+    // other phase hangs from a rule of the primary.
     const barFill = (item: RoadmapItem) =>
-      !marked || item.emphasis === true ? ctx.colors.accent : ctx.colors.primary
+      isRuled(ctx)
+        ? item.emphasis === true
+          ? ctx.colors.accent
+          : ctx.colors.primary
+        : !marked || item.emphasis === true
+          ? ctx.colors.accent
+          : ctx.colors.primary
     return (
       <g>
         {layouts.map((layout, i) =>

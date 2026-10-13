@@ -1,3 +1,4 @@
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { Component } from "@/ir"
 import {
   fitSvgLine,
@@ -148,29 +149,47 @@ export const code: SvgComponent<CodeComponent> = {
     // The lines the author marked are set bold in the theme's warning ink,
     // where it reads on the block, and in the block's own text ink otherwise.
     const marked = new Set(component.highlight_lines ?? [])
-    const markInk = accessibleInk(resolveSemanticColor("warning", ctx.colors), BG_COLOR, fontSize)
+    // Ruled, the listing is set on the paper between an ink rule over it and
+    // a hairline under it, in the theme's own inks: no dark block.
+    const ruled = isRuled(ctx)
+    const ground = ruled ? paperOf(ctx) : BG_COLOR
+    const textInk = ruled ? ctx.colors.text : TEXT_COLOR
+    const gutterInk = ruled ? ctx.colors.muted : LINE_NUM_COLOR
+    const markInk = accessibleInk(resolveSemanticColor("warning", ctx.colors), ground, fontSize)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect
-          x={0}
-          y={0}
-          width={box.w}
-          height={height + bar}
-          rx={BORDER_RADIUS}
-          fill={BG_COLOR}
-        />
+        {ruled ? (
+          <>
+            <line x1={0} y1={RULE / 2} x2={box.w} y2={RULE / 2} stroke={ctx.colors.text} strokeWidth={RULE} />
+            {bar ? <line x1={0} y1={bar} x2={box.w} y2={bar} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} /> : null}
+            <line x1={0} y1={height + bar - HAIRLINE / 2} x2={box.w} y2={height + bar - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          </>
+        ) : (
+          <rect
+            x={0}
+            y={0}
+            width={box.w}
+            height={height + bar}
+            rx={BORDER_RADIUS}
+            fill={BG_COLOR}
+          />
+        )}
         {title ? (
           <g data-code-title="">
-            <rect x={0} y={0} width={box.w} height={bar} rx={BORDER_RADIUS} fill={TITLE_BAR.fill} />
-            <rect x={0} y={bar - BORDER_RADIUS} width={box.w} height={BORDER_RADIUS} fill={TITLE_BAR.fill} />
+            {ruled ? null : (
+              <>
+                <rect x={0} y={0} width={box.w} height={bar} rx={BORDER_RADIUS} fill={TITLE_BAR.fill} />
+                <rect x={0} y={bar - BORDER_RADIUS} width={box.w} height={BORDER_RADIUS} fill={TITLE_BAR.fill} />
+              </>
+            )}
             <text
               data-truncated={title.truncated ? "1" : undefined}
               x={PADDING}
               y={Math.round(bar / 2 + TITLE_BAR.size * 0.35)}
               fontFamily={ctx.fonts.mono}
               fontSize={title.fontSize}
-              fill={accessibleInk(TITLE_BAR.ink, TITLE_BAR.fill, title.fontSize)}
+              fill={ruled ? accessibleInk(ctx.colors.muted, ground, title.fontSize) : accessibleInk(TITLE_BAR.ink, TITLE_BAR.fill, title.fontSize)}
               dominantBaseline="alphabetic"
             >
               {title.text}
@@ -192,7 +211,7 @@ export const code: SvgComponent<CodeComponent> = {
               y={PADDING + i * lineHeight + fontSize}
               fontFamily={ctx.fonts.mono}
               fontSize={fontSize}
-              fill={metaInk(LINE_NUM_COLOR, BG_COLOR)}
+              fill={metaInk(gutterInk, ground)}
               dominantBaseline="alphabetic"
               textAnchor="end"
             >
@@ -206,7 +225,7 @@ export const code: SvgComponent<CodeComponent> = {
               fontFamily={ctx.fonts.mono}
               fontSize={fontSize}
               fontWeight={marked.has(i + 1) ? "bold" : undefined}
-              fill={marked.has(i + 1) ? markInk : TEXT_COLOR}
+              fill={marked.has(i + 1) ? markInk : textInk}
               dominantBaseline="alphabetic"
               xmlSpace="preserve"
             >

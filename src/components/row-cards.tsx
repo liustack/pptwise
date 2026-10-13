@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText } from "../lib/svg-text-layout"
 import { Icon } from "../render/icons"
+import { cardGround, HAIRLINE, hairlineInk, isRuled, RULE } from "./surfaces"
 import type { RenderDef, SvgComponent } from "./types"
 import { accessibleInk, accessibleOpacity, graphicInk, resolveSemanticColor } from "../render/ink"
 
@@ -77,6 +78,9 @@ function stackH(contentHs: number[], padY: number, gap: number): number {
   return contentHs.reduce((sum, h) => sum + cardHAt(h, padY), 0) + Math.max(0, n - 1) * gap
 }
 
+/** A ruled row's number, set as a figure where its ring stood. */
+const RULED_NUM_SIZE = 22
+
 export const rowCards: SvgComponent<RowCardsComponent> = {
   measure(component, w) {
     return (
@@ -145,7 +149,12 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
     // least readable thing on the slide. Found once the 2026-08-15 review
     // corpus stopped over-filling this component, which had been truncating
     // the highlighted card out of the render entirely.
-    const highlightInk = accessibleInk(ctx.colors.accent, ctx.colors.surface, TITLE_SIZE)
+    // Ruled: no card. Each row hangs from a hairline, the highlighted one
+    // from a rule of the accent, the last closes on a hairline, and the
+    // number is the figure alone, with no ring.
+    const ruled = isRuled(ctx)
+    const ground = cardGround(ctx)
+    const highlightInk = accessibleInk(ctx.colors.accent, ground, TITLE_SIZE)
 
     let cursor = 0
     return (
@@ -172,39 +181,62 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
           const hl = Boolean(item.highlight)
           // A tone (`danger`, `warning`, `success`) says what kind of news
           // the row is: its number ring and its icon carry it.
-          const toneInk = item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), ctx.colors.surface) : undefined
+          const toneInk = item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), ground) : undefined
+          const numberInk = ruled
+            ? accessibleInk(hl ? ctx.colors.accent : (toneInk ?? ctx.colors.primary), ground, RULED_NUM_SIZE)
+            : hl
+              ? highlightInk
+              : ctx.colors.text
           const contentTop = cardY + (shellH - contentH) / 2
           const numCy = cardY + shellH / 2
           const titleBaseline = contentTop + TITLE_SIZE
           const textTop = contentTop + TITLE_LH + GAP_TITLE_NEXT
           return (
             <g key={i} data-audit-box={`0,${cardY},${box.w}`}>
-              <rect
-                x={0}
-                y={cardY}
-                width={box.w}
-                height={shellH}
-                rx={ctx.shape?.radius ?? 8}
-                fill={ctx.colors.surface}
-                stroke={hl ? ctx.colors.accent : (ctx.colors.cardStroke ?? "none")}
-                strokeWidth={hl ? 1.5 : 1}
-              />
-              <circle
-                cx={NUM_CX}
-                cy={numCy}
-                r={NUM_R}
-                fill="none"
-                stroke={toneInk ?? (hl ? ctx.colors.accent : ctx.colors.muted)}
-                strokeWidth={1.5}
-              />
+              {ruled ? (
+                <>
+                  <line
+                    x1={0}
+                    y1={cardY + (hl ? RULE : HAIRLINE) / 2}
+                    x2={box.w}
+                    y2={cardY + (hl ? RULE : HAIRLINE) / 2}
+                    stroke={hl ? graphicInk(ctx.colors.accent, ground) : hairlineInk(ctx)}
+                    strokeWidth={hl ? RULE : HAIRLINE}
+                  />
+                  {i === visibleItems.length - 1 ? (
+                    <line x1={0} y1={cardY + shellH - HAIRLINE / 2} x2={box.w} y2={cardY + shellH - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <rect
+                    x={0}
+                    y={cardY}
+                    width={box.w}
+                    height={shellH}
+                    rx={ctx.shape?.radius ?? 8}
+                    fill={ground}
+                    stroke={hl ? ctx.colors.accent : (ctx.colors.cardStroke ?? "none")}
+                    strokeWidth={hl ? 1.5 : 1}
+                  />
+                  <circle
+                    cx={NUM_CX}
+                    cy={numCy}
+                    r={NUM_R}
+                    fill="none"
+                    stroke={toneInk ?? (hl ? ctx.colors.accent : ctx.colors.muted)}
+                    strokeWidth={1.5}
+                  />
+                </>
+              )}
               <text
                 x={NUM_CX}
-                y={numCy + 6}
+                y={numCy + (ruled ? 8 : 6)}
                 textAnchor="middle"
-                fontSize={16}
+                fontSize={ruled ? RULED_NUM_SIZE : 16}
                 fontWeight="bold"
-                fill={hl ? highlightInk : ctx.colors.text}
-                fontFamily={ctx.fonts.heading}
+                fill={numberInk}
+                fontFamily={ruled ? ctx.fonts.figure : ctx.fonts.heading}
                 dominantBaseline="alphabetic"
               >
                 {i + 1}
@@ -244,7 +276,7 @@ export const rowCards: SvgComponent<RowCardsComponent> = {
                       // Dimmed a step under the title, as far as the card
                       // lets the words still read: on a mid-tone ground
                       // the ink has no room to give and goes at full.
-                      fillOpacity={accessibleOpacity(ctx.colors.text, ctx.colors.surface, text.fontSize, 0.85)}
+                      fillOpacity={accessibleOpacity(ctx.colors.text, ground, text.fontSize, 0.85)}
                       fontFamily={ctx.fonts.body}
                       dominantBaseline="alphabetic"
                     >

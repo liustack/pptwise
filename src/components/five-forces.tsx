@@ -2,9 +2,10 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { mostlyChinese } from "../lib/text-script"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
+import { isRuled, paperOf, RULE } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type FiveForcesComponent = Extract<Component, { type: "five_forces" }>
@@ -246,6 +247,9 @@ function forceToken(key: ForceKey, ctx: ComponentCtx): string {
 }
 
 function panelFill(key: ForceKey, ctx: ComponentCtx): string {
+  // Ruled: no tint. Each force is set on the paper under a rule of its own
+  // ink (`renderPanel`).
+  if (isRuled(ctx)) return paperOf(ctx)
   const t = key === "rivalry" ? 0.18 : 0.14
   return mixHex(ctx.colors.surface, forceToken(key, ctx), t)
 }
@@ -496,7 +500,11 @@ function renderPanel(
   const dropped = layout.items.length - visibleItems.length
   return (
     <g key={key}>
-      <rect data-force={key} x={x} y={y} width={w} height={h} rx={r} fill={panel} />
+      {isRuled(ctx) ? (
+        <line data-force={key} x1={x} y1={y + RULE / 2} x2={x + w} y2={y + RULE / 2} stroke={graphicInk(token, panel)} strokeWidth={RULE} />
+      ) : (
+        <rect data-force={key} x={x} y={y} width={w} height={h} rx={r} fill={panel} />
+      )}
       <text
         data-truncated={layout.label.truncated ? "1" : undefined}
         x={x + PAD_X}

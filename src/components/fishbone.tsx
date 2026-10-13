@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { cardGround, isRuled, leadInk, paperOf, ruledFrame } from "./surfaces"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
@@ -221,8 +222,11 @@ export const fishbone: SvgComponent<FishboneComponent> = {
     const stopsOf = causeStops(component, g, causes, headH, causeSize, ctx.fonts.body)
     if (!stopsOf) return <DroppedContentMarker count={component.ribs.length} kind="item" />
 
-    const chipInk = accessibleInk(ctx.colors.text, ctx.colors.surface, chipSize)
-    const headInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, head.fontSize)
+    const chipInk = accessibleInk(ctx.colors.text, cardGround(ctx), chipSize)
+    // Ruled: each rib's name stands alone at the rib's end, with no chip, and
+    // the head is an outline of the primary on the paper with its words in it.
+    const ruled = isRuled(ctx)
+    const headInk = ruled ? leadInk(ctx, head.fontSize) : accessibleInk(ctx.colors.surface, ctx.colors.primary, head.fontSize)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -253,16 +257,18 @@ export const fishbone: SvgComponent<FishboneComponent> = {
           const chipX = Math.min(Math.max(rib.endX - chipW / 2, 0), Math.max(0, box.w - chipW))
           return (
             <g key={`chip-${i}`}>
-              <rect
-                x={chipX}
-                y={chipCy - chipH / 2}
-                width={chipW}
-                height={chipH}
-                rx={ctx.shape?.radius ?? CARD_RADIUS}
-                fill={ctx.colors.surface}
-                stroke={border}
-                strokeWidth={1}
-              />
+              {ruled ? null : (
+                <rect
+                  x={chipX}
+                  y={chipCy - chipH / 2}
+                  width={chipW}
+                  height={chipH}
+                  rx={ctx.shape?.radius ?? CARD_RADIUS}
+                  fill={ctx.colors.surface}
+                  stroke={border}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 x={chipX + chipW / 2}
                 y={chipCy + chip.fontSize * 0.35}
@@ -305,8 +311,7 @@ export const fishbone: SvgComponent<FishboneComponent> = {
           y={oy - headH / 2}
           width={HEAD_W}
           height={headH}
-          rx={ctx.shape?.radius ?? CARD_RADIUS}
-          fill={ctx.colors.primary}
+          {...(ruled ? { fill: paperOf(ctx), ...ruledFrame(ctx, true) } : { rx: ctx.shape?.radius ?? CARD_RADIUS, fill: ctx.colors.primary })}
         />
         {head.lines.map((line, li) => (
           <text

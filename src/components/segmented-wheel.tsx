@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { isRuled, LEAD_FRAME, leadInk, paperOf, ruledFrame } from "./surfaces"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
@@ -113,7 +114,11 @@ export const segmentedWheel: SvgComponent<SegmentedWheelComponent> = {
       floor: FORM_BODY_FLOOR,
       fontFamily: ctx.fonts.heading,
     })
-    const hubInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, hub.fontSize)
+    // Ruled: every wedge an outline on the paper, the marked one in a line
+    // of the primary; the hub an outline of the primary with its name in it.
+    const ruled = isRuled(ctx)
+    const paper = paperOf(ctx)
+    const hubInk = ruled ? leadInk(ctx, hub.fontSize) : accessibleInk(ctx.colors.surface, ctx.colors.primary, hub.fontSize)
     const rimLabels = component.segments.map((segment) =>
       fitFormLine(segment.label, {
         maxWidth: LABEL_W * scale,
@@ -147,17 +152,25 @@ export const segmentedWheel: SvgComponent<SegmentedWheelComponent> = {
           {g.wedges.map((wedge, i) => {
             const marked = component.segments[i]!.emphasis === true
             return (
-              <path
-                key={`wedge-${i}`}
-                d={wedgePath(wedge, inner, outer, SPLIT * scale)}
-                fill={marked ? ctx.colors.primary : ctx.colors.surface}
-                stroke={marked ? ctx.colors.primary : rim}
-                strokeWidth={1}
-              />
+              ruled ? (
+                <path key={`wedge-${i}`} d={wedgePath(wedge, inner, outer, SPLIT * scale)} fill="none" {...ruledFrame(ctx, marked)} />
+              ) : (
+                <path
+                  key={`wedge-${i}`}
+                  d={wedgePath(wedge, inner, outer, SPLIT * scale)}
+                  fill={marked ? ctx.colors.primary : ctx.colors.surface}
+                  stroke={marked ? ctx.colors.primary : rim}
+                  strokeWidth={1}
+                />
+              )
             )
           })}
         </g>
-        <circle cx={cx} cy={cy} r={inner} fill={ctx.colors.primary} />
+        {ruled ? (
+          <circle cx={cx} cy={cy} r={inner - LEAD_FRAME / 2} fill={paper} {...ruledFrame(ctx, true)} />
+        ) : (
+          <circle cx={cx} cy={cy} r={inner} fill={ctx.colors.primary} />
+        )}
         {hub.lines.map((line, li) => (
           <text
             key={`hub-${li}`}

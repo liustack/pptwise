@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, graphicInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { cardGround, isRuled, paperOf } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
@@ -194,10 +195,13 @@ export const iceberg: SvgComponent<IcebergComponent> = {
     const lineY = h * WATERLINE_AT
     const above = lineY
     const belowH = h - lineY
-    const water = waterFill(ctx)
-    const mass = massFill(ctx)
+    // Ruled: no water and no tinted ice, the berg is its outline on the
+    // paper and the waterline its rule.
+    const ruled = isRuled(ctx)
+    const water = ruled ? paperOf(ctx) : waterFill(ctx)
+    const mass = ruled ? paperOf(ctx) : massFill(ctx)
     const outline = graphicInk(ctx.colors.primary, water)
-    const tipFill = ctx.colors.surface
+    const tipFill = cardGround(ctx)
     // The waterline's name stands above the line, on the page rather than
     // on the water, so its ink is measured against the page.
     const lineInk = accessibleInk(ctx.colors.primary, ctx.defaultBg ?? ctx.colors.bg, SIDE_PX)
@@ -309,9 +313,9 @@ export const iceberg: SvgComponent<IcebergComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect x={0} y={lineY} width={w} height={belowH} fill={water} />
-        <polygon points={points(MASS, w, lineY, belowH)} fill={mass} stroke={outline} strokeWidth={1} />
-        <polygon points={points(TIP, w, 0, above)} fill={tipFill} stroke={outline} strokeWidth={1} />
+        {ruled ? null : <rect x={0} y={lineY} width={w} height={belowH} fill={water} />}
+        <polygon points={points(MASS, w, lineY, belowH)} fill={ruled ? "none" : mass} stroke={outline} strokeWidth={1} />
+        <polygon points={points(TIP, w, 0, above)} fill={ruled ? "none" : tipFill} stroke={outline} strokeWidth={1} />
         <line x1={0} y1={lineY} x2={w} y2={lineY} stroke={outline} strokeWidth={1.5} />
 
         {waterlineLabel ? (

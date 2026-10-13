@@ -4,8 +4,10 @@ import { layoutSvgText, measureTextUnits, wrapTokens } from "../lib/svg-text-lay
 import { mostlyChinese } from "../lib/text-script"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { anyCut } from "./declared-fit"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
+import { emphasisRunInk } from "../render/emphasis"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type BmcComponent = Extract<Component, { type: "bmc" }>
@@ -393,8 +395,12 @@ function renderBlock(
   oy: number,
   r: number,
 ): React.ReactElement {
-  const panel = cell.tinted ? mixHex(ctx.colors.surface, ctx.colors.accent, 0.14) : ctx.colors.surface
-  const titleInk = accessibleInk(ctx.colors.text, panel, layout.titleSize)
+  // Ruled: the canvas is a grid of hairline frames on the paper; the block
+  // the canvas turns on (the tinted one) gains a rule of the accent along
+  // its top, its title in the emphasis ink.
+  const ruled = isRuled(ctx)
+  const panel = ruled ? paperOf(ctx) : cell.tinted ? mixHex(ctx.colors.surface, ctx.colors.accent, 0.14) : ctx.colors.surface
+  const titleInk = accessibleInk(ruled && cell.tinted ? emphasisRunInk(ctx.colors) : ctx.colors.text, panel, layout.titleSize)
   const itemInk = accessibleInk(ctx.colors.text, panel, layout.itemSize)
   const x = ox + cell.x
   const y = oy + cell.y
@@ -414,17 +420,24 @@ function renderBlock(
   const dropped = layout.items.length - visibleItems.length
   return (
     <g key={cell.key}>
-      <rect
-        x={x}
-        y={y}
-        width={cell.w}
-        height={cell.h}
-        rx={r}
-        fill={panel}
-        {...(ctx.colors.cardStroke && !cell.tinted
-          ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
-          : {})}
-      />
+      {ruled ? (
+        <>
+          <rect x={x + HAIRLINE / 2} y={y + HAIRLINE / 2} width={cell.w - HAIRLINE} height={cell.h - HAIRLINE} fill="none" stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          {cell.tinted ? <line x1={x} y1={y + RULE / 2} x2={x + cell.w} y2={y + RULE / 2} stroke={graphicInk(ctx.colors.accent, panel)} strokeWidth={RULE} /> : null}
+        </>
+      ) : (
+        <rect
+          x={x}
+          y={y}
+          width={cell.w}
+          height={cell.h}
+          rx={r}
+          fill={panel}
+          {...(ctx.colors.cardStroke && !cell.tinted
+            ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
+            : {})}
+        />
+      )}
       {layout.title.lines.map((line, li) => (
         <text
           key={`title-${li}`}

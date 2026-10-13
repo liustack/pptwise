@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { readableOn, relativeLuminance, resolveSemanticColor } from "../render/ink"
+import { graphicInk, readableOn, relativeLuminance, resolveSemanticColor } from "../render/ink"
+import { HAIRLINE, hairlineInk, isRuled, LEAD_FRAME, leadInk, paperOf } from "./surfaces"
 import { mixHex } from "./color-mix"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
@@ -144,6 +145,21 @@ export const pyramid: SvgComponent<PyramidComponent> = {
     const rule = ctx.colors.border ?? mixHex(ctx.colors.muted, ctx.colors.bg, 0.45)
     const surface = ctx.colors.surface
     const legendCardH = twoColumn ? (h - (n - 1) * LEGEND_ROW_GAP) / n : 0
+    // Ruled: each band an outline in its own ink on the paper, the apex in
+    // the lead weight; the legend rows hang under hairlines, keyed by a small
+    // square drawn the way its band is.
+    const ruled = isRuled(ctx)
+    const bandLine = (i: number): string => {
+      const tone = component.layers[i]!.tone
+      return graphicInk(tone ? resolveSemanticColor(tone, ctx.colors) : ctx.colors.primary, paperOf(ctx))
+    }
+    const bandWeight = (i: number): number => (i === 0 ? LEAD_FRAME : HAIRLINE)
+    const swatch = (x: number, y: number, i: number) =>
+      ruled ? (
+        <rect x={x + 0.75} y={y + 0.75} width={SWATCH - 1.5} height={SWATCH - 1.5} fill="none" stroke={bandLine(i)} strokeWidth={bandWeight(i)} />
+      ) : (
+        <rect x={x} y={y} width={SWATCH} height={SWATCH} fill={layerFill(ctx, i, n, component.layers[i]!.tone)} />
+      )
 
     // Every band label and every legend note is fitted before anything is
     // painted, and each is checked against the room it will actually get.
@@ -195,17 +211,26 @@ export const pyramid: SvgComponent<PyramidComponent> = {
         {component.layers.map((layer, i) => {
           const top = i * bandH
           const bottom = top + bandH - LAYER_GAP
+          const label = bands[i]!
           const ht = halfAt(i)
           const hb = halfAt(i + 1)
           const fill = layerFill(ctx, i, n, layer.tone)
-          const ink = readableOn(fill)
-          const label = bands[i]!
+          const ink = ruled ? (i === 0 ? leadInk(ctx, label.fontSize) : ctx.colors.text) : readableOn(fill)
           return (
             <g key={`p${i}`}>
-              <polygon
-                points={`${cx - ht},${top} ${cx + ht},${top} ${cx + hb},${bottom} ${cx - hb},${bottom}`}
-                fill={fill}
-              />
+              {ruled ? (
+                <polygon
+                  points={`${cx - ht},${top} ${cx + ht},${top} ${cx + hb},${bottom} ${cx - hb},${bottom}`}
+                  fill="none"
+                  stroke={bandLine(i)}
+                  strokeWidth={bandWeight(i)}
+                />
+              ) : (
+                <polygon
+                  points={`${cx - ht},${top} ${cx + ht},${top} ${cx + hb},${bottom} ${cx - hb},${bottom}`}
+                  fill={fill}
+                />
+              )}
               <text
                 x={cx}
                 y={top + (bottom - top) / 2 + label.fontSize * 0.35}
@@ -229,23 +254,21 @@ export const pyramid: SvgComponent<PyramidComponent> = {
               const firstY = y + legendCardH / 2 - ((note?.lines.length ?? 1) - 1) * (note?.lineHeight ?? 0) / 2
               return (
                 <g key={`g${i}`}>
-                  <rect
-                    x={legendX}
-                    y={y}
-                    width={legendW}
-                    height={legendCardH}
-                    rx={radius}
-                    fill={surface}
-                    stroke={rule}
-                    strokeWidth={1}
-                  />
-                  <rect
-                    x={legendX + LEGEND_PAD}
-                    y={y + legendCardH / 2 - SWATCH / 2}
-                    width={SWATCH}
-                    height={SWATCH}
-                    fill={layerFill(ctx, i, n, component.layers[i]!.tone)}
-                  />
+                  {ruled ? (
+                    <line x1={legendX} y1={y} x2={legendX + legendW} y2={y} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                  ) : (
+                    <rect
+                      x={legendX}
+                      y={y}
+                      width={legendW}
+                      height={legendCardH}
+                      rx={radius}
+                      fill={surface}
+                      stroke={rule}
+                      strokeWidth={1}
+                    />
+                  )}
+                  {swatch(legendX + LEGEND_PAD, y + legendCardH / 2 - SWATCH / 2, i)}
                   {note?.lines.map((line, k) => (
                     <text
                       key={`n${k}`}
@@ -271,14 +294,12 @@ export const pyramid: SvgComponent<PyramidComponent> = {
               const firstY = y + rowH / 2 - ((note?.lines.length ?? 1) - 1) * (note?.lineHeight ?? 0) / 2
               return (
                 <g key={`s${i}`}>
-                  <rect x={0} y={y} width={box.w} height={rowH} rx={radius} fill={surface} stroke={rule} strokeWidth={1} />
-                  <rect
-                    x={STACK_PAD}
-                    y={y + rowH / 2 - SWATCH / 2}
-                    width={SWATCH}
-                    height={SWATCH}
-                    fill={layerFill(ctx, i, n, component.layers[i]!.tone)}
-                  />
+                  {ruled ? (
+                    <line x1={0} y1={y} x2={box.w} y2={y} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                  ) : (
+                    <rect x={0} y={y} width={box.w} height={rowH} rx={radius} fill={surface} stroke={rule} strokeWidth={1} />
+                  )}
+                  {swatch(STACK_PAD, y + rowH / 2 - SWATCH / 2, i)}
                   {note?.lines.map((line, k) => (
                     <text
                       key={`n${k}`}

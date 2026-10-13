@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { isRuled, paperOf } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ArchitectureComponent = Extract<Component, { type: "architecture" }>
@@ -27,6 +28,8 @@ const HAIRLINE_W = 1
  * 渲染器就不替作者选。
  */
 function layerFill(ctx: ComponentCtx): string {
+  // Ruled: no band. The layers are set on the paper, ruled above and below.
+  if (isRuled(ctx)) return paperOf(ctx)
   return ctx.colors.panel ?? ctx.colors.surface
 }
 
@@ -100,6 +103,7 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
     const itemsX = TITLE_X + titleMax + 12
     const itemsMax = Math.max(40, box.w - itemsX - PAD)
     const rule = hairlineColor(ctx)
+    const ruled = isRuled(ctx)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -126,7 +130,7 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
           const index = `L${i + 1}`
           return (
             <g key={i}>
-              <rect x={0} y={layerY} width={box.w} height={LAYER_H} rx={0} fill={fill} />
+              {ruled ? null : <rect x={0} y={layerY} width={box.w} height={LAYER_H} rx={0} fill={fill} />}
               <text
                 x={INDEX_X}
                 y={layerY + INDEX_BASELINE_Y}
@@ -182,6 +186,12 @@ export const architecture: SvgComponent<ArchitectureComponent> = {
             strokeWidth={HAIRLINE_W}
           />
         ))}
+        {ruled ? (
+          <>
+            <line x1={0} y1={HAIRLINE_W / 2} x2={box.w} y2={HAIRLINE_W / 2} stroke={rule} strokeWidth={HAIRLINE_W} />
+            <line x1={0} y1={count * LAYER_H - HAIRLINE_W / 2} x2={box.w} y2={count * LAYER_H - HAIRLINE_W / 2} stroke={rule} strokeWidth={HAIRLINE_W} />
+          </>
+        ) : null}
       </g>
     )
   },

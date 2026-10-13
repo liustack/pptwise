@@ -1,7 +1,8 @@
 import type { Component } from "@/ir"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { accessibleInk, readableOn } from "../render/ink"
+import { accessibleInk, graphicInk, readableOn } from "../render/ink"
+import { cardGround, HAIRLINE, isRuled, leadInk, RULE } from "./surfaces"
 import { mixHex } from "./color-mix"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine, layoutFormBody } from "./legibility"
@@ -57,8 +58,11 @@ export const pillarModel: SvgComponent<PillarModelComponent> = {
     const pillarW = box.w / (n + PILLAR_GAP_RATIO * (n - 1))
     const radius = ctx.shape?.radius ?? 2
     const rule = hairline(ctx)
-    const surface = ctx.colors.surface
-    const beamInk = readableOn(ctx.colors.primary)
+    // Ruled: the beam is the goal over a rule of the primary, each pillar
+    // stands between two hairlines, and the base sits on a second rule.
+    const ruled = isRuled(ctx)
+    const surface = cardGround(ctx)
+    const beamInk = ruled ? leadInk(ctx, GOAL_PX) : readableOn(ctx.colors.primary)
 
     const goal = layoutFormBody(component.goal, {
       maxWidth: box.w - PAD_X * 2,
@@ -134,7 +138,11 @@ export const pillarModel: SvgComponent<PillarModelComponent> = {
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect x={0} y={0} width={box.w} height={beamH} rx={radius} fill={ctx.colors.primary} />
+        {ruled ? (
+          <line x1={0} y1={beamH - RULE / 2} x2={box.w} y2={beamH - RULE / 2} stroke={graphicInk(ctx.colors.primary, surface)} strokeWidth={RULE} />
+        ) : (
+          <rect x={0} y={0} width={box.w} height={beamH} rx={radius} fill={ctx.colors.primary} />
+        )}
         {goal.lines.map((line, i) => (
           <text
             key={`g${i}`}
@@ -157,16 +165,23 @@ export const pillarModel: SvgComponent<PillarModelComponent> = {
           const valueY = titleY + TITLE_TO_VALUE + value.fontSize
           return (
             <g key={`p${i}`}>
-              <rect
-                x={x}
-                y={pillarY}
-                width={pillarW}
-                height={pillarH}
-                rx={radius}
-                fill={surface}
-                stroke={rule}
-                strokeWidth={1}
-              />
+              {ruled ? (
+                <>
+                  <line x1={x + HAIRLINE / 2} y1={pillarY} x2={x + HAIRLINE / 2} y2={pillarY + pillarH} stroke={rule} strokeWidth={HAIRLINE} />
+                  <line x1={x + pillarW - HAIRLINE / 2} y1={pillarY} x2={x + pillarW - HAIRLINE / 2} y2={pillarY + pillarH} stroke={rule} strokeWidth={HAIRLINE} />
+                </>
+              ) : (
+                <rect
+                  x={x}
+                  y={pillarY}
+                  width={pillarW}
+                  height={pillarH}
+                  rx={radius}
+                  fill={surface}
+                  stroke={rule}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 x={x + 12}
                 y={titleY}
@@ -205,16 +220,20 @@ export const pillarModel: SvgComponent<PillarModelComponent> = {
           )
         })}
 
-        <rect
-          x={0}
-          y={baseY}
-          width={box.w}
-          height={baseH}
-          rx={radius}
-          fill={surface}
-          stroke={rule}
-          strokeWidth={1}
-        />
+        {ruled ? (
+          <line x1={0} y1={baseY + RULE / 2} x2={box.w} y2={baseY + RULE / 2} stroke={graphicInk(ctx.colors.primary, surface)} strokeWidth={RULE} />
+        ) : (
+          <rect
+            x={0}
+            y={baseY}
+            width={box.w}
+            height={baseH}
+            rx={radius}
+            fill={surface}
+            stroke={rule}
+            strokeWidth={1}
+          />
+        )}
         {base.lines.map((line, i) => (
           <text
             key={`b${i}`}

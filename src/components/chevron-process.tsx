@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { isRuled, paperOf, ruledFrame } from "./surfaces"
 import type { Component } from "@/ir"
 import { Icon } from "../render/icons"
 import { accessibleInk, graphicInk } from "../render/ink"
@@ -148,33 +149,41 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
     const last = component.items.length - 1
     const highlight = formHighlightFill(ctx.colors)
 
+    const ruled = isRuled(ctx)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {g.chevrons.map((c) => {
           const item = component.items[c.i]!
           const filled = c.i === last
-          const fill = filled ? highlight : ctx.colors.surface
+          // Ruled: each chevron an outline on the paper, the last in a line of
+          // the primary, its words unreversed.
+          const reversed = filled && !ruled
+          const fill = ruled ? paperOf(ctx) : filled ? highlight : ctx.colors.surface
           const textW = Math.max(24, c.textRight - c.textLeft)
           const index = String(c.i + 1).padStart(2, "0")
-          const indexInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, g.indexSize)
+          const indexInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.muted, fill, g.indexSize)
           const titleLayout = layoutFormTitle(item.title, {
             maxWidth: textW,
             fontSize: g.titleSize,
             maxLines: 2,
             fontFamily: ctx.fonts.heading,
           })
-          const titleInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, titleLayout.fontSize)
+          const titleInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.primary, fill, titleLayout.fontSize)
           const blockH = formLineHeight(g.indexSize) + titleLayout.lines.length * titleLayout.lineHeight
           const top = g.band / 2 - blockH / 2
           const noteFit = g.notes[c.i]
           return (
             <g key={`chevron-${c.i}`}>
-              <polygon
-                points={chevronPoints(c, g.band)}
-                fill={fill}
-                stroke={filled ? highlight : border}
-                strokeWidth={1}
-              />
+              {ruled ? (
+                <polygon points={chevronPoints(c, g.band)} fill="none" {...ruledFrame(ctx, filled)} />
+              ) : (
+                <polygon
+                  points={chevronPoints(c, g.band)}
+                  fill={fill}
+                  stroke={filled ? highlight : border}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 x={c.textLeft}
                 y={top + g.indexSize * 0.9}
@@ -192,7 +201,7 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
                     x={c.textLeft + textW - ICON_SIZE}
                     y={top + (formLineHeight(g.indexSize) - ICON_SIZE) / 2}
                     size={ICON_SIZE}
-                    color={graphicInk(filled ? ctx.colors.surface : ctx.colors.primary, fill)}
+                    color={graphicInk(reversed ? ctx.colors.surface : ctx.colors.primary, fill)}
                   />
                 </g>
               ) : null}

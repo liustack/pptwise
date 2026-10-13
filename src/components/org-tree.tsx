@@ -2,6 +2,7 @@ import type { Component } from "@/ir"
 import { accessibleInk, readableOn } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { mixHex } from "./color-mix"
+import { cardGround, isRuled, leadInk, ruledFrame } from "./surfaces"
 import { anyCut } from "./declared-fit"
 import { FORM_BODY_FLOOR, fitFormLine } from "./legibility"
 import { orthogonalConnector, tidyTree } from "./tree-layout"
@@ -164,8 +165,9 @@ export const orgTree: SvgComponent<OrgTreeComponent> = {
 
     const rule = hairline(ctx)
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
-    const surface = ctx.colors.surface
-    const rootInk = readableOn(ctx.colors.primary)
+    const ruled = isRuled(ctx)
+    const surface = cardGround(ctx)
+    const rootInk = ruled ? leadInk(ctx, NAME_PX) : readableOn(ctx.colors.primary)
     const radius = ctx.shape?.radius ?? 2
     const connectorInk = accessibleInk(ctx.colors.muted, pageBg, NODE_H)
 
@@ -192,22 +194,26 @@ export const orgTree: SvgComponent<OrgTreeComponent> = {
           // it lands on rather than assumed: `readableOn` guarantees the
           // full-strength ink, not a blend of it, and a light `primary` moves
           // the blend the wrong way.
-          const roleInk = node.filled
+          const roleInk = node.filled && !ruled
             ? accessibleInk(mixHex(rootInk, ctx.colors.primary, 0.28), ctx.colors.primary, ROLE_PX)
             : accessibleInk(ctx.colors.muted, surface, ROLE_PX)
           const nameY = node.role ? node.y + nodeH / 2 - 3 : node.y + nodeH / 2 + node.name.fontSize * 0.35
           return (
             <g key={node.key}>
-              <rect
-                x={x}
-                y={node.y}
-                width={node.w}
-                height={nodeH}
-                rx={radius}
-                fill={node.filled ? ctx.colors.primary : surface}
-                stroke={node.filled ? "none" : rule}
-                strokeWidth={node.filled ? 0 : 1}
-              />
+              {ruled ? (
+                <rect x={x} y={node.y} width={node.w} height={nodeH} fill="none" {...ruledFrame(ctx, node.filled)} />
+              ) : (
+                <rect
+                  x={x}
+                  y={node.y}
+                  width={node.w}
+                  height={nodeH}
+                  rx={radius}
+                  fill={node.filled ? ctx.colors.primary : surface}
+                  stroke={node.filled ? "none" : rule}
+                  strokeWidth={node.filled ? 0 : 1}
+                />
+              )}
               <text
                 x={x + PAD_X}
                 y={nameY}

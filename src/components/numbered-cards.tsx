@@ -1,6 +1,7 @@
 import type { Component } from "@/ir"
 import { fitSvgLine, measureTextUnits } from "@/lib/svg-text-layout"
 import { accessibleInk, blendOver, emphasisFill, graphicInk, readableOn } from "../render/ink"
+import { cardGround, HAIRLINE, hairlineInk, isRuled, leadInk, RULE } from "./surfaces"
 import { Icon } from "../render/icons"
 import {
   headingEmphasisPaint,
@@ -313,11 +314,16 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
   const leftCY = L.h / 2
   const leftCX = leftX + L.leftSize / 2
   const count = String(n).padStart(2, "0")
-  const countSize = Math.min(44, L.leftSize * 0.32)
-  const countInk = readableOn(leftFill)
+  const ruled = isRuled(ctx)
+  // Ruled, the count stands alone where its disc was, so it is set larger.
+  const countSize = ruled ? Math.min(72, L.leftSize * 0.5) : Math.min(44, L.leftSize * 0.32)
+  // Ruled: no disc and no pill. The count and each number are figures in
+  // the theme's figure face, each item hangs from a hairline, and the item
+  // the page lands on from a rule of the accent, its number in the accent.
+  const countInk = ruled ? leadInk(ctx, countSize) : readableOn(leftFill)
   const pillsTop = (L.h - L.stackH) / 2
   const pillsLeft = leftX + L.leftSize + COL_GAP
-  const surface = ctx.colors.surface
+  const surface = cardGround(ctx)
   const border = ctx.colors.border ?? ctx.colors.muted
   const rx = pillRx(L.pillH, ctx)
   const strokeW = 0
@@ -328,7 +334,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
 
   return (
     <g transform={`translate(${box.x},${box.y})`}>
-      <circle cx={leftCX} cy={leftCY} r={L.leftSize / 2} fill={leftFill} />
+      {ruled ? null : <circle cx={leftCX} cy={leftCY} r={L.leftSize / 2} fill={leftFill} />}
       <text
         x={leftCX}
         y={leftCY + countSize * BASELINE_FUDGE}
@@ -336,7 +342,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         fontSize={countSize}
         fontWeight="bold"
         fill={countInk}
-        fontFamily={ctx.fonts.heading}
+        fontFamily={ruled ? ctx.fonts.figure : ctx.fonts.heading}
         dominantBaseline="alphabetic"
       >
         {count}
@@ -374,11 +380,18 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
         // than the cards) the marked pill sank below the others: it takes
         // the theme's text ink instead, the house rule for a featured card.
         const marked = item.emphasis === true
+        const reversed = marked && !ruled
         const markFill = emphasisFill(ctx.colors.primary, ctx.colors.text, surface)
-        const pillFill = marked ? markFill : surface
+        const pillFill = reversed ? markFill : surface
         const onPill = readableOn(markFill)
-        const titleInk = marked ? onPill : ctx.colors.text
-        const bodyInk = marked ? accessibleInk(blendOver(onPill, markFill, 0.82), markFill, FORM_BODY_FLOOR) : ctx.colors.muted
+        const titleInk = reversed ? onPill : ctx.colors.text
+        const bodyInk = reversed ? accessibleInk(blendOver(onPill, markFill, 0.82), markFill, FORM_BODY_FLOOR) : ctx.colors.muted
+        const numberInk = ruled
+          ? accessibleInk(marked ? ctx.colors.accent : ctx.colors.primary, surface, badgeFont)
+          : marked
+            ? readableOn(onPill)
+            : badgeInk
+        const lastInColumn = row === L.n - 1 || i === component.items.length - 1
         const paint = (fontSize: number, base: string, bold: boolean) =>
           headingEmphasisPaint(ctx, { fontSize }, {
             baseFill: base,
@@ -386,31 +399,49 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
             fontFamily: bold ? ctx.fonts.heading : ctx.fonts.body,
             bold,
             bg: pillFill,
-            ...(marked ? { accent: onPill } : {}),
+            ...(reversed ? { accent: onPill } : {}),
           })
         return (
           <g key={i} data-card-marked={marked ? "1" : undefined}>
             <OmittedText text={omittedText} />
             <OmittedText text={omittedSub} />
-            <rect
-              x={pillX}
-              y={pillY}
-              width={L.pillW}
-              height={L.pillH}
-              rx={rx}
-              fill={pillFill}
-              stroke={marked ? pillFill : border}
-              strokeWidth={1}
-            />
-            <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={marked ? onPill : badgeFill} />
+            {ruled ? (
+              <>
+                <line
+                  x1={pillX}
+                  y1={pillY + (marked ? RULE : HAIRLINE) / 2}
+                  x2={pillX + L.pillW}
+                  y2={pillY + (marked ? RULE : HAIRLINE) / 2}
+                  stroke={marked ? graphicInk(ctx.colors.accent, surface) : hairlineInk(ctx)}
+                  strokeWidth={marked ? RULE : HAIRLINE}
+                />
+                {lastInColumn ? (
+                  <line x1={pillX} y1={pillY + L.pillH - HAIRLINE / 2} x2={pillX + L.pillW} y2={pillY + L.pillH - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                ) : null}
+              </>
+            ) : (
+              <>
+                <rect
+                  x={pillX}
+                  y={pillY}
+                  width={L.pillW}
+                  height={L.pillH}
+                  rx={rx}
+                  fill={pillFill}
+                  stroke={marked ? pillFill : border}
+                  strokeWidth={1}
+                />
+                <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={marked ? onPill : badgeFill} />
+              </>
+            )}
             <text
               x={badgeCx}
               y={badgeCy + badgeFont * BASELINE_FUDGE}
               textAnchor="middle"
               fontSize={badgeFont}
               fontWeight="bold"
-              fill={marked ? readableOn(onPill) : badgeInk}
-              fontFamily={ctx.fonts.heading}
+              fill={numberInk}
+              fontFamily={ruled ? ctx.fonts.figure : ctx.fonts.heading}
               dominantBaseline="alphabetic"
             >
               {num}
@@ -421,7 +452,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
                 x={badgeRight + BADGE_TEXT_GAP}
                 y={badgeCy - iconSize(L.pillH) / 2}
                 size={iconSize(L.pillH)}
-                color={marked ? onPill : graphicInk(ctx.colors.primary, surface)}
+                color={reversed ? onPill : graphicInk(ctx.colors.primary, surface)}
               />
             ) : null}
             {title.lines.map((line, li) =>

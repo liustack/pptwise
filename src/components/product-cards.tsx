@@ -1,8 +1,9 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits, truncateToUnits } from "../lib/svg-text-layout"
-import { accessibleInk, emphasisFill, readableOn } from "../render/ink"
+import { accessibleInk, emphasisFill, graphicInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { ComponentBox, ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type ProductCardsComponent = Extract<Component, { type: "product_cards" }>
@@ -174,6 +175,21 @@ function cardGeometry(component: ProductCardsComponent, w: number, ctx: Componen
 
 /** 一张卡自己的一套墨：底色决定其余全部颜色，`featured` 只是换了底。 */
 function cardInks(featured: boolean, ctx: ComponentCtx) {
+  if (isRuled(ctx)) {
+    // 印刷版：不铺卡，图片下的字直接压纸；`featured` 那张不换底，把价格上
+    // 那条分隔线换成 2px 强调色线（`./surfaces.ts`）。
+    const fill = paperOf(ctx)
+    return {
+      fill,
+      name: ctx.colors.text,
+      note: accessibleInk(ctx.colors.muted, fill, NOTE_FONT_SIZE),
+      rule: featured ? graphicInk(ctx.colors.accent, fill) : hairlineInk(ctx),
+      ruleWidth: featured ? RULE : HAIRLINE,
+      price: textInkNotAccent(ctx.colors.primary, fill, PRICE_FONT_SIZE, ctx),
+      unit: accessibleInk(ctx.colors.muted, fill, PRICE_UNIT_FONT_SIZE),
+      stroke: undefined as string | undefined,
+    }
+  }
   const fill = featured ? emphasisFill(ctx.colors.primary, ctx.colors.text, ctx.colors.surface) : ctx.colors.surface
   if (featured) {
     const ink = readableOn(fill)
@@ -185,6 +201,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
       // 和 3.81:1，都低于 16px 文字要求的 4.5:1。过不了就退回满墨。
       note: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, NOTE_FONT_SIZE),
       rule: mixHex(fill, ink, 0.3),
+      ruleWidth: 1,
       price: ink,
       unit: accessibleInk(mixHex(fill, ink, SOFT_INK_MIX), fill, PRICE_UNIT_FONT_SIZE),
       stroke: undefined as string | undefined,
@@ -196,6 +213,7 @@ function cardInks(featured: boolean, ctx: ComponentCtx) {
     name: ctx.colors.text,
     note: accessibleInk(ctx.colors.muted, fill, NOTE_FONT_SIZE),
     rule: stroke ?? mixHex(fill, ctx.colors.text, 0.2),
+    ruleWidth: 1,
     price: textInkNotAccent(ctx.colors.primary, fill, PRICE_FONT_SIZE, ctx),
     unit: accessibleInk(ctx.colors.muted, fill, PRICE_UNIT_FONT_SIZE),
     stroke,
@@ -254,6 +272,10 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
     // device-mockup.tsx 的屏幕矩形），所以卡片自己也不假装有大圆角：
     // 主题半径在这里封顶到 4px，圆角主题上仍读作一张卡，图片却不会探出去。
     const radius = Math.min(ctx.shape?.radius ?? CARD_RADIUS, MAX_CARD_RADIUS)
+    // Ruled: no card, so the words under a picture align with its edge, as
+    // a printed catalogue sets them.
+    const ruled = isRuled(ctx)
+    const inset = ruled ? 0 : PAD
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {component.items.map((item, i) => {
@@ -275,19 +297,21 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
             // 同一个元素上会让 ink-containment 把 cardX 算两遍。
             <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
               <g transform={`translate(${cardX},${cardY})`}>
-              <rect
-                x={0}
-                y={0}
-                width={cardW}
-                height={cardH}
-                rx={radius}
-                fill={inks.fill}
-                {...(inks.stroke ? { stroke: inks.stroke, strokeWidth: 1 } : {})}
-              />
+              {ruled ? null : (
+                <rect
+                  x={0}
+                  y={0}
+                  width={cardW}
+                  height={cardH}
+                  rx={radius}
+                  fill={inks.fill}
+                  {...(inks.stroke ? { stroke: inks.stroke, strokeWidth: 1 } : {})}
+                />
+              )}
               {renderPicture(item, 0, imageY, cardW, ctx)}
               <text
                 data-truncated={text.name.truncated ? "1" : undefined}
-                x={PAD}
+                x={inset}
                 y={nameBaselineY}
                 fontSize={text.name.fontSize}
                 fontWeight="700"
@@ -301,7 +325,7 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
                 <text
                   key={li}
                   data-truncated={text.note!.truncated ? "1" : undefined}
-                  x={PAD}
+                  x={inset}
                   y={noteTopY + li * text.note!.lineHeight + text.note!.fontSize}
                   fontSize={text.note!.fontSize}
                   fill={inks.note}
@@ -312,12 +336,12 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
                 </text>
               ))}
               {hasPriceRow && (
-                <rect x={PAD} y={ruleY} width={contentW} height={1} fill={inks.rule} />
+                <rect x={inset} y={ruleY} width={ruled ? cardW : contentW} height={inks.ruleWidth} fill={inks.rule} />
               )}
               {text.price && (
                 <text
                   data-truncated={text.price.truncated ? "1" : undefined}
-                  x={PAD}
+                  x={inset}
                   y={priceBaselineY}
                   fontSize={text.price.fontSize}
                   fontWeight="700"
@@ -331,7 +355,7 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
               {text.priceUnit && (
                 <text
                   data-truncated={text.priceUnit.truncated ? "1" : undefined}
-                  x={PAD + (text.price ? text.priceW + PRICE_UNIT_GAP : 0)}
+                  x={inset + (text.price ? text.priceW + PRICE_UNIT_GAP : 0)}
                   y={priceBaselineY}
                   fontSize={text.priceUnit.fontSize}
                   fill={inks.unit}

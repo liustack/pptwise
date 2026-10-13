@@ -2,6 +2,7 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { wrapClip } from "./clip-text"
 import { accessibleInk, graphicInk, readableOn, resolveSemanticColor } from "../render/ink"
+import { isRuled, LEAD_FRAME, paperOf, ruledFrame } from "./surfaces"
 import { Icon } from "../render/icons"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
@@ -119,6 +120,26 @@ function renderBadge(
   const label = padIndex(index)
   const pageBg = ctx.defaultBg ?? ctx.colors.bg
   const mark = item.tone ? resolveSemanticColor(item.tone, ctx.colors) : fill
+  // Ruled: no disc. The number is the figure itself, in the theme's figure
+  // face, in the step's ink.
+  if (isRuled(ctx)) {
+    return item.icon ? (
+      <Icon name={item.icon} x={cx - BADGE_ICON / 2} y={cy - BADGE_ICON / 2} size={BADGE_ICON} color={graphicInk(mark, pageBg)} />
+    ) : (
+      <text
+        x={cx}
+        y={cy + 7}
+        textAnchor="middle"
+        fontSize={BADGE_NUMBER_SIZE}
+        fontWeight="700"
+        fill={accessibleInk(mark, pageBg, BADGE_NUMBER_SIZE)}
+        fontFamily={ctx.fonts.figure}
+        dominantBaseline="alphabetic"
+      >
+        {label}
+      </text>
+    )
+  }
   return (
     <>
       <circle cx={cx} cy={cy} r={BADGE_R} fill={pageBg} stroke={item.tone ? graphicInk(mark, pageBg) : fill} strokeWidth={2.5} />
@@ -150,7 +171,10 @@ export const steps: SvgComponent<StepsComponent> = {
   const vertical = needsVertical(n, box.w)
   const slotW = vertical ? box.w : (box.w - GAP * (n - 1)) / n
   const fill = ctx.colors.primary
-  const ink = readableOn(fill)
+  // Ruled: each chevron an outline of the primary, its title on the paper.
+  const ruled = isRuled(ctx)
+  const ground = ruled ? paperOf(ctx) : fill
+  const ink = ruled ? ctx.colors.text : readableOn(fill)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
   // Side by side, a box shorter than the chevrons and their sentences gives
   // lines back from the bottom of every sentence, cut and marked, rather than
@@ -211,12 +235,16 @@ export const steps: SvgComponent<StepsComponent> = {
         const titleX = cx + BADGE_R + 10
         return (
           <g key={i}>
-            <path d={chevronPath(x, y, slotW, arrowH)} fill={fill} />
+            {ruled ? (
+              <path d={chevronPath(x + LEAD_FRAME / 2, y + LEAD_FRAME / 2, slotW - LEAD_FRAME, arrowH - LEAD_FRAME)} fill="none" {...ruledFrame(ctx, true)} />
+            ) : (
+              <path d={chevronPath(x, y, slotW, arrowH)} fill={fill} />
+            )}
             {renderBadge(cx, cy, i, fill, ctx, item)}
             {paintMarkedLine(
               ctx,
               markedLineSegments(item.title, [title.text])[0]!,
-              { baseFill: ink, fontWeight: "700", fontFamily: ctx.fonts.heading, bg: fill },
+              { baseFill: ink, fontWeight: "700", fontFamily: ctx.fonts.heading, bg: ground },
               <text
                 data-truncated={title.truncated ? "1" : undefined}
                 x={titleX}

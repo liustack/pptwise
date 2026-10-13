@@ -1,6 +1,7 @@
 import type { ReactElement } from "react"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { Component } from "@/ir"
-import { accessibleInk } from "../render/ink"
+import { accessibleInk, graphicInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { TEXT_INK_DESCENT } from "../render/depth-contract/geometry"
@@ -128,13 +129,18 @@ export const staircase: SvgComponent<StaircaseComponent> = {
     const radius = ctx.shape?.radius ?? 4
     const top = component.items.length - 1
     const highlight = formHighlightFill(ctx.colors)
+    const ruled = isRuled(ctx)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {steps.map((step, i) => {
           const item = component.items[i]!
           const filled = i === top
-          const fill = filled ? highlight : ctx.colors.surface
+          // Ruled: no tread is filled. Each step stands under a hairline with
+          // a hairline riser on its left, the top step under a rule of the
+          // primary with its words in the primary.
+          const reversed = filled && !ruled
+          const fill = ruled ? paperOf(ctx) : filled ? highlight : ctx.colors.surface
           const inner = step.w - step.pad * 2
           const title = fitFormTitleLine(item.title, {
             maxWidth: inner,
@@ -176,10 +182,10 @@ export const staircase: SvgComponent<StaircaseComponent> = {
           const noteFit = note
             ? fitFormLine(note, { maxWidth: inner, fontSize: step.noteSize, fontFamily: ctx.fonts.body })
             : null
-          const titleInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, title.fontSize)
-          const valueInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.primary, fill, value.fontSize)
-          const unitInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, unitFit?.fontSize ?? unitSize)
-          const noteInk = accessibleInk(filled ? ctx.colors.surface : ctx.colors.muted, fill, step.noteSize)
+          const titleInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.primary, fill, title.fontSize)
+          const valueInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.primary, fill, value.fontSize)
+          const unitInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.muted, fill, unitFit?.fontSize ?? unitSize)
+          const noteInk = accessibleInk(reversed ? ctx.colors.surface : ctx.colors.muted, fill, step.noteSize)
           const lines = textBaselines(step, note !== "", { titleSize: title.fontSize, valueSize: value.fontSize })
           const titleY = step.y + lines.title
           const valueY = step.y + lines.value
@@ -187,16 +193,30 @@ export const staircase: SvgComponent<StaircaseComponent> = {
 
           return (
             <g key={`step-${i}`}>
-              <rect
-                x={step.x}
-                y={step.y}
-                width={step.w}
-                height={step.h}
-                rx={radius}
-                fill={fill}
-                stroke={filled ? highlight : border}
-                strokeWidth={1}
-              />
+              {ruled ? (
+                <>
+                  <line
+                    x1={step.x}
+                    y1={step.y + (filled ? RULE : HAIRLINE) / 2}
+                    x2={step.x + step.w}
+                    y2={step.y + (filled ? RULE : HAIRLINE) / 2}
+                    stroke={filled ? graphicInk(ctx.colors.primary, fill) : hairlineInk(ctx)}
+                    strokeWidth={filled ? RULE : HAIRLINE}
+                  />
+                  <line x1={step.x + HAIRLINE / 2} y1={step.y} x2={step.x + HAIRLINE / 2} y2={step.y + step.h} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+                </>
+              ) : (
+                <rect
+                  x={step.x}
+                  y={step.y}
+                  width={step.w}
+                  height={step.h}
+                  rx={radius}
+                  fill={fill}
+                  stroke={filled ? highlight : border}
+                  strokeWidth={1}
+                />
+              )}
               <text
                 data-truncated={title.truncated ? "1" : undefined}
                 x={step.x + step.pad}

@@ -12,7 +12,7 @@ import { isLegacyThemeName } from "./legacy-names"
 import { foldedMotifIdMessage, retiredMotifIdMessage, retiredThemeIdMessage } from "./retired-ids"
 import type { MotifId } from "../motifs/types"
 import { OCCASION_VOCAB, type Occasion } from "./occasions"
-import type { StyleTokens } from "./tokens"
+import { SURFACE_TREATMENTS, type StyleTokens } from "./tokens"
 import { HexTokenSchema } from "./hex"
 
 export { HexTokenSchema } from "./hex"
@@ -75,6 +75,7 @@ export const StyleTokensFileSchema = z
         radius: z.number().min(0).max(32).optional(),
         gapScale: z.number().min(0.8).max(1.3).optional(),
         typeScale: z.number().min(0.5).max(2).optional(),
+        surfaces: z.enum(SURFACE_TREATMENTS).optional(),
       })
       .strict()
       .optional(),

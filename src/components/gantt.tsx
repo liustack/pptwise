@@ -4,6 +4,7 @@ import { recededMarkFill } from "../render/chart-palette"
 import { Icon } from "../render/icons"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, blendOver, graphicInk, liftedInk } from "../render/ink"
+import { isRuled } from "./surfaces"
 import type { RenderDef, SvgComponent } from "./types"
 
 type GanttComponent = Extract<Component, { type: "gantt" }>
@@ -178,6 +179,7 @@ export const gantt: SvgComponent<GanttComponent> = {
     // A bar the author marks keeps the accent and the others recede, the
     // way a marked waterfall bar does.
     const marked = component.items.some((item) => item.emphasis === true)
+    const ruled = isRuled(ctx)
     const receded = marked ? recededMarkFill(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg) : ""
 
     // The axis is the whole gantt's: rows left off do not shorten it.
@@ -246,7 +248,10 @@ export const gantt: SvgComponent<GanttComponent> = {
           const barW = Math.max(BAR_MIN_W, vx(item.end) - barX)
           const barY = rowY + BAR_INSET_Y
           const barH = Math.max(1, rowH - BAR_INSET_Y * 2)
-          const r = Math.min(4, barH / 2)
+          // Ruled: square bars, in the primary, the accent kept for the bar
+          // the author marked.
+          const r = ruled ? 0 : Math.min(4, barH / 2)
+          const barInk = marked && !item.emphasis ? receded : ruled && !item.emphasis ? ctx.colors.primary : ctx.colors.accent
           const text = rowText(item)
           // With a period or a line of text, the label and what follows it stack centred on the row.
           const stacked = text !== null || period !== null
@@ -312,7 +317,7 @@ export const gantt: SvgComponent<GanttComponent> = {
                   height={Math.max(1, barH - 1.6)}
                   rx={r}
                   fill="none"
-                  stroke={graphicInk(marked && !item.emphasis ? receded : ctx.colors.accent, ground)}
+                  stroke={graphicInk(barInk, ground)}
                   strokeWidth={1.6}
                   strokeDasharray="5 3"
                 />
@@ -323,7 +328,7 @@ export const gantt: SvgComponent<GanttComponent> = {
                   width={barW}
                   height={barH}
                   rx={r}
-                  fill={marked && !item.emphasis ? receded : ctx.colors.accent}
+                  fill={barInk}
                 />
               )}
             </g>

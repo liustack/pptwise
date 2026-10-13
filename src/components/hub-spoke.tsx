@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { cardGround, HAIRLINE, isRuled } from "./surfaces"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
@@ -247,7 +248,11 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
       )
     }
     const border = ctx.colors.border ?? ctx.colors.muted
-    const hubFill = ctx.colors.surface
+    // Ruled: the hub and each cap are outlines on the paper (the paper still
+    // masks the spokes under them), the caps square cornered, and each
+    // number the figure alone in the primary where its disc stood.
+    const ruled = isRuled(ctx)
+    const hubFill = cardGround(ctx)
 
     return (
       <g transform={`translate(${box.x},${box.y})`}>
@@ -298,11 +303,11 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
           const badgeFill = ctx.colors.accent
           const glyph = String(cap.i + 1)
           const glyphSize = Math.max(FORM_BODY_FLOOR, Math.round(16 * scale))
-          const glyphInk = accessibleInk(ctx.colors.surface, badgeFill, glyphSize)
+          const glyphInk = ruled ? accessibleInk(ctx.colors.primary, hubFill, glyphSize) : accessibleInk(ctx.colors.surface, badgeFill, glyphSize)
           const anchor = cap.badge === "left" ? "start" : "end"
           const tx = cap.badge === "left" ? textLeft : textRight
           const descLines = descLayout?.lines ?? []
-          const descInk = accessibleInk(ctx.colors.muted, ctx.colors.surface, descLayout?.fontSize ?? 12)
+          const descInk = accessibleInk(ctx.colors.muted, hubFill, descLayout?.fontSize ?? 12)
           const blockH = labelFit.fontSize + (descLines.length > 0 ? descLines.length * descLayout!.lineHeight : 0)
           const labelY = cap.y + cap.h / 2 - blockH / 2 + labelFit.fontSize * 0.9
           const descY = labelY + (descLayout ? descLayout.lineHeight : 0)
@@ -314,12 +319,12 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
                 y={cap.y}
                 width={cap.w}
                 height={cap.h}
-                rx={cap.h / 2}
-                fill={ctx.colors.surface}
+                rx={ruled ? 0 : cap.h / 2}
+                fill={hubFill}
                 stroke={border}
-                strokeWidth={1.25}
+                strokeWidth={ruled ? HAIRLINE : 1.25}
               />
-              <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={badgeFill} />
+              {ruled ? null : <circle cx={badgeCx} cy={badgeCy} r={badgeR} fill={badgeFill} />}
               {/* The badge number states its baseline, 0.35 em below the
                   disc's center. `dominant-baseline="middle"` centered it in
                   the preview only: the export lands the baseline on `y`, so
@@ -329,7 +334,7 @@ export const hubSpoke: SvgComponent<HubSpokeComponent> = {
                 y={badgeCy + glyphSize * 0.35}
                 textAnchor="middle"
                 dominantBaseline="alphabetic"
-                fontFamily={ctx.fonts.heading}
+                fontFamily={ruled ? ctx.fonts.figure : ctx.fonts.heading}
                 fontSize={glyphSize}
                 fontWeight="700"
                 fill={glyphInk}

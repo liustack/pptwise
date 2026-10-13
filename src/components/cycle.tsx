@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { cardGround, isRuled } from "./surfaces"
 import type { Component } from "@/ir"
 import { accessibleInk } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
@@ -297,7 +298,9 @@ export const cycle: SvgComponent<CycleComponent> = {
         const cy = oy + Math.sin(a) * ringR * scale
         const half = halfLens[i]! * scale
         const current = i === 0
-        const fill = ctx.colors.surface
+        // Ruled: a node is an outline on the paper (the paper still masks the
+        // ring under it), square cornered where it stretches to a lozenge.
+        const fill = cardGround(ctx)
         const stroke = current ? ctx.colors.accent : border
         const fit = g.labels[i]!
         const preferred = current ? ctx.colors.accent : ctx.colors.muted
@@ -312,7 +315,7 @@ export const cycle: SvgComponent<CycleComponent> = {
                 y={cy - nr}
                 width={2 * (nr + half)}
                 height={2 * nr}
-                rx={nr}
+                rx={isRuled(ctx) ? 0 : nr}
                 fill={fill}
                 stroke={stroke}
                 strokeWidth={current ? 2 : 1.25}

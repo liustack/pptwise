@@ -3,6 +3,7 @@ import { fitSvgLine } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk, metaInk, readableOn } from "../render/ink"
 import { mixHex } from "./color-mix"
+import { HAIRLINE, hairlineInk, isRuled, paperOf } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type DeviceMockupComponent = Extract<Component, { type: "device_mockup" }>
@@ -217,10 +218,15 @@ function CaptionBand({
   ctx: ComponentCtx
 }) {
   const fitted = fitSvgLine(caption, { maxWidth: w - 24, fontSize: 16, minFontSize: 16 })
-  const ink = accessibleInk(ctx.colors.surface, ctx.colors.primary, fitted.fontSize)
+  // Ruled: the band is knocked out of the screenshot in the paper under a
+  // hairline, the words in the text ink, as `image-compare.tsx` sets its
+  // labels; the device stays a picture of the device (`./surfaces.ts`).
+  const ruled = isRuled(ctx)
+  const band = ruled ? paperOf(ctx) : ctx.colors.primary
+  const ink = accessibleInk(ruled ? ctx.colors.text : ctx.colors.surface, band, fitted.fontSize)
   return (
     <>
-      <rect x={0} y={h - 32} width={w} height={32} fill={ctx.colors.primary} />
+      <rect x={0} y={h - 32} width={w} height={32} fill={band} />
       <text
         data-truncated={fitted.truncated ? "1" : undefined}
         x={w / 2}
@@ -233,6 +239,7 @@ function CaptionBand({
       >
         {fitted.text}
       </text>
+      {ruled ? <line x1={0} y1={h - 32 + HAIRLINE / 2} x2={w} y2={h - 32 + HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} /> : null}
     </>
   )
 }

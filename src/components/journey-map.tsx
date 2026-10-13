@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { cardGround, HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { Component } from "@/ir"
 import { accessibleInk, graphicInk, resolveSemanticColor } from "../render/ink"
 import { DroppedContentMarker } from "../render/drop-marker"
@@ -156,6 +157,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
     const pageBg = ctx.defaultBg ?? ctx.colors.bg
     const radius = ctx.shape?.radius ?? 4
     const highlight = formHighlightFill(ctx.colors)
+    const ruled = isRuled(ctx)
     const danger = resolveSemanticColor("danger", ctx.colors)
     const curve = graphicInk(ctx.colors.primary, pageBg)
     const inset = 10
@@ -252,23 +254,25 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
                 )
                 return (
                   <g key={`pill-${i}-${k}`}>
-                    <rect
-                      x={g.colX(i) + inset}
-                      y={y}
-                      width={width}
-                      height={PILL_H}
-                      rx={radius}
-                      fill={ctx.colors.surface}
-                      stroke={border}
-                      strokeWidth={1}
-                    />
+                    {ruled ? null : (
+                      <rect
+                        x={g.colX(i) + inset}
+                        y={y}
+                        width={width}
+                        height={PILL_H}
+                        rx={radius}
+                        fill={ctx.colors.surface}
+                        stroke={border}
+                        strokeWidth={1}
+                      />
+                    )}
                     <text
                       data-truncated={fit.truncated ? "1" : undefined}
                       x={g.colX(i) + inset + 11}
                       y={y + PILL_H / 2 + fit.fontSize * 0.35}
                       fontFamily={ctx.fonts.body}
                       fontSize={fit.fontSize}
-                      fill={accessibleInk(ctx.colors.text, ctx.colors.surface, fit.fontSize)}
+                      fill={accessibleInk(ctx.colors.text, cardGround(ctx), fit.fontSize)}
                     >
                       {fit.text}
                     </text>
@@ -341,20 +345,32 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
               if (!entry) return null
               const { layout } = entry
               const filled = i === g.low
-              const fill = filled ? highlight : ctx.colors.surface
+              const reversed = filled && !ruled
+              const fill = ruled ? paperOf(ctx) : filled ? highlight : ctx.colors.surface
               const blockH = layout.lines.length * layout.lineHeight
               return (
                 <g key={`chance-${i}`}>
-                  <rect
-                    x={g.colX(i) + inset}
-                    y={g.chance!.y}
-                    width={g.colW - inset * 2}
-                    height={g.chance!.h}
-                    rx={radius}
-                    fill={fill}
-                    stroke={filled ? highlight : border}
-                    strokeWidth={1}
-                  />
+                  {ruled ? (
+                    <line
+                      x1={g.colX(i) + inset}
+                      y1={g.chance!.y + (filled ? RULE : HAIRLINE) / 2}
+                      x2={g.colX(i) + g.colW - inset}
+                      y2={g.chance!.y + (filled ? RULE : HAIRLINE) / 2}
+                      stroke={filled ? graphicInk(ctx.colors.primary, fill) : hairlineInk(ctx)}
+                      strokeWidth={filled ? RULE : HAIRLINE}
+                    />
+                  ) : (
+                    <rect
+                      x={g.colX(i) + inset}
+                      y={g.chance!.y}
+                      width={g.colW - inset * 2}
+                      height={g.chance!.h}
+                      rx={radius}
+                      fill={fill}
+                      stroke={filled ? highlight : border}
+                      strokeWidth={1}
+                    />
+                  )}
                   {layout.lines.map((line, li) => (
                     <text
                       key={li}
@@ -364,7 +380,7 @@ export const journeyMap: SvgComponent<JourneyMapComponent> = {
                       fontFamily={ctx.fonts.body}
                       fontSize={layout.fontSize}
                       fontWeight={filled ? "700" : undefined}
-                      fill={accessibleInk(filled ? ctx.colors.surface : ctx.colors.text, fill, layout.fontSize)}
+                      fill={accessibleInk(reversed ? ctx.colors.surface : filled ? ctx.colors.primary : ctx.colors.text, fill, layout.fontSize)}
                     >
                       {line}
                     </text>

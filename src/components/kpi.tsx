@@ -13,6 +13,7 @@ import { DroppedContentMarker } from "../render/drop-marker"
 import { isMagnitudeUnit, isMultiplierUnit, isPercentUnit, joinUnit } from "../lib/quantity-format"
 import { layoutAtSize } from "./legibility"
 import type { RenderDef, SvgComponent } from "./types"
+import { cardGround, HAIRLINE, hairlineInk, isRuled } from "./surfaces"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 
 type KpiComponent = Extract<Component, { type: "kpi_cards" }>
@@ -466,7 +467,11 @@ export const kpi: SvgComponent<KpiComponent> = {
     const component = hidden > 0 ? { ...rawComponent, items: rawComponent.items.slice(0, visible) } : rawComponent
     const natural = rows * rowH + (rows - 1) * GAP
     const cardH = box.h != null && box.h > natural ? (box.h - (rows - 1) * GAP) / rows : rowH
-    const contentShift = (cardH - rowH) / 2
+    // Ruled, the words hang from the hairline over the card rather than
+    // floating in the middle of a card nobody can see.
+    const ruled = isRuled(ctx)
+    const contentShift = ruled ? 0 : (cardH - rowH) / 2
+    const ground = cardGround(ctx)
     // Row-level, not per-card: every card in this row is the same width, so
     // its text column and the type size its number is set at are the row's
     // property rather than each card's (see `rowValueFontSize`).
@@ -495,7 +500,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           // passed on, byte-identical), falls back to neutral ink only
           // where it doesn't.
           const deltaColor = dp
-            ? accessibleInk(dp.color || ctx.colors.muted, ctx.colors.surface, DELTA_SIZE)
+            ? accessibleInk(dp.color || ctx.colors.muted, ground, DELTA_SIZE)
             : ctx.colors.muted
           // The overflow auditor measures a `<text>`'s whole textContent
           // (value + unit tspan concatenated) at the outer element's
@@ -551,24 +556,28 @@ export const kpi: SvgComponent<KpiComponent> = {
           const tagFits = item.tag ? tagWidth(item.tag.text, tagSpec) <= cardW - 40 : true
           return (
             <g key={i}>
-              <rect
-                x={cardX}
-                y={cardY}
-                width={cardW}
-                height={cardH}
-                rx={ctx.shape?.radius ?? 8}
-                fill={ctx.colors.surface}
-                {...(ctx.colors.cardStroke
-                  ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
-                  : {})}
-              />
+              {ruled ? (
+                <line x1={cardX} y1={cardY} x2={cardX + cardW} y2={cardY} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+              ) : (
+                <rect
+                  x={cardX}
+                  y={cardY}
+                  width={cardW}
+                  height={cardH}
+                  rx={ctx.shape?.radius ?? 8}
+                  fill={ground}
+                  {...(ctx.colors.cardStroke
+                    ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
+                    : {})}
+                />
+              )}
               {item.icon && (
                 <Icon
                   name={item.icon}
                   x={cardX + 20}
                   y={cardY + 12 + contentShift}
                   size={18}
-                  color={graphicInk(item.tone ? resolveSemanticColor(item.tone, ctx.colors) : ctx.colors.primary, ctx.colors.surface)}
+                  color={graphicInk(item.tone ? resolveSemanticColor(item.tone, ctx.colors) : ctx.colors.primary, ground)}
                 />
               )}
               <text
@@ -577,7 +586,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                 y={valueY}
                 fontSize={fittedValue.fontSize}
                 fontWeight="bold"
-                fill={marked ? accessibleInk(emphasisRunInk(ctx.colors), ctx.colors.surface, fittedValue.fontSize) : ctx.colors.text}
+                fill={marked ? accessibleInk(emphasisRunInk(ctx.colors), ground, fittedValue.fontSize) : ctx.colors.text}
                 fontFamily={ctx.fonts.heading}
                 dominantBaseline="alphabetic"
                 xmlSpace={fittedUnit?.startsWith(" ") ? "preserve" : undefined}
@@ -609,7 +618,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                 fontSize={fittedLabel.fontSize}
                 // A tone (`danger`, `warning`, `success`) says what kind of
                 // news the figure is, and the label carries it.
-                fill={item.tone ? accessibleInk(resolveSemanticColor(item.tone, ctx.colors), ctx.colors.surface, fittedLabel.fontSize) : ctx.colors.muted}
+                fill={item.tone ? accessibleInk(resolveSemanticColor(item.tone, ctx.colors), ground, fittedLabel.fontSize) : ctx.colors.muted}
                 fontFamily={ctx.fonts.body}
                 dominantBaseline="alphabetic"
               >
@@ -622,7 +631,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                     x: cardX + 20,
                     y: cardY + 106 + contentShift,
                     spec: tagSpec,
-                    inks: tagInks(ctx, item.tag, marked, ctx.colors.surface, tagSpec.size),
+                    inks: tagInks(ctx, item.tag, marked, ground, tagSpec.size),
                   })
                 ) : (
                   <g data-dropped={1} data-dropped-kind="label" />
@@ -631,14 +640,14 @@ export const kpi: SvgComponent<KpiComponent> = {
                 paintMarkedLine(
                   ctx,
                   markedLineSegments(item.note ?? "", fittedNote.lines)[li]!,
-                  { baseFill: accessibleInk(ctx.colors.text, ctx.colors.surface, 16), fontWeight: "700", fontFamily: ctx.fonts.body, bold: false, bg: ctx.colors.surface },
+                  { baseFill: accessibleInk(ctx.colors.text, ground, 16), fontWeight: "700", fontFamily: ctx.fonts.body, bold: false, bg: ground },
                   <text
                     key={`note-${li}`}
                     data-truncated={fittedNote.truncated && li === fittedNote.lines.length - 1 ? "1" : undefined}
                     x={cardX + 20}
                     y={cardY + 114 + tagShift + li * SOURCE_LINE + contentShift}
                     fontSize={16}
-                    fill={accessibleInk(ctx.colors.text, ctx.colors.surface, 16)}
+                    fill={accessibleInk(ctx.colors.text, ground, 16)}
                     fontFamily={ctx.fonts.body}
                     dominantBaseline="alphabetic"
                   >
@@ -667,7 +676,7 @@ export const kpi: SvgComponent<KpiComponent> = {
                   // clear the floor, `preferredOpacity` unchanged otherwise
                   // — same pattern as chapter-banner-chapter.tsx/chapter-
                   // rail-chapter.tsx's existing subheading call sites.
-                  fillOpacity={accessibleOpacity(ctx.colors.muted, ctx.colors.surface, 11, 0.7)}
+                  fillOpacity={accessibleOpacity(ctx.colors.muted, ground, 11, 0.7)}
                   fontFamily={ctx.fonts.body}
                   dominantBaseline="alphabetic"
                 >

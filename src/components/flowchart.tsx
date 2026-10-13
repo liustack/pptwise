@@ -5,7 +5,8 @@ import {
   layoutSvgText,
   measureTextUnits,
 } from "../lib/svg-text-layout"
-import { readableOn } from "../render/ink"
+import { graphicInk, readableOn } from "../render/ink"
+import { isRuled, paperOf } from "./surfaces"
 import { mixHex } from "./color-mix"
 import {
   layoutFlowchart,
@@ -1168,8 +1169,10 @@ function focalNodeId(component: FlowchartComponent): string | null {
  * of painting every box alike. The focal node (the first decision, else the
  * last terminal) carries the accent.
  */
-function nodeRx(kind: LayoutNode["kind"]): number {
-  return kind === "round" ? 20 : 6
+function nodeRx(kind: LayoutNode["kind"], ctx: ComponentCtx): number {
+  // Ruled, a step is square cornered. A start or an end keeps its rounded
+  // ends: that is the flowchart's symbol for one, not a card's corner.
+  return kind === "round" ? 20 : isRuled(ctx) ? 0 : 6
 }
 
 function nodePaints(
@@ -1178,6 +1181,12 @@ function nodePaints(
   focal: boolean,
 ): { fill: string; stroke: string; text: string } {
   const stroke = ctx.colors.primary
+  // Ruled: every node is an outline on the paper (the paper still masks the
+  // edges under it), the focal one in the accent, its words in the ink.
+  if (isRuled(ctx)) {
+    const fill = paperOf(ctx)
+    return { fill, stroke: focal ? graphicInk(ctx.colors.accent, fill) : graphicInk(stroke, fill), text: ctx.colors.text }
+  }
   if (focal) {
     const fill = mixHex(ctx.colors.surface, ctx.colors.accent, 0.22)
     return { fill, stroke: ctx.colors.accent, text: readableOn(fill) }
@@ -1256,7 +1265,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
           const firstLineY =
             ny + nh / 2 - ((n.lines.length - 1) * pitch) / 2
           const paints = nodePaints(n.kind, ctx, n.id === focalId)
-          const rx = nodeRx(n.kind)
+          const rx = nodeRx(n.kind, ctx)
 
           return (
             <g key={n.id} data-flow-node="1">
@@ -1329,7 +1338,7 @@ export const flowchart: SvgComponent<FlowchartComponent> = {
                 y={label.chipY}
                 width={label.chipW}
                 height={label.chipH}
-                rx={LABEL_CHIP_RX}
+                rx={isRuled(ctx) ? 0 : LABEL_CHIP_RX}
                 fill={ctx.colors.bg}
               />
               <text

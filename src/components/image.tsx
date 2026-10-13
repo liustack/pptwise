@@ -4,6 +4,7 @@ import { fitEmphasisLine, headingEmphasisPaint, renderEmphasisTspans, renderEmph
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 import { accessibleInk } from "../render/ink"
 import { CroppedImage } from "../render/cropped-image"
+import { isRuled, paperOf } from "./surfaces"
 
 type ImageComponent = Extract<Component, { type: "image" }>
 
@@ -18,13 +19,21 @@ type ImageComponent = Extract<Component, { type: "image" }>
  */
 const MAX_IMAGE_H = 340
 
+/** The height a caption takes at the foot of the figure, when ruled. */
+const CAPTION_BAND = 32
+
 export const image: SvgComponent<ImageComponent> = {
   measure(_component, w) {
     // caption 画在图内底部色带（P3 卡片化），不再额外占图片下方空间
     return Math.min(Math.round(w * 0.5), MAX_IMAGE_H)
   },
   render(component, box, ctx) {
-    const imgH = Math.min(Math.round(box.w * 0.5), MAX_IMAGE_H, box.h ?? Number.POSITIVE_INFINITY)
+    const frameH = Math.min(Math.round(box.w * 0.5), MAX_IMAGE_H, box.h ?? Number.POSITIVE_INFINITY)
+    // Ruled: print sets a caption under its figure, not in a band laid over
+    // the photograph, so the photo gives the caption's 32px back from its
+    // own bottom and the line sits on the paper (`./surfaces.ts`).
+    const ruledCaption = isRuled(ctx) && !!component.caption
+    const imgH = ruledCaption ? frameH - CAPTION_BAND : frameH
     const src = ctx.images?.[component.asset_id]?.src
     // A11Y-01 alt 链路：`aria-label`（非 `<title>` 子元素——SVG 1.1 的
     // `<image>` 内容模型不含描述性子元素，2 起才允许，且 svg2pptx 的
@@ -82,16 +91,19 @@ export const image: SvgComponent<ImageComponent> = {
               minFontSize: 16,
             })
             if (!fittedCaption) return null
-            const captionInk = accessibleInk(ctx.colors.surface, ctx.colors.primary, fittedCaption.fontSize)
-            const paint = headingEmphasisPaint(ctx, fittedCaption, { baseFill: captionInk, bold: false, bg: ctx.colors.primary })
+            const captionGround = ruledCaption ? paperOf(ctx) : ctx.colors.primary
+            const captionInk = ruledCaption
+              ? accessibleInk(ctx.colors.muted, captionGround, fittedCaption.fontSize)
+              : accessibleInk(ctx.colors.surface, ctx.colors.primary, fittedCaption.fontSize)
+            const paint = headingEmphasisPaint(ctx, fittedCaption, { baseFill: captionInk, bold: false, bg: captionGround })
             // The number stays its own bold run, the full-width space and the words after it.
             const words = label ? dropLead(fittedCaption.segments, label) : null
             const line = (
               <text
                 data-truncated={fittedCaption.truncated ? "1" : undefined}
-                x={box.w / 2}
-                y={imgH - 11}
-                textAnchor="middle"
+                x={ruledCaption ? 0 : box.w / 2}
+                y={ruledCaption ? frameH - 9 : imgH - 11}
+                textAnchor={ruledCaption ? "start" : "middle"}
                 fontSize={fittedCaption.fontSize}
                 // Self-painted surface: measure the caption ink against
                 // the band this component just painted, not the ambient
@@ -109,7 +121,7 @@ export const image: SvgComponent<ImageComponent> = {
               // caption 底部色带（家居参考图 #3 的图卡形态）：主题主色半透明
               // 压在图片底边内，白字居中——不再吃图片下方 32px 的外部空间
               <>
-                <rect
+                {ruledCaption ? null : <rect
                   x={0}
                   y={imgH - 32}
                   width={box.w}
@@ -123,7 +135,7 @@ export const image: SvgComponent<ImageComponent> = {
                   // a light photo the true ratio stayed under the floor even
                   // after the ink fix. An opaque band is the only version of
                   // this the contrast pick can actually guarantee.
-                />
+                />}
                 {label && words
                   ? cloneElement(
                       line,

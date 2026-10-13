@@ -10,6 +10,7 @@ import { accessibleInk, graphicInk, liftedInk, resolveSemanticColor, type Semant
 import { mixHex } from "./color-mix"
 import { fitSvgLine } from "../lib/svg-text-layout"
 import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
+import { HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type CalloutComponent = Extract<Component, { type: "callout" }>
@@ -102,7 +103,10 @@ export const callout: SvgComponent<CalloutComponent> = {
   render(component, box, ctx) {
     const { laid, textX, bodyW, h, top: blockTop, title, titleH, tagSpec, tagW } = layout(component, box.w, ctx)
     const top = blockTop + titleH
-    const panel = mixHex(ctx.colors.bg, ctx.colors.muted, 0.08)
+    // Ruled, the panel is the paper itself, closed above by a rule in the
+    // variant's ink and below by a hairline.
+    const ruled = isRuled(ctx)
+    const panel = ruled ? paperOf(ctx) : mixHex(ctx.colors.bg, ctx.colors.muted, 0.08)
     const ink = accessibleInk(ctx.colors.text, panel, laid.fontSize)
     // The variant's ink when it reads on the panel as a graphic, the
     // readable ink when not: an info callout's primary on a dark theme whose
@@ -113,7 +117,14 @@ export const callout: SvgComponent<CalloutComponent> = {
     const tagTop = top + laid.contentH + TAG_GAP
     return (
       <g transform={`translate(${box.x},${box.y})`}>
-        <rect x={0} y={0} width={box.w} height={h} rx={PANEL_RADIUS} fill={panel} />
+        {ruled ? (
+          <>
+            <line x1={0} y1={RULE / 2} x2={box.w} y2={RULE / 2} stroke={iconColor} strokeWidth={RULE} />
+            <line x1={0} y1={h - HAIRLINE / 2} x2={box.w} y2={h - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          </>
+        ) : (
+          <rect x={0} y={0} width={box.w} height={h} rx={PANEL_RADIUS} fill={panel} />
+        )}
         {title ? (
           <text
             data-callout-title=""

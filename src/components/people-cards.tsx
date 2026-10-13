@@ -2,9 +2,10 @@ import type React from "react"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, truncateToUnits } from "../lib/svg-text-layout"
 import { DroppedContentMarker } from "../render/drop-marker"
-import { readableOn } from "../render/ink"
+import { accessibleInk, readableOn } from "../render/ink"
 import { anyCut } from "./declared-fit"
 import { deriveInitials } from "./people-initials"
+import { HAIRLINE, hairlineInk, isRuled, paperOf } from "./surfaces"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
 type PeopleCardsComponent = Extract<Component, { type: "people_cards" }>
@@ -253,10 +254,18 @@ function renderBadge(
   fill: string,
   ctx: ComponentCtx,
 ): React.ReactElement {
-  const ink = readableOn(fill)
+  // Ruled: a ring of hairline round the initials, set in the muted ink, as
+  // a printed roster marks a face it has no photograph for. The palette
+  // colour that told the badges apart has nothing to fill.
+  const ruled = isRuled(ctx)
+  const ink = ruled ? accessibleInk(ctx.colors.muted, paperOf(ctx), BADGE_FONT_SIZE) : readableOn(fill)
   return (
     <>
-      <circle cx={cx} cy={cy} r={BADGE_R} fill={fill} />
+      {ruled ? (
+        <circle cx={cx} cy={cy} r={BADGE_R - HAIRLINE / 2} fill="none" stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+      ) : (
+        <circle cx={cx} cy={cy} r={BADGE_R} fill={fill} />
+      )}
       <text
         x={cx}
         y={cy + Math.round(BADGE_FONT_SIZE * BASELINE_FUDGE_RATIO)}
@@ -312,6 +321,8 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
     const shellH = Math.min(cardH + perRowGrow, rowBudget)
     const contentShift = Math.max(0, (shellH - cardH) / 2)
     const palette = ctx.colors.chartPalette
+    // Ruled: no card, a hairline over each person (`./surfaces.ts`).
+    const ruled = isRuled(ctx)
     return (
       <g transform={`translate(${box.x},${box.y})`}>
         {hasTitle &&
@@ -364,17 +375,21 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
           const fill = palette.length > 0 ? palette[i % palette.length] : ctx.colors.primary
           return (
             <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
-              <rect
-                x={cardX}
-                y={cardY}
-                width={cardW}
-                height={shellH}
-                rx={ctx.shape?.radius ?? CARD_RADIUS}
-                fill={ctx.colors.surface}
-                {...(ctx.colors.cardStroke
-                  ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
-                  : {})}
-              />
+              {ruled ? (
+                <line x1={cardX} y1={cardY + HAIRLINE / 2} x2={cardX + cardW} y2={cardY + HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+              ) : (
+                <rect
+                  x={cardX}
+                  y={cardY}
+                  width={cardW}
+                  height={shellH}
+                  rx={ctx.shape?.radius ?? CARD_RADIUS}
+                  fill={ctx.colors.surface}
+                  {...(ctx.colors.cardStroke
+                    ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 }
+                    : {})}
+                />
+              )}
               {renderBadge(badgeCx, badgeCy, deriveInitials(person.name), fill, ctx)}
               {name.lines.map((line, li) => (
                 <text

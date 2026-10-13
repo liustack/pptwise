@@ -1,4 +1,5 @@
 import type { ReactElement } from "react"
+import { cardGround, HAIRLINE, hairlineInk, isRuled, paperOf, RULE } from "./surfaces"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { Icon } from "../render/icons"
@@ -204,19 +205,23 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
       filled: boolean,
       key: string,
     ): ReactElement => {
-      const ground = filled ? ctx.colors.primary : ctx.colors.surface
+      // Ruled: no panel is laid. Each term hangs from a hairline, the result
+      // from a rule of the accent, and every word keeps its own ink.
+      const ruled = isRuled(ctx)
+      const reversed = filled && !ruled
+      const ground = ruled ? paperOf(ctx) : filled ? ctx.colors.primary : ctx.colors.surface
       // `colors.primary` is the figure's preferred ink, but on a dark theme
       // primary and surface are neighbours — the number went missing on
       // ledger. Both postures route through the panel's real fill.
-      const valueInk = filled
+      const valueInk = reversed
         ? accessibleInk(ctx.colors.surface, ground, text.value?.fontSize ?? 38)
         : accessibleInk(ctx.colors.primary, ground, text.value?.fontSize ?? 38)
-      const labelInk = filled
+      const labelInk = reversed
         ? accessibleInk(ctx.colors.surface, ground, text.label.fontSize)
         : accessibleInk(ctx.colors.text, ground, text.label.fontSize)
-      const noteInk = filled
+      const noteInk = reversed
         ? accessibleInk(ctx.colors.surface, ground, text.note?.fontSize ?? FORM_BODY_FLOOR)
-        : accessibleInk(ctx.colors.muted, ctx.colors.surface, text.note?.fontSize ?? FORM_BODY_FLOOR)
+        : accessibleInk(ctx.colors.muted, cardGround(ctx), text.note?.fontSize ?? FORM_BODY_FLOOR)
       const iconH = iconHeight(text)
       const valueH = text.value ? text.value.fontSize * 1.28 : 0
       const labelH = text.label.lines.length * text.label.lineHeight
@@ -226,7 +231,7 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
       const nodes: ReactElement[] = []
       if (text.icon) {
         // The icon is a graphic, so it needs 3:1 on its panel, not a text's 4.5:1.
-        const iconInk = filled ? graphicInk(ctx.colors.surface, ground) : graphicInk(ctx.colors.primary, ground)
+        const iconInk = reversed ? graphicInk(ctx.colors.surface, ground) : graphicInk(ctx.colors.primary, ground)
         nodes.push(
           <g key="icon" data-term-icon={text.icon}>
             <Icon name={text.icon} x={left} y={y} size={ICON.size} color={iconInk} />
@@ -282,16 +287,27 @@ export const conceptEquation: SvgComponent<ConceptEquationComponent> = {
       })
       return (
         <g key={key}>
-          <rect
-            x={slot.x}
-            y={0}
-            width={slot.w}
-            height={h}
-            rx={ctx.shape?.radius ?? CARD_RADIUS}
-            fill={ground}
-            stroke={filled ? ground : border}
-            strokeWidth={1}
-          />
+          {ruled ? (
+            <line
+              x1={slot.x}
+              y1={(filled ? RULE : HAIRLINE) / 2}
+              x2={slot.x + slot.w}
+              y2={(filled ? RULE : HAIRLINE) / 2}
+              stroke={filled ? graphicInk(ctx.colors.accent, ground) : hairlineInk(ctx)}
+              strokeWidth={filled ? RULE : HAIRLINE}
+            />
+          ) : (
+            <rect
+              x={slot.x}
+              y={0}
+              width={slot.w}
+              height={h}
+              rx={ctx.shape?.radius ?? CARD_RADIUS}
+              fill={ground}
+              stroke={filled ? ground : border}
+              strokeWidth={1}
+            />
+          )}
           {nodes}
         </g>
       )
@@ -342,7 +358,7 @@ function ExcludedStrip({ text, y, w, ctx }: { text: ExcludedText; y: number; w: 
   const valueW = measureTextUnits(text.value.text, { bold: true, fontFamily: ctx.fonts.heading }) * text.value.fontSize
   return (
     <g data-excluded="">
-      <rect x={0.5} y={y + 0.5} width={w - 1} height={text.h - 1} rx={ctx.shape?.radius ?? CARD_RADIUS} fill="none" stroke={border} strokeWidth={1} strokeDasharray="5 4" />
+      <rect x={0.5} y={y + 0.5} width={w - 1} height={text.h - 1} rx={isRuled(ctx) ? 0 : (ctx.shape?.radius ?? CARD_RADIUS)} fill="none" stroke={border} strokeWidth={1} strokeDasharray="5 4" />
       {text.icon ? (
         <g data-term-icon={text.icon}>
           <Icon name={text.icon} x={EXCLUDED.padX} y={y + EXCLUDED.padY} size={EXCLUDED.icon} color={graphicInk(ctx.colors.muted, ground)} />

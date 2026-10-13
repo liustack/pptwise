@@ -1,4 +1,5 @@
 import { markedLineSegments, paintMarkedLine, stripEmphasis } from "../render/emphasis"
+import { cardGround, HAIRLINE, hairlineInk, isRuled } from "./surfaces"
 import type { Component } from "@/ir"
 import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-layout"
 import { accessibleInk, graphicInk } from "../render/ink"
@@ -143,37 +144,47 @@ export const insightPanel: SvgComponent<InsightPanelComponent> = {
     // which both crowded the first row against the title and left the block
     // floating short of the shell it was measured into.
     let rowY = box.y + PAD_TOP + TITLE_LH + GAP_TITLE_ROWS
+    // Ruled: no panel. The insight is set on the paper between two hairlines.
+    const ruled = isRuled(ctx)
+    const ground = cardGround(ctx)
     return (
       <g>
-        <rect
-          x={box.x}
-          y={box.y}
-          width={box.w}
-          height={panelH}
-          rx={r}
-          fill={ctx.colors.surface}
-          {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
-        />
+        {ruled ? (
+          <>
+            <line x1={box.x} y1={box.y + HAIRLINE / 2} x2={box.x + box.w} y2={box.y + HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+            <line x1={box.x} y1={box.y + panelH - HAIRLINE / 2} x2={box.x + box.w} y2={box.y + panelH - HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
+          </>
+        ) : (
+          <rect
+            x={box.x}
+            y={box.y}
+            width={box.w}
+            height={panelH}
+            rx={r}
+            fill={ctx.colors.surface}
+            {...(ctx.colors.cardStroke ? { stroke: ctx.colors.cardStroke, strokeWidth: 1 } : {})}
+          />
+        )}
         {component.icon ? (
           <Icon
             name={component.icon}
             x={box.x + PAD_X}
             y={titleBaseline - TITLE_SIZE * 0.85 - (ICON_SIZE - TITLE_SIZE) / 2}
             size={ICON_SIZE}
-            color={graphicInk(ctx.colors.accent, ctx.colors.surface)}
+            color={graphicInk(ctx.colors.accent, ground)}
           />
         ) : null}
         {paintMarkedLine(
           ctx,
           markedLineSegments(component.title, [layout.title.text])[0]!,
-          { baseFill: accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.title.fontSize), fontWeight: "700", fontFamily: ctx.fonts.heading, bg: ctx.colors.surface },
+          { baseFill: accessibleInk(ctx.colors.accent, ground, layout.title.fontSize), fontWeight: "700", fontFamily: ctx.fonts.heading, bg: ground },
           <text
             data-truncated={layout.title.truncated ? "1" : undefined}
             x={box.x + PAD_X + (component.icon ? ICON_SHIFT : 0)}
             y={titleBaseline}
             fontSize={layout.title.fontSize}
             fontWeight="700"
-            fill={accessibleInk(ctx.colors.accent, ctx.colors.surface, layout.title.fontSize)}
+            fill={accessibleInk(ctx.colors.accent, ground, layout.title.fontSize)}
             fontFamily={ctx.fonts.heading}
             dominantBaseline="alphabetic"
           >

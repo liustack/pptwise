@@ -120,4 +120,20 @@ export interface StyleShape {
    * `[0.8, 1.6]`.
    */
   typeScale?: number
+  /**
+   * How the shared components draw what a web page would set on a card.
+   * `"filled"` (omitted, the default) lays each card, cell, node and badge
+   * on a fill of its own. `"ruled"` sets them the way a printed document
+   * does: no fill and no rounded corner, hairlines and rules between parts,
+   * numbers as type rather than in discs, a dark block as an outline, a
+   * table on rules with no tinted rows, and emphasis carried by weight, the
+   * ink and one line of the accent. Charts keep their marks. Omitted, every
+   * component renders byte for byte as it did before the token existed.
+   * The renderers read it through `isRuled` (`components/surfaces.ts`).
+   */
+  surfaces?: SurfaceTreatment
 }
+
+/** The two ways a theme's shared components draw a card: see `StyleShape.surfaces`. */
+export const SURFACE_TREATMENTS = ["filled", "ruled"] as const
+export type SurfaceTreatment = (typeof SURFACE_TREATMENTS)[number]
