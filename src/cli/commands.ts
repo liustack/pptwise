@@ -66,6 +66,7 @@ import {
   type BuildThemeSource,
   type BuildReport,
 } from "./build-report"
+import { readWrittenFor, writeWrittenFor } from "./written-for"
 import { ALTERNATIVES_DIRNAME, writeBuildAlternatives } from "./build-alternatives"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
@@ -2221,6 +2222,9 @@ async function wantsAlternatives(flag: boolean | undefined, resolved: ResolvedTh
   return !(await pathExists(join(workspaceDir, ALTERNATIVES_DIRNAME, "manifest.json")))
 }
 
+/** Audit findings that, on a deck built under a theme its pages were not written for, say the page is drawn short rather than drawn wrong. */
+const SWITCH_DECLARED_AUDIT_CODES: ReadonlySet<string> = new Set(["content-truncated", "content-dropped", "stepped-aside"])
+
 async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit] = await readConfigs(cwd)
@@ -2265,7 +2269,9 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
     if (!(e instanceof PptwiseError)) throw e
     return needsRevision(assembleIssues(e.message, isDir ? await specPageIds(resolvedTarget) : []))
   }
-  const v = validateIr(loaded.raw, { theme, missingAssetPath: loaded.missingAssetPath })
+  // A deck project's pages may have been written for another theme (`./written-for.ts`).
+  const writtenFor = isDir ? await readWrittenFor(workspace.dir) : undefined
+  const v = validateIr(loaded.raw, { theme, missingAssetPath: loaded.missingAssetPath, ...(writtenFor !== undefined ? { writtenFor } : {}) })
   report.warnings = (v.warnings ?? []).map((issue) => validateIssue(issue, isDir))
   if (!v.ok) return needsRevision(v.errors.map((issue) => validateIssue(issue, isDir)))
   const ir = v.ir!
@@ -2301,12 +2307,23 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   if (await wantsAlternatives(opts.alternatives, resolvedTheme, workspace.dir)) {
     report.alternatives = await writeBuildAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir)
   }
-  const errors = [...placeholderIssues(ir, isDir), ...review.findings.map((finding) => auditIssue(finding, isDir))]
+  // Under a theme the pages were not written for, a text the face cuts or
+  // a label it leaves off (a scroll cover's column too long to stand, say)
+  // is the page drawn short, and a page a plainer layout drew whole is the
+  // page drawn plainer. The audit finding names the page and what it lost,
+  // and stays a warning, so the build still draws the deck.
+  const switched = writtenFor !== undefined && writtenFor !== ir.theme.id
+  const shortHere = switched ? review.findings.filter((finding) => SWITCH_DECLARED_AUDIT_CODES.has(finding.code)) : []
+  report.warnings.push(...shortHere.map((finding) => auditIssue(finding, isDir)))
+  const drawnShort = v.switchedFrom !== undefined || shortHere.length > 0
+  const errors = [...placeholderIssues(ir, isDir), ...review.findings.filter((finding) => !shortHere.includes(finding)).map((finding) => auditIssue(finding, isDir))]
   if (errors.length > 0) return needsRevision(errors)
 
   let bytes: Uint8Array
   try {
-    bytes = await generatePptx(ir, { theme })
+    // A page drawn short under a theme its pages were not written for is
+    // already named in the warnings, so the export takes it as drawn.
+    bytes = await generatePptx(ir, { theme, ...(drawnShort ? { allowDroppedContent: true } : {}) })
   } catch (e) {
     if (!(e instanceof PptwiseError)) throw e
     return needsRevision([{ stage: "render", message: e.message }])
@@ -2315,6 +2332,9 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   await removeFinalPptx(workspace.dir)
   const pptxPath = join(workspace.dir, finalPptxName(deckFilename(loaded), workspace.name))
   await writeFile(pptxPath, bytes)
+  // Every page drawn whole: the pages are now written for this theme.
+  if (isDir && !drawnShort) await writeWrittenFor(workspace.dir, ir.theme.id)
+  if (drawnShort) report.writtenFor = writtenFor
   return { ...report, status: "ok", pptx: pptxPath }
 }
 

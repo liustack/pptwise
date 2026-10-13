@@ -43,7 +43,7 @@ pptwise render deck-dir/
 
 An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`, which also lets the deck past validate's drawing of its content pages. Prefer fixing or splitting the page.
 
-The first build of a deck also draws its cover and a content page or two in up to three other themes, listed under `alternatives` with each theme's id. To change themes, set `theme` in `deck.spec.json` and build again. The report lists pages drawn as another kind under `drawnAs`, warns about furniture a new face leaves off, and names in `errors` any page that needs a change. `themeSource` says whether the bound theme is `builtin`, a `file`, or from a `pack`.
+The first build of a deck also draws its cover and a content page or two in up to three other themes, listed under `alternatives` with each theme's id. To change themes, set `theme` in `deck.spec.json` and build again. The report lists pages drawn as another kind under `drawnAs`, warns about furniture a new face leaves off, and names in `errors` any page that needs a change. After a build that drew every page whole, a page the new theme cannot draw whole is drawn with what it cannot take left off and a warning instead, and `writtenFor` names the theme that draws it whole. `themeSource` says whether the bound theme is `builtin`, a `file`, or from a `pack`.
 
 ## Audit geometry
 

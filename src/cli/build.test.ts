@@ -367,3 +367,81 @@ describe("pptwise build: a theme change is a name change", () => {
     expect(text.output).toMatch(/^note: page 3 \(numbers\): theme "crayon" draws this "fact" page as "\w+", the nearest kind whose face takes it$/m)
   })
 })
+
+describe("pptwise build: pages written for another theme", () => {
+  const coverList = (spec: typeof SPEC, pages: Record<string, unknown>) => {
+    pages.cover = { components: [{ type: "bullets", items: ["Status in writing", "Blockers only"] }] }
+  }
+  const recordOf = async (cwd: string) => JSON.parse(await readFile(join(cwd, ".pptwise", "weekly", "written-for.json"), "utf8")) as { theme: string }
+  const bind = async (cwd: string, theme: string) => {
+    const specPath = join(cwd, "weekly", "deck.spec.json")
+    await writeFile(specPath, JSON.stringify({ ...(JSON.parse(await readFile(specPath, "utf8")) as object), theme }))
+  }
+  const opts = (cwd: string) => ({ json: true, cwd, gitIgnore: false, alternatives: false })
+
+  it("draws the deck under the new theme with what it cannot take left off, names it, and keeps the record for switching back", async () => {
+    const { cwd } = await workspace(coverList)
+    expect((await runBuild("weekly", opts(cwd))).ok).toBe(true)
+    expect(await recordOf(cwd)).toEqual({ theme: "brief" })
+
+    await bind(cwd, "thesis")
+    const { output, ok } = await runBuild("weekly", opts(cwd))
+    const report = JSON.parse(output) as BuildReport
+    expect(ok).toBe(true)
+    expect(report).toMatchObject({ status: "ok", theme: "thesis", writtenFor: "brief", errors: [] })
+    expect(report.warnings).toEqual(
+      expect.arrayContaining([expect.objectContaining({ page: 1, message: expect.stringMatching(/^this deck's pages were written for theme "brief", and under "thesis" this is left off the page/) })]),
+    )
+    expect(await recordOf(cwd)).toEqual({ theme: "brief" })
+    const text = await runBuild("weekly", { ...opts(cwd), json: false })
+    expect(text.output).toMatch(/^note: this deck's pages were written for theme "brief"\. Theme "thesis" leaves off or cuts what the warnings below name\./m)
+
+    await bind(cwd, "brief")
+    const back = JSON.parse((await runBuild("weekly", opts(cwd))).output) as BuildReport
+    expect(back.writtenFor).toBeUndefined()
+    expect(await recordOf(cwd)).toEqual({ theme: "brief" })
+  })
+
+  it("moves the record when a build under the new theme draws every page whole", async () => {
+    const { cwd } = await workspace()
+    expect((await runBuild("weekly", opts(cwd))).ok).toBe(true)
+    await bind(cwd, "thesis")
+    const report = JSON.parse((await runBuild("weekly", opts(cwd))).output) as BuildReport
+    expect(report.status).toBe("ok")
+    expect(report.writtenFor).toBeUndefined()
+    expect(await recordOf(cwd)).toEqual({ theme: "thesis" })
+  })
+
+  it("refuses the same pages under that theme when no build has recorded another", async () => {
+    const { cwd } = await workspace((spec, pages) => {
+      coverList(spec, pages)
+      spec.theme = "thesis"
+    })
+    const { report, ok } = await build(cwd)
+    expect(ok).toBe(false)
+    expect(report.status).toBe("needs_revision")
+    expect(report.errors[0]!.message).toContain('"cover" slides do not render components')
+    expect(await exists(join(cwd, ".pptwise", "weekly", "written-for.json"))).toBe(false)
+  })
+})
+
+describe("pptwise build: a label the new theme's face leaves off", () => {
+  it("warns of it, draws the deck, and keeps the record on the theme that drew it", async () => {
+    const { cwd } = await workspace((spec) => {
+      ;(spec as Record<string, unknown>).meta = { organization: "New term parents' meeting" }
+      spec.pages[0] = { id: "cover", type: "cover", kicker: "Autumn term evening session", heading: "Weekly review" } as never
+    })
+    const opts = { json: true, cwd, gitIgnore: false, alternatives: false }
+    expect((await runBuild("weekly", opts)).ok).toBe(true)
+    const specPath = join(cwd, "weekly", "deck.spec.json")
+    // Ink's scroll cover stands the organization and the kicker in one
+    // vertical column, too long here to stand.
+    await writeFile(specPath, JSON.stringify({ ...(JSON.parse(await readFile(specPath, "utf8")) as object), theme: "ink" }))
+    const { output, ok } = await runBuild("weekly", opts)
+    const report = JSON.parse(output) as BuildReport
+    expect(ok).toBe(true)
+    expect(report).toMatchObject({ status: "ok", theme: "ink", writtenFor: "brief", errors: [] })
+    expect(report.warnings).toContainEqual(expect.objectContaining({ stage: "audit", page: 1, code: "content-dropped", detail: { count: 1, kind: "label" } }))
+    expect(JSON.parse(await readFile(join(cwd, ".pptwise", "weekly", "written-for.json"), "utf8"))).toEqual({ theme: "brief" })
+  })
+})

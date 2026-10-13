@@ -156,7 +156,11 @@ Freeze a workspace theme by copying it to `my-deck/theme.json` with the same id.
 
 A palette fork preserves the menu byte for byte. It may replace the project binding, followed by spec validation, assembly, IR validation, audit, and render.
 
-Switching to a theme with another menu is the same name change: edit `spec.theme` and build. Page files keep their kinds. A kind the new menu lacks is drawn by its nearest offered kind, and furniture the new faces have no place for (`kicker`, `stamp`, `tag`, `years`, `stage`) is left off with a warning while staying in the page file. See [Menu lookup](./menu-lookup.md#theme-changes). What the new faces cannot take at all (`fields`, `ballot`, a cover's own fill, a component one face sets and another refuses) fails validation as on any build and names the page to revise. A deck that froze its theme in its own `theme.json` keeps that file until it is deleted or replaced: the build refuses another name with a different menu rather than leaving the frozen file unused.
+Switching to a theme with another menu is the same name change: edit `spec.theme` and build. Page files keep their kinds. A kind the new menu lacks is drawn by its nearest offered kind, and furniture the new faces have no place for (`kicker`, `stamp`, `tag`, `years`, `stage`) is left off with a warning while staying in the page file. See [Menu lookup](./menu-lookup.md#theme-changes).
+
+A build that draws every page whole records its theme as the one the pages are written for, in `.pptwise/<place>/written-for.json`. A later build under another theme draws the deck rather than refusing pages written for the first theme's faces. What the new faces cannot take (a cover's list, a block beside a full-body one, `fields`, `ballot`, the last items of a list too long for the new box) is left off, and a text too long for the new box is cut. Each such page gets a warning that names what it lost and how to keep it under the new theme, and the report's `writtenFor` names the theme that draws it whole. The page files keep everything, so building under the recorded theme again draws them whole. A build under the new theme that draws every page whole, after the pages are rewritten for it, moves the record. Without a record (a deck never built whole, a fresh checkout) every page is checked as strictly as a new deck's.
+
+A deck that froze its theme in its own `theme.json` keeps that file until it is deleted or replaced: the build refuses another name with a different menu rather than leaving the frozen file unused.
 
 ## Live review
 

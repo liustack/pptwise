@@ -178,7 +178,8 @@ Switching theme is a name change: set `theme` in `deck.spec.json` and build agai
 
 - `drawnAs` lists the pages drawn as another kind.
 - A warning names furniture (`kicker`, `stamp`, `tag`, `years`, `stage`) a face has no place for. It is left off and stays in the page file.
-- An error names what the new faces cannot take at all, such as `fields`, `ballot`, a cover's components or footnote, or components one face sets together and another does not. Fix that page and build again.
+- Once a build has drawn every page whole, a later build under another theme still draws the deck. What the new faces cannot take (`fields`, `ballot`, a cover's components or footnote, a block beside a full-body one, the last items of a long list) is left off or cut, each with a warning that names the page, and the report's `writtenFor` names the theme that draws it whole. The page files keep everything. Deliver the deck and tell the user which pages lost what. Rewrite those pages only if the user wants them whole in the new theme.
+- Without such a build, an error names what the new faces cannot take. Fix that page and build again.
 
 A deck that froze its theme as its own `theme.json` keeps it: delete or replace that file to switch to a theme with another menu. A color fork of the same menu needs neither. When the user asks for other colors without naming one, fork two or three and draw them with `theme try` before binding one.
 

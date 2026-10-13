@@ -86,7 +86,7 @@ Show its SVGs or `contact-sheet.html`, and ask which one they want.
 
 Create a theme only when the user names brand colors or hands over a company template or deck. A wish for a look ("cool", "techy", "premium") picks among existing themes. Create means copy: copy the closest preset, extract a brand from an Office file, or fork for a color change. When the user asks for other colors without naming one, fork two or three fitting colors, draw them with `theme try`, and let the user choose before binding. The commands are in `references/spec.md`.
 
-Write the theme name into `deck.spec.json` before writing page content. There is no render-time theme switch. To switch later, change only `theme` in `deck.spec.json` and build again. Pages keep their kinds and files: the build lists pages drawn as another kind under `drawnAs`, warns about furniture the new faces leave off, and names any page that still needs a change.
+Write the theme name into `deck.spec.json` before writing page content. There is no render-time theme switch. To switch later, change only `theme` in `deck.spec.json` and build again. Pages keep their kinds and files: the build lists pages drawn as another kind under `drawnAs`, warns about what the new faces leave off or cut, and names any page that still needs a change. After a build that drew every page whole, switching draws the deck in one build: the warnings say what each page lost.
 
 ### 4. Write the spec with `kind`
 

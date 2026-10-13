@@ -48,7 +48,7 @@ pptwise render deck-dir/
 
 未填完的项目需要显式使用 `--draft`。可能丢失的内容仍会被拦截，除非用户明确接受 `--allow-dropped-content`，这个开关也让内容页越过 validate 的画页检查。应优先修复或拆页。
 
-deck 第一次 build 时，还会用另外最多三个主题画出它的封面和一两页内容页，列在 `alternatives` 里，带每个主题的 id。要换主题，把 `deck.spec.json` 里的 `theme` 改掉再 build。报告在 `drawnAs` 里列出按别的讲法画的页面，对新脸不画的装饰字段给出警告，需要改动的页面列在 `errors` 里。`themeSource` 写明绑定的主题是 `builtin`（内置）、`file`（主题文件）还是 `pack`（内容包）。
+deck 第一次 build 时，还会用另外最多三个主题画出它的封面和一两页内容页，列在 `alternatives` 里，带每个主题的 id。要换主题，把 `deck.spec.json` 里的 `theme` 改掉再 build。报告在 `drawnAs` 里列出按别的讲法画的页面，对新脸不画的装饰字段给出警告，需要改动的页面列在 `errors` 里。之前有一次 build 把每页都画全过，新主题画不全的页面就不再报错，而是去掉接不住的部分照常画出，给出警告，`writtenFor` 写明哪个主题能画全。`themeSource` 写明绑定的主题是 `builtin`（内置）、`file`（主题文件）还是 `pack`（内容包）。
 
 ## 审计几何
 

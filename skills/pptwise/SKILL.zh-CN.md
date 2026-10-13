@@ -88,7 +88,7 @@ pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <wo
 
 只有用户给了品牌色，或交来公司模板、公司已有的 PPT，才创建主题。想要某种观感（「炫酷」「科技感」「高级」）是在现有主题里挑的理由。创建就是拷贝：拷贝最接近的预设、从 Office 文件抽取品牌，或为改色 fork 一份。用户想换个颜色又没说哪种时，先 fork 两三个合适的配色，用 `theme try` 画出来，让用户挑了再绑定。命令见 `references/spec.md`。
 
-写页面内容之前，把主题名写进 `deck.spec.json`。没有渲染时临时换主题。之后要换主题，只改 `deck.spec.json` 里的 `theme`，再 build 一次。页面保留各自的讲法和文件：build 在 `drawnAs` 里列出按别的讲法画的页面，对新脸放不下的装饰字段给出警告，仍需改动的页面会被点名。
+写页面内容之前，把主题名写进 `deck.spec.json`。没有渲染时临时换主题。之后要换主题，只改 `deck.spec.json` 里的 `theme`，再 build 一次。页面保留各自的讲法和文件：build 在 `drawnAs` 里列出按别的讲法画的页面，对新脸不画或截短的内容给出警告，仍需改动的页面会被点名。之前有一次 build 把每页都画全过，换主题一次 build 就能画出来，警告会说明每页少了什么。
 
 ### 4. 用 `kind` 写 spec
 

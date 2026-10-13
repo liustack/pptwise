@@ -96,6 +96,12 @@ export interface BuildReport {
   themeSource?: BuildThemeSource
   /** Pages the bound theme draws as another kind. Facts, not problems: present only when there is one. */
   drawnAs?: BuildDrawnAs[]
+  /**
+   * The theme this deck's pages were written for, when this build drew them
+   * under another and left something off or drew a page short
+   * (`./written-for.ts`). Each such page is in `warnings`.
+   */
+  writtenFor?: string
   /** The deck's own pages drawn in other themes, when this build drew them (`./build-alternatives.ts`). */
   alternatives?: BuildAlternatives
   notes: string[]
@@ -228,6 +234,11 @@ export function formatBuildReport(report: BuildReport): string {
     const n = report.errors.length
     lines.push(`needs revision: ${n} problem${n === 1 ? "" : "s"}, no .pptx written`)
     for (const issue of report.errors) lines.push(`  ${issueLine(issue)}`)
+  }
+  if (report.writtenFor !== undefined) {
+    lines.push(
+      `note: this deck's pages were written for theme "${report.writtenFor}". Theme "${report.theme}" leaves off or cuts what the warnings below name. The sources keep all of it: building under "${report.writtenFor}" draws it whole, and rewriting those pages to fit "${report.theme}" makes them this theme's.`,
+    )
   }
   for (const issue of report.warnings) lines.push(`warning: ${issueLine(issue)}`)
   for (const landed of report.drawnAs ?? []) {
