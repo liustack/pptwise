@@ -7,7 +7,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { decisionTree } from "./decision-tree"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
+import { expectLeadLine } from "./__fixtures__/ruled-lead"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -140,8 +141,13 @@ describe("decision_tree component", () => {
   it("keeps the recommended outcome visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
-      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
+      if (isRuled(ctx)) {
+        // Ruled: the recommended outcome is framed in the lead line, the others in hairlines.
+        const { container } = svg(decisionTree.render(routing, { x: 88, y: 96, w: 1104 }, ctx))
+        const outcomes = Array.from(container.querySelectorAll("rect")).slice(3)
+        expectLeadLine(outcomes[1], [outcomes[0]!, ...outcomes.slice(2)], paperOf(ctx), theme)
+        continue
+      }
       const { container } = svg(decisionTree.render(routing, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = rects(container).slice(3)[1]!.fill!
       expect(fill, theme).not.toBe(ctx.colors.surface)

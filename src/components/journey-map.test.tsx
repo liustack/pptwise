@@ -7,7 +7,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { journeyMap } from "./journey-map"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
+import { expectLeadLine } from "./__fixtures__/ruled-lead"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { measureTextUnits } from "../lib/svg-text-layout"
 import { listThemes } from "../api"
@@ -142,8 +143,14 @@ describe("journey_map component", () => {
   it("keeps the dip's opportunity card visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
-      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
+      if (isRuled(ctx)) {
+        // Ruled: each opportunity is the line over it, the dip's a rule of the primary.
+        const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104 }, ctx))
+        const cards = Array.from(container.querySelectorAll("line")).slice(-journey.stages.length)
+        const low = journey.stages.findIndex((s) => s.emotion === Math.min(...journey.stages.map((t) => t.emotion)))
+        expectLeadLine(cards[low], cards.filter((_, i) => i !== low), paperOf(ctx), theme)
+        continue
+      }
       const { container } = svg(journeyMap.render(journey, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = Array.from(container.querySelectorAll("rect")).slice(-5)[2]!.getAttribute("fill")!
       expect(fill, theme).not.toBe(ctx.colors.surface)

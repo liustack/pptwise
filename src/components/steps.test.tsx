@@ -5,7 +5,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { steps } from "./steps"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
 import { CANONICAL_THEME_IDS } from "../themes"
 import { contrastRatio, readableOn } from "../render/ink"
 
@@ -175,10 +175,13 @@ describe("steps on every theme", () => {
         .join(",")
     }
     const baseline = shapesOf("runway")
+    // A ruled theme outlines its chevrons and sets no disc: the ruled themes
+    // agree among themselves.
+    const ruledIds = CANONICAL_THEME_IDS.filter((id) => isRuled(boundThemeCtx(id, {})))
+    const ruledBaseline = ruledIds.length > 0 ? shapesOf(ruledIds[0]!) : ""
+    expect(ruledBaseline).not.toContain("circle")
     for (const id of CANONICAL_THEME_IDS) {
-      // A ruled theme draws no disc: ruled-surfaces.test.tsx.
-      if (isRuled(boundThemeCtx(id, {}))) continue
-      expect(shapesOf(id), id).toBe(baseline)
+      expect(shapesOf(id), id).toBe(isRuled(boundThemeCtx(id, {})) ? ruledBaseline : baseline)
     }
   })
 
@@ -188,9 +191,18 @@ describe("steps on every theme", () => {
   it("sets every number in an ink its own disc can read", () => {
     for (const id of CANONICAL_THEME_IDS) {
       const ctx = boundThemeCtx(id, {})
-      // A ruled theme sets the number on the paper, no disc: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
       const { container } = svg(steps.render(threeSteps, { x: 0, y: 0, w: 1088, h: 360 }, ctx))
+      if (isRuled(ctx)) {
+        // Ruled: no disc, so each number must read on the paper it is set on.
+        expect(container.querySelectorAll("circle"), id).toHaveLength(0)
+        const figures = Array.from(container.querySelectorAll("text")).filter((t) => /^\d{2}$/.test(t.textContent ?? ""))
+        expect(figures, id).toHaveLength(threeSteps.items.length)
+        for (const figure of figures) {
+          const ratio = contrastRatio(figure.getAttribute("fill")!, paperOf(ctx))
+          expect(ratio, `${id} ${figure.textContent}`).toBeGreaterThanOrEqual(4.5)
+        }
+        continue
+      }
       const discs = Array.from(container.querySelectorAll("circle"))
       const numbers = Array.from(container.querySelectorAll("text")).filter((t) => /^\d{2}$/.test(t.textContent ?? ""))
       expect(numbers, id).toHaveLength(discs.length)

@@ -115,10 +115,13 @@ describe("icon_cards component", () => {
         .join(",")
     }
     const baseline = shapesOf("almanac")
+    // A ruled theme draws a hairline over each column where the others lay
+    // a disc: the ruled themes agree among themselves, with no disc at all.
+    const ruledIds = CANONICAL_THEME_IDS.filter((id) => isRuled(themeCtx(id)))
+    const ruledBaseline = ruledIds.length > 0 ? shapesOf(ruledIds[0]!) : ""
+    expect(ruledBaseline).not.toContain("circle")
     for (const id of CANONICAL_THEME_IDS) {
-      // A ruled theme draws a line where the others lay a disc: ruled-surfaces.test.tsx.
-      if (isRuled(themeCtx(id))) continue
-      expect(shapesOf(id), id).toBe(baseline)
+      expect(shapesOf(id), id).toBe(isRuled(themeCtx(id)) ? ruledBaseline : baseline)
     }
   })
 

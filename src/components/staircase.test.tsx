@@ -7,7 +7,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { staircase } from "./staircase"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
+import { expectLeadLine } from "./__fixtures__/ruled-lead"
 import { FORM_BODY_FLOOR, FORM_TITLE_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -138,8 +139,13 @@ describe("staircase component", () => {
   it("keeps the highlighted tread visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
-      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
+      if (isRuled(ctx)) {
+        // Ruled: each tread is the line over it, the top one a rule of the primary.
+        const { container } = svg(staircase.render(five, { x: 88, y: 96, w: 1104 }, ctx))
+        const treads = Array.from(container.querySelectorAll("line")).filter((l) => l.getAttribute("y1") === l.getAttribute("y2"))
+        expectLeadLine(treads.at(-1), treads.slice(0, -1), paperOf(ctx), theme)
+        continue
+      }
       const { container } = svg(staircase.render(five, { x: 88, y: 96, w: 1104 }, ctx))
       const treads = rects(container)
       const fill = treads.at(-1)!.fill!

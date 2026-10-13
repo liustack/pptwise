@@ -7,7 +7,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { swimlane } from "./swimlane"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
+import { expectLeadLine } from "./__fixtures__/ruled-lead"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -167,8 +168,13 @@ describe("swimlane component", () => {
   it("keeps the last step's fill visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
-      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
+      if (isRuled(ctx)) {
+        // Ruled: the lanes are hairlines and the last step's box carries the lead frame.
+        const { container } = svg(swimlane.render(renewal, { x: 88, y: 96, w: 1104 }, ctx))
+        const steps = Array.from(container.querySelectorAll("rect"))
+        expectLeadLine(steps.at(-1), steps.slice(0, -1), paperOf(ctx), theme)
+        continue
+      }
       const { container } = svg(swimlane.render(renewal, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = boxes(container).at(-1)!.fill!
       expect(fill, theme).not.toBe(ctx.colors.surface)

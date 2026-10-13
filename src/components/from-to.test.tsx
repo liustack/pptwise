@@ -7,7 +7,8 @@ import { assertSubset } from "../render/subset-validate"
 import { parseSvgRoot } from "../render/serialize"
 import { auditSvgMarkup } from "../audit/svg-audit"
 import { fromTo } from "./from-to"
-import { isRuled } from "./surfaces"
+import { isRuled, paperOf } from "./surfaces"
+import { expectLeadLine } from "./__fixtures__/ruled-lead"
 import { FORM_BODY_FLOOR } from "./legibility"
 import { listThemes } from "../api"
 import { contrastRatio } from "../render/ink"
@@ -156,8 +157,12 @@ describe("from_to component", () => {
   it("keeps the filled column visible on every theme, dark ones included", () => {
     for (const theme of listThemes().map((t) => t.id)) {
       const ctx = themed(theme)
-      // A ruled theme lifts it with a line, not a fill: ruled-surfaces.test.tsx.
-      if (isRuled(ctx)) continue
+      if (isRuled(ctx)) {
+        // Ruled: the arriving column is framed, the rows parted by hairlines.
+        const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, ctx))
+        expectLeadLine(container.querySelector("rect") ?? undefined, Array.from(container.querySelectorAll("line")), paperOf(ctx), theme)
+        continue
+      }
       const { container } = svg(fromTo.render(target, { x: 88, y: 96, w: 1104 }, ctx))
       const fill = container.querySelector("rect")!.getAttribute("fill")!
       expect(fill, theme).not.toBe(ctx.colors.surface)
