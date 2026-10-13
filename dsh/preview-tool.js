@@ -1772,7 +1772,8 @@ function buildSummary(value) {
   if (value.previewId) head.push(`pptwise-preview:${value.previewId}`)
   if (typeof value.pageCount === 'number') head.push(`rendered ${value.pageCount} page${value.pageCount === 1 ? '' : 's'}`)
   if (value.status === 'ok') {
-    head.push('build passed: every check is clean')
+    const w = value.warnings.length
+    head.push(w === 0 ? 'build passed: every check is clean' : `build passed with ${w} warning${w === 1 ? '' : 's'}, listed below`)
     lines.push(head.join(' · '))
     lines.push(`The deck's one .pptx is ${value.pptx}. Deliver this file as it is. Do not render, copy or rename another .pptx.`)
   } else {

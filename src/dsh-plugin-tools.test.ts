@@ -171,7 +171,8 @@ if (argv[0] === "theme" && argv[1] === "try") {
       return { theme: id, name: id[0].toUpperCase() + id.slice(1), pages: [{ page: 1, id: "cover", type: "cover", file: join(dir, id + "-01.svg") }, { page: 2, id: "why", type: "content", file: join(dir, id + "-02.svg") }] }
     }) }
   }
-  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings: [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }], preview, pptx: errors.length === 0 ? pptx : null, ...(alternatives ? { alternatives } : {}), notes: [] }
+  const warnings = existsSync(join(target, "clean")) ? [] : [{ stage: "validate", page: 1, pageId: "cover", field: "heading", message: "long heading" }]
+  const report = { status: errors.length === 0 ? "ok" : "needs_revision", target, theme: "brief", ...(unassembled ? {} : { pageCount: 2 }), audited: !unassembled, errors, warnings, preview, pptx: errors.length === 0 ? pptx : null, ...(alternatives ? { alternatives } : {}), notes: [] }
   process.stdout.write(JSON.stringify(report, null, 2) + "\\n")
   if (errors.length > 0) process.exitCode = 1
 } else if (argv[0] === "spec" && argv[1] === "validate") {
@@ -388,7 +389,7 @@ describe("pptwise_build", () => {
     matchesSchema(value, svc.buildTool.output.schema)
 
     const text = svc.buildTool.output.render({}, value)[0]!.text
-    expect(text.split("\n")[0]).toBe(`pptwise-preview:${value.previewId} · rendered 2 pages · build passed: every check is clean`)
+    expect(text.split("\n")[0]).toBe(`pptwise-preview:${value.previewId} · rendered 2 pages · build passed with 1 warning, listed below`)
     expect(text).toContain(`The deck's one .pptx is ${pptx}. Deliver this file as it is. Do not render, copy or rename another .pptx.`)
     expect(text).toContain("warning: page 1 (cover) — heading: long heading (validate)")
 
@@ -405,6 +406,15 @@ describe("pptwise_build", () => {
     const download = await request(handler, `${route}/${value.previewId}/pptx`)
     expect(download.status).toBe(200)
     expect(download.body.toString("utf8")).toBe("PK-weekly")
+  })
+
+  it("says every check is clean only when there is no warning", async () => {
+    const { svc, workspace } = await setup("build-clean")
+    const target = await deck(workspace, ["clean"])
+    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    expect(value.warnings).toEqual([])
+    const text = svc.buildTool.output.render({}, value)[0]!.text
+    expect(text.split("\n")[0]).toBe(`pptwise-preview:${value.previewId} · rendered 2 pages · build passed: every check is clean`)
   })
 
   it("returns each problem with its page, file and field, and shows the pages without a download", async () => {
