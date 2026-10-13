@@ -64,6 +64,15 @@ import type { BuiltinThemeDeclaration } from "../schema";
  * 正文交给 manuscript 设定里的构图。色值不动。标题字体从 Georgia 换成 Times New
  * Roman 配宋体：定稿是宋体排的，数字是等高数字，Georgia 的旧式数字在「5 个月」
  * 「23.0%」这类大数字上会掉到基线下面。
+ *
+ * **共享组件照论文排（2026-10，`shape.surfaces: "ruled"`）**：manuscript
+ * 构图之外由共享渲染器画的页（矩阵、SWOT、编号卡、表格之类）也照论文的
+ * 版面画，不铺卡、不画圆角，细线和留白撑结构，编号就是数字，强调靠字重、
+ * 墨色和一条学者金细线（`components/surfaces.ts`）。卡面 `surface` 和
+ * `radius` 不收：稿纸白本来就是从纸底抬半档的真实卡色，不是为了装作没有卡
+ * 设的，打开后它只剩缺图垫底和热力图起色，仍压得住正文墨（14.95:1），
+ * muted、success 等压卡面的实测照旧成立。圆角只剩图表自己的标记（热力
+ * 图格子）还在用，组件一律直角。
  */
 export const ACADEMIC_TOKENS: StyleTokens = {
   id: "thesis",
@@ -91,6 +100,7 @@ export const ACADEMIC_TOKENS: StyleTokens = {
   shape: {
     radius: 2,
     gapScale: 1.05, // 学术严谨微圆+论文留白
+    surfaces: "ruled", // 共享组件照论文排：无卡底、细线分隔，见上
   },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F5F3EC" },

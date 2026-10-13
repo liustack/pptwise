@@ -387,7 +387,8 @@ describe("callout marked run ink", () => {
     const thesis = boundThemeCtx("thesis")
     const component = { type: "callout" as const, variant: "info" as const, text: "**Why the gap:** the deduction is the benchmark times the factor" }
     const { container } = svg(callout.render(component, { x: 0, y: 0, w: 1000 }, thesis))
-    const panel = container.querySelector("rect")!.getAttribute("fill")!
+    // Set as print (`shape.surfaces: "ruled"`), thesis lays no panel: the run sits on the paper.
+    const panel = isRuled(thesis) ? paperOf(thesis) : container.querySelector("rect")!.getAttribute("fill")!
     const run = Array.from(container.querySelectorAll("tspan")).find((t) => t.textContent === "Why the gap:")!
     const size = Number(run.closest("text")!.getAttribute("font-size"))
     expect(contrastRatio(run.getAttribute("fill")!, panel)).toBeGreaterThanOrEqual(requiredContrastRatio(size))

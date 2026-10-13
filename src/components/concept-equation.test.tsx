@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from "vitest"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
+import { CANONICAL_THEME_IDS } from "../themes"
+import { isRuled } from "./surfaces"
 import { render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { assertSubset } from "../render/subset-validate"
@@ -161,8 +163,14 @@ describe("concept_equation component", () => {
         .join(",")
     }
     const baseline = shapesOf("ledger")
-    for (const theme of ["thesis", "rally", "terminal", "luxe", "brief"]) {
+    // A ruled theme draws no card or disc (`./surfaces.ts`), so it is held to
+    // the other ruled themes rather than to the filled baseline.
+    for (const theme of ["thesis", "rally", "terminal", "luxe", "brief"].filter((t) => !isRuled(themed(t)))) {
       expect(shapesOf(theme), theme).toBe(baseline)
+    }
+    const ruledIds = CANONICAL_THEME_IDS.filter((id) => isRuled(themed(id)))
+    for (const id of ruledIds) {
+      expect(shapesOf(id), id).toBe(shapesOf(ruledIds[0]!))
     }
   })
 
