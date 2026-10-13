@@ -2195,6 +2195,7 @@ window.__ModuleLoader__.load({
         var entry = props.entry
         var got = useRouteBundle(entry.id)
         var prior = useRouteBundle(entry.priorId || null)
+        var offer = useRouteBundle(props.offerId || null)
         var ui = useState({ layer: null, download: 'idle' })
         function set(change) {
           ui[1](function (prev) {
@@ -2315,7 +2316,7 @@ window.__ModuleLoader__.load({
           ),
           // The desk is what stays in view once the turn's work group folds,
           // so the other themes go here as well as on the build card.
-          h(Alternatives, { themes: bundle.alternatives, slide: slide }),
+          h(Alternatives, { themes: bundle.alternatives || (offer.bundle && offer.bundle.alternatives), slide: slide }),
           layer
             ? h(
                 Layer,
@@ -2343,7 +2344,20 @@ window.__ModuleLoader__.load({
         }
         if (!entry) entry = list[list.length - 1]
         if (!entry || !entry.id) return null
-        if (entry.kind === 'deck') return h(DraftDesk, { key: entry.id, entry: entry, editPage: props.editPage })
+        if (entry.kind === 'deck') {
+          // The other themes come with the first build of a deck that draws
+          // pages, which is this deck's first card in the turn. Later builds
+          // in the same turn draw none, so the desk asks that card for them.
+          var first = null
+          for (var j = 0; j < list.length; j++) {
+            if (list[j] && list[j].kind === 'deck' && list[j].target === entry.target) {
+              first = list[j]
+              break
+            }
+          }
+          var offerId = first && first.id !== entry.id ? first.id : null
+          return h(DraftDesk, { key: entry.id, entry: entry, offerId: offerId, editPage: props.editPage })
+        }
         var block = { content: [{ type: 'text', text: (entry.kind === 'outline' ? 'pptwise-outline:' : 'pptwise-themes:') + entry.id }] }
         return h(
           'div',
