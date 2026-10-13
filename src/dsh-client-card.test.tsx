@@ -917,7 +917,9 @@ describe("dsh preview card — fetching by id (Code Mode)", () => {
 
     expect(await screen.findByText("Deck A")).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith("/pptwise/preview/A")
-    expect(container.querySelectorAll("svg")).toHaveLength(2)
+    // The slides mount in an effect after the fetched bundle commits, so the
+    // title can be on screen a tick before they are.
+    await waitFor(() => expect(container.querySelectorAll("svg")).toHaveLength(2))
   })
 
   it("re-fetches and stops showing the old deck when the same instance moves to another preview", async () => {
