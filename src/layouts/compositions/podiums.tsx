@@ -64,7 +64,7 @@ export const podiumsComposition: Composition = ({ components, ctx, setting, rect
   if (components.length !== 2 || components.some((c) => c.type !== "chart")) return null
   const charts = components as Chart[]
   for (const c of charts) {
-    if (c.chart_type !== "bar" || c.direction !== "horizontal" || c.series.length !== 1 || !c.title?.trim()) { console.log("A"); return null }
+    if (c.chart_type !== "bar" || c.direction !== "horizontal" || c.series.length !== 1 || !c.title?.trim()) return null
     if (c.tag || c.bands || c.reference || c.changes || c.markers || c.gaps || c.emphasis_label) return null
     const data = c.series[0]!.data
     if (data.length < 2 || data.length > 4) return null
