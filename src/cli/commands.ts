@@ -66,6 +66,8 @@ import {
   type BuildDrawnAs,
   type BuildThemeSource,
   type BuildReport,
+  type BuildSignature,
+  type BuildSignaturePage,
 } from "./build-report"
 import { readWrittenFor, writeWrittenFor } from "./written-for"
 import { ALTERNATIVES_DIRNAME, writeBuildAlternatives } from "./build-alternatives"
@@ -2234,6 +2236,23 @@ async function wantsAlternatives(flag: boolean | undefined, resolved: ResolvedTh
 /** Audit findings that, on a deck built under a theme its pages were not written for, say the page is drawn short rather than drawn wrong. */
 const SWITCH_DECLARED_AUDIT_CODES: ReadonlySet<string> = new Set(["content-truncated", "content-dropped", "stepped-aside"])
 
+/** Which pages the theme's signature drawings drew, from the drawn pages, and the nearest one for each the face drew plain. */
+function signatureReport(ir: PptxIR, theme: ThemeDefinition, svgs: readonly string[], isDir: boolean): BuildSignature {
+  const perPage: BuildSignaturePage[] = []
+  ir.slides.forEach((slide, i) => {
+    const use = pageSignatureUse(ir, slide, theme, svgs[i]!)
+    if (use === undefined) return
+    perPage.push({
+      page: i + 1,
+      ...(slide.id !== undefined ? { pageId: slide.id } : {}),
+      ...(slide.id !== undefined && isDir ? { file: `${PAGES_DIRNAME}/${slide.id}.json` } : {}),
+      drawnBy: use.drawnBy,
+      ...(use.nearest !== undefined ? { nearest: use.nearest } : {}),
+    })
+  })
+  return { pages: ir.slides.length, offered: perPage.length, drawn: perPage.filter((entry) => entry.drawnBy !== null).length, perPage }
+}
+
 async function buildDeck(target: string, opts: BuildOptions): Promise<BuildReport> {
   const cwd = opts.cwd ?? process.cwd()
   const [projectHit] = await readConfigs(cwd)
@@ -2297,6 +2316,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   }
 
   const svgs = ir.slides.map((_, i) => renderSlideSvg(ir, i, { theme }))
+  if (theme !== undefined) report.signature = signatureReport(ir, theme, svgs, isDir)
   report.notes.push(...(await prepareWorkspaceDir(workspace, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
   await pruneRenderedSvgs(workspace.dir)
   const svgNames = await writeSlideSvgs(workspace.dir, ir, svgs)

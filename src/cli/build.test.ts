@@ -110,6 +110,9 @@ describe("pptwise build", () => {
     expect(ok).toBe(true)
     expect(output.split("\n")).toEqual([
       'OK: 6 pages, theme "brief", audit clean',
+      "signature layouts: 3 of the 4 pages that can take one (6 pages in all)",
+      "  hint: page 4 (how): drawn plain, nearest rows (A short list as ruled numbered rows, each a bold label and its gloss). write: bullets (2 to 3 items) + callout (optional). to change: turn the row_cards into bullets (2 to 3 items)",
+      "  hints only: rewrite a page where its content holds the recipe, and leave it plain where it does not. Never add content to fit",
       `preview: ${join(cwd, ".pptwise", "weekly", "preview.html")}`,
       `pptx: ${join(cwd, ".pptwise", "weekly", "weekly.pptx")}`,
     ])
@@ -330,6 +333,53 @@ describe("pptwise build: the deck in other themes", () => {
     const { output } = await runBuild("weekly", { cwd, gitIgnore: false })
     expect(output).toMatch(/^alternatives: the deck's own pages in 1 \w+, 2 \w+/m)
     expect(output).toContain('To switch, change "theme" in deck.spec.json and build again.')
+  })
+})
+
+describe("pptwise build: signature layouts", () => {
+  const withProse = (_spec: typeof SPEC, pages: Record<string, unknown>) => {
+    const numbers = pages.numbers as { components: unknown[] }
+    numbers.components.push({ type: "paragraph", text: "Half the hour goes back to the team." })
+  }
+
+  it("says which pages the theme's signature layouts drew and gives each plain page its nearest recipe", async () => {
+    const { cwd } = await workspace(withProse)
+    const { report, ok } = await build(cwd)
+    expect(ok).toBe(true)
+    expect(report.signature).toMatchObject({ pages: 6, offered: 4, drawn: 2 })
+    expect(report.signature!.perPage.map((entry) => [entry.pageId, entry.drawnBy])).toEqual([
+      ["why", "rows"],
+      ["numbers", null],
+      ["how", null],
+      ["who", "table"],
+    ])
+    expect(report.signature!.perPage[1]).toEqual({
+      page: 3,
+      pageId: "numbers",
+      file: "pages/numbers.json",
+      drawnBy: null,
+      nearest: { id: "figures", look: expect.any(String), write: "kpi_cards (2 to 4 items) + blockquote (optional)", changes: ["turn the paragraph into blockquote"] },
+    })
+    expect(report.warnings).toEqual([])
+  })
+
+  it("prints one summary line and a hint for each plain page, never a problem", async () => {
+    const { cwd } = await workspace(withProse)
+    const { output, ok } = await runBuild("weekly", { cwd, gitIgnore: false, alternatives: false })
+    expect(ok).toBe(true)
+    expect(output).toMatch(/^signature layouts: 2 of the 4 pages that can take one \(6 pages in all\)$/m)
+    expect(output).toMatch(/^ {2}hint: page 3 \(numbers\): drawn plain, nearest figures \(.+\)\. write: kpi_cards \(2 to 4 items\) \+ blockquote \(optional\)\. to change: turn the paragraph into blockquote$/m)
+    expect(output).toContain("Never add content to fit")
+    expect(output).not.toMatch(/^warning:/m)
+  })
+
+  it("counts the pages drawn whatever else is wrong with the deck", async () => {
+    const { cwd } = await workspace((_spec, pages) => {
+      delete pages.end
+    })
+    const { report, ok } = await build(cwd)
+    expect(ok).toBe(false)
+    expect(report.signature).toMatchObject({ offered: 4, drawn: 3 })
   })
 })
 

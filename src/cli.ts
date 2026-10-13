@@ -93,7 +93,7 @@ program
     "Assemble, validate, audit, preview and render a deck in one pass. Writes the pages and, only when every check passes, the deck's one .pptx under .pptwise/<deck>/ — exits 1 when the deck needs revision",
   )
   .argument("<target>", "deck project directory or IR JSON file")
-  .option("--json", "print the full report: status, every problem with its page, file and field, the preview, and the .pptx path")
+  .option("--json", "print the full report: status, every problem with its page, file and field, which pages the theme's signature layouts drew and the nearest recipe for the rest, the preview, and the .pptx path")
   .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .option(
     "--alternatives",

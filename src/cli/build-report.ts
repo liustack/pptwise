@@ -75,6 +75,38 @@ export interface BuildDrawnAs {
   drawnAs: string
 }
 
+/** How one page met the theme's signature drawings (`../layouts/signature.ts`). */
+export interface BuildSignaturePage {
+  page: number
+  pageId?: string
+  /** The page file to rewrite, in a deck project. */
+  file?: string
+  /** The drawing that drew the page, or null when its face drew it the ordinary way. */
+  drawnBy: string | null
+  /**
+   * On a page drawn the ordinary way, the drawing it is nearest: its look,
+   * how to write for it, and what to change on the page. `changes` is empty when
+   * the page has the recipe and the drawing still declined its words.
+   */
+  nearest?: { id: string; look: string; write: string; changes: string[] }
+}
+
+/**
+ * The theme's signature drawings across the deck: the pages whose face
+ * offers one, and which of them it drew. Hints, never problems: a page the
+ * content cannot write to a recipe stays as it is drawn.
+ */
+export interface BuildSignature {
+  /** Pages in the deck. */
+  pages: number
+  /** Pages whose face offers a signature drawing. */
+  offered: number
+  /** Of those, the pages one drew. */
+  drawn: number
+  /** Each page whose face offers one, in page order. */
+  perPage: BuildSignaturePage[]
+}
+
 export interface BuildReport {
   /** `ok` only when the deck passed every check and the .pptx was written. */
   status: "ok" | "needs_revision"
@@ -104,6 +136,8 @@ export interface BuildReport {
   writtenFor?: string
   /** The deck's own pages drawn in other themes, when this build drew them (`./build-alternatives.ts`). */
   alternatives?: BuildAlternatives
+  /** The theme's signature drawings across the deck, whenever its pages were drawn. */
+  signature?: BuildSignature
   notes: string[]
 }
 
@@ -210,6 +244,21 @@ export function assembleIssues(message: string, pageIds: readonly string[] = [])
   })
 }
 
+/** `signature layouts: 7 of the 9 pages that can take one (12 pages in all)`. */
+export function signatureSummary(signature: BuildSignature): string {
+  const all = signature.offered === signature.pages ? "" : ` (${signature.pages} pages in all)`
+  return `signature layouts: ${signature.drawn} of the ${signature.offered} page${signature.offered === 1 ? "" : "s"} that can take one${all}`
+}
+
+/** One hint for a page drawn the ordinary way: the nearest drawing and what the page lacks for it. */
+export function signatureHint(entry: BuildSignaturePage): string {
+  const page = entry.pageId !== undefined ? `page ${entry.page} (${entry.pageId})` : `page ${entry.page}`
+  const near = entry.nearest
+  if (near === undefined) return `${page}: drawn plain`
+  const changes = near.changes.length > 0 ? `to change: ${near.changes.join(", ")}` : "it has the recipe and the drawing still declined it: the words run long, or say something the drawing does not set"
+  return `${page}: drawn plain, nearest ${near.id} (${near.look}). write: ${near.write}. ${changes}`
+}
+
 function where(issue: BuildIssue): string {
   const parts: string[] = []
   if (issue.page !== undefined) parts.push(issue.pageId !== undefined ? `page ${issue.page} (${issue.pageId})` : `page ${issue.page}`)
@@ -244,6 +293,12 @@ export function formatBuildReport(report: BuildReport): string {
   for (const landed of report.drawnAs ?? []) {
     const page = landed.pageId !== undefined ? `page ${landed.page} (${landed.pageId})` : `page ${landed.page}`
     lines.push(`note: ${page}: theme "${report.theme}" draws this "${landed.kind}" page as "${landed.drawnAs}", the nearest kind whose face takes it`)
+  }
+  if (report.signature !== undefined && report.signature.offered > 0) {
+    lines.push(signatureSummary(report.signature))
+    const plain = report.signature.perPage.filter((entry) => entry.drawnBy === null)
+    for (const entry of plain) lines.push(`  hint: ${signatureHint(entry)}`)
+    if (plain.length > 0) lines.push("  hints only: rewrite a page where its content holds the recipe, and leave it plain where it does not. Never add content to fit")
   }
   if (report.alternatives !== undefined && report.alternatives.themes.length > 0) {
     const named = report.alternatives.themes.map((theme, i) => `${i + 1} ${theme.theme}`).join(", ")
