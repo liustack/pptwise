@@ -7,6 +7,8 @@ import { resolveEffectiveFace } from "../render/layout-selection"
 import { parseSvgRoot } from "../render/serialize"
 import { getThemeDefinition } from "../themes/definitions"
 import { validateIr } from "../validate-core"
+import { findContrastIssues } from "../audit/deck-audit"
+import { contrastRatio } from "../render/ink"
 
 await installNodePlatform()
 
@@ -168,5 +170,15 @@ describe("homeroom's faces", () => {
     expect(root.querySelector("[data-lesson-note]")).not.toBeNull()
     expect(root.querySelector("[data-lesson-stamp]")).not.toBeNull()
     expect(root.querySelector("[data-footer]")).toBeNull()
+  })
+
+  it("holds the stamp's ink to the page when no sticky note lies under it", () => {
+    // A close with no tip callout draws no note, and the stamp lands on the page.
+    const bare = { ...ending(), components: [ending().components[0]!] } as Slide
+    const root = page(deck([cover, bare]), 1)
+    expect(root.querySelector("[data-lesson-note]")).toBeNull()
+    expect(findContrastIssues(renderSlideSvg(deck([cover, bare]), 1))).toEqual([])
+    const word = root.querySelector("[data-lesson-stamp] text")!
+    expect(contrastRatio(word.getAttribute("fill")!, getThemeDefinition("homeroom").style.colors.bg)).toBeGreaterThanOrEqual(4.5)
   })
 })

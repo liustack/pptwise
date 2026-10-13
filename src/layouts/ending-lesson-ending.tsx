@@ -170,7 +170,8 @@ export function LessonEnding({ ir, slide, ctx }: SvgTemplateProps) {
           <g data-dropped={1} data-dropped-kind="component" />
         )
       ) : null}
-      {stamp ? paintStamp({ ctx, x: STAMP_AT.x + (112 - stampW) / 2, y: STAMP_AT.y, text: stamp, color: inks.pen, ground: inks.note, angle: STAMP_AT.angle, w: stampW }) : null}
+      {/* The stamp lands on the note's corner, or on the page when there is no note under it. */}
+      {stamp ? paintStamp({ ctx, x: STAMP_AT.x + (112 - stampW) / 2, y: STAMP_AT.y, text: stamp, color: inks.pen, ground: note && noteFits ? inks.note : inks.ground, angle: STAMP_AT.angle, w: stampW }) : null}
       {sign ? paintLessonLine(sign, { ctx, x: NOTE.x, top: SIGN.top, lineHeight: SIGN.lineHeight, size: SIGN.size, fill: lessonMeta(inks.muted, inks.ground) }) : null}
       {slide.stamp?.date?.trim() ? <g data-dropped={1} data-dropped-kind="label" /> : null}
     </>
