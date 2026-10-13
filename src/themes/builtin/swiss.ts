@@ -73,6 +73,14 @@ import type { BuiltinThemeDeclaration } from "../schema";
  *
  * **菜单分派**：制度年报按章推进，七类内容页共用一张栅格正文页，按内容挑
  * 构图。结论、大数字、照片各有自己的页。quote 不上。
+ *
+ * **共享组件照年报印刷排（2026-10，`shape.surfaces: "ruled"`）**：栅格构图
+ * 之外由共享渲染器画的页（矩阵、SWOT、编号卡、表格之类）也照印刷年报画，
+ * 不铺卡，细线和留白撑结构，编号就是数字，硬黑色块改成墨线描边，领头的那
+ * 一处是一条 2px 瑞士红线，红仍不成面、不成横幅，每页除顶边红条外只亮作者
+ * 标的那一处。卡面 `surface` 不收：制度卡纯白是从冷白纸抬一档的真实卡色，
+ * 不是为了装作没有卡设的，打开后它只剩缺图垫底和热力图起色，上面压 surface
+ * 的实测照旧成立。swiss 本来就是直角，也没有卡描边。
  */
 export const SWISS_TOKENS: StyleTokens = {
   id: "swiss",
@@ -96,7 +104,8 @@ export const SWISS_TOKENS: StyleTokens = {
     heading: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
     body: ["Microsoft YaHei", "PingFang SC", "Helvetica Neue", "Arial", "system-ui"],
   },
-  shape: { radius: 0, gapScale: 1 }, // 制度直角 + tight（与 terminal 同档）
+  // 制度直角 + tight（与 terminal 同档）。共享组件照年报印刷排，见文件头。
+  shape: { radius: 0, gapScale: 1, surfaces: "ruled" },
   defaultBackgrounds: {
     cover: { kind: "color", value: "#F7F7F5" },
     chapter: { kind: "color", value: "#F7F7F5" }, // 冷白纸（第八波批 4：板上章节是白纸 + 小数编号）

@@ -81,4 +81,6 @@ One family, the theme's body face, everywhere. No letter spacing: the export doe
 
 Before drawing, find the closest part in [Reusable parts](./reusable-parts.md#swiss-power-sample-2026-10). swiss's content pages are `grid-sheet`, which hands its body to a composition in the grid setting: `records`, `share`, `rail` with `columns` or `bridge`, and `lanes`. The statement page is `grid-statement` and the photo page `image-top` with its grid band, both setting their figures with `figures`. The fact page is `grid-figure`. A new page is usually a new composition in the grid setting, drawn inside the band from y196 to the source line, with the header above it untouched.
 
+A content page none of the compositions takes is drawn by the component renderer. swiss declares `shape.surfaces: "ruled"`, so that renderer sets its components as a printed annual report too: no card ground, hairlines and white space in its place, a number set as the figure itself, a solid black block drawn as an outline in the ink, a table on rules. What the page leads with takes one 2px rule of the Swiss red, so the red is still the top bar and the one thing the author marked, never a ground or a banner.
+
 Rows, options tables, stacks, calendar windows and horizontal bars have notice forms that bulletin settled, and no swiss board yet. Each needs its board before the grid setting offers it.

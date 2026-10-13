@@ -4,6 +4,7 @@ import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { render } from "@testing-library/react"
 import { assertSubset } from "../render/subset-validate"
 import { pyramid } from "./pyramid"
+import { isRuled } from "./surfaces"
 import { contrastRatio, readableOn, requiredContrastRatio } from "../render/ink"
 import { FORM_BODY_FLOOR } from "./legibility"
 import type { ComponentCtx } from "./types"
@@ -180,7 +181,8 @@ describe("pyramid component", () => {
 
 describe("pyramid ramp spread", () => {
   it("separates adjacent levels on a dark theme, where primary and the page are neighbours", () => {
-    for (const id of ["terminal", "rally", "ledger", "brief", "swiss"]) {
+    // A ruled theme (swiss) outlines its bands and fills none: ruled-surfaces.test.tsx.
+    for (const id of ["terminal", "rally", "ledger", "brief", "swiss"].filter((t) => !isRuled(themed(t)))) {
       const { container } = svg(pyramid.render(four, BOX, themed(id)))
       const fills = Array.from(container.querySelectorAll("polygon")).map((p) => p.getAttribute("fill")!)
       expect(new Set(fills).size, `${id} draws ${fills.join(" ")}`).toBe(fills.length)

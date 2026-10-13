@@ -173,7 +173,7 @@ function rounded(markup: string, type: string): string[] {
 
 describe("the surfaces token", () => {
   it("is off unless a theme declares ruled", () => {
-    expect(isRuled(boundThemeCtx("swiss"))).toBe(false)
+    expect(isRuled(boundThemeCtx("brief"))).toBe(false)
     expect(isRuled({ shape: { surfaces: "filled" } })).toBe(false)
     expect(isRuled({ shape: { surfaces: "ruled" } })).toBe(true)
   })
