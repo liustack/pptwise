@@ -79,6 +79,8 @@ export interface SwitchResult {
   status: "ok" | "needs_revision"
   ms: number
   landings: SwitchLanding[]
+  /** Warnings for what the theme left off or drew short, on a deck whose pages were written for another. */
+  leftOff: number
   errors: string[]
 }
 
@@ -99,6 +101,14 @@ export async function switchAndBuild(
     theme: string
     pages: { id: string; type: string }[]
   }
+  // A deck is switched after it has been built in its own theme, which is
+  // how the build learns which theme its pages were written for
+  // (`src/cli/written-for.ts`).
+  if (spec.theme !== theme) {
+    const own = JSON.parse((await runBuild(dir, { json: true, cwd: dir, gitIgnore: false, alternatives: false })).output) as { status: string }
+    // A deck its own theme does not build is not a switch to measure.
+    if (own.status !== "ok") throw new Error(`${deck} does not build in its own theme "${spec.theme}"`)
+  }
   spec.theme = theme
   if (opts.bareBoundaries) {
     // Covers, chapters and endings keep only what the spec gives them, so
@@ -114,6 +124,7 @@ export async function switchAndBuild(
     json: true,
     cwd: dir,
     gitIgnore: false,
+    alternatives: false,
   })
   const ms = Math.round(performance.now() - started)
   const report = JSON.parse(output) as {
@@ -122,9 +133,12 @@ export async function switchAndBuild(
       page?: number
       pageId?: string
       field?: string
+      code?: string
       message: string
     }[]
     drawnAs?: { pageId: string; kind: string; drawnAs: string }[]
+    warnings: { message: string }[]
+    writtenFor?: string
   }
   const landings = (report.drawnAs ?? []).map((d) => ({
     page: d.pageId,
@@ -147,11 +161,12 @@ export async function switchAndBuild(
     status: report.status,
     ms,
     landings,
+    leftOff: report.writtenFor === undefined ? 0 : report.warnings.filter((w) => w.message.startsWith("this deck's pages were written for")).length,
     errors: report.errors.map(
       (e) =>
         `${e.pageId ?? (e.page !== undefined ? `page ${e.page}` : "deck")}${
           e.field ? ` ${e.field}` : ""
-        }: ${e.message}`
+        }: ${e.code ? `[${e.code}] ` : ""}${e.message}`
     ),
   }
 }
