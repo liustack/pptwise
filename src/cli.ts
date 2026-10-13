@@ -40,6 +40,10 @@ program
   .name("pptwise")
   .description("Stable, editable PPTX generation for AI agents — semantic IR in, native DrawingML out")
   .version(VERSION)
+  // An unknown option or command prints the command's own help after the
+  // error, so a caller reads what the command does take, and where else to
+  // look, in the same answer instead of guessing again.
+  .showHelpAfterError()
 
 function fail(e: unknown): never {
   console.error(e instanceof Error ? e.message : String(e))
@@ -173,7 +177,7 @@ program
   .option("--pretty", "indent the JSON (default output is one line)")
   .addHelpText(
     "after",
-    "\nExamples:\n  $ pptwise schema --spec\n  $ pptwise schema --kind fact --theme brief\n  $ pptwise schema --kind quote --theme acme --deck my-deck/\n  $ pptwise schema --component kpi_cards",
+    "\nExamples:\n  $ pptwise schema --spec\n  $ pptwise schema --kind fact --theme brief\n  $ pptwise schema --kind quote --theme acme --deck my-deck/\n  $ pptwise schema --component kpi_cards\n\nOne page of a deck project, with the keys its page file takes and the components its face draws:\n  $ pptwise inspect <deck> --page <id>",
   )
   .action(async (opts: { spec?: boolean; component?: string; kind?: string; theme?: string; deck?: string; pretty?: boolean }) => {
     try {

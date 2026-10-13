@@ -534,16 +534,19 @@ if (finalSlide2.includes("Emphasize that every shape stays editable")) {
 }
 console.log("deck-dir speaker-notes leg OK (notesSlide2.xml carries p-goals's notes text, slide2.xml canvas does not)")
 
-// 6c) removed commands are ordinary unknown commands and options.
+// 6c) removed commands are ordinary unknown commands and options. The
+// error names no replacement. The command's own help printed after it
+// (`showHelpAfterError`) is the same help any wrong option gets.
 console.log("--- old-command hard-fail leg ---")
-const scenariosStderr = shExpectFail("node", ["dist/cli.js", "scenarios"])
+const errorPart = (stderr: string): string => stderr.split("\nUsage:")[0]!
+const scenariosStderr = errorPart(shExpectFail("node", ["dist/cli.js", "scenarios"]))
 if (!/unknown command/i.test(scenariosStderr)) {
   throw new Error(`e2e: old-command leg — expected \`pptwise scenarios\` to fail as an unknown command, got: ${scenariosStderr}`)
 }
 if (/pptwise narratives/.test(scenariosStderr)) {
   throw new Error(`e2e: old-command leg — \`pptwise scenarios\` must not point at \`pptwise narratives\`, got: ${scenariosStderr}`)
 }
-const schemaPlanStderr = shExpectFail("node", ["dist/cli.js", "schema", "--plan"])
+const schemaPlanStderr = errorPart(shExpectFail("node", ["dist/cli.js", "schema", "--plan"]))
 if (!/unknown option.*--plan/i.test(schemaPlanStderr) || /pptwise schema --spec/.test(schemaPlanStderr)) {
   throw new Error(`e2e: old-command leg, expected \`pptwise schema --plan\` to be an unknown option with no replacement pointer, got: ${schemaPlanStderr}`)
 }
@@ -583,7 +586,7 @@ if (iconLines.length !== 1758 || !iconLines.includes("alarm-clock")) {
 }
 console.log(`schema slice leg OK (default ${schemaOut.length} chars, ${iconLines.length} icons)`)
 
-const planValidateStderr = shExpectFail("node", ["dist/cli.js", "plan", "validate", join(deckDir, "deck.spec.json")])
+const planValidateStderr = errorPart(shExpectFail("node", ["dist/cli.js", "plan", "validate", join(deckDir, "deck.spec.json")]))
 if (!/unknown command.*plan/i.test(planValidateStderr) || /pptwise spec validate/.test(planValidateStderr)) {
   throw new Error(`e2e: old-command leg, expected \`pptwise plan validate\` to be an unknown command with no replacement pointer, got: ${planValidateStderr}`)
 }
