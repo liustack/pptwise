@@ -209,3 +209,22 @@ describe("a ruled face with no photograph", () => {
     })
   }
 })
+
+describe("a ruled figure with nothing inside it", () => {
+  // A ring of a layered model or a wedge of a wheel is only its outline,
+  // its label out on a leader line. Drawn in the hairline it all but
+  // vanished: on memo's notepaper the hairline reads at 1.18:1.
+  const outlines: Record<string, string> = { rings: "circle", segmented_wheel: "path" }
+  for (const [type, tag] of Object.entries(outlines)) {
+    it(`${type}: draws every outline in an ink that reads as a graphic`, () => {
+      const component = COMPONENT_BUILDERS[type]!(LEXICONS.zh)
+      const ctx = ruledCtx(component)
+      const doc = new DOMParser().parseFromString(page(component, ctx), "image/svg+xml")
+      const shapes = [...doc.querySelectorAll(tag)].filter((el) => el.getAttribute("fill") === "none" && el.getAttribute("stroke"))
+      expect(shapes.length).toBeGreaterThan(1)
+      for (const shape of shapes) {
+        expect(contrastRatio(shape.getAttribute("stroke")!, ctx.defaultBg ?? ctx.colors.bg)).toBeGreaterThanOrEqual(3)
+      }
+    })
+  }
+})

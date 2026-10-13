@@ -1,5 +1,5 @@
 import type { ReactElement } from "react"
-import { isRuled, LEAD_FRAME, leadInk, paperOf, ruledFrame } from "./surfaces"
+import { figureFrame, isRuled, LEAD_FRAME, leadInk, paperOf, ruledFrame } from "./surfaces"
 import type { Component } from "@/ir"
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
@@ -153,7 +153,7 @@ export const segmentedWheel: SvgComponent<SegmentedWheelComponent> = {
             const marked = component.segments[i]!.emphasis === true
             return (
               ruled ? (
-                <path key={`wedge-${i}`} d={wedgePath(wedge, inner, outer, SPLIT * scale)} fill="none" {...ruledFrame(ctx, marked)} />
+                <path key={`wedge-${i}`} d={wedgePath(wedge, inner, outer, SPLIT * scale)} fill="none" {...figureFrame(ctx, marked)} />
               ) : (
                 <path
                   key={`wedge-${i}`}

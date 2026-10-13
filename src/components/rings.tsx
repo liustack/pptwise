@@ -3,7 +3,7 @@ import { fitSvgLine, layoutSvgText, measureTextUnits } from "../lib/svg-text-lay
 import { DroppedContentMarker } from "../render/drop-marker"
 import { accessibleInk } from "../render/ink"
 import { anyCut } from "./declared-fit"
-import { HAIRLINE, isRuled, LEAD_FRAME, leadInk, ruledFrame } from "./surfaces"
+import { figureFrame, HAIRLINE, isRuled, LEAD_FRAME, leadInk } from "./surfaces"
 import type { RenderDef, SvgComponent } from "./types"
 
 type RingsComponent = Extract<Component, { type: "rings" }>
@@ -201,7 +201,7 @@ export const rings: SvgComponent<RingsComponent> = {
           // Ruled: the rings are outlines on the paper, the core a line of
           // the primary with its name in it.
           if (ruled) {
-            return <circle key={idx} cx={cx} cy={cy} r={r - (idx === 0 ? LEAD_FRAME : HAIRLINE) / 2} fill="none" {...ruledFrame(ctx, idx === 0)} />
+            return <circle key={idx} cx={cx} cy={cy} r={r - (idx === 0 ? LEAD_FRAME : HAIRLINE) / 2} fill="none" {...figureFrame(ctx, idx === 0)} />
           }
           if (idx === 0) {
             return <circle key={idx} cx={cx} cy={cy} r={r} fill={ctx.colors.primary} />

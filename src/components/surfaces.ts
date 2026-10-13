@@ -75,6 +75,17 @@ export function ruledFrame(ctx: Pick<ComponentCtx, "colors" | "defaultBg">, lead
   return lead ? { stroke: graphicInk(ctx.colors.primary, paperOf(ctx)), strokeWidth: LEAD_FRAME } : { stroke: hairlineInk(ctx), strokeWidth: HAIRLINE }
 }
 
+/**
+ * The outline of a ruled shape with nothing inside it to show it is there,
+ * such as a ring of a layered model or a wedge of a wheel, whose labels sit
+ * outside it on leader lines. A hairline is only fit to part things that
+ * hold words, and drawn in one such a shape all but vanishes, so the plain
+ * ones take the mark ink (`markInk`) and the lead keeps its frame.
+ */
+export function figureFrame(ctx: Pick<ComponentCtx, "colors" | "defaultBg">, lead: boolean): { stroke: string; strokeWidth: number } {
+  return lead ? ruledFrame(ctx, true) : { stroke: markInk(ctx), strokeWidth: HAIRLINE }
+}
+
 /** The weight of the outline round the node a ruled diagram leads with. */
 export const LEAD_FRAME = 1.5
 
