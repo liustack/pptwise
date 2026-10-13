@@ -1772,7 +1772,14 @@ function renderLineNotes({
       const edge = k === 0 || k === end.resolved.length - 1
       const prev = end.resolved[k - 1]
       const next = end.resolved[k + 1]
-      const low = (prev !== undefined || next !== undefined) && (!prev || prev.value > point.value) && (!next || next.value > point.value)
+      const lowPoint = (prev !== undefined || next !== undefined) && (!prev || prev.value > point.value) && (!next || next.value > point.value)
+      // The words take the other side of the point when the side its own
+      // line leaves free is where another series passes at this category.
+      const under = point.y + LINE_NOTE_GAP + VALUE_FONT_SIZE * 0.8
+      const over = point.y - LINE_NOTE_GAP
+      const crossed = (baseline: number) =>
+        seriesEnds.some((other) => other !== end && other.resolved.some((p) => p.i === point.i && p.y >= baseline - VALUE_FONT_SIZE - NOTE_LINE_CLEAR && p.y <= baseline + NOTE_LINE_CLEAR))
+      const low = lowPoint ? !crossed(under) || crossed(over) : crossed(over) && !crossed(under)
       const text = edge ? note : `${note} ${chartFigure(point.value, figures)}`
       labels.push(
         <text
@@ -1780,7 +1787,7 @@ function renderLineNotes({
           data-value-label="1"
           data-point-note=""
           x={point.x}
-          y={low ? point.y + LINE_NOTE_GAP + VALUE_FONT_SIZE * 0.8 : point.y - LINE_NOTE_GAP}
+          y={low ? under : over}
           textAnchor={edgeAnchor(point.i, n)}
           fontSize={VALUE_FONT_SIZE}
           fontWeight={VALUE_FONT_WEIGHT}
@@ -1798,6 +1805,9 @@ function renderLineNotes({
 
 /** Air between a noted point and the words over or under it. */
 const LINE_NOTE_GAP = 10
+
+/** How near another series' line may pass a note's words, over their cap height or under their baseline. */
+const NOTE_LINE_CLEAR = 4
 
 /** The band a line's markers take over the plot for their labels, and the air under a label. */
 const MARKER_BAND = 30

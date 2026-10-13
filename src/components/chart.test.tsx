@@ -2486,6 +2486,24 @@ describe("a note on a point of a line", () => {
     const { container } = svg(chart.render(line({ 0: "起点" }), { ...box, h: 360 }, ctx))
     expect(Array.from(container.querySelectorAll("[data-point-note]")).map((el) => el.textContent)).toEqual(["起点"])
   })
+
+  it("sets a low point's note over it when another series passes under it there", () => {
+    const close = {
+      type: "chart" as const,
+      chart_type: "line" as const,
+      series: [
+        { name: "Close", data: [{ x: "Jan", y: 1243 }, { x: "Sep", y: 907, note: "Close" }] },
+        { name: "Average", data: [{ x: "Jan", y: 798 }, { x: "Sep", y: 798 }] },
+      ],
+    }
+    const { container } = svg(chart.render(close, { ...box, h: 220 }, ctx))
+    const note = container.querySelector("[data-point-note]")!
+    const [own, other] = Array.from(container.querySelectorAll("polyline")).map((l) => l.getAttribute("points")!.split(" ").map((p) => p.split(",").map(Number)))
+    const y = Number(note.getAttribute("y"))
+    expect(y).toBeLessThan(own![1]![1]!)
+    // The other line at that point is clear of the words' band.
+    expect(other![1]![1]! > y + 4 || other![1]![1]! < y - 16 - 4).toBe(true)
+  })
 })
 
 describe("markers on a line", () => {
