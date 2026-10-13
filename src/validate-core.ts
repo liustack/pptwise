@@ -44,9 +44,10 @@ import { boundaryBulletItems, boundarySlotBlocks, drawableItems, slotItemRoom } 
 import { findImageSelection } from "./layouts/find-image"
 import { bodyStatementLines } from "./layouts/minimal-shared"
 import { headingRoom, headingVerdict, type HeadingCtx, type HeadingPage } from "./layouts/heading-set"
-import { textRoom, type TextRoom } from "./layouts/text-room"
+import { prefixOf, textRoom, type TextRoom } from "./layouts/text-room"
+import { isChineseText } from "./lib/text-script"
 import { blockTextCrowding, blocksLoss, fieldsCrowdingBlocks, headingCrowding, subheadingSet, type PageLoss } from "./render/boundary-loss"
-import { contentLoss, contentRemedy, losesContent, PAGE_FIELD_DROPS } from "./render/content-loss"
+import { contentLoss, contentRemedy, leaveOffDropped, losesContent, PAGE_FIELD_DROPS } from "./render/content-loss"
 import { dropPhrase } from "./render/drop-marker"
 import { droppedIn, slideToSvgMarkup } from "./render/render-slide"
 import { parseSvgRoot } from "./render/serialize"
@@ -123,6 +124,16 @@ export interface ValidateResult {
    * same id a second time. Absent on failure — nothing was resolved.
    */
   theme?: ThemeDefinition
+  /**
+   * Set on an `ok` result for a deck built under a theme other than the
+   * one its pages were written for (`validateIr`'s `writtenFor`), when that
+   * theme leaves anything off or draws a page short: the theme they were
+   * written for. `ir` is then the deck as this theme draws it,
+   * with what its faces cannot take left off, and a page may be drawn
+   * short. Each is named in `warnings`, and an export of this `ir` is told
+   * so (`allowDroppedContent`).
+   */
+  switchedFrom?: string
 }
 
 /**
@@ -735,6 +746,36 @@ function heldPart(room: TextRoom): string {
   return room.limit === 0 ? "none" : `the first ${room.limit} ("${room.held}")`
 }
 
+/** How the face of cover, chapter or ending page `i` sets its heading, or undefined when it sets none. */
+function boundaryHeadingSet(ir: PptxIR, i: number, theme: ThemeDefinition) {
+  const slide = ir.slides[i]!
+  if (slide.placeholder) return undefined
+  if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return undefined
+  if (!stripEmphasis(slide.heading ?? "").trim()) return undefined
+  const ctx: HeadingCtx = {
+    fonts: deckFonts(theme.style.fonts, deckWritesChinese(ir)),
+    ...(theme.style.shape !== undefined ? { shape: theme.style.shape } : {}),
+    figures: deckFigureStyle(ir),
+  }
+  const effective = resolveEffectiveFace(ir, slide, theme)
+  // A cover or chapter over a photograph is drawn by the shared photo
+  // page, not by its menu face, and is asked that page's fit.
+  const photo = effective.route === "image-cover"
+  const layout = componentFace(ir, slide, theme)
+  if (!layout && !photo) return undefined
+  const asked = photo ? IMAGE_COVER_HEADING : layout!
+  const page: HeadingPage = {
+    ir,
+    slide,
+    index: i,
+    ...(effective.entry?.params !== undefined ? { params: effective.entry.params } : {}),
+    page: resolvePageRenderContext(ir, slide, effective, theme),
+    ctx,
+  }
+  const verdict = headingVerdict(asked, page)
+  return { slide, effective, photo, layout, verdict, room: () => headingRoom(asked, page) }
+}
+
 /**
  * Boundary-page heading hard gate.
  *
@@ -756,33 +797,12 @@ function heldPart(room: TextRoom): string {
  */
 function checkBoundaryHeadingFit(ir: PptxIR, theme: ThemeDefinition): ValidationIssue[] {
   const errors: ValidationIssue[] = []
-  const ctx: HeadingCtx = {
-    fonts: deckFonts(theme.style.fonts, deckWritesChinese(ir)),
-    ...(theme.style.shape !== undefined ? { shape: theme.style.shape } : {}),
-    figures: deckFigureStyle(ir),
-  }
-  ir.slides.forEach((slide, i) => {
-    if (slide.placeholder) return
-    if (slide.type !== "cover" && slide.type !== "chapter" && slide.type !== "ending") return
-    if (!stripEmphasis(slide.heading ?? "").trim()) return
-    const effective = resolveEffectiveFace(ir, slide, theme)
-    // A cover or chapter over a photograph is drawn by the shared photo
-    // page, not by its menu face, and is asked that page's fit.
-    const photo = effective.route === "image-cover"
-    const layout = componentFace(ir, slide, theme)
-    if (!layout && !photo) return
-    const asked = photo ? IMAGE_COVER_HEADING : layout!
-    const page: HeadingPage = {
-      ir,
-      slide,
-      index: i,
-      ...(effective.entry?.params !== undefined ? { params: effective.entry.params } : {}),
-      page: resolvePageRenderContext(ir, slide, effective, theme),
-      ctx,
-    }
-    const verdict = headingVerdict(asked, page)
+  ir.slides.forEach((_, i) => {
+    const set = boundaryHeadingSet(ir, i, theme)
+    if (set === undefined) return
+    const { slide, effective, photo, layout, verdict } = set
     if (verdict === undefined || verdict === "whole") return
-    const room = headingRoom(asked, page)
+    const room = set.room()
     const where = photo || layout!.subheading === undefined ? ", or move part of it into the subheading" : ""
     errors.push({
       path: `slides.${i}.heading`,
@@ -1330,6 +1350,208 @@ function foldIrThemeId(input: unknown): { value: unknown; warning?: ValidationIs
   }
 }
 
+/** How every warning about a page written for another theme begins. */
+const WRITTEN_FOR_PREFIX = "this deck's pages were written for theme"
+
+const SWITCH_TAKEABLE_FIELDS = new Set(["fields", "ballot", "subheading", "stage", "footnote", "kicker", "stamp", "tag", "years"])
+
+/** The face gates a page can fail only because of the face it is drawn on, in validate's order. */
+function firstFaceGate(ir: PptxIR, theme: ThemeDefinition, bodyFamily: string): { gate: string; errors: ValidationIssue[] } | undefined {
+  const gates: [string, () => ValidationIssue[]][] = [
+    ["content-slots", () => checkContentPageSlots(ir, theme)],
+    ["full-body", () => checkFullBodyExclusivity(ir, theme)],
+    ["boundary-content", () => checkBoundaryPageContent(ir, theme)],
+    ["page-fields", () => [...checkKickerDrawn(ir, theme).errors, ...checkSubheadingDrawn(ir, theme)]],
+    ["stage", () => courseStageIssues(ir, bodyFamily)],
+    ["boundary-slot", () => checkBoundarySlotCapacity(ir, theme)],
+    ["boundary-items", () => checkBoundaryItemCapacity(ir, theme)],
+    ["boundary-shape", () => checkBoundaryBlockShape(ir, theme)],
+    ["boundary-heading", () => checkBoundaryHeadingFit(ir, theme)],
+    ["boundary-subheading", () => checkBoundarySubheadingFit(ir, theme)],
+    ["boundary-heading-room", () => checkBoundaryHeadingRoom(ir, theme)],
+    ["boundary-blocks", () => checkBoundaryBlocksDrawn(ir, theme)],
+  ]
+  for (const [gate, run] of gates) {
+    const errors = run()
+    if (errors.length > 0) return { gate, errors }
+  }
+  return undefined
+}
+
+type SwitchSlide = PptxIR["slides"][number]
+
+/**
+ * A heading split where the face stops setting it whole, at the last break
+ * a reader would pause on (a stop, a comma, a colon, a line break) when one
+ * falls in the second half of what the face holds, else at the last unit it
+ * holds.
+ */
+function splitHeading(heading: string, limit: number): { head: string; tail: string } {
+  const held = prefixOf(heading, limit)
+  let cut = held.length
+  const pause = /[.。,，:：;；?？!！\n]/g
+  let last = -1
+  for (let m = pause.exec(held); m !== null; m = pause.exec(held)) last = m.index + 1
+  if (last >= held.length / 2) cut = last
+  return { head: heading.slice(0, cut).trim(), tail: heading.slice(cut).trim() }
+}
+
+/**
+ * A cover, chapter or ending heading longer than the new face sets whole,
+ * with the part past what it holds moved to the line under it, where the
+ * face sets one. Every word stays on the page.
+ */
+function moveHeadingTail(ir: PptxIR, index: number, theme: ThemeDefinition): { slide: SwitchSlide; note: string } | undefined {
+  const set = boundaryHeadingSet(ir, index, theme)
+  if (set === undefined || set.verdict === undefined || set.verdict === "whole") return undefined
+  if (!set.photo && set.layout?.subheading !== undefined) return undefined
+  const room = set.room()
+  if (room.limit === 0) return undefined
+  const slide = set.slide
+  const { head, tail } = splitHeading(slide.heading ?? "", room.limit)
+  if (head === "" || tail === "") return undefined
+  const join = isChineseText(tail) ? "" : " "
+  const subheading = slide.subheading?.trim() ? `${tail}${join}${slide.subheading}` : tail
+  return {
+    slide: { ...slide, heading: head, subheading },
+    note: `sets the first part of this heading whole ("${head}"), so the rest moves to the line under it`,
+  }
+}
+
+/**
+ * `slide` with what one face gate refused left off, or undefined when
+ * nothing on it can be: a page field the face has no place for, a
+ * component it cannot set, or, on a cover, chapter or ending, the page's
+ * body, which leaves the page its heading. A heading is never left off: one
+ * longer than the face sets whole moves its tail to the line under it.
+ */
+function leaveOff(ir: PptxIR, index: number, gate: string, path: string, theme: ThemeDefinition): { slide: SwitchSlide; note?: string } | undefined {
+  const slide = ir.slides[index]!
+  const field = path.split(".")[2]
+  if (gate === "boundary-heading" && field === "heading") {
+    const moved = moveHeadingTail(ir, index, theme)
+    if (moved !== undefined) return moved
+  }
+  const boundary = slide.type === "cover" || slide.type === "chapter" || slide.type === "ending"
+  const without = (key: string): { slide: SwitchSlide } | undefined => {
+    if ((slide as Record<string, unknown>)[key] === undefined) return undefined
+    const next = { ...slide } as Record<string, unknown>
+    delete next[key]
+    return { slide: next as unknown as SwitchSlide }
+  }
+  if (gate === "full-body") {
+    const first = slide.components.find((c) => FULL_BODY_TYPES.has(c.type))
+    return first === undefined ? undefined : { slide: { ...slide, components: [first] } }
+  }
+  if (gate === "content-slots") {
+    const layout = componentFace(ir, slide, theme)
+    if (layout === undefined) return undefined
+    const kept = slide.components.filter((c) => layoutAcceptsComponent(layout, c.type))
+    return kept.length === slide.components.length ? undefined : { slide: { ...slide, components: kept } }
+  }
+  if (gate === "boundary-content") {
+    const layout = componentFace(ir, slide, theme)
+    let next: SwitchSlide = { ...slide, components: slide.components.filter((c) => layout !== undefined && layoutAcceptsComponent(layout, c.type)) }
+    if (slide.footnote !== undefined && !layout?.pageFields?.includes("footnote")) next = { ...next, footnote: undefined }
+    return { slide: next }
+  }
+  if (field !== undefined && SWITCH_TAKEABLE_FIELDS.has(field)) return without(field)
+  if (!boundary) return undefined
+  // A cover, chapter or ending whose face cannot set its body, or its
+  // heading beside that body, keeps the heading: first the body goes, then
+  // the line under the heading.
+  if (slide.components.length > 0) return { slide: { ...slide, components: [] } }
+  if (field === "heading") return without("subheading")
+  return undefined
+}
+
+/**
+ * A deck whose pages were written for one theme, built under another.
+ *
+ * Every page of a deck is written against the faces of the theme it was
+ * written for: a cover with a row of figures because that theme's cover
+ * sets one, a waterfall beside a note because that theme's chart face
+ * takes one, card text as long as that theme's cards hold. Changing the
+ * one name a deck binds keeps every page and changes every face. Some of
+ * what the pages carry has no place on the new faces, and some of it is
+ * longer than the new faces set whole.
+ *
+ * Refusing that deck would make a theme change a rewrite. So a deck built
+ * under a theme other than the one its pages were written for
+ * (`writtenFor`, which the build reads from the deck's own workspace folder)
+ * is drawn with what the new faces cannot take left off, page by page, and
+ * every piece left off is named in a warning. Nothing is removed from the
+ * source: building under the theme the pages were written for draws them
+ * whole again. A deck built under the theme it was written for keeps every
+ * hard gate exactly as before, so writing a deck is as strict as it was.
+ */
+function giveWayToTheme(input: PptxIR, theme: ThemeDefinition, from: string, bodyFamily: string): { ir: PptxIR; notes: ValidationIssue[] } {
+  // What the deck keeps under `theme`, and a warning for each piece left off.
+  let ir = input
+  const notes: ValidationIssue[] = []
+  // Each round leaves something off, so the rounds are bounded by what the
+  // deck holds. The cap is a guard against a gate that keeps naming a page
+  // it has already been given.
+  for (let round = 0; round < 64; round++) {
+    const hit = firstFaceGate(ir, theme, bodyFamily)
+    if (hit === undefined) break
+    let changed = false
+    const slides = [...ir.slides]
+    for (const issue of hit.errors) {
+      if (issue.page === undefined) continue
+      const index = issue.page - 1
+      const next = leaveOff({ ...ir, slides }, index, hit.gate, issue.path, theme)
+      if (next === undefined) continue
+      slides[index] = next.slide
+      changed = true
+      notes.push({
+        ...issue,
+        message:
+          next.note !== undefined
+            ? `${WRITTEN_FOR_PREFIX} "${from}", and "${theme.id}" ${next.note}. The source keeps the heading as written, and "${from}" sets it so again.`
+            : `${WRITTEN_FOR_PREFIX} "${from}", and under "${theme.id}" this is left off the page. The source keeps it, and "${from}" draws it again. To keep it under "${theme.id}": ${issue.message}`,
+      })
+    }
+    if (!changed) break
+    ir = { ...ir, slides }
+  }
+  return { ir, notes }
+}
+
+/**
+ * A deck written for theme `from`, its content pages fitted to `theme`'s
+ * faces: what a page's drawing leaves off is taken off the page it draws
+ * (`leaveOffDropped`), so the page shows what it holds and no block goes
+ * missing unmarked, and a warning names each piece. A cut text stays on the
+ * page as the face cuts it, and validate names it after.
+ */
+function fitContentToTheme(input: PptxIR, theme: ThemeDefinition, from: string): { ir: PptxIR; notes: ValidationIssue[] } {
+  let ir = input
+  const notes: ValidationIssue[] = []
+  for (let round = 0; round < 16; round++) {
+    let changed = false
+    const slides = [...ir.slides]
+    ir.slides.forEach((slide, i) => {
+      if (slide.placeholder || slide.type !== "content") return
+      const loss = contentLoss(ir, i, theme)
+      if (!losesContent(loss)) return
+      const fewer = leaveOffDropped(slide, loss)
+      if (fewer === undefined) return
+      slides[i] = fewer.slide
+      changed = true
+      notes.push({
+        path: `slides.${i}.components`,
+        page: i + 1,
+        ...(slide.id !== undefined ? { slideId: slide.id } : {}),
+        message: `${WRITTEN_FOR_PREFIX} "${from}", and "${theme.id}" cannot draw all of this page, so ${fewer.took} is left off. The source keeps it, and "${from}" draws it again. To keep it under "${theme.id}", split the page or shorten it.`,
+      })
+    })
+    if (!changed) break
+    ir = { ...ir, slides }
+  }
+  return { ir, notes }
+}
+
 /**
  * Validate raw JSON against the IR schema, then — once it parses — resolve
  * `narrative` (`resolveNarrative`, spec §5: an unrecognized preset name is a
@@ -1409,6 +1631,15 @@ export function validateIr(
      * the export to mean anything. Nothing else should set it.
      */
     allowDroppedContent?: boolean
+    /**
+     * The theme this deck's pages were written for, when the caller knows
+     * it (a deck project's build reads it from the deck's workspace
+     * folder). When it names a theme other than the one the deck binds, what
+     * the bound theme's faces cannot take is left off with a warning instead
+     * of refusing the deck (`giveWayToTheme`), and a content page drawn
+     * short is a warning too. The returned `ir` is the one drawn.
+     */
+    writtenFor?: string
   },
 ): ValidateResult {
   const version = typeof input === "object" && input !== null ? (input as Record<string, unknown>).version : undefined
@@ -1485,56 +1716,63 @@ export function validateIr(
     return withNormalized({ ok: false, errors: [{ path: "theme.id", message }] })
   }
   const theme = resolved.theme
-  const menuFaceErrors = checkThemeMenuFaces(r.data, theme)
+  const switchedFrom = opts?.writtenFor !== undefined && opts.writtenFor !== theme.id ? opts.writtenFor : undefined
+  let data = r.data
+  if (switchedFrom !== undefined) {
+    const kept = giveWayToTheme(data, theme, switchedFrom, resolveFontStack(theme.style.fonts.body, "body", deckWritesChinese(data)))
+    data = kept.ir
+    givenWay = kept.notes
+  }
+  const menuFaceErrors = checkThemeMenuFaces(data, theme)
   if (menuFaceErrors.length > 0) return withNormalized({ ok: false, errors: menuFaceErrors })
-  const contentSlotErrors = checkContentPageSlots(r.data, theme)
+  const contentSlotErrors = checkContentPageSlots(data, theme)
   if (contentSlotErrors.length > 0) return withNormalized({ ok: false, errors: contentSlotErrors })
-  const fullBodyErrors = checkFullBodyExclusivity(r.data, theme)
+  const fullBodyErrors = checkFullBodyExclusivity(data, theme)
   if (fullBodyErrors.length > 0) return withNormalized({ ok: false, errors: fullBodyErrors })
-  const boundaryPageErrors = checkBoundaryPageContent(r.data, theme)
+  const boundaryPageErrors = checkBoundaryPageContent(data, theme)
   if (boundaryPageErrors.length > 0) return withNormalized({ ok: false, errors: boundaryPageErrors })
-  const pageFields = checkKickerDrawn(r.data, theme)
-  givenWay = [...checkOwnKindLanding(r.data, theme), ...pageFields.givenWay]
-  const kickerErrors = [...pageFields.errors, ...checkSubheadingDrawn(r.data, theme)]
+  const pageFields = checkKickerDrawn(data, theme)
+  givenWay = [...givenWay, ...checkOwnKindLanding(data, theme), ...pageFields.givenWay]
+  const kickerErrors = [...pageFields.errors, ...checkSubheadingDrawn(data, theme)]
   if (kickerErrors.length > 0) return withNormalized({ ok: false, errors: kickerErrors })
   // The body face these two measure in is the one the deck renders in,
   // whose cut follows the deck's language (`resolveFontStack`).
-  const bodyFamily = resolveFontStack(theme.style.fonts.body, "body", deckWritesChinese(r.data))
-  const stageErrors = courseStageIssues(r.data, bodyFamily)
+  const bodyFamily = resolveFontStack(theme.style.fonts.body, "body", deckWritesChinese(data))
+  const stageErrors = courseStageIssues(data, bodyFamily)
   if (stageErrors.length > 0) return withNormalized({ ok: false, errors: stageErrors })
-  const boundarySlotErrors = checkBoundarySlotCapacity(r.data, theme)
+  const boundarySlotErrors = checkBoundarySlotCapacity(data, theme)
   if (boundarySlotErrors.length > 0) return withNormalized({ ok: false, errors: boundarySlotErrors })
-  const boundaryItemErrors = checkBoundaryItemCapacity(r.data, theme)
+  const boundaryItemErrors = checkBoundaryItemCapacity(data, theme)
   if (boundaryItemErrors.length > 0) return withNormalized({ ok: false, errors: boundaryItemErrors })
-  const boundaryShapeErrors = checkBoundaryBlockShape(r.data, theme)
+  const boundaryShapeErrors = checkBoundaryBlockShape(data, theme)
   if (boundaryShapeErrors.length > 0) return withNormalized({ ok: false, errors: boundaryShapeErrors })
-  const boundaryHeadingErrors = checkBoundaryHeadingFit(r.data, theme)
+  const boundaryHeadingErrors = checkBoundaryHeadingFit(data, theme)
   if (boundaryHeadingErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingErrors })
-  const duplicateIdErrors = checkDuplicateSlideIds(r.data)
+  const duplicateIdErrors = checkDuplicateSlideIds(data)
   if (duplicateIdErrors.length > 0) return withNormalized({ ok: false, errors: duplicateIdErrors })
-  const overflowVocabularyErrors = checkOverflowVocabulary(r.data)
+  const overflowVocabularyErrors = checkOverflowVocabulary(data)
   if (overflowVocabularyErrors.length > 0) return withNormalized({ ok: false, errors: overflowVocabularyErrors })
-  const markErrors = checkMarkedFields(r.data)
+  const markErrors = checkMarkedFields(data)
   if (markErrors.length > 0) return withNormalized({ ok: false, errors: markErrors })
   // Footer marks: cross-field rules first (a mark with nothing to print, a
   // legal classification in the wrong place), then whether the row the
   // deck asked for fits on one line. A footer never trims an author's text
   // to make room, so a row that does not fit is refused here.
-  const footerErrors = [...footerSettingIssues(r.data), ...footerFitIssues(r.data, bodyFamily)]
+  const footerErrors = [...footerSettingIssues(data), ...footerFitIssues(data, bodyFamily)]
   if (footerErrors.length > 0) return withNormalized({ ok: false, errors: footerErrors })
   // Asset byte validation (borrow wave, Task 2 — D3): a broken image is
   // content loss, so this is a hard gate at the same short-circuiting
   // position as the other structural checks above, not folded into
   // checkIrQuality's editorial-budget warn/error split below.
-  const assetByteErrors = checkAssetBytes(r.data)
+  const assetByteErrors = checkAssetBytes(data)
   if (assetByteErrors.length > 0) return withNormalized({ ok: false, errors: assetByteErrors })
   // Drawn last among the hard gates: it draws the page, so every structural
   // gate above has passed by then and the drawing reads a sound page.
-  const boundarySubheadingErrors = checkBoundarySubheadingFit(r.data, theme)
+  const boundarySubheadingErrors = checkBoundarySubheadingFit(data, theme)
   if (boundarySubheadingErrors.length > 0) return withNormalized({ ok: false, errors: boundarySubheadingErrors })
-  const boundaryHeadingRoomErrors = checkBoundaryHeadingRoom(r.data, theme)
+  const boundaryHeadingRoomErrors = checkBoundaryHeadingRoom(data, theme)
   if (boundaryHeadingRoomErrors.length > 0) return withNormalized({ ok: false, errors: boundaryHeadingRoomErrors })
-  const boundaryBlockErrors = checkBoundaryBlocksDrawn(r.data, theme)
+  const boundaryBlockErrors = checkBoundaryBlocksDrawn(data, theme)
   if (boundaryBlockErrors.length > 0) return withNormalized({ ok: false, errors: boundaryBlockErrors })
   // Narrative resolution (spec §5's defaults chain, W3 task 2; renamed from
   // "scenario resolution" spec §8.1). Both branches of the schema's
@@ -1548,23 +1786,23 @@ export function validateIr(
   // deliberate, per the W3 task-2 review finding: nesting a schema-closed
   // enum object inside a z.union meant a failing branch reported as one
   // opaque zod `invalid_union` issue ("Invalid input", no specifics), never
-  // resolveNarrative's own available-values message. r.data.narrative's
+  // resolveNarrative's own available-values message. data.narrative's
   // inferred type (`string | Record<string, unknown> | undefined`) is wider
   // than resolveNarrative's declared parameter — safe to narrow here because
   // resolveNarrative validates every key and value itself at runtime
   // regardless of what the schema let through (its own test suite pins
-  // that). The resolved axes are not written back onto r.data (see the
+  // that). The resolved axes are not written back onto data (see the
   // narrative field's docstring in ir/index.ts) — they are only threaded
   // into checkIrQuality below for task 3 to consume.
   let resolvedAxes: NarrativeProfile
   try {
-    resolvedAxes = resolveNarrative(r.data.narrative as string | Partial<NarrativeProfile> | undefined)
+    resolvedAxes = resolveNarrative(data.narrative as string | Partial<NarrativeProfile> | undefined)
   } catch (err) {
     if (!(err instanceof PptwiseError)) throw err
     return withNormalized({ ok: false, errors: [{ path: "narrative", message: err.message }] })
   }
-  const quality = checkIrQuality(r.data, resolvedAxes, theme)
-  // `issue.slide` indexes `r.data.slides` directly for every code but
+  const quality = checkIrQuality(data, resolvedAxes, theme)
+  // `issue.slide` indexes `data.slides` directly for every code but
   // "empty_deck" (that branch never reaches here, see its own `slide: 0`
   // bookkeeping in ir-quality.ts's checkIrQuality — an early return makes it
   // the sole issue whenever it fires) — safe to read `.id` off it unguarded.
@@ -1577,7 +1815,7 @@ export function validateIr(
           path: `slides.${issue.slide}`,
           message: describeQualityIssue(issue),
           page: issue.slide + 1,
-          ...(r.data.slides[issue.slide]!.id !== undefined ? { slideId: r.data.slides[issue.slide]!.id } : {}),
+          ...(data.slides[issue.slide]!.id !== undefined ? { slideId: data.slides[issue.slide]!.id } : {}),
         }
   // Dual-threshold severity split (borrow wave, Task 2 — see this
   // function's own doc comment above for the evidence/rationale): only
@@ -1587,7 +1825,7 @@ export function validateIr(
   // rejected (`ok: false`) deck's warnings are still worth seeing, not just
   // a clean one's.
   const warnFindings = quality.filter((issue) => issue.severity === "warn").map(toIssue)
-  const assetRefWarnings = checkAssetReferences(r.data, theme, opts?.missingAssetPath)
+  const assetRefWarnings = checkAssetReferences(data, theme, opts?.missingAssetPath)
   const allWarnings = [...warnFindings, ...assetRefWarnings]
   const warnings = allWarnings.length > 0 ? allWarnings : undefined
   const errorFindings = quality.filter((issue) => issue.severity === "error")
@@ -1596,11 +1834,28 @@ export function validateIr(
   }
   // Drawn after every other gate: a page they refuse is not drawn, and a
   // page they pass is drawn as the export will draw it.
-  const contentDrawnErrors = opts?.allowDroppedContent === true ? [] : checkContentPagesDrawn(r.data, theme)
+  if (switchedFrom !== undefined && opts?.allowDroppedContent !== true) {
+    const fitted = fitContentToTheme(data, theme, switchedFrom)
+    data = fitted.ir
+    givenWay = [...givenWay, ...fitted.notes]
+  }
+  const contentDrawnErrors = opts?.allowDroppedContent === true ? [] : checkContentPagesDrawn(data, theme)
+  if (switchedFrom !== undefined && contentDrawnErrors.length > 0) {
+    // A page written for another theme's faces, drawn short on these: the
+    // deck is drawn, and each page says what it loses and how to keep it.
+    givenWay = [
+      ...givenWay,
+      ...contentDrawnErrors.map((issue) => ({
+        ...issue,
+        message: `${WRITTEN_FOR_PREFIX} "${switchedFrom}", and "${theme.id}" draws this page short. The source keeps all of it, and "${switchedFrom}" draws it whole. To draw it whole under "${theme.id}": ${issue.message}`,
+      })),
+    ]
+    return withNormalized({ ok: true, ir: data, theme, errors: [], switchedFrom, ...(warnings ? { warnings } : {}) })
+  }
   if (contentDrawnErrors.length > 0) {
     return withNormalized({ ok: false, errors: contentDrawnErrors, ...(warnings ? { warnings } : {}) })
   }
-  return withNormalized({ ok: true, ir: r.data, theme, errors: [], ...(warnings ? { warnings } : {}) })
+  return withNormalized({ ok: true, ir: data, theme, errors: [], ...(switchedFrom !== undefined && givenWay.some((issue) => issue.message.startsWith(WRITTEN_FOR_PREFIX)) ? { switchedFrom } : {}), ...(warnings ? { warnings } : {}) })
 }
 
 /**

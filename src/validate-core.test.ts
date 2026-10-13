@@ -175,3 +175,44 @@ describe("validateIr leftover phrasing", () => {
     expect(result.ok).toBe(true)
   })
 })
+
+describe("validateIr for a deck written for another theme", () => {
+  const coverWithList = (themeId: string): unknown => ({
+    version: "5",
+    filename: "switched",
+    theme: { id: themeId },
+    slides: [
+      { type: "cover", heading: "Hello", components: [{ type: "bullets", items: ["One", "Two"] }] },
+      { type: "content", kind: "points", heading: "Findings", components: [{ type: "bullets", items: ["Alpha", "Beta"] }] },
+    ],
+  })
+
+  it("refuses a cover list on a theme whose cover draws none, with no record of another theme", () => {
+    const result = validateIr(coverWithList("thesis"))
+    expect(result.ok).toBe(false)
+    expect(result.errors[0]).toMatchObject({ path: "slides.0" })
+    expect(result.errors[0]!.message).toContain('"cover" slides do not render components')
+  })
+
+  it("draws the deck with the cover list left off when its pages were written for a theme that draws it", () => {
+    expect(validateIr(coverWithList("brief")).ok).toBe(true)
+    const result = validateIr(coverWithList("thesis"), { writtenFor: "brief" })
+    expect(result.ok).toBe(true)
+    expect(result.switchedFrom).toBe("brief")
+    const left = result.warnings?.find((w) => w.path === "slides.0")
+    expect(left?.message).toMatch(/^this deck's pages were written for theme "brief", and under "thesis" this is left off the page\. The source keeps it, and "brief" draws it again\./)
+    expect(result.ir?.slides[0]?.components).toEqual([])
+  })
+
+  it("stays strict when the record names the theme the deck binds", () => {
+    const result = validateIr(coverWithList("thesis"), { writtenFor: "thesis" })
+    expect(result.ok).toBe(false)
+    expect(result.switchedFrom).toBeUndefined()
+  })
+
+  it("names no switch when the bound theme draws every page as written", () => {
+    const result = validateIr(coverWithList("brief"), { writtenFor: "thesis" })
+    expect(result.ok).toBe(true)
+    expect(result.switchedFrom).toBeUndefined()
+  })
+})

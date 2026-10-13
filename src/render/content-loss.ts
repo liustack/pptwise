@@ -147,6 +147,56 @@ export function contentRemedy(ir: PptxIR, index: number, theme: ThemeDefinition,
   return { kind: "list", field: `components.${c}.${key}`, type: component.type, key, count: length, keep }
 }
 
+/**
+ * `slide` without what its drawing left off, for a page written for another
+ * theme's faces (`validateIr`'s `writtenFor`): the blocks past the ones
+ * drawn, the page fields the face had no place for beside the rest, or the
+ * items past the ones drawn of the one list that ran long. What it took
+ * says so, for the warning. Undefined when the drawing dropped nothing
+ * this can name, or only cut text: a cut stays declared on the page.
+ */
+export function leaveOffDropped(slide: Slide, loss: PageLoss): { slide: Slide; took: string } | undefined {
+  if (loss.dropped === 0) return undefined
+  const blocks = loss.drops.filter(({ kind }) => kind === "component").reduce((sum, { count }) => sum + count, 0)
+  if (blocks > 0) {
+    const keep = Math.max(1, slide.components.length - blocks)
+    if (keep === slide.components.length) return undefined
+    const gone = [...new Set(slide.components.slice(keep).map((c) => c.type))].join(" and ")
+    return { slide: { ...slide, components: slide.components.slice(0, keep) }, took: `its last ${slide.components.length - keep} block${slide.components.length - keep === 1 ? "" : "s"} (${gone})` }
+  }
+  const fields = [...new Set(loss.drops.map(({ kind }) => PAGE_FIELD_DROPS[kind]).filter((field) => field !== undefined))]
+  if (fields.length > 0) {
+    const without = { ...slide } as Record<string, unknown>
+    for (const field of fields) delete without[field]
+    return { slide: without as unknown as Slide, took: `its ${fields.map((field) => (field === "footnote" ? "source line (footnote)" : field)).join(" and ")}` }
+  }
+  const items = loss.drops.filter(({ kind }) => LIST_UNITS.has(kind)).reduce((sum, { count }) => sum + count, 0)
+  if (items === 0) return undefined
+  const lists = shortenableLists(slide, items)
+  if (lists.length !== 1) return undefined
+  const { c, key, length } = lists[0]!
+  const component = slide.components[c]!
+  const shorter = { ...axisPinned(component, key), [key]: (component as unknown as Record<string, unknown[]>)[key]!.slice(0, length - items) } as unknown as Slide["components"][number]
+  return {
+    slide: { ...slide, components: slide.components.map((other, k) => (k === c ? shorter : other)) },
+    took: `the last ${items} of the ${length} ${key} in its ${component.type}`,
+  }
+}
+
+/**
+ * `component` with its axis written out when the list being shortened is
+ * what sets it. A gantt with no `range` runs its axis over its bars'
+ * stretch, and its axis labels and spans are placed on that axis: a gantt
+ * that left its last bars off without the range would set the same labels
+ * on a shorter axis and put its spans past the end.
+ */
+function axisPinned(component: Slide["components"][number], key: string): Slide["components"][number] {
+  if (component.type !== "gantt" || key !== "items" || component.range !== undefined) return component
+  const from = Math.min(...component.items.map((item) => item.start))
+  const to = Math.max(...component.items.map((item) => item.end))
+  return { ...component, range: { from, to } }
+}
+
 /** The text at `field` of `slide` (`heading`, `components.0.items.2.label`). */
 function textAt(slide: Slide, field: string): string {
   let at: unknown = slide
