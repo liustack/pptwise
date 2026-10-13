@@ -248,10 +248,10 @@ export const gantt: SvgComponent<GanttComponent> = {
           const barW = Math.max(BAR_MIN_W, vx(item.end) - barX)
           const barY = rowY + BAR_INSET_Y
           const barH = Math.max(1, rowH - BAR_INSET_Y * 2)
-          // Ruled: square bars, in the primary, the accent kept for the bar
-          // the author marked.
+          // A bar is a data mark, so ruled leaves its colour as filled has it
+          // and only squares its corners, as print sets no rounded corner.
           const r = ruled ? 0 : Math.min(4, barH / 2)
-          const barInk = marked && !item.emphasis ? receded : ruled && !item.emphasis ? ctx.colors.primary : ctx.colors.accent
+          const barInk = marked && !item.emphasis ? receded : ctx.colors.accent
           const text = rowText(item)
           // With a period or a line of text, the label and what follows it stack centred on the row.
           const stacked = text !== null || period !== null
