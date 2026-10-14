@@ -106,7 +106,7 @@ pnpm gallery --bbox
 
 The gallery renders the review matrix through the production validation and SVG path. It has no alternate renderer. Output goes to `.gallery/` by default and includes SVG pages, `manifest.json`, and a self-contained `index.html`.
 
-The matrix covers themes, internal faces, the shared compositions (at least one page each in the 构图 band, `COMPOSITION_PAGES`), components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage. A new component or theme must not disappear from review merely because its builder was forgotten.
+The matrix covers themes, internal faces, the shared compositions (at least one page each in the 构图 band, `COMPOSITION_PAGES`), components, full-load cases, and heading constructions across language tracks. `scripts/gallery.test.mts` exercises the matrix during `pnpm check`, including inventory coverage and every page's pinned hash (see [Gallery hash goldens](#gallery-hash-goldens)). A new component or theme must not disappear from review merely because its builder was forgotten.
 
 `--bbox` mounts SVG in a real browser and compares `getBBox()` against declared boxes. It is optional because it needs Playwright and depends on installed fonts. Findings go to `.gallery/bbox.json` and make the command fail.
 
@@ -150,6 +150,8 @@ pnpm exec tsx evals/gallery/write-hashes.mts
 ```
 
 Inspect the hash diff and page inventory. Do not edit individual hashes by hand.
+
+`pnpm check` holds every gallery page to its pin. `scripts/gallery.test.mts` already paints the whole matrix one section at a time, and each section's test compares every page's hash with `hashes.json` and names the pages that moved. A second test fails when the matrix gains a page the file does not pin or the file pins a page the matrix no longer draws. A drawing change therefore lands together with its rerecorded hashes, in the same commit, before it reaches main. The comparison reads the paint the test makes anyway, so it adds no measurable time: rendering the 2640 pages a second time for it would cost about 18 seconds.
 
 ### Byte fixtures
 

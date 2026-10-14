@@ -37,6 +37,7 @@ import {
   COMPOSITION_PAGES,
   STEP_ASIDE_PAGES,
 } from "../evals/gallery/matrix"
+import { loadGoldHashes } from "../evals/gallery/hashes"
 import { installNodePlatform } from "@/platform/node"
 
 // `renderMatrix` audits every page it renders, and the auditor parses SVG
@@ -48,6 +49,10 @@ await installNodePlatform()
 const themeIds = listThemes()
   .map((t) => t.id)
   .sort()
+
+/** What a stale pin says: the drawing moved, and the pages need a look and a rerecord. */
+const RERECORD =
+  "these gallery pages no longer match evals/gallery/hashes.json. Review them (pnpm gallery), then rerecord with pnpm exec tsx evals/gallery/write-hashes.mts (docs/testing.md, Gallery hash goldens)"
 
 /** Built once — loading the committed JPEG fixtures is the slow part. */
 let cached: Record<LanguageId, CorpusAssets> | undefined
@@ -437,7 +442,19 @@ describe("gallery corpus", () => {
     expect(split.sort()).toEqual(whole.sort())
   })
 
-  it.each(sections)("renders every page of the %s section through the real render chain", async (section) => {
+  // The pinned hashes (`evals/gallery/hashes.json`) name the same pages the
+  // matrix draws, no more and no fewer, so the per-section check below
+  // reaches every pinned page and a page added or removed without
+  // rerecording fails here.
+  it("pins a hash for exactly the pages of the matrix", async () => {
+    const whole = new Set(buildMatrix(themeIds, await assets()).map((j) => j.id))
+    const gold = new Set(Object.keys(loadGoldHashes().pages))
+    const added = [...whole].filter((id) => !gold.has(id))
+    const removed = [...gold].filter((id) => !whole.has(id))
+    expect({ added, removed }, RERECORD).toEqual({ added: [], removed: [] })
+  })
+
+  it.each(sections)("renders every page of the %s section through the real render chain, as pinned", async (section) => {
     const { renderMatrix } = await import("../evals/gallery/render")
     const { mkdtempSync } = await import("node:fs")
     const { tmpdir } = await import("node:os")
@@ -451,6 +468,14 @@ describe("gallery corpus", () => {
     const failures = manifest.pages.filter((p) => p.skipped).map((p) => `${p.id}: ${p.skipped}`)
     expect(failures).toEqual([])
     expect(manifest.pages.length).toBe(jobs.length)
+
+    // Every page against its pinned hash, on the paint this test already
+    // made. A drawing change committed without rerecording `hashes.json`
+    // fails here and names its pages, instead of sitting in a stale pin
+    // until an incremental audit trusts it.
+    const gold = loadGoldHashes().pages
+    const moved = manifest.pages.filter((p) => gold[p.id]?.hash !== p.hash).map((p) => p.id)
+    expect(moved, RERECORD).toEqual([])
   })
 
   it("fingerprints every rendered page in both halves", async () => {

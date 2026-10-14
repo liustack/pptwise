@@ -1,16 +1,14 @@
 // @vitest-environment node
 //
 // Gold-hash diff is the incremental-audit selector. Tests use fake pages so
-// a recolor story does not wait on a full matrix render.
+// a recolor story does not wait on a full matrix render. Every gallery page
+// is checked against `hashes.json` in `scripts/gallery.test.mts`, on the
+// paint that file already makes.
 
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { listThemes } from "@/api"
-import { installNodePlatform } from "@/platform/node"
-import { corpusAssets } from "./corpus/decks"
-import { LEXICONS, type LanguageId } from "./corpus/lexicon"
 import {
   diffAffectedPages,
   hashesFromManifest,
@@ -18,10 +16,7 @@ import {
   type GoldHashes,
   type GoldPageHash,
 } from "./hashes"
-import { buildMatrix } from "./matrix"
-import { renderMatrix, type Manifest } from "./render"
-
-await installNodePlatform()
+import type { Manifest } from "./render"
 
 function page(hash: string, geometry = "geo", color = "col"): GoldPageHash {
   return { hash, geometry, color }
@@ -111,46 +106,5 @@ describe("hashesFromManifest", () => {
         "layout--two-column--en": { hash: "def", geometry: "g2", color: "c2" },
       },
     })
-  })
-})
-
-describe("gold sample against a live render", () => {
-  it("matches hashes.json for the baseline theme's component/zh pages and every step-aside and composition page", async () => {
-    const goldFile = loadGoldHashes()
-    const themeIds = listThemes()
-      .map((t) => t.id)
-      .sort()
-    const assets = { zh: await corpusAssets(LEXICONS.zh) } as Record<
-      LanguageId,
-      Awaited<ReturnType<typeof corpusAssets>>
-    >
-    const jobs = [
-      ...buildMatrix(
-        themeIds,
-        assets,
-        // One section is enough to catch a stale pin: the mechanism is what is
-        // under test, and rendering all 27 skins' component bands here would
-        // add nine seconds to every `pnpm check`.
-        { only: "component", languages: ["zh"], section: "brief" },
-      ),
-      // The whole `aside` band, across every section that has one. Three
-      // pages, and they are the only pages in the matrix that draw the
-      // shared step-aside — a regression in its geometry, its branding or
-      // its motif would otherwise sit in a committed hash nothing renders,
-      // and `pnpm check` would stay green through it.
-      ...buildMatrix(themeIds, assets, { only: "aside", languages: ["zh"] }),
-      // The whole `compose` band, for the same reason: the only pages that
-      // draw an options table, a phase plan or a two-level team through the
-      // shared compositions.
-      ...buildMatrix(themeIds, assets, { only: "compose", languages: ["zh"] }),
-    ]
-    const outDir = mkdtempSync(join(tmpdir(), "pptwise-gold-sample-"))
-    const current = hashesFromManifest(renderMatrix(jobs, outDir, "pin").manifest)
-    const subset: GoldHashes = {
-      algorithm: "gallery-page-v2",
-      pages: Object.fromEntries(jobs.map((job) => [job.id, goldFile.pages[job.id]!])),
-    }
-    expect(jobs.every((job) => goldFile.pages[job.id])).toBe(true)
-    expect(diffAffectedPages(subset, current)).toEqual({ changed: [], added: [], removed: [] })
   })
 })
