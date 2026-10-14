@@ -24,12 +24,12 @@ in its own profile and a plugin installed into the other one never loads.
 **dsh started from a terminal (`dsh web` or the CLI)** uses the `web` profile:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.44.0
+npx -y @deepseek-ai/dsh plugin --profile web add @liustack/pptwise@0.45.0
 ```
 
 **DeepSeek Harness Desktop** uses its own `desktop` profile, which the npm `dsh`
 above cannot change. Have the user install from inside Desktop: open
-**Plugins**, choose **Add plugin**, enter `@liustack/pptwise@0.44.0`, choose
+**Plugins**, choose **Add plugin**, enter `@liustack/pptwise@0.45.0`, choose
 **Install**, then **Enable now**. You cannot do this for them from a Desktop
 session, since the terminal route needs Desktop fully quit.
 
@@ -38,7 +38,7 @@ registered from its **Manage dsh Command…** menu. Launch Desktop once so the
 profile exists, quit it fully, run the line below, then reopen Desktop.
 
 ```sh
-dsh plugin --profile desktop add @liustack/pptwise@0.44.0
+dsh plugin --profile desktop add @liustack/pptwise@0.45.0
 ```
 
 The version is named on purpose: dsh installs plugins through pnpm 11, which

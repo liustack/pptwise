@@ -61,7 +61,7 @@
 
 > 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md 安装 pptwise，装完跑一遍健康检查，把结果告诉我。
 
-**在 DeepSeek Harness Desktop 里自己添加？** 打开「插件」，点「添加插件」，填包名 `@liustack/pptwise@0.44.0`，不要填 GitHub 地址。GitHub 上的源码不带构建好的引擎，从那里加的插件能装上，但做不出 PPT。
+**在 DeepSeek Harness Desktop 里自己添加？** 打开「插件」，点「添加插件」，填包名 `@liustack/pptwise@0.45.0`，不要填 GitHub 地址。GitHub 上的源码不带构建好的引擎，从那里加的插件能装上，但做不出 PPT。
 
 没有第二步。你的 AI 会把 skill 文件夹放到你这个 harness 读取的位置，skill 自带钉死版本的启动器，不需要你手动装 CLI。pptwise 在本地渲染 PPTX：渲染不要 API key、不用注册、无需配置。可选的图库搜索需要用户自己的 Pexels key。唯一前置是 Node 22.19+（或 Bun）。
 
