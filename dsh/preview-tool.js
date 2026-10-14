@@ -532,7 +532,9 @@ const OUTLINE_FILE = 'outline.json'
 /**
  * What a build record keeps of the deck's own pages drawn in other themes
  * (`build`'s `alternatives`): the themes in the CLI's order, each with its
- * page files, copied beside the deck's pages under an `alt-` prefix.
+ * number `n` and its page files, copied beside the deck's pages under an
+ * `alt-` prefix. The number is given once, here: the card draws it and the
+ * model's text names it, so "the second" means one theme in both.
  */
 const ALTERNATIVES_FILE = 'alternatives.json'
 
@@ -1681,7 +1683,8 @@ async function readAlternatives(dir) {
     }
     const pages = []
     for (const page of theme.pages) pages.push({ ...page, svg: await readFile(join(dir, page.file), 'utf8') })
-    themes.push({ ...theme, pages })
+    // A record written before the number was kept numbers its themes in order, as its card did.
+    themes.push({ ...theme, n: Number.isInteger(theme.n) ? theme.n : themes.length + 1, pages })
   }
   return themes
 }
@@ -1749,7 +1752,7 @@ function signatureHintLine(entry) {
 /**
  * Copy the pages a build drew in other themes into the record being built,
  * and write the list the card reads. Returns what the model is told: each
- * theme's id and display name, in the CLI's order.
+ * theme's number, id and display name, the same numbers the card draws.
  */
 async function copyAlternatives(alternatives, stageDir) {
   if (!alternatives || !Array.isArray(alternatives.themes) || alternatives.themes.length === 0) return undefined
@@ -1762,11 +1765,11 @@ async function copyAlternatives(alternatives, stageDir) {
       await copyFile(String(page.file), join(stageDir, name))
       pages.push({ page: Number(page.page), type: String(page.type), file: name })
     }
-    if (pages.length > 0) themes.push({ id: String(theme.theme), label: String(theme.name), pages })
+    if (pages.length > 0) themes.push({ n: themes.length + 1, id: String(theme.theme), label: String(theme.name), pages })
   }
   if (themes.length === 0) return undefined
   await writeFile(join(stageDir, ALTERNATIVES_FILE), JSON.stringify({ themes }))
-  return themes.map((theme) => ({ id: theme.id, name: theme.label }))
+  return themes.map((theme) => ({ n: theme.n, id: theme.id, name: theme.label }))
 }
 
 /**
@@ -1864,8 +1867,8 @@ function buildSummary(value) {
   if (value.previewId) lines.push('The user can page through the drawn pages in this card. Do not tell them to open a URL.')
   if (Array.isArray(value.alternatives) && value.alternatives.length > 0) {
     lines.push(
-      `Under the pages, the card also shows this deck in other themes, numbered: ${value.alternatives.map((theme, i) => `${i + 1} ${theme.id} (${theme.name})`).join(', ')}. ` +
-        'Do not stop to ask about them. If the user asks for one, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+      `Other themes under the pages, numbered as on the card: ${value.alternatives.map((theme) => `${theme.n} = ${theme.id} (${theme.name})`).join(', ')}. ` +
+        'Do not stop to ask. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
     )
   }
   return lines.join('\n')
@@ -2769,8 +2772,8 @@ export function createPreviewService(cliPath) {
             type: 'array',
             items: {
               type: 'object',
-              properties: { id: { type: 'string' }, name: { type: 'string' } },
-              required: ['id', 'name'],
+              properties: { n: { type: 'number' }, id: { type: 'string' }, name: { type: 'string' } },
+              required: ['n', 'id', 'name'],
               additionalProperties: false,
             },
           },

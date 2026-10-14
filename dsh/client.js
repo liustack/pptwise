@@ -1810,7 +1810,8 @@ window.__ModuleLoader__.load({
                     onClick: onClick,
                   })
                 }),
-                h(ThemeLabel, { theme: theme, n: i + 1 }),
+                // The number the record carries, the one the model was told.
+                h(ThemeLabel, { theme: theme, n: theme.n }),
               )
             }),
           ),

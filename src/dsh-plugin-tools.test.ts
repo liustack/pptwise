@@ -502,24 +502,25 @@ describe("pptwise_build", () => {
     const target = await deck(workspace, ["alternatives"])
     const value = await svc.buildTool.execute({ target }, inSession(workspace))
     expect(value.alternatives).toEqual([
-      { id: "memo", name: "Memo" },
-      { id: "swiss", name: "Swiss" },
+      { n: 1, id: "memo", name: "Memo" },
+      { n: 2, id: "swiss", name: "Swiss" },
     ])
     matchesSchema(value, svc.buildTool.output.schema)
     const text = svc.buildTool.output.render({}, value)[0]!.text
     expect(text).toContain(
-      'Under the pages, the card also shows this deck in other themes, numbered: 1 memo (Memo), 2 swiss (Swiss). Do not stop to ask about them. If the user asks for one, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+      'Other themes under the pages, numbered as on the card: 1 = memo (Memo), 2 = swiss (Swiss). Do not stop to ask. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
     )
     // Copied, not pointed at: the next build may redraw the CLI's own folder.
     await rm(join(workspace, ".pptwise", "weekly", "alternatives"), { recursive: true })
     const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as {
       pages: { svg: string }[]
-      alternatives: { id: string; label: string; pages: { page: number; type: string; svg: string }[] }[]
+      alternatives: { n: number; id: string; label: string; pages: { page: number; type: string; svg: string }[] }[]
     }
     expect(bundle.pages.map((p) => p.svg)).toEqual(["<svg>cover</svg>", "<svg>why</svg>"])
-    expect(bundle.alternatives.map((t) => [t.id, t.label, t.pages.map((p) => [p.page, p.type, p.svg])])).toEqual([
-      ["memo", "Memo", [[1, "cover", "<svg>memo cover</svg>"], [2, "content", "<svg>memo why</svg>"]]],
-      ["swiss", "Swiss", [[1, "cover", "<svg>swiss cover</svg>"], [2, "content", "<svg>swiss why</svg>"]]],
+    // The card numbers each theme with the number the model was given, read from one file.
+    expect(bundle.alternatives.map((t) => [t.n, t.id, t.label, t.pages.map((p) => [p.page, p.type, p.svg])])).toEqual([
+      [1, "memo", "Memo", [[1, "cover", "<svg>memo cover</svg>"], [2, "content", "<svg>memo why</svg>"]]],
+      [2, "swiss", "Swiss", [[1, "cover", "<svg>swiss cover</svg>"], [2, "content", "<svg>swiss why</svg>"]]],
     ])
   })
 

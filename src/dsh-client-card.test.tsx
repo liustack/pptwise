@@ -2729,8 +2729,8 @@ describe("dsh cards — DSH's own look", () => {
 
 describe("the build card's other themes", () => {
   const alternatives = [
-    { id: "memo", label: "Memo", pages: [page(1, "cover"), page(2)] },
-    { id: "swiss", label: "Swiss", pages: [page(1, "cover"), page(3)] },
+    { n: 1, id: "memo", label: "Memo", pages: [page(1, "cover"), page(2)] },
+    { n: 2, id: "swiss", label: "Swiss", pages: [page(1, "cover"), page(3)] },
   ]
   const built = () => ({ ...bundleOf([page(1, "cover"), page(2), page(3)], "weekly"), alternatives })
 
@@ -2811,6 +2811,16 @@ describe("the build card's other themes", () => {
     await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(2))
     await new Promise((r) => setTimeout(r, 20))
     expect(container.querySelector("[data-pptwise-alternatives]")).toBeNull()
+  })
+
+  it("numbers each theme with the number its record carries, the one the model was told", async () => {
+    const kit = makeTail({ sidebar: true })
+    const told = { ...built(), alternatives: alternatives.map((theme, i) => ({ ...theme, n: i + 4 })) }
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: told }))
+    const Card = kit.seats.get("pptwise_build")!
+    const { container } = render(<Card block={blockWith(told as Bundle, "new-0001")} />)
+    await waitFor(() => expect(container.querySelector("[data-pptwise-alternatives]")).not.toBeNull())
+    expect([...container.querySelectorAll("[data-alt-theme] [data-theme-number]")].map((el) => el.textContent)).toEqual(["4", "5"])
   })
 
   it("asks in the harness's language", async () => {
