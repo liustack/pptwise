@@ -28,12 +28,16 @@
 
 ## 做出来长这样
 
+<p align="center"><a href="https://pptwise.com/zh#samples"><img src="assets/gallery/mosaic-zh.webp" alt="24 张幻灯片，每个内置主题的样例各取一页：带照片的封面、竞聘人物页、黑底金镯、黄昏里的无人机、演唱会人群、大数字、章节页" width="100%"></a></p>
+
 <table>
-  <tr><td><img src="assets/gallery/data-charts-02.png" alt="按季度对比营收与目标的分组柱状图"></td><td><img src="assets/gallery/quarterly-review-zh-05.png" alt="中文利润桥瀑布图，从 Q1 到 Q2"></td><td><img src="assets/gallery/strategy-analysis-02.png" alt="市场进入分析的 SWOT 四象限"></td></tr>
-  <tr><td><img src="assets/gallery/team-onboarding-04.png" alt="变更上线流程的四段箭头"></td><td><img src="assets/gallery/data-charts-04.png" alt="按客群拆分营收的环形图"></td><td><img src="assets/gallery/team-onboarding-02.png" alt="带姓名、职位与小组的团队卡片"></td></tr>
+  <tr><td><a href="https://pptwise.com/zh/samples/profile-member"><img src="assets/gallery/profile-11-zh.webp" alt="竞聘页：会员为什么不再来的一句话，旁边是本人照片"></a><br><sub>竞聘 · profile</sub></td><td><a href="https://pptwise.com/zh/samples/luxe-gold"><img src="assets/gallery/luxe-13-zh.webp" alt="黑底金字的章节页，背景是金匠在打金"></a><br><sub>经销商大会 · luxe</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/zh/samples/recap-channel"><img src="assets/gallery/recap-03-zh.webp" alt="一年的账：每季度目标、实际、差额和判定，旁边是柱状图"></a><br><sub>年终述职 · recap</sub></td><td><a href="https://pptwise.com/zh/samples/stage-game"><img src="assets/gallery/stage-09-zh.webp" alt="演讲的章节页：大字「单机」压在手柄和键盘上"></a><br><sub>主题演讲 · stage</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/zh/samples/proposal-solar"><img src="assets/gallery/proposal-03-zh.webp" alt="方案的章节页，深蓝底配日出时的屋顶光伏"></a><br><sub>客户方案 · proposal</sub></td><td><a href="https://pptwise.com/zh/samples/rally-concert"><img src="assets/gallery/rally-18-zh.webp" alt="舞台灯光和彩带下的收尾页，带拍板按钮"></a><br><sub>营销方案 · rally</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/zh/samples/runway-denim"><img src="assets/gallery/runway-12-zh.webp" alt="系列页：七个牛仔造型一字排开"></a><br><sub>毕业答辩 · runway</sub></td><td><a href="https://pptwise.com/zh/samples/ink-ich"><img src="assets/gallery/ink-15-zh.webp" alt="讲座页：红灯笼下的人群，旁边是两年春节出游对比"></a><br><sub>公众讲座 · ink</sub></td></tr>
 </table>
 
-以上是 [`examples/`](./examples) 里几份样例经引擎渲染出的页面。导出的文件里，每根柱子、每个标签、每张卡片都是 PowerPoint 原生形状，文字都能改。其中三份可以直接下载打开：[季度业务评审](https://pptwise.com/samples/quarterly-review-zh.pptx) · [产品提案（英文）](https://pptwise.com/samples/product-pitch.pptx) · [图表样例（英文）](https://pptwise.com/samples/data-charts.pptx)。
+上面是 24 个主题的样例页，每个主题一页，再放大看八页，都由引擎渲染。每份样例都能在 [pptwise.com](https://pptwise.com/zh#samples) 整份翻看，也能下载 .pptx。导出的文件里，每个标题、每根柱子、每个标签、每张卡片都是 PowerPoint 原生形状，文字都能改。
 
 ## 交流
 

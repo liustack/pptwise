@@ -28,12 +28,16 @@
 
 ## What it makes
 
+<p align="center"><a href="https://pptwise.com/#samples"><img src="assets/gallery/mosaic-en.webp" alt="Twenty-four slides, one from each built-in theme's sample deck: photo covers, a candidate's profile, a gold cuff on black, a drone at dusk, a concert crowd, big numbers, chapter pages" width="100%"></a></p>
+
 <table>
-  <tr><td><img src="assets/gallery/data-charts-02.png" alt="Grouped bar chart of revenue against target by quarter"></td><td><img src="assets/gallery/quarterly-review-zh-05.png" alt="Profit bridge from Q1 to Q2 drawn as a waterfall chart, in Chinese"></td><td><img src="assets/gallery/strategy-analysis-02.png" alt="SWOT grid for a market entry analysis"></td></tr>
-  <tr><td><img src="assets/gallery/team-onboarding-04.png" alt="Four-step chevron process for how a change ships"></td><td><img src="assets/gallery/data-charts-04.png" alt="Donut chart of revenue by segment"></td><td><img src="assets/gallery/team-onboarding-02.png" alt="Team cards with names, roles, and groups"></td></tr>
+  <tr><td><a href="https://pptwise.com/samples/profile-member"><img src="assets/gallery/profile-11-en.webp" alt="A candidate page: a quote on why members leave, beside his portrait"></a><br><sub>Internal job application · profile</sub></td><td><a href="https://pptwise.com/samples/luxe-gold"><img src="assets/gallery/luxe-13-en.webp" alt="A chapter page in gold on black over a goldsmith at work"></a><br><sub>Dealer conference · luxe</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/samples/recap-channel"><img src="assets/gallery/recap-03-en.webp" alt="A year in a ledger: quarterly target, actual, gap and verdict beside the bars"></a><br><sub>Year-end review · recap</sub></td><td><a href="https://pptwise.com/samples/stage-game"><img src="assets/gallery/stage-09-en.webp" alt="A keynote chapter page: one word large over a game controller and keyboard"></a><br><sub>Conference keynote · stage</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/samples/proposal-solar"><img src="assets/gallery/proposal-03-en.webp" alt="A proposal chapter page in navy beside rooftop solar at sunrise"></a><br><sub>Client proposal · proposal</sub></td><td><a href="https://pptwise.com/samples/rally-concert"><img src="assets/gallery/rally-18-en.webp" alt="A closing page under stage lights and confetti, with a sign-off button"></a><br><sub>Marketing plan · rally</sub></td></tr>
+  <tr><td><a href="https://pptwise.com/samples/runway-denim"><img src="assets/gallery/runway-12-en.webp" alt="A collection page lining up seven denim looks"></a><br><sub>Graduation collection · runway</sub></td><td><a href="https://pptwise.com/samples/ink-ich"><img src="assets/gallery/ink-15-en.webp" alt="A lecture page: red lanterns over a crowd beside a two-year comparison"></a><br><sub>Public lecture · ink</sub></td></tr>
 </table>
 
-Pages from the decks in [`examples/`](./examples), rendered by the engine. In the exported file every bar, label, and card is a native PowerPoint shape with editable text. Three of the decks come ready to open: [product pitch](https://pptwise.com/samples/product-pitch.pptx) · [charts](https://pptwise.com/samples/data-charts.pptx) · [quarterly review, in Chinese](https://pptwise.com/samples/quarterly-review-zh.pptx).
+One page from the sample deck of each of the 24 themes, then eight up close, all rendered by the engine. Every sample pages through in full on [pptwise.com](https://pptwise.com/#samples), with its .pptx to download. In the exported file every heading, chart bar, label, and card is a native PowerPoint shape with editable text.
 
 ## Talk to us
 
