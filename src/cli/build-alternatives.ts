@@ -8,10 +8,11 @@
  * shortlist `theme try` uses, keyed by the bound theme's occasions and the
  * deck's narrative strategy, and draws the deck's own cover and one or two
  * of its content pages in each. Pages are validated one at a time against
- * each theme, the way the theme wall draws a sample page, so a page a theme
- * cannot take is passed over rather than failing the build, and a theme
- * that can draw none of the content pages tried is passed over for the
- * next.
+ * each theme, through the same `validateIr` call the build after a switch
+ * makes, so a page shows what that build would draw: what the theme has no
+ * place for left off. A page that build could not draw either is passed
+ * over rather than failing this one, and a theme that can draw none of the
+ * content pages tried is passed over for the next.
  *
  * The offer stays with the deck as it is now. Every later build under the
  * same theme hands back the same themes: read off disk while the pages they
@@ -91,10 +92,17 @@ export function alternativeCandidates(ir: PptxIR, bound: ThemeDefinition): strin
   return ordered.filter((id) => id !== bound.id && id !== ir.theme.id)
 }
 
-/** One page of `ir` drawn alone in `theme`, or undefined when that theme cannot take it. */
-function drawAlone(ir: PptxIR, slide: Slide, theme: ThemeDefinition): string | undefined {
+/**
+ * One page of `ir` drawn alone in `theme`, the way a build after switching
+ * to `theme` draws it, or undefined when that build could not draw it
+ * either. `writtenFor` is the theme the build would take the pages as
+ * written for (`./written-for.ts`): with it, `validateIr` leaves off what
+ * `theme` has no place for and draws the rest, exactly as the switched build
+ * does. Without it, the switched build is strict, and so is this.
+ */
+function drawAlone(ir: PptxIR, slide: Slide, theme: ThemeDefinition, writtenFor: string | undefined): string | undefined {
   const raw = { ...ir, theme: { ...ir.theme, id: theme.id }, slides: [slide] }
-  const v = validateIr(raw, { theme })
+  const v = validateIr(raw, { theme, ...(writtenFor !== undefined ? { writtenFor } : {}) })
   if (!v.ok) return undefined
   return renderSlideSvg(v.ir!, 0, { theme })
 }
@@ -122,30 +130,31 @@ function sourcePages(ir: PptxIR): { cover: { slide: Slide; index: number } | und
 /**
  * A hash of everything the alternatives of `ir` are drawn from: the pages
  * they may show, the deck around them (narrative, assets, brand, footer),
- * the bound theme's id and occasions, which pick the candidates, and the
- * engine that draws them. Equal hashes draw equal pages.
+ * the bound theme's id and occasions, which pick the candidates, the theme
+ * the pages count as written for, and the engine that draws them. Equal
+ * hashes draw equal pages.
  */
-export function alternativesSource(ir: PptxIR, bound: ThemeDefinition): string {
+export function alternativesSource(ir: PptxIR, bound: ThemeDefinition, writtenFor: string | undefined): string {
   const { cover, content } = sourcePages(ir)
   const slides = [...(cover ? [cover] : []), ...content].map(({ slide, index }) => ({ index, slide }))
-  const input = { engine: VERSION, bound: { id: bound.id, occasions: bound.occasions ?? [] }, deck: { ...ir, slides } }
+  const input = { engine: VERSION, bound: { id: bound.id, occasions: bound.occasions ?? [] }, writtenFor: writtenFor ?? null, deck: { ...ir, slides } }
   return createHash("sha256").update(JSON.stringify(input)).digest("hex")
 }
 
 /** The cover, when `theme` can draw it, and up to two content pages it can, preferring two different kinds. Undefined when it can draw no content page. */
-function drawIn(ir: PptxIR, theme: ThemeDefinition): Drawn[] | undefined {
+function drawIn(ir: PptxIR, theme: ThemeDefinition, writtenFor: string | undefined): Drawn[] | undefined {
   const drawn: Drawn[] = []
   const { cover, content } = sourcePages(ir)
   if (cover !== undefined) {
     // A cover written for the bound theme's face (its own fill, components
-    // or footnote) may not fit another's. The theme still shows on its
-    // content pages, and the build after a switch names what to change.
-    const svg = drawAlone(ir, cover.slide, theme)
+    // or footnote) may not fit another's. It is drawn the way the switched
+    // build draws it, and passed over only when that build could not.
+    const svg = drawAlone(ir, cover.slide, theme, writtenFor)
     if (svg !== undefined) drawn.push({ index: cover.index, slide: cover.slide, svg })
   }
   const drawable: Drawn[] = []
   for (const { slide, index } of content) {
-    const svg = drawAlone(ir, slide, theme)
+    const svg = drawAlone(ir, slide, theme, writtenFor)
     if (svg !== undefined) drawable.push({ index, slide, svg })
   }
   // The second page shows another kind when the deck has one to show.
@@ -162,14 +171,14 @@ function drawIn(ir: PptxIR, theme: ThemeDefinition): Drawn[] | undefined {
  * `<workspaceDir>/alternatives/`, replacing whatever an earlier run left
  * there. Pure apart from writing that folder.
  */
-export async function writeBuildAlternatives(ir: PptxIR, bound: ThemeDefinition, workspaceDir: string): Promise<BuildAlternatives> {
+export async function writeBuildAlternatives(ir: PptxIR, bound: ThemeDefinition, workspaceDir: string, writtenFor?: string): Promise<BuildAlternatives> {
   const started = performance.now()
   const dir = join(workspaceDir, ALTERNATIVES_DIRNAME)
   const themes: (BuildAlternative & { pageFiles: { name: string; svg: string }[] })[] = []
   for (const id of alternativeCandidates(ir, bound)) {
     if (themes.length >= ALTERNATIVES_MAX) break
     const theme = getThemeDefinition(id)
-    const drawn = drawIn(ir, theme)
+    const drawn = drawIn(ir, theme, writtenFor)
     if (drawn === undefined) continue
     const pageFiles = drawn.map((d) => ({ name: `${id}-${String(d.index + 1).padStart(2, "0")}.svg`, svg: d.svg }))
     themes.push({
@@ -190,7 +199,7 @@ export async function writeBuildAlternatives(ir: PptxIR, bound: ThemeDefinition,
   const ms = Math.round(performance.now() - started)
   const manifest: AlternativesManifest = {
     bound: ir.theme.id,
-    source: alternativesSource(ir, bound),
+    source: alternativesSource(ir, bound, writtenFor),
     slide: { width: CANVAS_W_PX, height: CANVAS_H_PX },
     themes: themes.map((theme) => ({
       id: theme.theme,
@@ -262,6 +271,8 @@ export interface OfferOptions {
   flag?: boolean
   /** Whether a deck never offered any gets them unasked: one bound to a built-in theme. */
   unasked: boolean
+  /** The theme the deck's pages are recorded as written for (`./written-for.ts`), as the build read it. */
+  writtenFor?: string
 }
 
 /**
@@ -276,15 +287,15 @@ export interface OfferOptions {
 export async function offerAlternatives(ir: PptxIR, bound: ThemeDefinition, workspaceDir: string, opts: OfferOptions): Promise<BuildAlternatives | undefined> {
   const dir = join(workspaceDir, ALTERNATIVES_DIRNAME)
   if (opts.flag === false) return decline(dir, ir.theme.id)
-  if (opts.flag === true) return writeBuildAlternatives(ir, bound, workspaceDir)
+  if (opts.flag === true) return writeBuildAlternatives(ir, bound, workspaceDir, opts.writtenFor)
   const started = performance.now()
   const manifest = await readManifest(dir)
-  if (manifest === undefined) return opts.unasked ? writeBuildAlternatives(ir, bound, workspaceDir) : undefined
+  if (manifest === undefined) return opts.unasked ? writeBuildAlternatives(ir, bound, workspaceDir, opts.writtenFor) : undefined
   if (manifest.themes.length === 0) return undefined
   if (manifest.bound !== ir.theme.id) return decline(dir, ir.theme.id)
-  if (manifest.source === alternativesSource(ir, bound)) {
+  if (manifest.source === alternativesSource(ir, bound, opts.writtenFor)) {
     const current = await readBack(dir, manifest, started)
     if (current !== undefined) return current
   }
-  return writeBuildAlternatives(ir, bound, workspaceDir)
+  return writeBuildAlternatives(ir, bound, workspaceDir, opts.writtenFor)
 }

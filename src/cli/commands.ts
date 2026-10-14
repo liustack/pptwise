@@ -2322,13 +2322,6 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
       file: join(workspace.dir, svgNames[i]!),
     })),
   }
-  // A theme file or a pack is a choice someone already made on purpose, so
-  // only a built-in theme gets them unasked.
-  const alternatives = await offerAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir, {
-    flag: opts.alternatives,
-    unasked: resolvedTheme?.kind === "builtin",
-  })
-  if (alternatives !== undefined) report.alternatives = alternatives
   // Under a theme the pages were not written for, a text the face cuts or
   // a label it leaves off (a scroll cover's column too long to stand, say)
   // is the page drawn short, and a page a plainer layout drew whole is the
@@ -2339,6 +2332,19 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   report.warnings.push(...shortHere.map((finding) => auditIssue(finding, isDir)))
   const drawnShort = v.switchedFrom !== undefined || shortHere.length > 0
   const errors = [...placeholderIssues(ir, isDir), ...review.findings.filter((finding) => !shortHere.includes(finding)).map((finding) => auditIssue(finding, isDir))]
+  // The other themes are drawn the way switching to each draws the pages,
+  // which reads the theme they are written for as it stands after this
+  // build: a build that draws every page whole records the bound theme
+  // (`./written-for.ts`, below). A theme file or a pack is a choice someone
+  // already made on purpose, so only a built-in theme gets them unasked.
+  const recordsBound = isDir && errors.length === 0 && !drawnShort
+  const switchReads = recordsBound ? ir.theme.id : writtenFor
+  const alternatives = await offerAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir, {
+    flag: opts.alternatives,
+    unasked: resolvedTheme?.kind === "builtin",
+    ...(switchReads !== undefined ? { writtenFor: switchReads } : {}),
+  })
+  if (alternatives !== undefined) report.alternatives = alternatives
   if (errors.length > 0) return needsRevision(errors)
 
   let bytes: Uint8Array

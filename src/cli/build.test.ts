@@ -372,6 +372,39 @@ describe("pptwise build: the deck in other themes", () => {
     expect(asked.alternatives!.themes.length).toBeGreaterThan(0)
   })
 
+  it("draws a page the way switching to that theme draws it, leaving off only what the switch leaves off", async () => {
+    // A cover with a footnote: museum draws it, brief and swiss have no
+    // place for one. Switching draws the cover without it and says so, so
+    // the other themes show that cover too, not a deck without one.
+    const { cwd } = await workspace((spec, pages) => {
+      spec.theme = "museum"
+      ;(spec as { narrative: unknown }).narrative = { strategy: "storytelling", pacing: "balanced", audience: "public" }
+      pages.cover = { footnote: "Taken from the team's own notes" }
+    })
+    const offered = await buildWith(cwd)
+    const ids = offered.alternatives!.themes.map((theme) => theme.theme)
+    expect(ids).toEqual(expect.arrayContaining(["brief", "swiss"]))
+    const previews = new Map<string, string>()
+    for (const id of ["brief", "swiss"]) {
+      const shown = offered.alternatives!.themes.find((theme) => theme.theme === id)!
+      expect(shown.pages[0]!.type).toBe("cover")
+      previews.set(id, await readFile(shown.pages[0]!.file, "utf8"))
+    }
+    for (const id of ["brief", "swiss"]) {
+      const preview = previews.get(id)!
+      await editSpec(cwd, (spec) => {
+        spec.theme = id
+      })
+      const switched = await buildWith(cwd, false)
+      expect(switched.status).toBe("ok")
+      expect(switched.warnings.some((issue) => issue.pageId === "cover")).toBe(true)
+      expect(preview).toBe(await readFile(switched.preview!.pages[0]!.file, "utf8"))
+      await editSpec(cwd, (spec) => {
+        spec.theme = "museum"
+      })
+    }
+  })
+
   it("draws them for a deck that still needs revision, since its pages are drawn", async () => {
     const { cwd } = await workspace((_spec, pages) => {
       delete pages.how
