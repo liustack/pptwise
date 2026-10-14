@@ -70,7 +70,7 @@ import {
   type BuildSignaturePage,
 } from "./build-report"
 import { readWrittenFor, writeWrittenFor } from "./written-for"
-import { ALTERNATIVES_DIRNAME, writeBuildAlternatives } from "./build-alternatives"
+import { offerAlternatives } from "./build-alternatives"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
 import {
@@ -2151,8 +2151,9 @@ export interface BuildOptions {
   runGit?: GitRunner
   /**
    * `--alternatives` (true) or `--no-alternatives` (false): draw the deck's
-   * own pages in other themes, or not. Unset draws them on a deck's first
-   * build bound to a built-in theme (`./build-alternatives.ts`).
+   * own pages in other themes, or not. Unset offers them on a deck's first
+   * build bound to a built-in theme and keeps that offer current on later
+   * builds under the same theme (`./build-alternatives.ts`).
    */
   alternatives?: boolean
 }
@@ -2219,18 +2220,6 @@ function drawnAsReport(ir: PptxIR, theme: ThemeDefinition | undefined): BuildDra
 function themeSourceOf(resolved: ResolvedTheme): BuildThemeSource {
   if (resolved.kind === "builtin") return "builtin"
   return resolved.pack !== undefined ? "pack" : "file"
-}
-
-/**
- * Whether this build draws the deck in other themes (`./build-alternatives.ts`):
- * always with `--alternatives`, never with `--no-alternatives`, and otherwise
- * once, on the first build of a deck bound to a built-in theme. A theme file
- * or a pack is a choice someone already made on purpose.
- */
-async function wantsAlternatives(flag: boolean | undefined, resolved: ResolvedTheme | undefined, workspaceDir: string): Promise<boolean> {
-  if (flag !== undefined) return flag
-  if (resolved?.kind !== "builtin") return false
-  return !(await pathExists(join(workspaceDir, ALTERNATIVES_DIRNAME, "manifest.json")))
 }
 
 /** Audit findings that, on a deck built under a theme its pages were not written for, say the page is drawn short rather than drawn wrong. */
@@ -2333,9 +2322,13 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
       file: join(workspace.dir, svgNames[i]!),
     })),
   }
-  if (await wantsAlternatives(opts.alternatives, resolvedTheme, workspace.dir)) {
-    report.alternatives = await writeBuildAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir)
-  }
+  // A theme file or a pack is a choice someone already made on purpose, so
+  // only a built-in theme gets them unasked.
+  const alternatives = await offerAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir, {
+    flag: opts.alternatives,
+    unasked: resolvedTheme?.kind === "builtin",
+  })
+  if (alternatives !== undefined) report.alternatives = alternatives
   // Under a theme the pages were not written for, a text the face cuts or
   // a label it leaves off (a scroll cover's column too long to stand, say)
   // is the page drawn short, and a page a plainer layout drew whole is the

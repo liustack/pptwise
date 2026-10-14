@@ -286,15 +286,52 @@ describe("pptwise build: the deck in other themes", () => {
     expect(manifest.themes.map((theme) => theme.id)).toEqual(ids)
   })
 
-  it("offers them once: a later build leaves them alone, --alternatives draws them again", async () => {
+  /** Rewrite `weekly/deck.spec.json` in `cwd` with `edit` applied. */
+  async function editSpec(cwd: string, edit: (spec: typeof SPEC) => void): Promise<void> {
+    const file = join(cwd, "weekly", "deck.spec.json")
+    const spec = JSON.parse(await readFile(file, "utf8")) as typeof SPEC
+    edit(spec)
+    await writeFile(file, JSON.stringify(spec))
+  }
+
+  it("hands a later build the same pages while the deck's own are unchanged, and --alternatives draws them again", async () => {
     const { cwd } = await workspace()
     const first = await buildWith(cwd)
-    expect(first.alternatives).toBeDefined()
+    const files = first.alternatives!.themes.flatMap((theme) => theme.pages.map((page) => page.file))
+    const drawn = await Promise.all(files.map((file) => stat(file).then((s) => s.mtimeMs)))
     const again = await buildWith(cwd)
-    expect(again.alternatives).toBeUndefined()
-    expect(await exists(join(first.alternatives!.dir, "manifest.json"))).toBe(true)
+    expect(again.alternatives!.themes).toEqual(first.alternatives!.themes)
+    // Read back, not drawn again.
+    expect(await Promise.all(files.map((file) => stat(file).then((s) => s.mtimeMs)))).toEqual(drawn)
     const asked = await buildWith(cwd, true)
     expect(asked.alternatives!.themes.map((theme) => theme.theme)).toEqual(first.alternatives!.themes.map((theme) => theme.theme))
+  })
+
+  it("draws them again from the deck as it is now once a page they show has changed", async () => {
+    const { cwd } = await workspace()
+    const first = await buildWith(cwd)
+    const cover = (report: BuildReport) => report.alternatives!.themes[0]!.pages.find((page) => page.type === "cover")!.file
+    expect(await readFile(cover(first), "utf8")).toContain("Weekly")
+    await editSpec(cwd, (spec) => {
+      spec.pages[0]!.heading = "Fortnightly review"
+    })
+    const later = await buildWith(cwd)
+    expect(later.alternatives!.themes.map((theme) => theme.theme)).toEqual(first.alternatives!.themes.map((theme) => theme.theme))
+    const svg = await readFile(cover(later), "utf8")
+    expect(svg).toContain("Fortnightly")
+    expect(svg).not.toContain("Weekly")
+  })
+
+  it("offers none once the deck has moved to another theme", async () => {
+    const { cwd } = await workspace()
+    const first = await buildWith(cwd)
+    const picked = first.alternatives!.themes[1]!.theme
+    await editSpec(cwd, (spec) => {
+      spec.theme = picked
+    })
+    const switched = await buildWith(cwd)
+    expect(switched.theme).toBe(picked)
+    expect(switched.alternatives).toBeUndefined()
   })
 
   it("draws none with --no-alternatives", async () => {

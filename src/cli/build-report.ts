@@ -134,7 +134,7 @@ export interface BuildReport {
    * (`./written-for.ts`). Each such page is in `warnings`.
    */
   writtenFor?: string
-  /** The deck's own pages drawn in other themes, when this build drew them (`./build-alternatives.ts`). */
+  /** The deck's own pages drawn in other themes, current with its pages, whenever the deck is offered them (`./build-alternatives.ts`). */
   alternatives?: BuildAlternatives
   /** The theme's signature drawings across the deck, whenever its pages were drawn. */
   signature?: BuildSignature

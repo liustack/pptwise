@@ -2788,24 +2788,18 @@ describe("the build card's other themes", () => {
     expect(calls).toEqual(["set:Switch to Memo", "focus"])
   })
 
-  it("keeps the offer on the desk after a later build in the same turn, which draws none", async () => {
-    const { calls, conversation } = composer()
-    const kit = makeTail({ sidebar: true, conversation })
+  it("shows on the desk only the other themes its own build handed back, never an earlier build's", async () => {
+    const kit = makeTail({ sidebar: true })
+    // The first build's other themes were drawn from pages the deck has
+    // since rewritten. A later build hands back the current ones, or none.
     const later = { ...bundleOf([page(1, "cover"), page(2), page(3), page(4)], "weekly"), exportable: true }
-    const other = { ...bundleOf([page(1, "cover")], "other"), exportable: true }
-    fetchMock.mockImplementation(async (url: string) =>
-      routeAnswer({ status: 200, json: url.includes("first-0001") ? built() : url.includes("other-0001") ? other : later }),
-    )
+    fetchMock.mockImplementation(async (url: string) => routeAnswer({ status: 200, json: url.includes("first-0001") ? built() : later }))
     const deck = (id: string, target: string): TailEntry => ({ callId: id, tool: "pptwise_build", kind: "deck", id, target, version: 1, priorId: null })
-    const { container } = render(
-      <kit.Tail turn={{ turn: 1 }} useArtifacts={() => [deck("first-0001", "weekly"), deck("other-0001", "other"), deck("last-0001", "weekly")]} />,
-    )
-    await waitFor(() => expect(container.querySelector("[data-pptwise-desk] [data-pptwise-alternatives]")).not.toBeNull())
-    // The desk is the turn's last build, and its own pages are the ones drawn.
+    const { container } = render(<kit.Tail turn={{ turn: 1 }} useArtifacts={() => [deck("first-0001", "weekly"), deck("last-0001", "weekly")]} />)
+    await waitFor(() => expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(4))
+    await new Promise((r) => setTimeout(r, 20))
     expect(container.querySelector("[data-pptwise-desk]")!.getAttribute("data-pptwise-desk")).toBe("last-0001")
-    expect(container.querySelectorAll("[data-desk-page]")).toHaveLength(4)
-    fireEvent.click(container.querySelector('[data-alt-theme="swiss"] .pw-thumb')!)
-    expect(calls[0]).toBe("set:Switch to Swiss")
+    expect(container.querySelector("[data-pptwise-alternatives]")).toBeNull()
   })
 
   it("does not carry another deck's offer onto the desk", async () => {
