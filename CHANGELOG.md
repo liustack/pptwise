@@ -1,5 +1,14 @@
 # @liustack/pptwise
 
+## 0.45.1 - 2026-10-14
+
+### Patch Changes
+
+- 0317a2a: The other themes shown under a deck now look the way the deck would look after switching. A cover with something another theme has no place for, a footnote say, used to be left out of that theme's preview altogether, so some themes showed no cover at all. It is now drawn as switching draws it, with only that part left off.
+- 3091bf3: The other themes a build shows under the deck now always show the deck as it is. They used to be drawn once, on the first build, and kept showing an old cover or old pages after you rewrote them. Every later build under the same theme shows them again, redrawn as soon as a page they show has changed, and once you switch to another theme they are gone.
+- 93fb05c: A theme you named, or picked from a theme wall, is taken as your choice. The AI no longer explains why it chose it, and the deck no longer comes with other themes to switch to, on its first build or any later one. The same holds once you switch to one of the other themes it showed you.
+- 8090ec1: In DeepSeek Harness, "switch to the second one" now goes straight to the theme numbered 2 under the deck. The AI is told the same numbers the card shows, on every build, so it no longer searches the project folder to work out which theme you meant.
+
 ## 0.45.0 - 2026-10-14
 
 ### Minor Changes
