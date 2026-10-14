@@ -2746,6 +2746,11 @@ export function createPreviewService(cliPath) {
           type: 'string',
           description: 'Deck project directory (or IR json file), the same target the CLI takes.',
         },
+        alternatives: {
+          type: 'boolean',
+          description:
+            'false when the user named the theme or picked it from a theme wall: the card then shows this deck in no other themes, on this build and on its later builds. Leave it out otherwise.',
+        },
       },
       required: ['target'],
       additionalProperties: false,
@@ -2786,7 +2791,7 @@ export function createPreviewService(cliPath) {
       // The CLI runs in the same folder the preview goes to, so the build's
       // own `.pptwise/` and the card's copy sit in one project.
       const workspace = workspaceFor(exec, target)
-      const report = await runCliJson(cliPath, ['build', target, '--json'], {
+      const report = await runCliJson(cliPath, ['build', target, '--json', ...(args.alternatives === false ? ['--no-alternatives'] : [])], {
         signal: exec?.signal,
         cwd: workspace,
         okCodes: [0, 1],

@@ -18,6 +18,9 @@
  * were drawn from are unchanged, and drawn again from the current pages
  * once one of those changed (`manifest.json` keeps a hash of what they were
  * drawn from). A deck moved to another theme gets none: the user has chosen.
+ * So does a deck built with `--no-alternatives`, the flag for a theme the
+ * user named. Both leave a manifest with no themes, which keeps later
+ * builds from offering them again until `--alternatives` asks.
  *
  * Switching is still a name change in `deck.spec.json` and a rebuild: these
  * pages are a preview of that rebuild, not a second deck. They are written
@@ -245,6 +248,15 @@ async function readBack(dir: string, manifest: AlternativesManifest, started: nu
   return { dir, themes, ms: Math.round(performance.now() - started) }
 }
 
+/** Record that this deck is offered none: its theme is the user's choice. */
+async function decline(dir: string, theme: string): Promise<undefined> {
+  await rm(dir, { recursive: true, force: true })
+  await mkdir(dir, { recursive: true })
+  const manifest: AlternativesManifest = { bound: theme, slide: { width: CANVAS_W_PX, height: CANVAS_H_PX }, themes: [] }
+  await writeFile(join(dir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`)
+  return undefined
+}
+
 export interface OfferOptions {
   /** `--alternatives` (true) or `--no-alternatives` (false). */
   flag?: boolean
@@ -254,20 +266,22 @@ export interface OfferOptions {
 
 /**
  * The alternatives this build hands back, drawing them when it has to.
- * `--alternatives` always draws them, `--no-alternatives` never. Otherwise
- * a deck never offered any gets them when `unasked` allows. A deck offered
- * some gets the same themes again while it keeps the theme it had then:
- * read back while their pages are current, drawn again from the deck as it
- * is now when they are not. A deck moved to another theme gets none.
+ * `--alternatives` always draws them. `--no-alternatives` draws none and
+ * declines them for the deck's later builds too. Otherwise a deck never
+ * offered any gets them when `unasked` allows. A deck offered some gets the
+ * same themes again while it keeps the theme it had then: read back while
+ * their pages are current, drawn again from the deck as it is now when they
+ * are not. A deck moved to another theme gets none, now or later.
  */
 export async function offerAlternatives(ir: PptxIR, bound: ThemeDefinition, workspaceDir: string, opts: OfferOptions): Promise<BuildAlternatives | undefined> {
-  if (opts.flag === false) return undefined
+  const dir = join(workspaceDir, ALTERNATIVES_DIRNAME)
+  if (opts.flag === false) return decline(dir, ir.theme.id)
   if (opts.flag === true) return writeBuildAlternatives(ir, bound, workspaceDir)
   const started = performance.now()
-  const dir = join(workspaceDir, ALTERNATIVES_DIRNAME)
   const manifest = await readManifest(dir)
   if (manifest === undefined) return opts.unasked ? writeBuildAlternatives(ir, bound, workspaceDir) : undefined
-  if (manifest.bound !== ir.theme.id || manifest.themes.length === 0) return undefined
+  if (manifest.themes.length === 0) return undefined
+  if (manifest.bound !== ir.theme.id) return decline(dir, ir.theme.id)
   if (manifest.source === alternativesSource(ir, bound)) {
     const current = await readBack(dir, manifest, started)
     if (current !== undefined) return current

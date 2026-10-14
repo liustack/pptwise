@@ -49,7 +49,7 @@ Scan the workspace before asking questions. An existing `deck.spec.json` already
 
 ## Show the user before you check it yourself
 
-Write every message to the user in the language they wrote in, from the first status line to the final answer. One decision stops for the user: the outline, which also names the theme you picked and why. Show it in the conversation and ask before writing pages. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the outline and continue. The theme is not a second stop: the user can change it at the outline or after any build.
+Write every message to the user in the language they wrote in, from the first status line to the final answer. One decision stops for the user: the outline, which also names the theme: the one the user named, or the one you picked and why. Show it in the conversation and ask before writing pages. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the outline and continue. The theme is not a second stop: the user can change it at the outline or after any build.
 
 Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
 
@@ -76,7 +76,7 @@ Resolve theme names in this order:
 3. Installed content packs (`pptwise packs list`).
 4. The 24 factory presets.
 
-Pick the theme yourself. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit the request and the narrative best, and write one line on why with the outline. Draw a theme wall only when the user asks to see looks before choosing ("show me some styles"). Then call the `pptwise_themes` tool with the deck's cover title, subtitle, and `occasion`: the occasion words that fit. It draws each shortlisted theme's cover and one content page in the conversation, numbered. Pass `themes` only when the user named themes. Without the tool, draw the same wall:
+When the user named a theme or picked one from a theme wall, bind it. It is their choice: give no reason for it, and build with `--no-alternatives` (`alternatives: false` on the `pptwise_build` tool) so no build offers them other themes. Otherwise pick the theme yourself. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit the request and the narrative best, and write one line on why with the outline. Draw a theme wall only when the user asks to see looks before choosing ("show me some styles"). Then call the `pptwise_themes` tool with the deck's cover title, subtitle, and `occasion`: the occasion words that fit. It draws each shortlisted theme's cover and one content page in the conversation, numbered. Pass `themes` only when the user named themes. Without the tool, draw the same wall:
 
 ```bash
 pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
@@ -103,7 +103,7 @@ When the user names a page count, the spec has exactly that many pages, the cove
 
 Run `pptwise spec validate deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page.
 
-The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. Put the theme and its one-line reason above the pages. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
+The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. Put the theme above the pages, with its one-line reason when you picked it. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
 
 The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
 

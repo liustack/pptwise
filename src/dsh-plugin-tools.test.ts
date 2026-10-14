@@ -73,7 +73,7 @@ interface FakeResponse {
 
 interface Service {
   themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
-  buildTool: Tool<{ target: string }, BuildValue>
+  buildTool: Tool<{ target: string; alternatives?: boolean }, BuildValue>
   outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
   /** The test's own note of where the workspace keeps previews: `previewRoot(workspace)`. */
@@ -163,7 +163,7 @@ if (argv[0] === "theme" && argv[1] === "try") {
       : []
   if (errors.length === 0) writeFileSync(pptx, "PK-" + name)
   let alternatives
-  if (!unassembled && existsSync(join(target, "alternatives"))) {
+  if (!unassembled && existsSync(join(target, "alternatives")) && !argv.includes("--no-alternatives")) {
     const dir = join(out, "alternatives")
     mkdirSync(dir, { recursive: true })
     alternatives = { dir, ms: 42, themes: ["memo", "swiss"].map((id) => {
@@ -521,6 +521,18 @@ describe("pptwise_build", () => {
       ["memo", "Memo", [[1, "cover", "<svg>memo cover</svg>"], [2, "content", "<svg>memo why</svg>"]]],
       ["swiss", "Swiss", [[1, "cover", "<svg>swiss cover</svg>"], [2, "content", "<svg>swiss why</svg>"]]],
     ])
+  })
+
+  it("asks the CLI for none when the user named the theme", async () => {
+    const { svc, workspace, route, handler } = await setup("build-named-theme")
+    const target = await deck(workspace, ["alternatives"])
+    const value = await svc.buildTool.execute({ target, alternatives: false }, inSession(workspace))
+    expect(value).not.toHaveProperty("alternatives")
+    expect(svc.buildTool.output.render({}, value)[0]!.text).not.toContain("other themes")
+    const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as Record<string, unknown>
+    expect(bundle).not.toHaveProperty("alternatives")
+    // Left out, the CLI decides, as before.
+    expect(await svc.buildTool.execute({ target }, inSession(workspace))).toHaveProperty("alternatives")
   })
 
   it("says nothing about other themes when the build drew none", async () => {

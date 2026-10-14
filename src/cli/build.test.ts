@@ -334,11 +334,30 @@ describe("pptwise build: the deck in other themes", () => {
     expect(switched.alternatives).toBeUndefined()
   })
 
-  it("draws none with --no-alternatives", async () => {
+  it("draws none with --no-alternatives, and offers none on the deck's later builds either", async () => {
     const { cwd } = await workspace()
     const report = await buildWith(cwd, false)
     expect(report.alternatives).toBeUndefined()
-    expect(await exists(join(cwd, ".pptwise", "weekly", ALTERNATIVES_DIRNAME))).toBe(false)
+    // A theme the user named: later builds, which pass no flag, keep to it.
+    const later = await buildWith(cwd)
+    expect(later.alternatives).toBeUndefined()
+    const asked = await buildWith(cwd, true)
+    expect(asked.alternatives!.themes.length).toBeGreaterThan(0)
+  })
+
+  it("offers none to a deck that moved to another theme, even after it moves back", async () => {
+    const { cwd } = await workspace()
+    const first = await buildWith(cwd)
+    await editSpec(cwd, (spec) => {
+      spec.theme = first.alternatives!.themes[0]!.theme
+    })
+    expect((await buildWith(cwd)).alternatives).toBeUndefined()
+    await editSpec(cwd, (spec) => {
+      spec.theme = "brief"
+    })
+    const back = await buildWith(cwd)
+    expect(back.theme).toBe("brief")
+    expect(back.alternatives).toBeUndefined()
   })
 
   it("leaves a deck on a theme file alone unless asked, and says where its theme came from", async () => {

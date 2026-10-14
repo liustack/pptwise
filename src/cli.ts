@@ -97,9 +97,9 @@ program
   .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .option(
     "--alternatives",
-    "also draw the deck's cover and one or two content pages in up to 3 other themes, under .pptwise/<deck>/alternatives/ (done once by default, on the first build of a deck on a built-in theme)",
+    "also draw the deck's cover and one or two content pages in up to 3 other themes, under .pptwise/<deck>/alternatives/ (by default from the first build of a deck on a built-in theme, kept current on later builds)",
   )
-  .option("--no-alternatives", "do not draw the deck in other themes, even on its first build")
+  .option("--no-alternatives", "draw the deck in no other themes, on this build or later ones (the user named the theme)")
   .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
   .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean; alternatives?: boolean }) => {
     try {
