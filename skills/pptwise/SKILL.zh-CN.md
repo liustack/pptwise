@@ -47,7 +47,7 @@ pptwise themes --json
 
 `themes --json` 会列出已装内容包的主题，并标 `"source": "pack"`。每个主题行都带 `menu`：`menu.content` 的键就是它提供的内容讲法。IR 组件契约在填页时按页读取，不整份读。见第 5 步。
 
-提问前先扫描工作区。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
+提问前先扫描工作区，`.pptwise/decks/` 也要看：按 `.gitignore` 过滤的文件搜索会跳过它。已有 `deck.spec.json` 会记录叙事、绑定主题、页面顺序、标题与每张内容页的 `kind`。deck 内 `theme.json`、工作区 `themes/` 文件、用户点名的主题，或递来的 `.thmx`、`.potx`、带品牌 `.pptx` 都是主题信号。
 
 ## 先给用户看，再自己查
 
@@ -92,7 +92,7 @@ pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <wo
 
 ### 4. 用 `kind` 写 spec
 
-spec 锁定主题、叙事、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
+新 deck 项目一律建在项目目录（有 `pptwise.config.json` 的目录，没有就是当前工作目录）下的 `.pptwise/decks/<名字>/`，名字用几个小写英文单词加连字符，比如 `q3-review`。用户点名放别处时照用户的。已有的 deck 在哪就在哪改，不要搬。命令都在项目目录里运行，下文的 `deck-dir/` 就是 deck 从那里算起的路径。spec 锁定主题、叙事、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
 
 spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字样。只要场合需要的那几样，见 `references/branding.md`。
 
@@ -103,7 +103,7 @@ spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字
 
 用户说了页数，spec 就正好是那么多页，封面和结尾页都算在内。不要为了过检查加页或删页。
 
-运行 `pptwise spec validate deck.spec.json`，直到打印 `OK`。`kind` 不在绑定主题菜单里只是一条提示，不是错误：那一页按菜单里最近的讲法来画。`kind` 写页面真实的讲法。
+运行 `pptwise spec validate deck-dir/deck.spec.json`，直到打印 `OK`。`kind` 不在绑定主题菜单里只是一条提示，不是错误：那一页按菜单里最近的讲法来画。`kind` 写页面真实的讲法。
 
 校验通过的 spec 就是大纲。写任何页面文件之前，先在对话里逐页列出：页码、页型或 `kind`、标题、这一页讲什么。主题写在页面列表上方，是你选的就附上那一句理由。这一步不论 deck 多短都不能省。有 `pptwise_outline` 工具时，同时对 deck 目录调用它，让用户以卡片看到同一份列表。用户说了直接做或让你定，就列出大纲，在同一条回复里接着做。否则请用户确认或修改，有 `ask_user_question` 工具时用它来问，等他回答再写页面。
 

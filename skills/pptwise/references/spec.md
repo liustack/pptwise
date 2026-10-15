@@ -22,7 +22,7 @@ Each theme row in `themes --json` carries its `menu`. The keys of `menu.content`
 
 The IR component contract is read per page during fill with `pptwise inspect deck-dir/ --page <id>`. See `components.md`.
 
-The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json`, deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.
+The command output and workspace files outrank this guide. Scan for an existing `deck.spec.json` (look in `.pptwise/decks/` too, which a search that honours `.gitignore` skips), deck-local `theme.json`, workspace `themes/`, and supplied Office brand files before asking questions.
 
 ## Intent and narrative
 
@@ -138,6 +138,8 @@ Four boundaries settle most ambiguous cases:
 
 ## Write the spec
 
+A new deck project goes in `.pptwise/decks/<name>/` under the project folder, the folder holding `pptwise.config.json`, else the working directory. `<name>` is a few lowercase English words joined by hyphens, such as `q3-review`. When the user names another place, use it. A deck that already exists elsewhere is edited where it is, never moved. Run commands from the project folder, so the build output lands in that folder's `.pptwise/`.
+
 A valid deck spec opens with `cover`, closes with `ending`, and uses `content` or `chapter` inside. Every page has `id`, `type`, and `heading`. Content pages additionally require `kind`. `focus` may name a preferred component type. `summary` is a short content anchor for the fill step. `kicker` is a short label set over the heading, such as the occasion on a cover. Only a face with a place for it draws it, and validate names the face when it has none.
 
 ```json
@@ -163,7 +165,7 @@ The spec contains no page geometry or render selection state. Do not add retired
 Run:
 
 ```bash
-pptwise spec validate deck.spec.json
+pptwise spec validate deck-dir/deck.spec.json
 ```
 
 Fix hard errors until the command prints `OK`. A page count outside the range the pacing usually spans is a warning, not an error. When the user asked for a page count, keep it. Three or more consecutive content pages with the same `kind` produce an editorial warning.

@@ -14,10 +14,16 @@ import { DECKS_DIRNAME, isFirstWorkspaceWrite, projectDirOf } from "./cli/worksp
 
 const execFile = promisify(execFileCb)
 
+interface ToolShape {
+  parameters: { properties: Record<string, { description?: string }> }
+}
+
 interface PluginModule {
+  createPreviewService: (cliPath: string) => { tool: ToolShape; buildTool: ToolShape; outlineTool: ToolShape }
   previewRoot: (anchor: string) => string
   __testing: {
     DECKS_DIRNAME: string
+    DECK_HOME_HINT: string
     projectDirOf: (start: string) => string
     projectAnchor: (start: string) => string
     isFirstWorkspaceWrite: (dir: string) => Promise<boolean>
@@ -43,6 +49,17 @@ afterEach(async () => {
 })
 
 describe("the plugin's deck home", () => {
+  it("tells the model where a new deck goes on every tool that takes a deck path", async () => {
+    const { createPreviewService, __testing } = await plugin()
+    expect(__testing.DECK_HOME_HINT).toContain(".pptwise/decks/<name>/")
+    expect(__testing.DECK_HOME_HINT).toContain("unless the user names another place")
+    expect(__testing.DECK_HOME_HINT).toContain("An existing deck is edited where it is")
+    const svc = createPreviewService(join(await tmp(), "cli.mjs"))
+    for (const tool of [svc.tool, svc.buildTool, svc.outlineTool]) {
+      expect(tool.parameters.properties.target!.description).toContain(__testing.DECK_HOME_HINT)
+    }
+  })
+
   it("reads a folder inside .pptwise/ as the project that holds it, as the CLI does", async () => {
     const { __testing } = await plugin()
     expect(__testing.DECKS_DIRNAME).toBe(DECKS_DIRNAME)

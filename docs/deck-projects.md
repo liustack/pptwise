@@ -1,10 +1,11 @@
 ---
-summary: 'Deck projects: theme-shaped specs, content-only page files, assets, placeholders, deterministic assembly, theme rebinding, and live review'
+summary: 'Deck projects: where a new deck goes (.pptwise/decks/), theme-shaped specs, content-only page files, assets, placeholders, deterministic assembly, theme rebinding, and live review'
 read_when:
   - authoring or debugging a deck project directory
   - touching spec, assemble, disassemble, deck-directory loading, or live review
   - tracing placeholder, orphan-file, locked-field, theme-menu, or asset errors
   - changing or freezing a project's bound theme
+  - deciding where a deck lives, or why its output folder has the name it has
 ---
 
 # Deck projects
@@ -191,3 +192,23 @@ Disassembly writes a version 1 spec, one content-only file for every non-placeho
 ## Where decks live
 
 A deck lives in the project, and a `<target>` is always a path: a deck project directory or an IR file, resolved against the current directory. There is no deck folder under the home directory and no setting that points at one.
+
+A new deck goes in `.pptwise/decks/<name>/` under the project root, the directory holding `pptwise.config.json`, or the working directory without one. The skill and the DSH plugin's tools tell the model so, with `<name>` a few lowercase English words joined by hyphens. A place the user names wins, and a deck that already sits elsewhere is read where it is, never moved. Nothing in pptwise writes into `decks/`: the author does.
+
+```text
+my-project/
+  .pptwise/
+    .gitignore          *
+    decks/
+      q3-review/        deck.spec.json, pages/, assets/
+    q3-review/          pages, preview.html, written-for.json, q3-review.pptx
+    previews/           DSH cards
+```
+
+A deck in `decks/` builds to `.pptwise/<name>/`, its path inside `decks/` with hyphens, so `.pptwise/decks/q3/zh/` builds to `.pptwise/q3-zh/`. A deck at the project's top level with the same name builds to the same folder, so keep the names apart. No deck output takes the names `decks`, `themes`, `previews`, or `theme-try`. A deck that would gets `-deck` after its name. A deck kept straight under `.pptwise/` (`.pptwise/q3/`, as some were started before `decks/`) keeps building where it always did, to `.pptwise/pptwise-q3/`. Its folder is the one `.pptwise/decks/q3/` would build to, so while both exist, the deck in `decks/` is refused with a message naming the shared name, before anything reads or clears that folder. Rename one of them.
+
+The output folder follows the deck's path, so a deck that moves builds to a new folder. The old one (its `.pptx`, `written-for.json`, and any pictures pinned there) stays until it is deleted, and the first build in the new place checks every page as strictly as a new deck's until a build draws them all whole. This is one reason a deck that already exists is edited where it is.
+
+A command run from inside `.pptwise/` (from the deck's own folder, say) works for the project that holds that `.pptwise/`. Output lands in the project's `.pptwise/`, never in one nested under the deck, and `theme new` writes to the project's `themes/`. The theme lookup walks up from the working directory as always, through `.pptwise/` to the project's `themes/`.
+
+Because the sources sit in `.pptwise/`, they share its git posture. The first command that writes there keeps the folder out of git, also when the author created it by starting a deck in it. A deck that should be committed belongs somewhere else in the project, or is added with `git add -f`.

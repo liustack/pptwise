@@ -45,7 +45,7 @@ pptwise themes --json
 
 `themes --json` lists installed content pack themes with `"source": "pack"`. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while filling, never whole. See step 5.
 
-Scan the workspace before asking questions. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
+Scan the workspace before asking questions, `.pptwise/decks/` included: a file search that honours `.gitignore` skips it. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 
 ## Show the user before you check it yourself
 
@@ -90,7 +90,7 @@ Write the theme name into `deck.spec.json` before writing page content. There is
 
 ### 4. Write the spec with `kind`
 
-The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
+Start a new deck project in `.pptwise/decks/<name>/` under the project folder (the folder holding `pptwise.config.json`, else the working directory), `<name>` a few lowercase English words joined by hyphens, such as `q3-review`. Put it elsewhere only when the user names a place. Edit a deck that already exists where it is, and never move it. Run commands from the project folder: `deck-dir/` below is the deck's path from there. The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
 
 A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it. Ask only for what the occasion needs, see `references/branding.md`.
 
@@ -101,7 +101,7 @@ A deck prints no page number, organization, date, or confidentiality line unless
 
 When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
 
-Run `pptwise spec validate deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page.
+Run `pptwise spec validate deck-dir/deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page.
 
 The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. Put the theme above the pages, with its one-line reason when you picked it. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
 

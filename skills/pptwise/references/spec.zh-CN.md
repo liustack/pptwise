@@ -27,7 +27,7 @@ pptwise themes --json
 
 IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读取。见 `components.md`。
 
-命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
+命令输出与工作区文件优先于本指南。提问前先找已有 `deck.spec.json`（`.pptwise/decks/` 里也要找，按 `.gitignore` 过滤的搜索会跳过它）、deck 内 `theme.json`、工作区 `themes/`，以及用户递来的 Office 品牌文件。
 
 ## 意图与叙事
 
@@ -143,6 +143,8 @@ pptwise theme fork acme --brand '#0B5FFF' --id acme-blue
 
 ## 编写 spec
 
+新 deck 项目建在项目目录下的 `.pptwise/decks/<名字>/`。项目目录是有 `pptwise.config.json` 的目录，没有就是当前工作目录。名字用几个小写英文单词加连字符，比如 `q3-review`。用户点名放别处时照用户的。已有的 deck 在别处就在原处改，不要搬。命令都在项目目录里运行，build 产物就落在这个目录的 `.pptwise/` 里。
+
 合法 spec 以 `cover` 开头，以 `ending` 结束，中间使用 `content` 或 `chapter`。每页都有 `id`、`type`、`heading`。内容页还必须有 `kind`。`focus` 可以点名偏好的组件类型。`summary` 是填充步骤使用的简短内容锚点。`kicker` 是标题上方的一行短标签，比如封面上的场合。只有给它留了位置的脸才画，没有位置时 validate 会点名是哪张脸。
 
 ```json
@@ -168,7 +170,7 @@ spec 不含页面几何或渲染选择状态。不要加入已退役的作者字
 运行：
 
 ```bash
-pptwise spec validate deck.spec.json
+pptwise spec validate deck-dir/deck.spec.json
 ```
 
 修完硬错误，直到命令打印 `OK`。页数超出 `pacing` 通常的范围只是提示，不是错误。用户给了页数就保持那个页数。连续三张或更多内容页使用同一个 `kind` 时，会产生编辑提示。

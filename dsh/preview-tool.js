@@ -347,6 +347,11 @@ const DECKS_DIRNAME = 'decks'
 /** A deck project's spec file. Must match `SPEC_FILENAME` in `src/cli/deck-dir.ts`. */
 const DECK_SPEC_FILENAME = 'deck.spec.json'
 
+/** Where the model starts a new deck, told on every tool that takes a deck
+ *  path. The skill says the same, in both languages. */
+const DECK_HOME_HINT =
+  'A new deck goes in .pptwise/decks/<name>/ under the project folder, <name> a few lowercase English words joined by hyphens, unless the user names another place. An existing deck is edited where it is.'
+
 /** The files that mark a project root, newest name first. Must match `src/cli/config.ts`. */
 const PROJECT_CONFIG_NAMES = ['pptwise.config.json', 'pptpress.config.json', 'pptfast.config.json']
 
@@ -2495,7 +2500,8 @@ export function createPreviewService(cliPath) {
       properties: {
         target: {
           type: 'string',
-          description: 'Deck project directory or IR json file, the same target the CLI takes.',
+          description:
+            'Deck project directory or IR json file, the same target the CLI takes. ' + DECK_HOME_HINT,
         },
       },
       required: ['target'],
@@ -2793,7 +2799,8 @@ export function createPreviewService(cliPath) {
       properties: {
         target: {
           type: 'string',
-          description: 'Deck project directory (or IR json file), the same target the CLI takes.',
+          description:
+            'Deck project directory (or IR json file), the same target the CLI takes. ' + DECK_HOME_HINT,
         },
         alternatives: {
           type: 'boolean',
@@ -2911,7 +2918,8 @@ export function createPreviewService(cliPath) {
       properties: {
         target: {
           type: 'string',
-          description: 'Deck project directory, or the path of its deck.spec.json.',
+          description:
+            'Deck project directory, or the path of its deck.spec.json. ' + DECK_HOME_HINT,
         },
       },
       required: ['target'],
@@ -3066,6 +3074,7 @@ export const __testing = {
   projectAnchor,
   projectDirOf,
   DECKS_DIRNAME,
+  DECK_HOME_HINT,
   encodePreviewId,
   decodePreviewId,
   workspaceFor,
