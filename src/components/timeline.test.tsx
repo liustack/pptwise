@@ -353,6 +353,51 @@ describe("timeline end labels beside a centred neighbour", () => {
   })
 })
 
+describe("timeline labels side by side", () => {
+  // A terminal page as an author wrote it (2026-10): five milestones across
+  // the 1152px measure, each with a sentence under its title. Twelve pixels
+  // between one milestone's words and the next read as one run of text.
+  const relay = {
+    type: "timeline" as const,
+    layout: "horizontal" as const,
+    milestones: [
+      { date: "2025-06-25", title: "原创 OC「溟月」", desc: "上善无形发布原创角色，当时与 DeepSeek 无关。", icon: "palette" },
+      { date: "2026-04-25", title: "改成女仆鲸鱼娘", desc: "ZipZipPipe 换深蓝白女仆装，出第一批表情包。", icon: "brush" },
+      { date: "2026-04-29", title: "它把自己认成了鱼", desc: "识图灰测推送，它把自家 logo 念成「蓝色大肥鱼」。", icon: "search", highlight: true },
+      { date: "2026-07-10", title: "Q 版大肥鱼破圈", desc: "这个刀子真甜做成 Q 版模型，人设从此定型。", icon: "sparkles" },
+      { date: "2026-08-02", title: "作者补版权声明", desc: "声明仅限非商用二创。", icon: "copyright" },
+    ],
+  }
+
+  it("keep two characters between one milestone's words and the next", () => {
+    const terminal = boundThemeCtx("terminal", {})
+    const { container } = svg(timeline.render(relay, { x: 64, y: 228, w: 1152 }, terminal))
+    const milestones = Array.from(container.querySelector("svg > g")!.children).filter((el) => el.tagName.toLowerCase() === "g")
+    expect(milestones).toHaveLength(relay.milestones.length)
+    const lines = milestones.map((group) =>
+      Array.from(group.querySelectorAll("text")).map((t) => {
+        const size = Number(t.getAttribute("font-size"))
+        const width = measureTextUnits(t.textContent ?? "", { bold: t.getAttribute("font-weight") === "bold", fontFamily: t.getAttribute("font-family") ?? "" }) * size
+        const x = Number(t.getAttribute("x"))
+        const anchor = t.getAttribute("text-anchor")
+        const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x
+        const y = Number(t.getAttribute("y"))
+        return { text: t.textContent, size, left, right: left + width, top: y - 0.72 * size, bottom: y + 0.12 * size }
+      }),
+    )
+    const words = lines.flat().map((l) => l.text).join("").replace(/\s/g, "")
+    for (const m of relay.milestones) expect(words).toContain(m.desc.replace(/\s/g, ""))
+    for (let i = 0; i + 1 < lines.length; i++) {
+      for (const a of lines[i]!) {
+        for (const b of lines[i + 1]!) {
+          if (a.bottom <= b.top || b.bottom <= a.top) continue
+          expect(b.left - a.right, `"${a.text}" and "${b.text}"`).toBeGreaterThanOrEqual(2 * Math.min(a.size, b.size))
+        }
+      }
+    }
+  })
+})
+
 describe("timeline side by side in a short box", () => {
   const english = {
     type: "timeline" as const,

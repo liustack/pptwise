@@ -12,9 +12,14 @@ type TimelineComponent = Extract<Component, { type: "timeline" }>
 
 const AXIS_Y = 100
 const PAD = 20
-/** Reserved gap on each side of a milestone label before it would collide
- * with its neighbor's label. */
-const LABEL_GAP = 12
+/**
+ * The gutter between one milestone's words and the next: two characters of
+ * the label size. It used to be 12px, the least that kept two ink boxes from
+ * touching, and five milestones across the measure then ran their
+ * descriptions into one line of text (a terminal page, 2026-10): a gap
+ * narrower than a character does not read as a column break.
+ */
+const LABEL_GUTTER = 32
 const MIN_FONT_SIZE = 16
 const TITLE_SIZE = 16
 const DESC_SIZE = 16
@@ -104,7 +109,7 @@ function labelPlacement(
   w: number,
   step: number,
 ): { maxWidth: number; anchor: Anchor; tx: number } {
-  const distToNeighbor = n > 1 ? step - LABEL_GAP : w - 2 * PAD
+  const distToNeighbor = n > 1 ? step - LABEL_GUTTER : w - 2 * PAD
   if (n > 1 && i === 0) {
     return { maxWidth: Math.max(1, Math.min(distToNeighbor, w - x - PAD)), anchor: "start", tx: x - 8 }
   }
@@ -182,18 +187,18 @@ function milestoneLayout(component: TimelineComponent, w: number, fontFamily: st
   })
   // An end label is offered a whole step, and its centred neighbour half a
   // step on either side, so the two offers overlap by half a step. Where the
-  // words actually meet there, the end label wraps short of its neighbour's
+  // words actually meet there, the end label wraps a gutter short of its neighbour's
   // first glyph instead of running under it.
   if (n > 1) {
     const first = rows[0]!
     const next = rows[1]!
-    if (first.right > next.left - LABEL_GAP) {
-      rows[0] = lay(first.m, 0, first.x, Math.max(1, next.left - LABEL_GAP - first.tx), first.anchor, first.tx)
+    if (first.right > next.left - LABEL_GUTTER) {
+      rows[0] = lay(first.m, 0, first.x, Math.max(1, next.left - LABEL_GUTTER - first.tx), first.anchor, first.tx)
     }
     const last = rows[n - 1]!
     const prev = rows[n - 2]!
-    if (last.left < prev.right + LABEL_GAP) {
-      rows[n - 1] = lay(last.m, n - 1, last.x, Math.max(1, last.tx - prev.right - LABEL_GAP), last.anchor, last.tx)
+    if (last.left < prev.right + LABEL_GUTTER) {
+      rows[n - 1] = lay(last.m, n - 1, last.x, Math.max(1, last.tx - prev.right - LABEL_GUTTER), last.anchor, last.tx)
     }
   }
   return rows
