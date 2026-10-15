@@ -121,8 +121,9 @@ export interface WorkspaceLocation {
  * `.pptwise/decks/q3-review/` builds to `.pptwise/q3-review/`, beside its
  * sources rather than under a `pptwise-decks-` prefix.
  *
- * Four names are not a deck's to take ({@link RESERVED_SLUGS}): `previews/`
+ * Five names are not a deck's to take ({@link RESERVED_SLUGS}): `previews/`
  * for the DSH plugin's cards, `theme-try/` for `pptwise theme try`,
+ * `image-search/` for the contact sheets of `pptwise images search`,
  * `decks/` for the deck sources, and `themes/`, which the theme lookup
  * reads walking up from a deck in `decks/`. A deck that would land on one
  * of them gets `-deck` after its name instead.
@@ -134,11 +135,11 @@ export interface WorkspaceLocation {
  * into a write path — a future change to either function then fails loudly
  * here instead of quietly writing outside the workspace.
  */
-/** Folders under `.pptwise/` that are not one deck's output: `previews/`
- *  and `theme-try/`, which pptwise writes for itself, `decks/`, which holds
+/** Folders under `.pptwise/` that are not one deck's output: `previews/`,
+ *  `theme-try/` and `image-search/`, which pptwise writes for itself, `decks/`, which holds
  *  the deck sources, and `themes/`, which the theme lookup reads on its way
  *  up from a deck in `decks/`. */
-export const RESERVED_SLUGS: ReadonlySet<string> = new Set(["previews", "theme-try", DECKS_DIRNAME, "themes"])
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set(["previews", "theme-try", "image-search", DECKS_DIRNAME, "themes"])
 
 export function deckSlug(target: string, isDir: boolean, anchor?: string): string {
   const withoutExt = (p: string) => (isDir ? p : p.slice(0, p.length - extname(p).length))

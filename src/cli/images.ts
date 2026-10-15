@@ -6,7 +6,7 @@
  */
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { PptwiseError } from "../errors"
 import { sniffImageFormat } from "../ir/asset-sniff"
 import { isMissingModuleError } from "../platform/node"
@@ -38,7 +38,9 @@ import { defaultSleep, loadOpenverseDetail, searchOpenverse, type SleepFn } from
 import { proxyFetch } from "./proxy-fetch"
 import { assertSafeRemoteTarget, defaultDnsLookup, pinnedFetch, type DnsLookup } from "./ssrf"
 import { redactSecrets } from "./redact"
-import { resolveWorkspaceLocation, type WorkspaceLocation } from "./workspace"
+import { drawContactSheet, type SheetCell } from "./image-sheet"
+import { slugify } from "../themes/extract/brand-extract"
+import { prepareWorkspaceDir, resolveWorkspaceLocation, type GitRunner, type WorkspaceLocation } from "./workspace"
 
 export type { ProcessRun, ProcessRunner } from "./image-generators"
 
@@ -78,6 +80,10 @@ export interface SearchHit {
    *  `tags`, Openverse `title`. Lets a reader rule a result in or out
    *  before looking at it. */
   description?: string
+  /** The full-size picture, kept for the contact sheet when the thumbnail
+   *  will not download: Openverse renders its thumbnails itself and fails
+   *  on some sources (Wikimedia Commons among them). Never printed. */
+  full?: string
 }
 
 export interface ImagesSearchOptions {
@@ -248,7 +254,9 @@ function parsePixabayHits(json: unknown): SearchHit[] {
       id: `pixabay:${photoId}`,
       provider: "pixabay",
       photoId,
-      thumb: asString(photo.previewURL) ?? "",
+      // The 640 px web size reads on a contact sheet. The 150 px preview
+      // is all some hits carry.
+      thumb: asString(photo.webformatURL) ?? asString(photo.previewURL) ?? "",
       width: asNumber(photo.imageWidth) ?? 0,
       height: asNumber(photo.imageHeight) ?? 0,
       author,
@@ -309,11 +317,11 @@ async function searchPixabay(
 
 function formatHits(hits: SearchHit[]): string {
   return hits
-    .map((hit) => {
+    .map((hit, index) => {
       const thumb = hit.thumb ? `\n  ${hit.thumb}` : ""
       const source = hit.source ? `  ${hit.source}` : ""
       const description = hit.description ? `\n  ${hit.description}` : ""
-      return `${hit.id}  ${hit.width}x${hit.height}  ${hit.author}  ${hit.license}${source}${description}${thumb}\n  ${hit.attribution}\n  ${hit.pageUrl}`
+      return `${index + 1}. ${hit.id}  ${hit.width}x${hit.height}  ${hit.author}  ${hit.license}${source}${description}${thumb}\n  ${hit.attribution}\n  ${hit.pageUrl}`
     })
     .join("\n")
 }
@@ -385,27 +393,101 @@ export async function searchImages(query: string, opts: ImagesSearchOptions = {}
     attribution: hit.attribution,
     source: hit.source,
     ...describe(hit.title),
+    full: hit.url,
   }))
   return { query: q, hits, notes }
 }
 
-/** One hit as `--json` prints it: the id `images fetch` takes, without the
- *  provider-local photo id it already contains. */
-function hitJson(hit: SearchHit): Omit<SearchHit, "photoId"> {
-  const { photoId: _photoId, ...rest } = hit
-  return rest
+/** One hit as `--json` prints it: its number on the contact sheet and the
+ *  id `images fetch` takes, without the provider-local photo id that id
+ *  already contains. */
+function hitJson(hit: SearchHit, index: number): { n: number } & Omit<SearchHit, "photoId" | "full"> {
+  const { photoId: _photoId, full: _full, ...rest } = hit
+  return { n: index + 1, ...rest }
 }
 
-export async function runImagesSearch(
-  query: string,
-  opts: ImagesSearchOptions & { json?: boolean } = {},
-): Promise<string> {
+export interface ImagesSearchRunOptions extends ImagesSearchOptions {
+  json?: boolean
+  /** Draw the contact sheet: `true` for `.pptwise/image-search/<query>.jpg`
+   *  under the project, or a file path of the caller's. */
+  sheet?: boolean | string
+  cwd?: string
+  lookup?: DnsLookup
+  gitIgnore?: boolean
+  runGit?: GitRunner
+}
+
+export async function runImagesSearch(query: string, opts: ImagesSearchRunOptions = {}): Promise<string> {
   const result = await searchImages(query, opts)
+  const drawn = opts.sheet && result.hits.length > 0 ? await writeSearchSheet(result, opts) : undefined
+  const notes = [...result.notes, ...(drawn?.notes ?? [])]
   if (opts.json) {
-    return JSON.stringify({ query: result.query, hits: result.hits.map(hitJson), notes: result.notes }, null, 2)
+    return JSON.stringify(
+      { query: result.query, hits: result.hits.map(hitJson), notes, ...(drawn ? { sheet: drawn.path } : {}) },
+      null,
+      2,
+    )
   }
-  if (result.hits.length === 0) return ["No photos found.", ...result.notes].join("\n")
-  return [...result.notes, formatHits(result.hits)].join("\n")
+  if (result.hits.length === 0) return ["No photos found.", ...notes].join("\n")
+  const sheet = drawn ? [`contact sheet: ${drawn.path}`] : []
+  return [...notes, ...sheet, formatHits(result.hits)].join("\n")
+}
+
+/** The folder under `.pptwise/` the default contact sheets go in. */
+export const IMAGE_SEARCH_DIRNAME = "image-search"
+
+/**
+ * Download every hit's thumbnail and draw them as one numbered sheet. A
+ * hit whose thumbnail fails is drawn from its full-size picture when the
+ * search kept one. One the network does not deliver at all is drawn
+ * crossed out under its number, and a note says which, so one slow host
+ * never costs the search.
+ */
+async function writeSearchSheet(
+  result: ImagesSearchResult,
+  opts: ImagesSearchRunOptions,
+): Promise<{ path: string; notes: string[] }> {
+  const cwd = opts.cwd ?? process.cwd()
+  const notes: string[] = []
+  let path: string
+  if (typeof opts.sheet === "string") {
+    path = resolve(cwd, opts.sheet)
+    await mkdir(dirname(path), { recursive: true })
+  } else {
+    const projectHit = await findConfig(cwd)
+    const location = resolveWorkspaceLocation({
+      cwd,
+      projectConfigPath: projectHit?.path,
+      target: IMAGE_SEARCH_DIRNAME,
+      isDir: true,
+    })
+    notes.push(...(await prepareWorkspaceDir(location, { gitIgnore: opts.gitIgnore, runGit: opts.runGit })))
+    path = join(location.dir, `${slugify(result.query, "search")}.jpg`)
+  }
+  const lookup = opts.lookup ?? (opts.fetch ? undefined : defaultDnsLookup)
+  const reasons = new Map<number, string>()
+  const cells: SheetCell[] = await Promise.all(
+    result.hits.map(async (hit, index) => {
+      const n = index + 1
+      const sources = [hit.thumb, hit.full].filter((url): url is string => url !== undefined && url !== "")
+      if (sources.length === 0) reasons.set(n, "no thumbnail")
+      for (const url of sources) {
+        try {
+          return { n, bytes: await downloadBytes(url, opts.fetch, [], lookup) }
+        } catch (e) {
+          reasons.set(n, e instanceof Error ? e.message : String(e))
+        }
+      }
+      return { n, bytes: null }
+    }),
+  )
+  const { jpeg, missing } = await drawContactSheet(cells)
+  await writeFile(path, jpeg)
+  if (missing.length > 0) {
+    const listed = missing.map((n) => `${n} (${reasons.get(n) ?? "not a readable image"})`)
+    notes.push(`The contact sheet is missing thumbnails ${listed.join(", ")}. Open those pages to look at them.`)
+  }
+  return { path, notes }
 }
 
 type PhotoRefProvider = "pexels" | "pixabay" | "openverse"

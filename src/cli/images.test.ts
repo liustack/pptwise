@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { persistImageApiKey, persistUserConfigValue } from "./image-config"
 import { resetOpenverseTokenCache } from "./image-openverse"
 import { runImagesFetch, runImagesList, runImagesSearch } from "./images"
+import sharp from "sharp"
 
 const originalHome = process.env.PPTWISE_HOME
 const originalPexels = process.env.PPTWISE_PEXELS_API_KEY
@@ -228,6 +229,7 @@ describe("runImagesSearch", () => {
     expect(report.query).toBe("office")
     expect(report.hits).toEqual([
       {
+        n: 1,
         id: `openverse:${OPENVERSE_CC0_ID}`,
         provider: "openverse",
         thumb: OPENVERSE_CC0.thumbnail,
@@ -257,6 +259,71 @@ describe("runImagesSearch", () => {
     const report = JSON.parse(out) as { hits: unknown[]; notes: string[] }
     expect(report.hits).toEqual([])
     expect(report.notes.join("\n")).toContain("Pixabay is unconfigured")
+  })
+
+  it("draws the thumbnails as one numbered contact sheet in the project's .pptwise/ with --sheet", async () => {
+    await tmpHome()
+    const project = await mkdtemp(join(tmpdir(), "pptwise-images-sheet-"))
+    const thumb = await sharp({ create: { width: 400, height: 300, channels: 3, background: "#3366cc" } }).jpeg().toBuffer()
+    // The second hit's thumbnail fails and its full-size picture stands in.
+    // The third has neither.
+    const second = {
+      ...OPENVERSE_CC0,
+      id: "aaaa1111-bbbb-4ccc-8ddd-eeeeffff0002",
+      thumbnail: "https://api.openverse.org/v1/images/aaaa1111-bbbb-4ccc-8ddd-eeeeffff0002/thumb/",
+      url: "https://upload.wikimedia.org/full.jpg",
+    }
+    const third = {
+      ...OPENVERSE_CC0,
+      id: "aaaa1111-bbbb-4ccc-8ddd-eeeeffff0003",
+      thumbnail: "https://live.staticflickr.com/123/gone-thumb.jpg",
+      url: "https://live.staticflickr.com/123/gone.jpg",
+    }
+    const thumbs: string[] = []
+    const fetchImpl = async (input: string | URL | Request) => {
+      const url = String(input)
+      if (url.startsWith("https://api.openverse.org/v1/images/?")) return jsonResponse({ results: [OPENVERSE_CC0, second, third] })
+      thumbs.push(url)
+      if (url === OPENVERSE_CC0.thumbnail || url === second.url) return bytesResponse(thumb)
+      return new Response("gone", { status: url === second.thumbnail ? 424 : 404 })
+    }
+    const text = await runImagesSearch("office desk", { sheet: true, cwd: project, gitIgnore: false, fetch: fetchImpl })
+    const sheet = join(project, ".pptwise", "image-search", "office-desk.jpg")
+    expect(text).toContain(`contact sheet: ${sheet}`)
+    expect(text).toContain(`1. openverse:${OPENVERSE_CC0_ID}`)
+    expect(text).toContain("2. openverse:aaaa1111-bbbb-4ccc-8ddd-eeeeffff0002")
+    expect(text).toContain("3. openverse:aaaa1111-bbbb-4ccc-8ddd-eeeeffff0003")
+    expect(text).toContain("missing thumbnails 3 (download HTTP 404).")
+    expect(text).not.toContain("upload.wikimedia.org")
+    expect(thumbs.sort()).toEqual(
+      [OPENVERSE_CC0.thumbnail, second.thumbnail, second.url, third.thumbnail, third.url].sort(),
+    )
+    const meta = await sharp(await readFile(sheet)).metadata()
+    expect(meta.format).toBe("jpeg")
+    expect(meta.width).toBeGreaterThan(meta.height!)
+
+    const json = JSON.parse(
+      await runImagesSearch("office desk", { sheet: "picks/desk.jpg", json: true, cwd: project, gitIgnore: false, fetch: fetchImpl }),
+    ) as { sheet: string; hits: { n: number; id: string }[]; notes: string[] }
+    expect(json.sheet).toBe(join(project, "picks", "desk.jpg"))
+    expect(json.hits.map((hit) => hit.n)).toEqual([1, 2, 3])
+    expect(json.hits.some((hit) => "full" in hit)).toBe(false)
+    expect(json.notes.join("\n")).toContain("missing thumbnails 3")
+    expect((await sharp(await readFile(json.sheet)).metadata()).format).toBe("jpeg")
+  })
+
+  it("draws no sheet for a search that found nothing", async () => {
+    await tmpHome()
+    const project = await mkdtemp(join(tmpdir(), "pptwise-images-sheet-"))
+    const out = await runImagesSearch("office", {
+      sheet: true,
+      json: true,
+      cwd: project,
+      gitIgnore: false,
+      fetch: async () => jsonResponse({ results: [] }),
+    })
+    expect(JSON.parse(out)).not.toHaveProperty("sheet")
+    await expect(readFile(join(project, ".pptwise", "image-search", "office.jpg"))).rejects.toThrow()
   })
 
   it("searches Pixabay then Openverse when only Pixabay is configured", async () => {

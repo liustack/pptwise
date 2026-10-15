@@ -98,6 +98,7 @@ describe("deckSlug", () => {
   it("keeps a deck off the folders pptwise writes for itself", () => {
     expect(deckSlug("/tmp/proj/previews", true, "/tmp/proj")).toBe("previews-deck")
     expect(deckSlug("/tmp/proj/theme-try.json", false, "/tmp/proj")).toBe("theme-try-deck")
+    expect(deckSlug("/tmp/proj/image-search", true, "/tmp/proj")).toBe("image-search-deck")
     expect(deckSlug("/tmp/proj/old/previews", true, "/tmp/proj")).toBe("old-previews")
   })
 

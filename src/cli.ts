@@ -531,16 +531,29 @@ images
   .option("--color <color>", "color name or hex for the search API")
   .option("--min-width <px>", "client-side minimum width in pixels")
   .option("--min-height <px>", "client-side minimum height in pixels")
+  .option("--sheet [file]", "also draw the thumbnails as one numbered image (default: .pptwise/image-search/<query>.jpg)")
+  .option("--no-git-ignore", "do not write .pptwise/.gitignore or add .pptwise/ to this repository's local exclude file")
   .option("--json", "machine-readable output")
   .action(
     async (
       query: string,
-      opts: { orientation?: string; color?: string; minWidth?: string; minHeight?: string; json?: boolean },
+      opts: {
+        orientation?: string
+        color?: string
+        minWidth?: string
+        minHeight?: string
+        json?: boolean
+        sheet?: boolean | string
+        gitIgnore?: boolean
+      },
     ) => {
       try {
         console.log(
           await runImagesSearch(query, {
             json: opts.json,
+            sheet: opts.sheet,
+            gitIgnore: opts.gitIgnore,
+            cwd: process.cwd(),
             orientation: opts.orientation,
             color: opts.color,
             minWidth: opts.minWidth !== undefined ? parsePositiveInt(opts.minWidth, "--min-width") : undefined,

@@ -318,13 +318,14 @@ Narratives 报告命名预设、具体 strategy、pacing、audience 三轴与主
 pptwise asset-brief <target> [--json]
 pptwise images search <query> \
   [--orientation landscape|portrait|square] \
-  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] [--json]
+  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] \
+  [--sheet [file]] [--no-git-ignore] [--json]
 pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
 pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
+搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。结果按顺序编号。`--sheet` 还会下载每张缩略图，拼成一张 JPEG，每张图压着自己的编号，写到 `.pptwise/image-search/<query>.jpg` 或你给的文件，并打印路径（`--json` 里是 `sheet`）。看这一张图就能挑，再按编号对应的 id 去 fetch。下不到的缩略图，搜索结果里有原图就用原图画，没有就画叉，并在说明里点名。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
 
 页面引用的 `asset_id` 没有对应文件时，validate 会警告，并给出这张图该放的路径，比如 `decks/q3/zh/assets/hero.jpg`。
 
@@ -372,4 +373,4 @@ pptwise self-update
 
 第一次往 `.pptwise/` 里写东西的命令用两种办法让它不进 git（作者先在里面建了 `decks/` 放 deck 时也一样）：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。
 
-DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。插件先往 `.pptwise/` 里写东西时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 所在的项目里（`.pptwise/decks/` 里的 deck 就放进外面那个 `.pptwise/`），两样都没有就拒绝并说明原因。四个名字不给 deck 产物用：pptwise 自己写的 `previews/` 和 `theme-try/`，放 deck 源文件的 `decks/`，还有 `themes/`。deck 落到这几个名字上时，目录名后面加 `-deck`。
+DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。插件先往 `.pptwise/` 里写东西时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 所在的项目里（`.pptwise/decks/` 里的 deck 就放进外面那个 `.pptwise/`），两样都没有就拒绝并说明原因。五个名字不给 deck 产物用：pptwise 自己写的 `previews/`、`theme-try/` 和 `image-search/`，放 deck 源文件的 `decks/`，还有 `themes/`。deck 落到这几个名字上时，目录名后面加 `-deck`。
