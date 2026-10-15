@@ -132,7 +132,7 @@ pptwise render <target> \
   [--no-git-ignore]
 ```
 
-省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<filename>.pptx`。`<filename>` 是 deck 自己的 `filename`（spec 的，或 IR 文件的），带不带 `.pptx` 都行，deck 没写时用 deck 目录名或 IR 文件名。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）。放在项目根目录下一层的 deck 保持原名。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
+省略 `-o` 时，输出写到项目根目录下的 `.pptwise/<place>/<filename>.pptx`。`<filename>` 是 deck 自己的 `filename`（spec 的，或 IR 文件的），带不带 `.pptx` 都行，deck 没写时用 deck 目录名或 IR 文件名。`<place>` 是 deck 相对项目根目录的路径，用连字符连起来，所以 `decks/q3/zh` 和 `decks/q4/zh` 各有自己的目录（`decks-q3-zh`、`decks-q4-zh`）。放在项目根目录下一层的 deck 保持原名，放在 `.pptwise/decks/` 里的 deck 也一样，按它在这个文件夹里的路径命名（`.pptwise/decks/q3-review/` 写到 `.pptwise/q3-review/`）。项目外的 deck，或路径里有拉丁字母和数字以外字符的 deck，名字后面加一段路径的短哈希。改颜色用 `pptwise theme fork`，它写出一份完整主题。Render 不接受局部改色覆盖。
 
 `--draft` 允许占位页。`--allow-dropped-content` 允许已知内容丢失，只能在用户明确同意时使用。正常处理方式是缩短或拆页。
 
@@ -372,4 +372,4 @@ pptwise self-update
 
 第一次创建 `.pptwise/` 的命令用两种办法让它不进 git：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。
 
-DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。`.pptwise/` 由插件先建出来时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 旁边，两样都没有就拒绝并说明原因。`previews/` 和 `theme-try/` 两个名字归 pptwise 自己用，deck 落到这两个名字上时，目录名后面加 `-deck`。
+DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。`.pptwise/` 由插件先建出来时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 旁边，两样都没有就拒绝并说明原因。四个名字不给 deck 产物用：pptwise 自己写的 `previews/` 和 `theme-try/`，放 deck 源文件的 `decks/`，还有 `themes/`。deck 落到这几个名字上时，目录名后面加 `-deck`。

@@ -584,3 +584,54 @@ describe("pptwise build: a label the new theme's face leaves off", () => {
     expect(JSON.parse(await readFile(join(cwd, ".pptwise", "weekly", "written-for.json"), "utf8"))).toEqual({ theme: "brief" })
   })
 })
+
+describe("pptwise build: a deck in .pptwise/decks/", () => {
+  /** A project folder with SPEC and PAGES written into `.pptwise/decks/weekly/`, the way an author starts a deck there. */
+  async function homedDeck(edit: (spec: typeof SPEC) => void = () => {}): Promise<{ cwd: string; deck: string }> {
+    const cwd = await mkdtemp(join(tmpdir(), "pptwise-build-home-"))
+    const deck = join(cwd, ".pptwise", "decks", "weekly")
+    const spec = structuredClone(SPEC)
+    edit(spec)
+    await mkdir(join(deck, "pages"), { recursive: true })
+    await writeFile(join(deck, "deck.spec.json"), JSON.stringify(spec))
+    for (const [id, page] of Object.entries(PAGES)) await writeFile(join(deck, "pages", `${id}.json`), JSON.stringify(page))
+    return { cwd, deck }
+  }
+
+  async function buildFrom(cwd: string, target: string, gitIgnore = false): Promise<BuildReport> {
+    const { output, ok } = await runBuild(target, { json: true, cwd, gitIgnore, alternatives: false })
+    expect(ok).toBe(true)
+    return JSON.parse(output) as BuildReport
+  }
+
+  it("writes its pages, record and .pptx to .pptwise/<name>/, beside the sources and never inside them", async () => {
+    const { cwd, deck } = await homedDeck()
+    const report = await buildFrom(cwd, ".pptwise/decks/weekly")
+    const out = join(cwd, ".pptwise", "weekly")
+    expect(report).toMatchObject({ status: "ok", pptx: join(out, "weekly.pptx") })
+    expect(report.preview!.dir).toBe(out)
+    expect(await pptxFiles(cwd)).toEqual([join(out, "weekly.pptx")])
+    expect(JSON.parse(await readFile(join(out, "written-for.json"), "utf8"))).toEqual({ theme: "brief" })
+    expect((await readdir(join(cwd, ".pptwise"))).sort()).toEqual(["decks", "weekly"])
+    expect((await readdir(deck)).sort()).toEqual(["deck.spec.json", "pages"])
+    expect(await readdir(cwd)).toEqual([".pptwise"])
+  })
+
+  it("builds a deck kept straight under .pptwise/ beside itself, and refuses a deck in decks/ whose output would be its folder", async () => {
+    const { cwd, deck } = await homedDeck()
+    // An earlier deck kept its sources at .pptwise/weekly/, the folder decks/weekly/ builds to.
+    const older = join(cwd, ".pptwise", "weekly")
+    await mkdir(join(older, "pages"), { recursive: true })
+    await writeFile(join(older, "deck.spec.json"), JSON.stringify(SPEC))
+    for (const [id, page] of Object.entries(PAGES)) await writeFile(join(older, "pages", `${id}.json`), JSON.stringify(page))
+    await writeFile(join(older, "kept.pptx"), "PK")
+
+    expect((await buildFrom(cwd, ".pptwise/weekly")).pptx).toBe(join(cwd, ".pptwise", "pptwise-weekly", "weekly.pptx"))
+    await expect(runBuild(".pptwise/decks/weekly", { json: true, cwd, gitIgnore: false })).rejects.toThrow(
+      /holds another deck's deck\.spec\.json: two decks share the name "weekly"/,
+    )
+    await expect(runRender(".pptwise/decks/weekly", { cwd, gitIgnore: false })).rejects.toThrow(/two decks share the name/)
+    expect((await readdir(older)).sort()).toEqual(["deck.spec.json", "kept.pptx", "pages"])
+    expect(await exists(join(deck, ".pptwise"))).toBe(false)
+  })
+})

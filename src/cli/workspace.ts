@@ -30,8 +30,10 @@
  *    pinned downloads, not garbage. A deck project's pictures are pinned
  *    into its own `assets/` (`resolveImageHome`, `./images.ts`), and this
  *    folder is still read for the ones pinned here before. Deleting the whole `.pptwise/` directory
- *    drops those photos. Deck sources (`deck.spec.json`, `pages/`, project
- *    `assets/`, `theme.json`) stay where the user put them.
+ *    drops those photos, and the deck sources in `decks/` with them. Deck
+ *    sources (`deck.spec.json`, `pages/`, project `assets/`, `theme.json`)
+ *    stay where the author put them: a new deck goes in `decks/<name>/`
+ *    ({@link DECKS_DIRNAME}), and a deck anywhere else is read in place.
  * 3. **The directory ignores itself, once.** The first time this CLI creates
  *    `.pptwise/` it writes `.pptwise/.gitignore` holding `*`, and appends the
  *    entry to the repository's *local* exclude file — never the shared
@@ -50,11 +52,18 @@ import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } 
 import { PptwiseError } from "../errors"
 import { slugify } from "../themes/extract/brand-extract"
 import { runChild } from "./child"
-import { ASSETS_DIRNAME, assertSafeFileSegment } from "./deck-dir"
+import { ASSETS_DIRNAME, SPEC_FILENAME, assertSafeFileSegment } from "./deck-dir"
 
 /** The artifact root's directory name, relative to the anchor. Fixed: every
  *  writer (the CLI and the DSH plugin) finds the project's artifacts here. */
 export const WORKSPACE_DIRNAME = ".pptwise"
+
+/** The folder under the artifact root that holds deck sources:
+ *  `<anchor>/.pptwise/decks/<name>/`, where the skill and the DSH plugin
+ *  tell the model to start a new deck. pptwise never writes into it. The
+ *  author does, and {@link deckSlug} names a deck there by its path inside
+ *  it, so `.pptwise/decks/q3/` builds to `.pptwise/q3/`. */
+export const DECKS_DIRNAME = "decks"
 
 /** The line appended to the local exclude file — a trailing slash so it only
  *  ever matches a directory, and no leading slash so it matches at whatever
@@ -106,9 +115,15 @@ export interface WorkspaceLocation {
  * outside the anchor, whose path from it climbs out, take a short hash of
  * that path after the name, so they stay apart too.
  *
- * Two names belong to pptwise itself (`previews/` for the DSH plugin's
- * cards, `theme-try/` for `pptwise theme try`), so a deck that would land on
- * one of them gets `-deck` after its name instead.
+ * A deck in `.pptwise/decks/` is named by its path inside that folder, so
+ * `.pptwise/decks/q3-review/` builds to `.pptwise/q3-review/`, beside its
+ * sources rather than under a `pptwise-decks-` prefix.
+ *
+ * Four names are not a deck's to take ({@link RESERVED_SLUGS}): `previews/`
+ * for the DSH plugin's cards, `theme-try/` for `pptwise theme try`,
+ * `decks/` for the deck sources, and `themes/`, which the theme lookup
+ * reads walking up from a deck in `decks/`. A deck that would land on one
+ * of them gets `-deck` after its name instead.
  *
  * `slugify` strips every character that could mean anything to a path (it
  * keeps `[a-z0-9-]` and nothing else), which makes an escape impossible by
@@ -117,8 +132,11 @@ export interface WorkspaceLocation {
  * into a write path — a future change to either function then fails loudly
  * here instead of quietly writing outside the workspace.
  */
-/** Folders under `.pptwise/` that pptwise writes for itself, not for one deck. */
-export const RESERVED_SLUGS: ReadonlySet<string> = new Set(["previews", "theme-try"])
+/** Folders under `.pptwise/` that are not one deck's output: `previews/`
+ *  and `theme-try/`, which pptwise writes for itself, `decks/`, which holds
+ *  the deck sources, and `themes/`, which the theme lookup reads on its way
+ *  up from a deck in `decks/`. */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set(["previews", "theme-try", DECKS_DIRNAME, "themes"])
 
 export function deckSlug(target: string, isDir: boolean, anchor?: string): string {
   const withoutExt = (p: string) => (isDir ? p : p.slice(0, p.length - extname(p).length))
@@ -129,7 +147,7 @@ export function deckSlug(target: string, isDir: boolean, anchor?: string): strin
     const rel = relative(resolve(anchor), withoutExt(resolve(target)))
     if (rel === "") key = name
     else if (rel.startsWith("..") || isAbsolute(rel)) hashed = withoutExt(resolve(target))
-    else key = rel
+    else key = pathInDecksHome(rel) ?? rel
   }
   const words = key.split(/[\\/]+/u).join("-")
   // A name slugify can only carry part of keeps the rest as a hash of the whole path.
@@ -139,6 +157,37 @@ export function deckSlug(target: string, isDir: boolean, anchor?: string): strin
   const slug = anchor !== undefined && isAbsolute(target) && RESERVED_SLUGS.has(hashedSlug) ? `${hashedSlug}-deck` : hashedSlug
   assertSafeFileSegment(slug, "deck slug")
   return slug
+}
+
+/** A deck's path inside `.pptwise/decks/`, given its path from the anchor,
+ *  or `undefined` for a deck anywhere else. The two leading segments say
+ *  where every deck there lives, so they are left out of its name. */
+function pathInDecksHome(rel: string): string | undefined {
+  const segments = rel.split(/[\\/]+/u)
+  if (segments.length < 3 || segments[0] !== WORKSPACE_DIRNAME || segments[1] !== DECKS_DIRNAME) return undefined
+  return segments.slice(2).join("/")
+}
+
+/**
+ * Refuse an output folder that holds a deck's own sources. A deck kept
+ * straight under `.pptwise/` (`.pptwise/q3/`, written before decks had a
+ * folder of their own) and a deck in `.pptwise/decks/q3/` both name
+ * `.pptwise/q3/`: the first as its sources, the second as its output. A
+ * build there would read the first deck's `assets/` and `written-for.json` as
+ * its own and delete its `.pptx` files, so nothing is read or written until
+ * one of the two is renamed.
+ */
+export async function assertNotDeckSources(dir: string): Promise<void> {
+  try {
+    await stat(join(dir, SPEC_FILENAME))
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT" || (e as NodeJS.ErrnoException).code === "ENOTDIR") return
+    throw new PptwiseError(`cannot check the output folder ${dir}: ${(e as Error).message}`)
+  }
+  throw new PptwiseError(
+    `the output folder ${dir} holds another deck's ${SPEC_FILENAME}: two decks share the name "${basename(dir)}". ` +
+      `Rename one of them, for example the folder of the deck being built.`,
+  )
 }
 
 /** The artifact root hanging off an anchor, before a deck slug is known.
@@ -406,6 +455,7 @@ export async function prepareWorkspaceDir(
   location: WorkspaceLocation,
   opts: { gitIgnore?: boolean; runGit?: GitRunner } = {},
 ): Promise<string[]> {
+  await assertNotDeckSources(location.dir)
   const rootExisted = await exists(location.root)
   try {
     await mkdir(location.dir, { recursive: true })

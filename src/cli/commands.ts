@@ -85,6 +85,7 @@ import {
 } from "./theme-wall"
 import { buildPreviewManifest } from "./preview-manifest"
 import {
+  assertNotDeckSources,
   finalPptxName,
   prepareWorkspaceDir,
   pruneRenderedSvgs,
@@ -240,6 +241,7 @@ async function loadWorkspaceStock(
     target: resolvedTarget,
     isDir,
   })
+  await assertNotDeckSources(location.dir)
   const workspaceAssetsDir = join(location.dir, ASSETS_DIRNAME)
   const images = await scanWorkspaceAssets(workspaceAssetsDir)
   return { workspaceAssetsDir, images }
@@ -2256,6 +2258,8 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
     target: resolvedTarget,
     isDir,
   })
+  // Before anything reads or clears that folder.
+  await assertNotDeckSources(workspace.dir)
   const report: BuildReport = {
     status: "needs_revision",
     target: resolvedTarget,

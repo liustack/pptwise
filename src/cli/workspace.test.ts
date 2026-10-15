@@ -98,6 +98,21 @@ describe("deckSlug", () => {
     expect(deckSlug("/tmp/proj/old/previews", true, "/tmp/proj")).toBe("old-previews")
   })
 
+  it("names a deck in .pptwise/decks/ by its path inside that folder", () => {
+    expect(deckSlug("/tmp/proj/.pptwise/decks/q3-review", true, "/tmp/proj")).toBe("q3-review")
+    expect(deckSlug("/tmp/proj/.pptwise/decks/q3/zh", true, "/tmp/proj")).toBe("q3-zh")
+    expect(deckSlug("/tmp/proj/.pptwise/decks/brief.json", false, "/tmp/proj")).toBe("brief")
+    expect(deckSlug("/tmp/proj/.pptwise/decks/previews", true, "/tmp/proj")).toBe("previews-deck")
+    expect(deckSlug("/tmp/proj/.pptwise/other/q3", true, "/tmp/proj")).toBe("pptwise-other-q3")
+  })
+
+  it("keeps a deck off decks/ and themes/, where the sources live and the theme lookup reads", () => {
+    expect(deckSlug("/tmp/proj/decks", true, "/tmp/proj")).toBe("decks-deck")
+    expect(deckSlug("/tmp/proj/themes.json", false, "/tmp/proj")).toBe("themes-deck")
+    expect(deckSlug("/tmp/proj/.pptwise/decks/decks", true, "/tmp/proj")).toBe("decks-deck")
+    expect(deckSlug("/tmp/proj/.pptwise/decks/themes", true, "/tmp/proj")).toBe("themes-deck")
+  })
+
   it("uses the directory name for a deck project", () => {
     expect(deckSlug("/tmp/launch-deck", true)).toBe("launch-deck")
   })
