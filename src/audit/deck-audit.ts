@@ -2560,6 +2560,121 @@ export function findOverlapIssues(markup: string): OverlapIssue[] {
   return issues
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// Crowded columns: items set side by side whose words run together.
+// ────────────────────────────────────────────────────────────────────────
+
+/**
+ * Words in two neighbouring columns closer than this share of their type
+ * size read as one line. Two characters, the gutter a timeline keeps between
+ * its milestones: the terminal page that shipped crowded (2026-10) had its
+ * descriptions 19px to 28px apart by this estimate at 16px, and real glyphs
+ * run a few pixels wider than the estimate, so on screen they stood about a
+ * character apart and read as one sentence.
+ */
+const CROWDED_GAP_EM = 2
+/** Rounding room, so a gap laid out at exactly two characters passes. */
+const CROWDED_SLACK = 0.5
+
+/** Estimated ascent above a text baseline, as a fraction of font-size. */
+const TEXT_ASCENT_RATIO = 0.8
+
+export interface CrowdedIssue {
+  /** The two lines that stand closest, the first one's column first. */
+  a: string
+  b: string
+  /** The horizontal gap between their ink, negative when they run into each other. */
+  gap: number
+  /** The smaller of the two lines' type sizes. */
+  size: number
+}
+
+interface ColumnLine {
+  left: number
+  right: number
+  top: number
+  bottom: number
+  size: number
+  text: string
+}
+
+/**
+ * Lines of text in two different columns that stand on one row less than
+ * two characters apart (`CROWDED_GAP_EM`), or run into each other.
+ *
+ * A component that sets its items side by side, each item's words in an
+ * open column with no card edge between them, marks each item's group with
+ * `data-audit-column`: a horizontal timeline marks each milestone. The area
+ * test in `findOverlapIssues` cannot see this: a timeline is one
+ * `data-audit-box`, and five milestone labels 19px apart overlap by nothing
+ * while reading as one sentence across the page (a terminal page, 2026-10).
+ *
+ * Words inside one column are never compared with each other. Two lines
+ * share a row when at least half the shorter one's height overlaps, so
+ * lines a row apart are never compared either. Text is measured with the
+ * same estimators the leaf walk uses (`collectLeafBoxes`). Reports the
+ * closest pair of each two columns.
+ */
+export function findCrowdedColumns(markup: string): CrowdedIssue[] {
+  const columns: ColumnLine[][] = []
+  const visit = (el: Element, ox: number, oy: number, os: number, column: ColumnLine[] | null) => {
+    const { dx, dy, scale } = parseTransform(el)
+    const ax = ox + os * dx
+    const ay = oy + os * dy
+    const as = os * scale
+    let own = column
+    if (el.hasAttribute("data-audit-column")) {
+      own = []
+      columns.push(own)
+    }
+    if (own && el.tagName.toLowerCase() === "text") {
+      const content = (el.textContent ?? "").trim()
+      if (content) {
+        const fontSize = Number(el.getAttribute("font-size") ?? DEFAULT_FONT_SIZE) * as
+        const fontFamily = el.getAttribute("font-family") ?? ""
+        const units = isMonoFontFamily(fontFamily)
+          ? measureMonoTextUnits(content)
+          : measureTextUnits(content, { bold: isBold(el.getAttribute("font-weight")), fontFamily })
+        const width = units * fontSize
+        const tx = ax + Number(el.getAttribute("x") ?? 0) * as
+        const anchor = el.getAttribute("text-anchor") ?? "start"
+        const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
+        const baseline = ay + Number(el.getAttribute("y") ?? 0) * as
+        own.push({ left, right: left + width, top: baseline - fontSize * TEXT_ASCENT_RATIO, bottom: baseline + fontSize * TEXT_DESCENT_RATIO, size: fontSize, text: content.slice(0, 24) })
+      }
+    }
+    for (const child of Array.from(el.children)) visit(child, ax, ay, as, own)
+  }
+  visit(parseSvg(markup), 0, 0, 1, null)
+
+  const issues: CrowdedIssue[] = []
+  for (let i = 0; i < columns.length; i++) {
+    for (let j = i + 1; j < columns.length; j++) {
+      let worst: CrowdedIssue | null = null
+      for (const a of columns[i]!) {
+        for (const b of columns[j]!) {
+          const shared = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+          if (shared < Math.min(a.bottom - a.top, b.bottom - b.top) / 2) continue
+          const gap = Math.max(b.left - a.right, a.left - b.right)
+          const size = Math.min(a.size, b.size)
+          if (gap + CROWDED_SLACK >= size * CROWDED_GAP_EM) continue
+          if (!worst || gap < worst.gap) worst = { a: a.text, b: b.text, gap, size }
+        }
+      }
+      if (worst) issues.push(worst)
+    }
+  }
+  return issues
+}
+
+function crowdedMessage(issue: CrowdedIssue): string {
+  const where = issue.gap < 0 ? `run ${Math.round(-issue.gap)}px into each other` : `stand ${Math.round(issue.gap)}px apart`
+  return (
+    `the words of two neighbouring columns ${where} on one row, less than two characters of their ${Math.round(issue.size)}px type, ` +
+    `so they read as one line: "${issue.a}" and "${issue.b}". This is a rendering defect: report it`
+  )
+}
+
 function overlapMessage(issue: OverlapIssue): string {
   const pct = Math.round(issue.ratio * 100)
   return (
@@ -2592,7 +2707,15 @@ function overlapFindings(markup: string, page: number, slideId: string | undefin
     message: runMisfitMessage(issue),
     detail: { kind: issue.kind, text: issue.text, detail: issue.detail },
   }))
-  return [...regions, ...runs]
+  // Columns set side by side whose words run together (`findCrowdedColumns`).
+  const crowded: AuditFinding[] = findCrowdedColumns(markup).map((issue) => ({
+    page,
+    ...(slideId !== undefined ? { slideId } : {}),
+    code: "overlap",
+    message: crowdedMessage(issue),
+    detail: { kind: "crowded", ...issue },
+  }))
+  return [...regions, ...runs, ...crowded]
 }
 
 // ────────────────────────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import { renderDonut, renderPie } from "../components/chart-svg"
 import {
   auditDeck,
   findContrastIssues,
+  findCrowdedColumns,
   findOverlapIssues,
   findSourceLineCrossings,
   __collectBgRegions,
@@ -3130,5 +3131,77 @@ describe("auditDeck — low-contrast says what an author can change", () => {
     for (const finding of low) {
       expect(finding.message).toMatch(/\(needs [\d.]+:1\)\. Text takes its color from the theme, so move the page's background lighter or darker, or bind a theme whose colors read on it$/)
     }
+  })
+})
+
+describe("findCrowdedColumns: neighbouring columns whose words run together", () => {
+  const FONT = 'font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="16"'
+  // Three milestones of the terminal page that shipped this way (2026-10):
+  // the ordinary timeline offered each label its node step less 12px, and the
+  // descriptions stood 19px and 28px apart, reading as one line.
+  const shipped = (column: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720"><g transform="translate(64,228)">
+    <g ${column}><text x="12" y="128" text-anchor="start" font-weight="bold" ${FONT}>原创 OC「溟月」</text><text x="12" y="150" text-anchor="start" ${FONT}>上善无形发布原创角</text></g>
+    <g ${column}><text x="298" y="128" text-anchor="middle" font-weight="bold" ${FONT}>改成女仆鲸鱼娘</text><text x="298" y="150" text-anchor="middle" ${FONT}>ZipZipPipe 换深蓝白女仆装，出第</text></g>
+    <g ${column}><text x="576" y="128" text-anchor="middle" font-weight="bold" ${FONT}>它把自己认成了鱼</text><text x="576" y="150" text-anchor="middle" ${FONT}>识图灰测推送，它把自家 logo 念成</text></g>
+  </g></svg>`
+
+  it("finds the shipped page's descriptions less than two characters apart", () => {
+    const issues = findCrowdedColumns(shipped('data-audit-column=""'))
+    expect(issues.map((i) => [i.a, i.b])).toEqual([
+      ["上善无形发布原创角", "ZipZipPipe 换深蓝白女仆装，出第"],
+      ["ZipZipPipe 换深蓝白女仆装，出第", "识图灰测推送，它把自家 logo 念成"],
+    ])
+    for (const issue of issues) {
+      expect(issue.gap).toBeGreaterThanOrEqual(0)
+      expect(issue.gap).toBeLessThan(2 * issue.size)
+    }
+  })
+
+  it("reads only groups that declare themselves columns", () => {
+    expect(findCrowdedColumns(shipped(""))).toEqual([])
+  })
+
+  it("leaves words two characters apart, words in one column, and lines a row apart alone", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <g data-audit-column=""><text x="100" y="100" ${FONT}>标签</text><text x="134" y="100" ${FONT}>数值</text></g>
+      <g data-audit-column=""><text x="198" y="100" ${FONT}>下一列</text></g>
+      <g data-audit-column=""><text x="100" y="121" ${FONT}>下一行的字</text></g>
+    </svg>`
+    // "标签数值" ends at 166: the second column starts 32px later, the third a row lower.
+    expect(findCrowdedColumns(markup)).toEqual([])
+  })
+
+  it("reports words that run into the next column's", () => {
+    const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <g data-audit-column=""><text x="100" y="100" ${FONT}>一二三四五</text></g>
+      <g data-audit-column=""><text x="150" y="100" ${FONT}>六七八</text></g>
+    </svg>`
+    const [issue] = findCrowdedColumns(markup)
+    expect(issue!.gap).toBeLessThan(0)
+  })
+
+  it("holds the page that shipped crowded clean now that its timeline keeps a gutter", () => {
+    const milestones = [
+      { date: "2025-06-25", title: "原创 OC「溟月」", desc: "上善无形发布原创角色，当时与 DeepSeek 无关。", icon: "palette" },
+      { date: "2026-04-25", title: "改成女仆鲸鱼娘", desc: "ZipZipPipe 换深蓝白女仆装，出第一批表情包。", icon: "brush" },
+      { date: "2026-04-29", title: "它把自己认成了鱼", desc: "识图灰测推送，它把自家 logo 念成「蓝色大肥鱼」。", icon: "search", highlight: true },
+      { date: "2026-07-10", title: "Q 版大肥鱼破圈", desc: "这个刀子真甜做成 Q 版模型，人设从此定型。", icon: "sparkles" },
+      { date: "2026-08-02", title: "作者补版权声明", desc: "声明仅限非商用二创。", icon: "copyright" },
+    ]
+    const ir = deck("terminal", [
+      {
+        type: "content",
+        kind: "process",
+        heading: "接力时间线：从「溟月」到「大肥鱼」",
+        components: [
+          { type: "timeline", title: "形象先来，名字后到", layout: "horizontal", milestones },
+          { type: "kpi_cards", items: [{ value: "16", unit: "个月", label: "从「溟月」到出圈", note: "2025-06-25 → 2026-10" }, { value: "4", unit: "位", label: "接力画完这张脸", note: "原创角色 → 鲸鱼娘 → 名字 → Q 版" }] },
+        ],
+      } as Slide,
+    ])
+    const markup = renderSlideSvg(ir, 0)
+    expect(markup.match(/data-audit-column/g)).toHaveLength(milestones.length)
+    expect(findCrowdedColumns(markup)).toEqual([])
+    expect(auditDeck(ir).findings.filter((f) => f.code === "overlap")).toEqual([])
   })
 })

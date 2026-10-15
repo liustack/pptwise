@@ -176,6 +176,27 @@ genuinely rendered ink, not of insufficient calibration:
 Recorded here as a known, narrowed-but-not-closed boundary, not a settled
 one — same discipline as this section's donut/pie AABB gap above.
 
+### Crowded columns (`findCrowdedColumns`, same file)
+
+The area test above compares whole components, so the items inside one
+component are never compared with each other, and words that come close
+without touching overlap by nothing. A horizontal timeline shipped that way
+in 2026-10: five milestone labels stood 19px to 28px apart (estimated, a few
+pixels less on screen) and read as one sentence across the page.
+
+A component that sets its items side by side in open columns marks each
+item's group with `data-audit-column`. `findCrowdedColumns` measures the
+lines in those groups with the same estimators and reports, as `overlap`,
+two lines in different columns that share a row less than two characters of
+their type apart (`CROWDED_GAP_EM`). Words in one column are never compared.
+
+Only the horizontal timeline opts in today. A trial that compared each
+card's own `data-audit-box` the same way, at just one character, already
+flagged 15 gallery pages: `icon_cards` drawn without card grounds (memo,
+vermilion, bulletin, ledger and other themes' four-across rows) with
+descriptions 16px to 35px apart at 23px to 43px type. That is the same
+defect, left for its own fix before that component opts in.
+
 ## Full-matrix regression net (`full-matrix-contrast.test.ts`)
 
 Sweeps every theme × slide type × curated layout for the W4 defect class. Two guardrails worth knowing about:

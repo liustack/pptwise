@@ -544,8 +544,10 @@ export const timeline: SvgComponent<TimelineComponent> = {
           const sourceTop = descTop + (desc ? desc.lines.length * desc.lineHeight + 4 : 0)
           const tagTop = sourceTop + (source ? source.lines.length * source.lineHeight : 0) - 12 + MILESTONE_TAG.gap
           const tagX = anchor === "start" ? tx : anchor === "end" ? tx - tagW : tx - tagW / 2
+          // Each milestone's words are a column of their own, and the audit
+          // holds neighbouring columns a character apart (`findCrowdedColumns`).
           return (
-            <g key={i}>
+            <g key={i} data-audit-column="">
               <MilestoneNode m={m} cx={x} cy={AXIS_Y} baseR={8} ctx={ctx} />
               {lane ? (
                 <text
