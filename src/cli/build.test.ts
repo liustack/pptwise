@@ -1,7 +1,9 @@
 // @vitest-environment node
+import { execFile as execFileCb } from "node:child_process"
 import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { promisify } from "node:util"
 import { describe, expect, it } from "vitest"
 import { installNodePlatform } from "@/platform/node"
 import type { BuildReport } from "./build-report"
@@ -13,6 +15,8 @@ import { ALTERNATIVES_DIRNAME, ALTERNATIVES_MAX, alternativeCandidates } from ".
 import { runBuild, runRender, runThemeNew } from "./commands"
 
 installNodePlatform()
+
+const execFile = promisify(execFileCb)
 
 const SPEC = {
   version: "1",
@@ -656,5 +660,14 @@ describe("pptwise build: a deck in .pptwise/decks/", () => {
       const report = await buildFrom(from, target)
       expect(report).toMatchObject({ status: "ok", theme: "acme", themeSource: "file" })
     }
+  })
+
+  it("keeps .pptwise/ out of git on the first build, though the author created it for the deck", async () => {
+    const { cwd } = await homedDeck()
+    await execFile("git", ["init", "-q"], { cwd })
+    await buildFrom(cwd, ".pptwise/decks/weekly", true)
+    expect(await readFile(join(cwd, ".pptwise", ".gitignore"), "utf8")).toBe("*\n")
+    const { stdout } = await execFile("git", ["status", "--porcelain", "--untracked-files=all"], { cwd })
+    expect(stdout).toBe("")
   })
 })

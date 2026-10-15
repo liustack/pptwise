@@ -36,8 +36,8 @@
  *    sources (`deck.spec.json`, `pages/`, project `assets/`, `theme.json`)
  *    stay where the author put them: a new deck goes in `decks/<name>/`
  *    ({@link DECKS_DIRNAME}), and a deck anywhere else is read in place.
- * 3. **The directory ignores itself, once.** The first time this CLI creates
- *    `.pptwise/` it writes `.pptwise/.gitignore` holding `*`, and appends the
+ * 3. **The directory ignores itself, once.** The first time this CLI writes
+ *    into `.pptwise/` ({@link isFirstWorkspaceWrite}) it writes `.pptwise/.gitignore` holding `*`, and appends the
  *    entry to the repository's *local* exclude file — never the shared
  *    `.gitignore` at the project root, which is the user's to write. The
  *    inner file works when `.git` is read-only. See {@link ensureGitIgnored}
@@ -415,15 +415,6 @@ export async function ensureGitIgnored(
 
 // ── directory preparation ───────────────────────────────────────────────
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path)
-    return true
-  } catch {
-    return false
-  }
-}
-
 /** The file that keeps the artifact root out of git from the inside, and
  *  its one rule. `*` matches every name in the folder, this file included,
  *  so `git status` shows nothing there and no setting of the user's is
@@ -456,8 +447,38 @@ export async function isSelfIgnored(root: string): Promise<boolean> {
 }
 
 /**
- * Create `location.dir`, and — only on the run that first creates the
- * artifact root itself — keep that root out of git two ways: a
+ * Whether pptwise is about to write into `root` for the first time: the
+ * folder is not there, or it holds nothing but deck sources, the
+ * {@link DECKS_DIRNAME} folder or a deck folder of its own (one holding
+ * `deck.spec.json`, as a deck kept straight under `.pptwise/` is). An
+ * author who starts a deck there creates `.pptwise/` before any command
+ * runs, and that folder still has to be kept out of git on the first write.
+ * Anything else in it means pptwise wrote there before, and a missing
+ * `.gitignore` then is the user's decision, never restored.
+ */
+export async function isFirstWorkspaceWrite(root: string): Promise<boolean> {
+  let entries: string[]
+  try {
+    entries = await readdir(root)
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return true
+    // Not a folder pptwise can list: mkdir below says what is wrong with it.
+    return false
+  }
+  for (const name of entries) {
+    if (name === DECKS_DIRNAME) continue
+    try {
+      await stat(join(root, name, SPEC_FILENAME))
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * Create `location.dir`, and — only on the run that first writes into the
+ * artifact root ({@link isFirstWorkspaceWrite}) — keep that root out of git two ways: a
  * {@link SELF_IGNORE_FILENAME} inside it, and a line in the repository's
  * local exclude file. Either alone is enough. The file covers a `.git` this
  * process may not write, the exclude line covers a user who deletes the
@@ -477,7 +498,7 @@ export async function prepareWorkspaceDir(
   opts: { gitIgnore?: boolean; runGit?: GitRunner } = {},
 ): Promise<string[]> {
   await assertNotDeckSources(location.dir)
-  const rootExisted = await exists(location.root)
+  const firstWrite = await isFirstWorkspaceWrite(location.root)
   try {
     await mkdir(location.dir, { recursive: true })
   } catch (e) {
@@ -486,7 +507,7 @@ export async function prepareWorkspaceDir(
         `  pass -o <path> to write somewhere writable, or run from a writable project`,
     )
   }
-  if (rootExisted || opts.gitIgnore === false) return []
+  if (!firstWrite || opts.gitIgnore === false) return []
 
   const ignoreEntry = WORKSPACE_IGNORE_ENTRY
   // The exclude line first: once the folder holds its own `*` rule, git

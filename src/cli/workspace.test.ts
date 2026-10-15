@@ -7,6 +7,7 @@ import { promisify } from "node:util"
 import { afterEach, describe, expect, it } from "vitest"
 import { PptwiseError } from "../errors"
 import {
+  DECKS_DIRNAME,
   RENDERED_SVG_PATTERN,
   SELF_IGNORE_FILENAME,
   WORKSPACE_DIRNAME,
@@ -15,6 +16,7 @@ import {
   ensureGitIgnored,
   finalPptxName,
   inspectWorkspace,
+  isFirstWorkspaceWrite,
   isSelfIgnored,
   prepareWorkspaceDir,
   projectDirOf,
@@ -424,14 +426,33 @@ describe("prepareWorkspaceDir", () => {
     expect(await isSelfIgnored(root)).toBe(false)
   })
 
-  it("skips the ignore step when the artifact root already exists", async () => {
+  it("still runs the ignore step when the root holds only deck sources an author put there", async () => {
+    const repo = await trackedTmp()
+    await execFile("git", ["init", "-q"], { cwd: repo })
+    const loc = location({ anchor: repo, root: join(repo, WORKSPACE_DIRNAME), dir: join(repo, WORKSPACE_DIRNAME, "q3") })
+    await mkdir(join(loc.root, DECKS_DIRNAME, "q3", "pages"), { recursive: true })
+    await writeFile(join(loc.root, DECKS_DIRNAME, "q3", "deck.spec.json"), "{}")
+    // A deck kept straight under .pptwise/, the way decks were started before decks/.
+    await mkdir(join(loc.root, "older"), { recursive: true })
+    await writeFile(join(loc.root, "older", "deck.spec.json"), "{}")
+    expect(await isFirstWorkspaceWrite(loc.root)).toBe(true)
+    await prepareWorkspaceDir(loc)
+    await writeFile(join(loc.dir, "q3.pptx"), "PK")
+    expect(await readFile(join(loc.root, SELF_IGNORE_FILENAME), "utf8")).toBe("*\n")
+    const { stdout } = await execFile("git", ["status", "--porcelain", "--untracked-files=all"], { cwd: repo })
+    expect(stdout).toBe("")
+  })
+
+  it("skips the ignore step when pptwise has written into the artifact root before", async () => {
     const cwd = await trackedTmp()
     const loc = location({
       anchor: cwd,
       root: join(cwd, WORKSPACE_DIRNAME),
       dir: join(cwd, WORKSPACE_DIRNAME, "hello"),
     })
-    await mkdir(loc.root, { recursive: true })
+    await mkdir(join(loc.root, "earlier-deck"), { recursive: true })
+    await mkdir(join(loc.root, DECKS_DIRNAME), { recursive: true })
+    expect(await isFirstWorkspaceWrite(loc.root)).toBe(false)
     const notes = await prepareWorkspaceDir(loc, {
       runGit: async () => {
         throw new Error("git should not run when the root already exists")

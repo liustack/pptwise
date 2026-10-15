@@ -84,7 +84,7 @@
 
 import { createHash, randomUUID } from 'node:crypto'
 import { accessSync, constants as fsConstants, existsSync, statSync } from 'node:fs'
-import { appendFile, copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { appendFile, copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, delimiter, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { runChild } from './spawnHidden.js'
@@ -341,6 +341,12 @@ const PREVIEW_DIR = 'previews'
 const SELF_IGNORE_FILENAME = '.gitignore'
 const SELF_IGNORE_RULES = '*\n'
 
+/** The folder under `.pptwise/` that holds deck sources. Must match `DECKS_DIRNAME` in `src/cli/workspace.ts`. */
+const DECKS_DIRNAME = 'decks'
+
+/** A deck project's spec file. Must match `SPEC_FILENAME` in `src/cli/deck-dir.ts`. */
+const DECK_SPEC_FILENAME = 'deck.spec.json'
+
 /** The files that mark a project root, newest name first. Must match `src/cli/config.ts`. */
 const PROJECT_CONFIG_NAMES = ['pptwise.config.json', 'pptpress.config.json', 'pptfast.config.json']
 
@@ -434,7 +440,32 @@ async function ensureGitIgnored(dir, entry, runGit = runGitDefault) {
 }
 
 /**
- * Make the project's `.pptwise/` exist, and on the call that creates it keep
+ * Whether this is the first write into a project's `.pptwise/`: the folder
+ * is not there, or holds nothing but deck sources the model wrote before any
+ * tool ran: `decks/`, or a folder holding `deck.spec.json`. A copy of `isFirstWorkspaceWrite` in
+ * `src/cli/workspace.ts`. Change one, change both.
+ */
+async function isFirstWorkspaceWrite(dir) {
+  let entries
+  try {
+    entries = await readdir(dir)
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return true
+    return false
+  }
+  for (const name of entries) {
+    if (name === DECKS_DIRNAME) continue
+    try {
+      await stat(join(dir, name, DECK_SPEC_FILENAME))
+    } catch {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * Make the project's `.pptwise/` exist, and on the call that first writes into it keep
  * it out of git the two ways the CLI does (`prepareWorkspaceDir`,
  * `src/cli/workspace.ts`): a line in the local exclude file, then a
  * `.gitignore` holding `*` inside the folder, never over one already there.
@@ -445,7 +476,7 @@ async function ensureGitIgnored(dir, entry, runGit = runGitDefault) {
  */
 async function ensureWorkspaceDir(anchor, runGit = runGitDefault) {
   const dir = join(anchor, WORKSPACE_DIRNAME)
-  if (existsSync(dir)) return { created: false }
+  if (!(await isFirstWorkspaceWrite(dir))) return { created: false }
   await mkdir(dir, { recursive: true })
   const exclude = await ensureGitIgnored(anchor, WORKSPACE_IGNORE_ENTRY, runGit)
   let selfIgnore = 'written'
@@ -3031,8 +3062,10 @@ export const __testing = {
   SELF_IGNORE_FILENAME,
   ensureGitIgnored,
   ensureWorkspaceDir,
+  isFirstWorkspaceWrite,
   projectAnchor,
   projectDirOf,
+  DECKS_DIRNAME,
   encodePreviewId,
   decodePreviewId,
   workspaceFor,
