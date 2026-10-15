@@ -813,6 +813,25 @@ describe("createServeServer — theme files that appear after startup", () => {
     await servedWith(handle, BUILTIN_BRIEF_PRIMARY, "0F5132")
   })
 
+  it("serves a deck in .pptwise/decks/ like any other: page edits and the project's themes/ both reach the preview", async () => {
+    const dir = await makeDir("pptwise-serve-deck-home-")
+    const deckDir = join(dir, ".pptwise", "decks", "q3")
+    await mkdir(join(deckDir, "pages"), { recursive: true })
+    await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
+    await writeFile(join(deckDir, "pages", "p-a.json"), JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }))
+    // Started from inside the deck: the project is still the folder holding .pptwise/.
+    const handle = await startServe(deckDir, { cwd: deckDir })
+    const sse = await connectSSE(handle.port)
+    await writeFile(join(deckDir, "pages", "p-a.json"), JSON.stringify({ components: [{ type: "paragraph", text: "revised draft" }] }))
+    await sse.waitFor("reload")
+    expect((await get(handle.port, "/")).body).toContain("revised draft")
+    sse.close()
+
+    await mkdir(join(dir, "themes"))
+    await writeFile(join(dir, "themes", "brief.theme.json"), briefWithPrimary("brief", "#0B5FFF"))
+    await servedWith(handle, "0B5FFF", BUILTIN_BRIEF_PRIMARY)
+  })
+
   it("follows a spec rebind: the new name's file is watched before it exists, and its later edits refresh", async () => {
     const dir = await makeDir("pptwise-serve-rebind-theme-")
     const deckDir = await makeBriefDeck(dir)

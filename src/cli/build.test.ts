@@ -634,4 +634,27 @@ describe("pptwise build: a deck in .pptwise/decks/", () => {
     expect((await readdir(older)).sort()).toEqual(["deck.spec.json", "kept.pptx", "pages"])
     expect(await exists(join(deck, ".pptwise"))).toBe(false)
   })
+
+  it("lands in the same place when run from inside the deck, with or without a project config", async () => {
+    const { cwd, deck } = await homedDeck()
+    const out = join(cwd, ".pptwise", "weekly")
+    expect((await buildFrom(deck, ".")).pptx).toBe(join(out, "weekly.pptx"))
+    await writeFile(join(cwd, "pptwise.config.json"), "{}")
+    expect((await buildFrom(deck, ".")).pptx).toBe(join(out, "weekly.pptx"))
+    expect(await exists(join(deck, ".pptwise"))).toBe(false)
+    expect(await pptxFiles(cwd)).toEqual([join(out, "weekly.pptx")])
+  })
+
+  it("finds a workspace theme in the project's themes/, from the project or from inside the deck", async () => {
+    const { cwd, deck } = await homedDeck((spec) => {
+      spec.theme = "acme"
+    })
+    // Made from inside the deck, the theme still goes to the project's themes/.
+    await runThemeNew({ from: "brief", id: "acme", cwd: deck })
+    expect(await exists(join(cwd, "themes", "acme.theme.json"))).toBe(true)
+    for (const [from, target] of [[cwd, ".pptwise/decks/weekly"], [deck, "."]] as const) {
+      const report = await buildFrom(from, target)
+      expect(report).toMatchObject({ status: "ok", theme: "acme", themeSource: "file" })
+    }
+  })
 })

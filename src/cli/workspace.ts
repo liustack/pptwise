@@ -21,7 +21,9 @@
  *
  * 1. **One anchor rule, two lines long.** The anchor is the directory of the
  *    nearest `pptwise.config.json` (`./config.ts`'s `findConfig` cwd walk-up
- *    — the project root is already a concept this CLI has), else cwd. No git
+ *    — the project root is already a concept this CLI has), else cwd, read
+ *    as the project that holds it when cwd is inside a `.pptwise/` folder
+ *    ({@link projectDirOf}). No git
  *    root probing: a git root and a project root are not the same thing in a
  *    monorepo, and a third rule would only be a third thing to remember.
  * 2. **Two zones live here.** Render output (pptx, preview.html, `NNN-*.svg`,
@@ -169,6 +171,25 @@ function pathInDecksHome(rel: string): string | undefined {
 }
 
 /**
+ * The directory a working directory stands for when no project config is
+ * found: the folder that holds the outermost `.pptwise/` on its path, or
+ * the directory itself when it is not inside one. A folder inside
+ * `.pptwise/` (a deck in `.pptwise/decks/<name>/`, say) is never a project
+ * of its own, so a command run from there writes to the project's
+ * `.pptwise/`, never to a `.pptwise/` nested in it.
+ */
+export function projectDirOf(cwd: string): string {
+  const dir = resolve(cwd)
+  const segments = dir.split(sep)
+  const at = segments.indexOf(WORKSPACE_DIRNAME)
+  if (at <= 0) return dir
+  const head = segments.slice(0, at).join(sep)
+  // `/.pptwise` splits to ["", ".pptwise"], `C:\.pptwise` to ["C:", ".pptwise"]:
+  // the holder is the filesystem root, which keeps its separator.
+  return at === 1 ? `${head}${sep}` : head
+}
+
+/**
  * Refuse an output folder that holds a deck's own sources. A deck kept
  * straight under `.pptwise/` (`.pptwise/q3/`, written before decks had a
  * folder of their own) and a deck in `.pptwise/decks/q3/` both name
@@ -198,7 +219,7 @@ export function resolveWorkspaceRoot(opts: {
   /** The nearest `pptwise.config.json`'s path (`findConfig`'s hit), or null. */
   projectConfigPath?: string | null
 }): Pick<WorkspaceLocation, "anchor" | "root"> {
-  const anchor = opts.projectConfigPath ? dirname(resolve(opts.projectConfigPath)) : resolve(opts.cwd)
+  const anchor = opts.projectConfigPath ? dirname(resolve(opts.projectConfigPath)) : projectDirOf(opts.cwd)
   return { anchor, root: join(anchor, WORKSPACE_DIRNAME) }
 }
 

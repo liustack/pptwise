@@ -85,7 +85,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { accessSync, constants as fsConstants, existsSync, statSync } from 'node:fs'
 import { appendFile, copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
-import { basename, delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, delimiter, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { engineReady, missingEngineMessage, packageVersion } from './engine.js'
 import { runChild } from './spawnHidden.js'
 
@@ -353,14 +353,29 @@ const PROJECT_CONFIG_NAMES = ['pptwise.config.json', 'pptpress.config.json', 'pp
  * broken still marks the root.
  */
 function projectAnchor(start) {
-  const origin = resolve(start)
-  let dir = origin
+  const origin = projectDirOf(start)
+  let dir = resolve(start)
   for (;;) {
     if (PROJECT_CONFIG_NAMES.some((name) => existsSync(join(dir, name)))) return dir
     const parent = dirname(dir)
     if (parent === dir) return origin
     dir = parent
   }
+}
+
+/**
+ * The folder that holds the outermost `.pptwise/` on a path, or the path
+ * itself when it is not inside one: a deck in `.pptwise/decks/<name>/` is
+ * not a project of its own. A copy of `projectDirOf` in
+ * `src/cli/workspace.ts`. Change one, change both.
+ */
+function projectDirOf(start) {
+  const dir = resolve(start)
+  const segments = dir.split(sep)
+  const at = segments.indexOf(WORKSPACE_DIRNAME)
+  if (at <= 0) return dir
+  const head = segments.slice(0, at).join(sep)
+  return at === 1 ? `${head}${sep}` : head
 }
 
 /** Where a project keeps this plugin's previews: `<project>/.pptwise/previews`. */
@@ -3017,6 +3032,7 @@ export const __testing = {
   ensureGitIgnored,
   ensureWorkspaceDir,
   projectAnchor,
+  projectDirOf,
   encodePreviewId,
   decodePreviewId,
   workspaceFor,

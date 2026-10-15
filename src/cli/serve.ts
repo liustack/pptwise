@@ -119,7 +119,7 @@ import { findConfig } from "./config"
 import { ASSETS_DIRNAME, PAGES_DIRNAME, SPEC_FILENAME, THEME_FILENAME } from "./deck-dir"
 import { boundThemeName, type ThemeInputs } from "./theme-inputs"
 import { themeCandidates } from "./theme-resolve"
-import { resolveWorkspaceLocation } from "./workspace"
+import { resolveWorkspaceLocation, resolveWorkspaceRoot } from "./workspace"
 
 /** `pptwise serve`'s own default (spec-plan.md §2's worked example,
  *  `pptwise serve <target> [--port 4400] [--no-open]`) — never
@@ -731,7 +731,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
   // here, before anything is opened, with the error the build would raise.
   const located = await locateDeck(options.target, { cwd })
   const projectHit = await findConfig(cwd)
-  const watchCeiling = projectHit !== null ? dirname(projectHit.path) : cwd
+  const watchCeiling = resolveWorkspaceRoot({ cwd, projectConfigPath: projectHit?.path }).anchor
 
   // Set by the first build, below. The server only listens once it has
   // succeeded, so nothing reads these before then.

@@ -17,6 +17,7 @@ import {
   inspectWorkspace,
   isSelfIgnored,
   prepareWorkspaceDir,
+  projectDirOf,
   pruneRenderedSvgs,
   resolveWorkspaceLocation,
   workspaceStockAssetsDir,
@@ -159,6 +160,22 @@ describe("resolveWorkspaceLocation (anchor rules)", () => {
     expect(asPosix(loc.root)).toBe("/tmp/proj/.pptwise")
     // The deck sits in nested/, so its workspace is named for that path.
     expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptwise/nested-hello")
+  })
+
+  it("anchors at the project that holds .pptwise/ when cwd is inside it", () => {
+    const loc = resolveWorkspaceLocation({
+      cwd: "/tmp/proj/.pptwise/decks/q3",
+      target: "/tmp/proj/.pptwise/decks/q3",
+      isDir: true,
+    })
+    expect(asPosix(loc.anchor)).toBe("/tmp/proj")
+    expect(asPosix(loc.dir)).toBe("/tmp/proj/.pptwise/q3")
+    expect(asPosix(projectDirOf("/tmp/proj/.pptwise/decks/q3/.pptwise/q3"))).toBe("/tmp/proj")
+    expect(asPosix(projectDirOf("/tmp/proj/decks"))).toBe("/tmp/proj/decks")
+  })
+
+  it.skipIf(process.platform === "win32")("reads a .pptwise/ at the filesystem root as the root's", () => {
+    expect(projectDirOf("/.pptwise/decks/q3")).toBe("/")
   })
 
   it("gives two decks of the same name under different parents their own workspace and asset directory", () => {

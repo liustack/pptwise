@@ -91,6 +91,7 @@ import {
   pruneRenderedSvgs,
   removeFinalPptx,
   resolveWorkspaceLocation,
+  resolveWorkspaceRoot,
   scanWorkspaceAssets,
   type GitRunner,
 } from "./workspace"
@@ -1327,8 +1328,8 @@ function defaultThemeIdFor(output: string): string {
 async function defaultThemeOutputPath(id: string, cwd: string): Promise<string> {
   assertThemeId(id)
   const project = await findConfig(cwd)
-  const root = project !== null ? dirname(project.path) : resolve(cwd)
-  return join(root, WORKSPACE_THEMES_DIRNAME, `${id}.theme.json`)
+  const { anchor } = resolveWorkspaceRoot({ cwd, projectConfigPath: project?.path })
+  return join(anchor, WORKSPACE_THEMES_DIRNAME, `${id}.theme.json`)
 }
 
 async function resolveThemeWriteTarget(
