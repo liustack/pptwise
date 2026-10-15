@@ -1301,7 +1301,7 @@ function runCli(cliPath, args, signal) {
  * deck's `.pptwise/` folder and which project config a theme wall reads, so
  * the files land where the model would have put them from its own terminal.
  */
-async function runCliJson(cliPath, args, options = {}) {
+export async function runCliJson(cliPath, args, options = {}) {
   requireEngine(cliPath)
   const { code, stdout, stderr } = await runChild(resolveCliCommand(), [cliPath, ...args], {
     env: cliChildEnv(),
@@ -1324,7 +1324,7 @@ async function runCliJson(cliPath, args, options = {}) {
  * call outside a session has none, and then the CLI runs where this process
  * runs, which is what `pptwise_preview` has always done.
  */
-function sessionCwd(exec) {
+export function sessionCwd(exec) {
   const cwd = exec && exec.agent && exec.agent.session && exec.agent.session.header && exec.agent.session.header.cwd
   return typeof cwd === 'string' && cwd !== '' ? cwd : undefined
 }

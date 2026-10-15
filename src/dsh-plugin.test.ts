@@ -152,7 +152,7 @@ describe("dsh plugin (skill registration, v0)", () => {
     // names each tool, including the Code Mode call shape.
     const preamble = plugin.dshRuntimePreamble("/p/dist/cli.js", { command: "node", runAsNode: false }, "darwin")
     expect(preamble).toContain(plugin.dshToolRouting())
-    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.OUTLINE_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME]) {
+    for (const tool of [plugin.THEMES_TOOL_NAME, plugin.OUTLINE_TOOL_NAME, plugin.BUILD_TOOL_NAME, plugin.PREVIEW_TOOL_NAME, plugin.IMAGES_TOOL_NAME]) {
       expect(preamble).toContain(`\`${tool}\``)
     }
     expect(preamble).toContain("Never run `build` or `theme try` in the terminal here")
