@@ -92,9 +92,7 @@ pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <wo
 
 ### 4. 用 `kind` 写 spec
 
-新 deck 项目一律建在项目目录（有 `pptwise.config.json` 的目录，没有就是当前工作目录）下的 `.pptwise/decks/<名字>/`，名字用几个小写英文单词加连字符，比如 `q3-review`。用户点名放别处时照用户的。已有的 deck 在哪就在哪改，不要搬。命令都在项目目录里运行，下文的 `deck-dir/` 就是 deck 从那里算起的路径。spec 锁定主题、叙事、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。
-
-spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字样。只要场合需要的那几样，见 `references/branding.md`。
+新 deck 项目一律建在项目目录（有 `pptwise.config.json` 的目录，没有就是当前工作目录）下的 `.pptwise/decks/<名字>/`，名字用几个小写英文单词加连字符，比如 `q3-review`。用户点名放别处时照用户的。已有的 deck 在哪就在哪改，不要搬。命令都在项目目录里运行，下文的 `deck-dir/` 就是 deck 从那里算起的路径。spec 锁定主题、叙事、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。它不保存任何渲染选择状态。spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字样。只要场合需要的那几样，见 `references/branding.md`。
 
 - `cover`、`chapter`、`ending` 是页型，不写 `kind`。
 - 每张 `content` 页必须显式写且只写一个 `kind`。
@@ -113,7 +111,7 @@ spec 的 `footer` 不要，deck 就不印页码、机构名、日期和保密字
 
 每批至多写四个 `pages/<id>.json`。页面文件可以含 `components`、`background`、`image_side`、`footnote`、`fields`、`stamp`、`tag`、`ballot`、`years`、`stage`、`notes`。不要重复 `type`、`kind`、`heading`，它们归 spec。
 
-选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。图片流程见 `references/images.md`。
+选择服务本页 `kind` 的组件。`quote` 是页面讲法，引用组件名是 `blockquote`。组件归属与相似项对照见 `references/components.md`。节奏与容量见 `references/density.md`。
 
 写一页之前先读这一页的契约。`inspect` 打印 spec 锁定的内容、页面文件可以填的字段、绑定主题的脸在这一页能画的组件、`validate` 对这一页的计数要求，以及 `validate` 此刻对它的结论。组件列表之外的组件要么过不了 `validate`，要么让这一页按别的讲法来画，并给出警告。写某个组件前先展开它。计数不能证明内容放得下：页面内容偏长时，`--fit` 会真的画这一页，告诉你渲染会不会丢内容。图标字段的名字来自 `pptwise icons`。`inspect` 还会列出主题在这一页的招牌版式：主题自己的样例页就是用它们画的，每个都写明画出来是什么样子，以及配方（`write:` 后面是它要的组件、条目数和字段）。按配方写的页面会用上这种画法，其余的页面用脸的普通版式来画。封面、章节页或结尾页的脸如果画在照片上，配方就是一张背景照片。写这一页之前先读它们，手上的内容撑得起某个配方时，就照它写。
 
@@ -123,6 +121,8 @@ pptwise inspect deck-dir/ --page <id> --component <type>
 pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
+
+除非用户说了不要图，否则给 deck 配图。每个 `photo` 页都要配，封面的 `inspect` 列出照片配方时封面也配。其他页只在图本身就是要点时才配，不为填空间加图。用户给了自己的图就先用他的。其余的，在一批页面写完、build 之前：对每个图框跑 `pptwise asset-brief deck-dir/` 拿画幅（封面背景铺满整页，用横幅），用 `pptwise images search "<两到四个英文词>" --orientation <画幅> --sheet` 搜图，看它画出的带编号联系表，挑合适的编号，用 `pptwise images fetch <id> --deck deck-dir/ --as <asset_id>` 取图。有 `pptwise_images` 工具时用它搜，结果里直接给你看联系表。搜图不需要任何 key。细节见 `references/images.md`。
 
 每批写完都 build 一次。有 `pptwise_build` 工具时用它，它会把目前画好的页面展示给用户。否则运行：
 
@@ -175,5 +175,5 @@ pptwise build deck-dir/ --json
 - `references/components.md`：组件归属、字段与相似项选择。
 - `references/density.md`：节奏、容量、独占页面组件与局部装饰。
 - `references/branding.md`：页脚标记（页码、机构名、保密标识）、deck 品牌姿态、无框页面、logo 与品牌抽取。
-- `references/images.md`：图片资产、图库、生图，以及 `photo` 和 `evidence` 的边界。
+- `references/images.md`：哪些页配图、图片资产、图库搜索与联系表、生图，以及 `photo` 和 `evidence` 的边界。
 - `references/validate.md`：build、assemble、validate、audit、preview、serve、render 与修订循环。

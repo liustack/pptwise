@@ -90,9 +90,7 @@ Write the theme name into `deck.spec.json` before writing page content. There is
 
 ### 4. Write the spec with `kind`
 
-Start a new deck project in `.pptwise/decks/<name>/` under the project folder (the folder holding `pptwise.config.json`, else the working directory), `<name>` a few lowercase English words joined by hyphens, such as `q3-review`. Put it elsewhere only when the user names a place. Edit a deck that already exists where it is, and never move it. Run commands from the project folder: `deck-dir/` below is the deck's path from there. The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state.
-
-A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it. Ask only for what the occasion needs, see `references/branding.md`.
+Start a new deck project in `.pptwise/decks/<name>/` under the project folder (the folder holding `pptwise.config.json`, else the working directory), `<name>` a few lowercase English words joined by hyphens, such as `q3-review`. Put it elsewhere only when the user names a place. Edit a deck that already exists where it is, and never move it. Run commands from the project folder: `deck-dir/` below is the deck's path from there. The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state. A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it. Ask only for what the occasion needs, see `references/branding.md`.
 
 - `cover`, `chapter`, and `ending` are page types and do not use `kind`.
 - Every `content` page requires exactly one explicit `kind`.
@@ -111,7 +109,7 @@ The 11 words and their boundaries are in `references/layouts.md`. Full spec guid
 
 Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, `stage`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
 
-Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`. Image workflows are in `references/images.md`.
+Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`.
 
 Read one page's contract before writing it. `inspect` prints what the spec locked, the fields the page file may carry, the components the bound theme's face draws there, the counts `validate` holds the page to, and `validate`'s current findings on it. Anything outside its component list fails `validate` or draws the page as another kind, with a warning. Expand a component before writing it. The counts do not prove the content fits: when a page runs long, `--fit` draws it and says whether render would drop anything. Icon fields take a name from `pptwise icons`. `inspect` also lists the theme's signature layouts for the page: the drawings the theme's own samples are made of, each with how it looks and a recipe (`write:` the components, item counts and fields it takes). A page written to a recipe gets that drawing. Anything else is drawn in the face's plain layout. On a cover, chapter or ending whose face draws over a photograph, the recipe is a background photograph. Read them before writing the page, and write to one when the content you have holds it.
 
@@ -121,6 +119,8 @@ pptwise inspect deck-dir/ --page <id> --component <type>
 pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
+
+Give the deck pictures unless the user said not to. Every `photo` page gets one, and so does the cover when its `inspect` lists the photograph recipe. Other pages get one only where the picture is the point, never to fill space. The user's own pictures come first. For the rest, once a batch is written and before building it, run `pptwise asset-brief deck-dir/` for each frame's shape (a cover background fills the slide: landscape), search with `pptwise images search "<two to four English words>" --orientation <shape> --sheet`, look at the numbered contact sheet it draws, and pin the number that fits with `pptwise images fetch <id> --deck deck-dir/ --as <asset_id>`. Where a `pptwise_images` tool exists, search with it: its result shows you the sheet. Search works with no key. The details are in `references/images.md`.
 
 After each batch, build the deck. Use the `pptwise_build` tool when it exists: it shows the user the pages drawn so far. Otherwise run:
 
@@ -173,5 +173,5 @@ Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Us
 - `references/components.md`: component ownership, fields, and lookalike choices.
 - `references/density.md`: pacing, capacity, full-page components, and local decoration.
 - `references/branding.md`: footer marks (page numbers, organization, confidentiality), deck branding posture, frameless pages, logos, and brand extraction.
-- `references/images.md`: image assets, stock search, generation, and `photo` versus `evidence`.
+- `references/images.md`: which pages get pictures, image assets, stock search and its contact sheet, generation, and `photo` versus `evidence`.
 - `references/validate.md`: build, assemble, validate, audit, preview, serve, render, and revision loops.

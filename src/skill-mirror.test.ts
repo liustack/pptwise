@@ -332,6 +332,28 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     }
   })
 
+  it("pictures the cover and every photo page by default, chosen by looking at the contact sheet", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("Give the deck pictures unless the user said not to. Every `photo` page gets one, and so does the cover when its `inspect` lists the photograph recipe.")
+    expect(zh).toContain("除非用户说了不要图，否则给 deck 配图。每个 `photo` 页都要配，封面的 `inspect` 列出照片配方时封面也配。")
+    for (const text of [en, zh]) {
+      expect(text).toContain("pptwise asset-brief deck-dir/")
+      expect(text).toContain("--orientation")
+      expect(text).toContain("--sheet")
+      expect(text).toContain("`pptwise_images`")
+    }
+    for (const rel of [REF("images.md"), REF("images.zh-CN.md")]) {
+      const text = read(rel)
+      expect(text).toContain('pptwise images search "wind farm" --orientation landscape --sheet')
+      expect(text).toContain("Openverse")
+      expect(text).toContain('"background": { "kind": "asset", "asset_id": "cover" }')
+    }
+    // Zero configuration comes before the keys: the key is an upgrade, not a gate.
+    const images = read(REF("images.md"))
+    expect(images.indexOf("Search works with no setup.")).toBeLessThan(images.indexOf("pptwise config set pexels.apiKey"))
+  })
+
   it("keeps stock-image and live-review operational commands", () => {
     for (const rel of [REF("images.md"), REF("images.zh-CN.md")]) {
       const text = read(rel)
