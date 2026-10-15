@@ -214,6 +214,51 @@ describe("runImagesSearch", () => {
     expect(out).toContain("Pixabay is unconfigured")
   })
 
+  it("prints the hits as JSON with --json, descriptions and notes included", async () => {
+    await tmpHome()
+    const out = await runImagesSearch(" office ", {
+      json: true,
+      fetch: async (input) => {
+        const url = String(input)
+        if (url.startsWith("https://api.openverse.org/v1/images/")) return jsonResponse({ results: [OPENVERSE_CC0] })
+        throw new Error(`unexpected fetch ${url}`)
+      },
+    })
+    const report = JSON.parse(out) as { query: string; hits: Record<string, unknown>[]; notes: string[] }
+    expect(report.query).toBe("office")
+    expect(report.hits).toEqual([
+      {
+        id: `openverse:${OPENVERSE_CC0_ID}`,
+        provider: "openverse",
+        thumb: OPENVERSE_CC0.thumbnail,
+        width: 2000,
+        height: 1333,
+        author: "Bench Accounting",
+        license: "cc0",
+        pageUrl: OPENVERSE_CC0.foreign_landing_url,
+        attribution: OPENVERSE_CC0.attribution,
+        source: "stocksnap",
+        description: "Office Desk",
+      },
+    ])
+    expect(report.notes.some((note) => /anonymous/i.test(note))).toBe(true)
+  })
+
+  it("prints an empty hit list as JSON rather than a sentence", async () => {
+    await tmpHome()
+    await persistImageApiKey("pexels", "TESTPEXELSKEY99")
+    const out = await runImagesSearch("office", {
+      json: true,
+      fetch: async (input) =>
+        String(input).startsWith("https://api.openverse.org/")
+          ? jsonResponse({ results: [] })
+          : jsonResponse({ photos: [], total_results: 0 }),
+    })
+    const report = JSON.parse(out) as { hits: unknown[]; notes: string[] }
+    expect(report.hits).toEqual([])
+    expect(report.notes.join("\n")).toContain("Pixabay is unconfigured")
+  })
+
   it("searches Pixabay then Openverse when only Pixabay is configured", async () => {
     await tmpHome()
     await persistImageApiKey("pixabay", "TESTPIXABAYKEY99")

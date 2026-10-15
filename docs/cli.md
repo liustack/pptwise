@@ -318,13 +318,13 @@ Narratives reports named presets, concrete strategy, pacing, audience axes, and 
 pptwise asset-brief <target> [--json]
 pptwise images search <query> \
   [--orientation landscape|portrait|square] \
-  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>]
+  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] [--json]
 pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
 pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-Search checks Pexels, then configured Pixabay, then commercially filtered Openverse sources. Each result carries the provider's own words for the picture when it has some: Pexels alt text, Pixabay tags, or the Openverse title. Fetch and generate pin the picture as `<asset_id>.jpg` with a provenance sidecar `<asset_id>.json`. For a deck project they go into the deck's own `assets/`, which the deck registers by file name, so the pictures move with the deck. For a single IR file they go under `.pptwise/<place>/assets/`. Pictures an earlier version pinned under `.pptwise/<place>/assets/` for a deck project still count while the deck stays where it was. To keep them after a move, copy them into the deck's `assets/`. Generate uses an enabled local generator and falls back to the asset brief prompt when `--prompt` is omitted. A generator that a sandbox stops from writing its own home folder (`Operation not permitted`, `EPERM`, `FS_PERMISSION_DENIED`) is reported by name with the fix: run the command outside the sandbox, or allow that generator to write its home folder in the host. Copying its login files elsewhere is not a fix.
+Search checks Pexels, then configured Pixabay, then commercially filtered Openverse sources. Each result carries the provider's own words for the picture when it has some: Pexels alt text, Pixabay tags, or the Openverse title. `--json` prints the same results as `{ query, hits, notes }`, each hit with the `id` that `images fetch` takes. Fetch and generate pin the picture as `<asset_id>.jpg` with a provenance sidecar `<asset_id>.json`. For a deck project they go into the deck's own `assets/`, which the deck registers by file name, so the pictures move with the deck. For a single IR file they go under `.pptwise/<place>/assets/`. Pictures an earlier version pinned under `.pptwise/<place>/assets/` for a deck project still count while the deck stays where it was. To keep them after a move, copy them into the deck's `assets/`. Generate uses an enabled local generator and falls back to the asset brief prompt when `--prompt` is omitted. A generator that a sandbox stops from writing its own home folder (`Operation not permitted`, `EPERM`, `FS_PERMISSION_DENIED`) is reported by name with the fix: run the command outside the sandbox, or allow that generator to write its home folder in the host. Copying its login files elsewhere is not a fix.
 
 When a page names an `asset_id` no file supplies, validate warns with the path the picture belongs at, such as `decks/q3/zh/assets/hero.jpg`.
 

@@ -531,14 +531,16 @@ images
   .option("--color <color>", "color name or hex for the search API")
   .option("--min-width <px>", "client-side minimum width in pixels")
   .option("--min-height <px>", "client-side minimum height in pixels")
+  .option("--json", "machine-readable output")
   .action(
     async (
       query: string,
-      opts: { orientation?: string; color?: string; minWidth?: string; minHeight?: string },
+      opts: { orientation?: string; color?: string; minWidth?: string; minHeight?: string; json?: boolean },
     ) => {
       try {
         console.log(
           await runImagesSearch(query, {
+            json: opts.json,
             orientation: opts.orientation,
             color: opts.color,
             minWidth: opts.minWidth !== undefined ? parsePositiveInt(opts.minWidth, "--min-width") : undefined,

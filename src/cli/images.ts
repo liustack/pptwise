@@ -331,7 +331,16 @@ function openverseNotes(anonymous: boolean, pixabaySkipped: boolean): string[] {
   return lines
 }
 
-export async function runImagesSearch(query: string, opts: ImagesSearchOptions = {}): Promise<string> {
+/** What one search found: the hits in the order printed, and the notes
+ *  that go with them (Openverse's licence caveat, a missing key). */
+export interface ImagesSearchResult {
+  query: string
+  hits: SearchHit[]
+  notes: string[]
+}
+
+/** The search itself, without printing: Pexels, then Pixabay, then Openverse. */
+export async function searchImages(query: string, opts: ImagesSearchOptions = {}): Promise<ImagesSearchResult> {
   const q = query.trim()
   if (q === "") throw new PptwiseError("search query must not be empty")
   const env = opts.env ?? process.env
@@ -342,12 +351,12 @@ export async function runImagesSearch(query: string, opts: ImagesSearchOptions =
 
   if (keys.pexels.apiKey) {
     const pexelsHits = await searchPexels(q, keys.pexels.apiKey, opts, fetchImpl, secrets)
-    if (pexelsHits.length > 0) return formatHits(pexelsHits)
+    if (pexelsHits.length > 0) return { query: q, hits: pexelsHits, notes: [] }
   }
 
   if (keys.pixabay.apiKey) {
     const pixabayHits = await searchPixabay(q, keys.pixabay.apiKey, opts, fetchImpl, secrets)
-    if (pixabayHits.length > 0) return formatHits(pixabayHits)
+    if (pixabayHits.length > 0) return { query: q, hits: pixabayHits, notes: [] }
   }
 
   const orientation = parseOrientation(opts.orientation)
@@ -363,9 +372,6 @@ export async function runImagesSearch(query: string, opts: ImagesSearchOptions =
     sleep,
   })
   const notes = openverseNotes(!keys.openverse.ready, !keys.pixabay.apiKey)
-  if (ovHits.length === 0) {
-    return ["No photos found.", ...notes].join("\n")
-  }
   const hits: SearchHit[] = ovHits.map((hit) => ({
     id: `openverse:${hit.id}`,
     provider: "openverse",
@@ -380,7 +386,26 @@ export async function runImagesSearch(query: string, opts: ImagesSearchOptions =
     source: hit.source,
     ...describe(hit.title),
   }))
-  return [...notes, formatHits(hits)].join("\n")
+  return { query: q, hits, notes }
+}
+
+/** One hit as `--json` prints it: the id `images fetch` takes, without the
+ *  provider-local photo id it already contains. */
+function hitJson(hit: SearchHit): Omit<SearchHit, "photoId"> {
+  const { photoId: _photoId, ...rest } = hit
+  return rest
+}
+
+export async function runImagesSearch(
+  query: string,
+  opts: ImagesSearchOptions & { json?: boolean } = {},
+): Promise<string> {
+  const result = await searchImages(query, opts)
+  if (opts.json) {
+    return JSON.stringify({ query: result.query, hits: result.hits.map(hitJson), notes: result.notes }, null, 2)
+  }
+  if (result.hits.length === 0) return ["No photos found.", ...result.notes].join("\n")
+  return [...result.notes, formatHits(result.hits)].join("\n")
 }
 
 type PhotoRefProvider = "pexels" | "pixabay" | "openverse"

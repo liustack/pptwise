@@ -318,13 +318,13 @@ Narratives 报告命名预设、具体 strategy、pacing、audience 三轴与主
 pptwise asset-brief <target> [--json]
 pptwise images search <query> \
   [--orientation landscape|portrait|square] \
-  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>]
+  [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] [--json]
 pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
 pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
+搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
 
 页面引用的 `asset_id` 没有对应文件时，validate 会警告，并给出这张图该放的路径，比如 `decks/q3/zh/assets/hero.jpg`。
 
