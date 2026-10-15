@@ -35,6 +35,7 @@ const PEXELS_PHOTO = {
   height: 3000,
   url: "https://www.pexels.com/photo/office-desk-123/",
   photographer: "Jane",
+  alt: "Laptop and notebook on a wooden office desk",
   src: {
     original: "https://images.pexels.com/photos/123/original.jpg",
     large2x: "https://images.pexels.com/photos/123/large2x.jpg",
@@ -49,6 +50,7 @@ const PIXABAY_HIT = {
   previewURL: "https://cdn.pixabay.com/photo/preview.jpg",
   largeImageURL: "https://cdn.pixabay.com/photo/large.jpg",
   user: "Bob",
+  tags: "office, desk, workplace",
   imageWidth: 1280,
   imageHeight: 720,
 }
@@ -60,6 +62,7 @@ const OPENVERSE_CC0 = {
   url: "https://live.staticflickr.com/123/office.jpg",
   foreign_landing_url: "https://stocksnap.io/photo/office-desk",
   creator: "Bench Accounting",
+  title: "Office Desk",
   license: "cc0",
   attribution:
     '"Office Desk" by Bench Accounting is marked with CC0 1.0. To view the terms, visit https://creativecommons.org/publicdomain/zero/1.0/.',
@@ -116,6 +119,7 @@ describe("runImagesSearch", () => {
     expect(out).toContain("https://images.pexels.com/photos/123/medium.jpg")
     expect(out).toContain("Photo by Jane on Pexels")
     expect(out).toContain("https://www.pexels.com/photo/office-desk-123/")
+    expect(out).toContain("Laptop and notebook on a wooden office desk")
     expect(out).not.toContain("api.pexels.com")
   })
 
@@ -143,6 +147,7 @@ describe("runImagesSearch", () => {
     expect(out).toContain("https://cdn.pixabay.com/photo/preview.jpg")
     expect(out).toContain("Photo by Bob on Pixabay")
     expect(out).toContain("https://pixabay.com/photos/office-456/")
+    expect(out).toContain("office, desk, workplace")
     expect(out).not.toContain("TESTPIXABAYKEY99")
     expect(out).not.toMatch(/key=/)
     expect(urls.some((u) => u.includes("openverse.org"))).toBe(false)
@@ -174,6 +179,7 @@ describe("runImagesSearch", () => {
     expect(out).toContain(`openverse:${OPENVERSE_CC0_ID}`)
     expect(out).not.toContain(OPENVERSE_BYSA_ID)
     expect(out).toContain("stocksnap")
+    expect(out).toContain("\n  Office Desk\n")
     expect(out).toContain("Bench Accounting")
     expect(out).toContain("cc0")
     expect(out).toContain(OPENVERSE_CC0.attribution)

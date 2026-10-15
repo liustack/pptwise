@@ -74,6 +74,10 @@ export interface SearchHit {
   pageUrl: string
   attribution: string
   source?: string
+  /** The provider's own words for the picture: Pexels `alt`, Pixabay
+   *  `tags`, Openverse `title`. Lets a reader rule a result in or out
+   *  before looking at it. */
+  description?: string
 }
 
 export interface ImagesSearchOptions {
@@ -193,6 +197,12 @@ function clientFilter(hits: SearchHit[], minWidth?: number, minHeight?: number):
   })
 }
 
+/** A provider description, trimmed, or nothing when it says nothing. */
+function describe(text: string | undefined): { description?: string } {
+  const trimmed = text?.replace(/\s+/gu, " ").trim()
+  return trimmed ? { description: trimmed } : {}
+}
+
 function parsePexelsPhotos(json: unknown): SearchHit[] {
   const root = asRecord(json)
   const photos = Array.isArray(root?.photos) ? root.photos : []
@@ -217,6 +227,7 @@ function parsePexelsPhotos(json: unknown): SearchHit[] {
       license: "Pexels License",
       pageUrl,
       attribution: `Photo by ${author} on Pexels`,
+      ...describe(asString(photo.alt)),
     })
   }
   return hits.slice(0, PER_PAGE)
@@ -244,6 +255,7 @@ function parsePixabayHits(json: unknown): SearchHit[] {
       license: "Pixabay License",
       pageUrl,
       attribution: `Photo by ${author} on Pixabay`,
+      ...describe(asString(photo.tags)),
     })
   }
   return hits.slice(0, PER_PAGE)
@@ -300,7 +312,8 @@ function formatHits(hits: SearchHit[]): string {
     .map((hit) => {
       const thumb = hit.thumb ? `\n  ${hit.thumb}` : ""
       const source = hit.source ? `  ${hit.source}` : ""
-      return `${hit.id}  ${hit.width}x${hit.height}  ${hit.author}  ${hit.license}${source}${thumb}\n  ${hit.attribution}\n  ${hit.pageUrl}`
+      const description = hit.description ? `\n  ${hit.description}` : ""
+      return `${hit.id}  ${hit.width}x${hit.height}  ${hit.author}  ${hit.license}${source}${description}${thumb}\n  ${hit.attribution}\n  ${hit.pageUrl}`
     })
     .join("\n")
 }
@@ -365,6 +378,7 @@ export async function runImagesSearch(query: string, opts: ImagesSearchOptions =
     pageUrl: hit.foreignLandingUrl,
     attribution: hit.attribution,
     source: hit.source,
+    ...describe(hit.title),
   }))
   return [...notes, formatHits(hits)].join("\n")
 }

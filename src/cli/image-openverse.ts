@@ -25,6 +25,7 @@ export interface OpenverseHit {
   width: number
   height: number
   thumbnail: string
+  title?: string
 }
 
 interface CachedToken {
@@ -181,6 +182,7 @@ function parseHit(raw: unknown): OpenverseHit | null {
     width: asNumber(photo.width) ?? 0,
     height: asNumber(photo.height) ?? 0,
     thumbnail: asString(photo.thumbnail) ?? "",
+    ...(asString(photo.title) ? { title: asString(photo.title) } : {}),
   }
 }
 
