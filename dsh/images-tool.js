@@ -80,13 +80,23 @@ async function routeTakesImages(ctx, exec) {
   }
 }
 
-/** The sheet saved as a host attachment, or undefined where the host has no store for one. */
+/**
+ * The sheet saved as a host attachment, or undefined where the host has no
+ * store for one. A store that refuses the file (its own size or type limits)
+ * leaves the search standing: the refusal comes back as `refused`, and the
+ * result names the file instead.
+ */
 async function attachSheet(ctx, exec, sheetPath) {
   const attachments = typeof ctx.get === 'function' ? ctx.get('attachments') : undefined
-  if (!attachments || typeof attachments.saveImage !== 'function') return undefined
-  if (!(await routeTakesImages(ctx, exec))) return undefined
-  const ref = await attachments.saveImage({ data: await readFile(sheetPath), mediaType: 'image/jpeg', name: basename(sheetPath) })
-  return {
+  if (!attachments || typeof attachments.saveImage !== 'function') return {}
+  if (!(await routeTakesImages(ctx, exec))) return {}
+  let ref
+  try {
+    ref = await attachments.saveImage({ data: await readFile(sheetPath), mediaType: 'image/jpeg', name: basename(sheetPath) })
+  } catch (error) {
+    return { refused: error instanceof Error ? error.message : String(error) }
+  }
+  const image = {
     attachmentId: String(ref.attachmentId),
     mediaType: String(ref.mediaType),
     bytes: Number(ref.bytes),
@@ -94,6 +104,7 @@ async function attachSheet(ctx, exec, sheetPath) {
     height: Number(ref.height),
     ...(typeof ref.name === 'string' ? { name: ref.name } : {}),
   }
+  return { image }
 }
 
 /** What the model reads: the numbered hits, the notes, and how to take one. */
@@ -176,11 +187,13 @@ export function createImagesTool(cliPath, ctx) {
         ...(typeof hit.source === 'string' ? { source: hit.source } : {}),
       }))
       const sheet = typeof report.sheet === 'string' ? report.sheet : undefined
-      const image = sheet ? await attachSheet(ctx, exec, sheet) : undefined
+      const { image, refused } = sheet ? await attachSheet(ctx, exec, sheet) : {}
+      const notes = report.notes.map(String)
+      if (refused !== undefined) notes.push(`The contact sheet could not be attached here (${refused}). Open its file to look at it.`)
       return {
         query: String(report.query ?? query),
         hits,
-        notes: report.notes.map(String),
+        notes,
         ...(sheet ? { sheet } : {}),
         ...(image ? { image } : {}),
       }

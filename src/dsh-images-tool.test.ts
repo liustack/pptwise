@@ -88,7 +88,7 @@ async function setup(tag: string): Promise<{ cliPath: string; workspace: string 
 
 /** A host context: an attachment store that records what it saved, and a
  *  model catalogue whose one model takes `modalities`. */
-function host(modalities: string[] | undefined, withStore = true) {
+function host(modalities: string[] | undefined, withStore = true, refuse?: string) {
   const saved: { data: Buffer; mediaType: string; name?: string }[] = []
   const services: Record<string, unknown> = {
     llm: {
@@ -101,6 +101,7 @@ function host(modalities: string[] | undefined, withStore = true) {
   if (withStore) {
     services.attachments = {
       saveImage: async (input: { data: Buffer; mediaType: string; name?: string }) => {
+        if (refuse !== undefined) throw new Error(refuse)
         saved.push(input)
         return { attachmentId: "att-1", mediaType: input.mediaType, bytes: input.data.length, width: 1500, height: 576, name: input.name }
       },
@@ -167,6 +168,19 @@ describe("pptwise_images", () => {
       expect(blocks.map((block) => block.type)).toEqual(["text"])
       expect((blocks[0] as { text: string }).text).toContain(`Contact sheet: ${value.sheet}`)
     }
+  })
+
+  it("keeps the search when the host's store refuses the sheet, and says why", async () => {
+    const { cliPath, workspace } = await setup("refused")
+    const { createImagesTool } = await load()
+    const tool = createImagesTool(cliPath, host(["text", "image"], true, "image too large").ctx)
+    const value = await tool.execute({ query: "wind farm" }, inSession(workspace))
+    expect(value).not.toHaveProperty("image")
+    expect(value.hits).toHaveLength(2)
+    expect(value.notes).toContain("The contact sheet could not be attached here (image too large). Open its file to look at it.")
+    const text = (tool.output.render({}, value)[0] as { text: string }).text
+    expect(text).toContain(`Contact sheet: ${value.sheet}`)
+    expect(text).toContain("image too large")
   })
 
   it("says so when the search found nothing, and refuses an empty query", async () => {
