@@ -190,12 +190,30 @@ lines in those groups with the same estimators and reports, as `overlap`,
 two lines in different columns that share a row less than two characters of
 their type apart (`CROWDED_GAP_EM`). Words in one column are never compared.
 
-Only the horizontal timeline opts in today. A trial that compared each
-card's own `data-audit-box` the same way, at just one character, already
-flagged 15 gallery pages: `icon_cards` drawn without card grounds (memo,
-vermilion, bulletin, ledger and other themes' four-across rows) with
-descriptions 16px to 35px apart at 23px to 43px type. That is the same
-defect, left for its own fix before that component opts in.
+Five components opt in, the ones that set items side by side with no card
+ground between them. The horizontal timeline marks each milestone.
+`icon_cards` marks each card, since it never draws a ground: until 2026-10
+it offered each line its column less 16px, and four cards across a page
+stood their sentences 16px to 35px apart at 23px to 43px type. Its lines now
+keep two characters of their own size from the next column. `people_cards`,
+`product_cards`, `quote_wall` and `matrix` mark each card or cell only on a
+ruled theme, where the words stand on the paper under a hairline. On every
+other theme their words stand inside a card's own ground, and the card's edge
+is the break between one card and the next, so they are not compared.
+
+Marking every leaf `data-audit-box` as a column across the whole gallery
+(2640 pages) and the showcase decks with their alternatives (1232 pages)
+finds nothing once `icon_cards` keeps its gutter, so nothing else is held
+back by a defect. The rest stay out for what they are:
+
+- `row_cards` stacks its cards one under another, never two on a row.
+- `cycle` and `flowchart` set each node's words inside the node's own shape.
+- `logo_wall` sets each name inside its tile.
+- `sankey` sets its node labels down the sides of the flow, one column of
+  labels per column of nodes, never two labels side by side on a row.
+- Components with no `data-audit-box` per item (`kpi_cards`, `numbered_cards`,
+  `steps`, `chevron_process` and the like) give the check nothing to tell one item's words
+  from the next. They need a per-item group before they can opt in.
 
 ## Full-matrix regression net (`full-matrix-contrast.test.ts`)
 

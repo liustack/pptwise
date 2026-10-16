@@ -274,7 +274,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
         const textTop =
           titleTop + layout.title.lines.length * layout.title.lineHeight + GAP_TITLE_TEXT
         return (
-          <g key={i} data-audit-box={`${col * g.colW},${rowY},${g.colW}`}>
+          <g key={i} data-audit-box={`${col * g.colW},${rowY},${g.colW}`} data-audit-column="">
             <OmittedText text={formTextOmission(item.text, layout.text)} />
             {ruled ? (
               <line x1={col * g.colW + COLUMN_INSET} y1={rowY} x2={(col + 1) * g.colW - COLUMN_INSET} y2={rowY} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />

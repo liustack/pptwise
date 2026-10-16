@@ -268,7 +268,7 @@ export const quoteWall: SvgComponent<QuoteWallComponent> = {
           return (
             // 审计框挂在未平移的外层 g 上（同 people-cards.tsx）：叠在同一个
             // 元素上会让 ink-containment 把 cardX 算两遍。
-            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
+            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`} data-audit-column={isRuled(ctx) ? "" : undefined}>
               <g transform={`translate(${cardX},${cardY})`}>
                 {inks.top ? (
                   <line x1={0} y1={inks.top.width / 2} x2={cardW} y2={inks.top.width / 2} stroke={inks.top.ink} strokeWidth={inks.top.width} />

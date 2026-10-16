@@ -295,7 +295,7 @@ export const productCards: SvgComponent<ProductCardsComponent> = {
             // 审计框挂在未平移的外层 g 上（同 people-cards.tsx）：它声明的是
             // 这张卡在组件盒里的位置，内层 g 才是绘制用的坐标系。两者叠在
             // 同一个元素上会让 ink-containment 把 cardX 算两遍。
-            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
+            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`} data-audit-column={ruled ? "" : undefined}>
               <g transform={`translate(${cardX},${cardY})`}>
               {ruled ? null : (
                 <rect

@@ -374,7 +374,7 @@ export const peopleCards: SvgComponent<PeopleCardsComponent> = {
             : []
           const fill = palette.length > 0 ? palette[i % palette.length] : ctx.colors.primary
           return (
-            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`}>
+            <g key={i} data-audit-box={`${cardX},${cardY},${cardW}`} data-audit-column={ruled ? "" : undefined}>
               {ruled ? (
                 <line x1={cardX} y1={cardY + HAIRLINE / 2} x2={cardX + cardW} y2={cardY + HAIRLINE / 2} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
               ) : (

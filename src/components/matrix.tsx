@@ -269,7 +269,7 @@ export const matrix: SvgComponent<MatrixComponent> = {
           const cellFill = ruled ? ground : toneFill(item.tone, ctx)
           const lead = ruled && item.tone === "accent"
           return (
-            <g key={i} data-audit-box={`${x},${y},${cardW}`}>
+            <g key={i} data-audit-box={`${x},${y},${cardW}`} data-audit-column={ruled ? "" : undefined}>
               {ruled ? (
                 <line
                   x1={x}

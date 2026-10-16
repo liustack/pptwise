@@ -2604,8 +2604,10 @@ interface ColumnLine {
  *
  * A component that sets its items side by side, each item's words in an
  * open column with no card edge between them, marks each item's group with
- * `data-audit-column`: a horizontal timeline marks each milestone. The area
- * test in `findOverlapIssues` cannot see this: a timeline is one
+ * `data-audit-column`: a horizontal timeline marks each milestone, icon cards
+ * each card, and the ruled cards and matrix cells each card or cell (see
+ * docs/contrast-system.md). The area test in `findOverlapIssues` cannot
+ * see this: a timeline is one
  * `data-audit-box`, and five milestone labels 19px apart overlap by nothing
  * while reading as one sentence across the page (a terminal page, 2026-10).
  *
