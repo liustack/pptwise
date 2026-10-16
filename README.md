@@ -144,6 +144,10 @@ The commands you will reach for most:
 
 Full reference: [`docs/cli.md`](./docs/cli.md).
 
+## Pictures and brand
+
+An agent following the [skill](./skills/pptwise/SKILL.md) starts from your own material: `pptwise brand scan` finds the project's logo, pictures and brand colors, and the theme wall then offers a theme repainted in those colors. Pictures come next from stock search, which works with no setup, then from the web under a license that lets a deck use them, then from a local generator only you can turn on. Keys and generators: [Image sources and generators](./docs/cli.md#image-sources-and-generators). License rules: [pictures reference](./skills/pptwise/references/images.md).
+
 ## Documentation
 
 | Doc | Read it when |

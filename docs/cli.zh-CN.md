@@ -363,6 +363,28 @@ pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 
 页面引用的 `asset_id` 没有对应文件时，validate 会警告，并给出这张图该放的路径，比如 `decks/q3/zh/assets/hero.jpg`。
 
+### 图源与生成器
+
+`images search` 按这个顺序查图库，哪个先找到就用哪个：Pexels，然后 Pixabay，各自只在配了 key 时查，最后 Openverse。Openverse 不用配置：没有凭据时匿名查询，每天额度小。Pexels 和 Pixabay 各要一个免费 key。每个用 `config set` 设一次，不写值时会用隐藏输入的提示来问：
+
+| 键 | 环境变量 | 作用 |
+| --- | --- | --- |
+| `pexels.apiKey` | `PPTWISE_PEXELS_API_KEY` | 启用 Pexels。 |
+| `pixabay.apiKey` | `PPTWISE_PIXABAY_API_KEY` | 启用 Pixabay。 |
+| `openverse.clientId`、`openverse.clientSecret` | `PPTWISE_OPENVERSE_CLIENT_ID`、`PPTWISE_OPENVERSE_CLIENT_SECRET` | 提高 Openverse 的额度。 |
+
+配置文件优先于环境变量，按图源逐个算：`$PPTWISE_HOME/config.json` 里写了哪个图源，这个图源的 key 就全部从文件取，它的环境变量不再看。`config show` 会遮住 key。
+
+`images generate` 用本地的命令行 agent 出图：grok、codex 或 antigravity，每个都要单独安装并登录。用户打开之前它们一直关着，因为 pptwise 运行它们时关掉了它们的权限确认，它们做事不会问任何人：grok 带 `--permission-mode bypassPermissions`，codex 带 `--dangerously-bypass-approvals-and-sandbox`，antigravity 带 `--dangerously-skip-permissions`。每次都在一个新建的临时目录里运行，不在项目里，但没有什么能拦住它去别处。
+
+| 键 | 默认 | 作用 |
+| --- | --- | --- |
+| `images.generators.grok.enabled`、`.codex.enabled`、`.antigravity.enabled` | `false` | 打开这个生成器。 |
+| `images.generators.order` | `grok,codex,antigravity` | 尝试的顺序，逗号分隔。不在里面的生成器不会被尝试。 |
+| `images.generators.timeoutMs` | `180000` | 每个的时限，毫秒。 |
+
+`pptwise doctor` 显示配置情况：每个图库有没有 key、来自文件还是环境变量（从不显示 key 本身），每个生成器装没装、开没开。
+
 ## Preview 与 serve
 
 ```bash

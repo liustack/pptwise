@@ -363,6 +363,28 @@ Every download, thumbnails included, refuses a host that resolves to a private, 
 
 When a page names an `asset_id` no file supplies, validate warns with the path the picture belongs at, such as `decks/q3/zh/assets/hero.jpg`.
 
+### Image sources and generators
+
+`images search` asks the stock providers in this order and stops at the first one that finds something: Pexels, then Pixabay, each only with its key, then Openverse. Openverse needs no setup: with no credentials it is asked anonymously, under a small daily quota. Pexels and Pixabay take a free key each. Set each once with `config set`, which asks for the value through a hidden prompt when you leave it out:
+
+| key | environment variable | what it does |
+| --- | --- | --- |
+| `pexels.apiKey` | `PPTWISE_PEXELS_API_KEY` | Turns on Pexels. |
+| `pixabay.apiKey` | `PPTWISE_PIXABAY_API_KEY` | Turns on Pixabay. |
+| `openverse.clientId`, `openverse.clientSecret` | `PPTWISE_OPENVERSE_CLIENT_ID`, `PPTWISE_OPENVERSE_CLIENT_SECRET` | Raises the Openverse quota. |
+
+The config file wins over the environment, a provider at a time: a provider named in `$PPTWISE_HOME/config.json` takes all its keys from the file, and its environment variables are ignored. `config show` masks the keys.
+
+`images generate` draws with a local command-line agent: grok, codex, or antigravity, each installed and logged in on its own. They are off until the user turns one on, because pptwise runs each with its permission checks turned off, so it acts without asking: grok with `--permission-mode bypassPermissions`, codex with `--dangerously-bypass-approvals-and-sandbox`, and antigravity with `--dangerously-skip-permissions`. Each runs in a fresh temporary folder, not in the project, but nothing stops it from reaching elsewhere.
+
+| key | default | what it does |
+| --- | --- | --- |
+| `images.generators.grok.enabled`, `.codex.enabled`, `.antigravity.enabled` | `false` | Turns that generator on. |
+| `images.generators.order` | `grok,codex,antigravity` | The order they are tried in, comma-separated. A generator left out is never tried. |
+| `images.generators.timeoutMs` | `180000` | How long each one gets, in milliseconds. |
+
+`pptwise doctor` shows the setup: for each stock provider, whether a key is set and whether it came from the file or the environment (never the key), and for each generator, whether it is installed and whether it is on.
+
 ## Preview and serve
 
 ```bash

@@ -144,6 +144,10 @@ Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进
 
 完整命令表见 [`docs/cli.zh-CN.md`](./docs/cli.zh-CN.md)。
 
+## 配图与品牌
+
+按 [skill](./skills/pptwise/SKILL.zh-CN.md) 做 deck 的 agent 先用你自己的素材：`pptwise brand scan` 找出项目的 logo、图片和品牌色，主题墙随后多给一个按品牌色重新上色的主题。其余的图依次来自图库搜索（不用配置就能用）、许可允许 deck 使用的网上图片，最后才是只有你能开启的本地生成器。key 和生成器的配置：[图源与生成器](./docs/cli.zh-CN.md#图源与生成器)。许可规则：[配图参考](./skills/pptwise/references/images.zh-CN.md)。
+
 ## 文档
 
 | 文档 | 适用场景 |
