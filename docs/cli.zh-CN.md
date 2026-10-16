@@ -54,6 +54,7 @@ pptwise preview deck-dir/ --html
 | `layouts` | 为引擎维护检查内部脸注册表。 |
 | `images search` | 搜索已配置的图库来源。 |
 | `images fetch` | 把一张选定图库图片固定到 deck。 |
+| `images add` | 把一张 https 地址或本地文件的图片固定到 deck，记下来源、作者和授权。 |
 | `images list` | 列出某 deck 已固定的图片。 |
 | `images generate` | 通过已启用的本地 CLI 生成并固定图片。 |
 | `config set` | 设置可选用户配置。 |
@@ -321,6 +322,9 @@ pptwise images search <query> \
   [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] \
   [--sheet [file]] [--no-git-ignore] [--json]
 pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
+pptwise images add <https-url|file> --deck <dir> --as <asset_id> \
+  [--license cc0|pdm|cc-by[-<version>]|press|own] [--source <page-url>] \
+  [--author <name>] [--attribution <text>]
 pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
@@ -328,6 +332,8 @@ pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 `asset-brief` 列出页面里的每个 `image` 组件，给出真实画框、裁切、安全区、配色和提示词。它不列 `image_grid`、`image_compare`、`device_mockup` 和页面背景。页面里还没有 `image` 组件时，它只打印一行说明这一点：这不由主题决定，每个出厂主题的 `photo` 页都会画出图。
 
 搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。结果按顺序编号。`--sheet` 还会下载每张缩略图，拼成一张 JPEG，每张图压着自己的编号，写到 `.pptwise/image-search/<query>.jpg` 或你给的文件，并打印路径（`--json` 里是 `sheet`）。看这一张图就能挑，再按编号对应的 id 去 fetch。下不到的缩略图，搜索结果里有原图就用原图画，没有就画叉，并在说明里点名。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
+
+`images add` 固定一张图库搜索没给的图：项目里或用户自己的文件，或者在网上找到的图。网上的图只按它自己页面写明的条款进来。`--license` 写明条款，而且只收允许 deck 原样使用的：`cc0`、`pdm`（公有领域）、`cc-by` 或 `cc-by-<版本>`、`press`（主体方自己的新闻或媒体素材，用来展示这个主体）、`own`（用户或其所在机构自己的图）。相同方式共享、非商业、禁止演绎的授权一律拒收，清单里没有的授权也拒收。`--source` 是展示这张图并写明授权的页面，地址来源必填。`--author` 是那个页面写的作者或所有者，`cc-by` 和 `press` 必填。本地文件默认是用户自己的，除非 `--license` 另说。PNG 保持 PNG，所以 logo 的透明背景还在，SVG 画成 PNG（需要 `sharp`），JPEG、WebP、GIF 转成 JPEG，长边不超过 1920 px。sidecar 记下 `provider`（`web` 或 `file`）、授权、作者、来源页、图片原本的地址或文件，授权要求署名时还记下署名行，命令也会把它打印出来。同一个 id 之前固定过另一种格式的图会被替换，不是 pptwise 固定的同 id 文件则原样保留并报错。
 
 每次下载（缩略图也算）都拒绝解析到私有、回环、链路本地、组播或其他保留地址的主机。只有一段保留地址放行：198.18.0.0/15。这是公网不路由的基准测试段，Clash、Surge 这类 fake-ip 代理把所有域名都解析到这一段，再把连接转给真正的主机，拒绝它会让代理后面的每次下载都失败。
 

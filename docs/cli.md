@@ -54,6 +54,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `layouts` | Inspect the internal face registry for engine maintenance. |
 | `images search` | Search configured stock providers. |
 | `images fetch` | Pin one selected stock image to a deck. |
+| `images add` | Pin one picture from an https address or a file, with its source, author, and license. |
 | `images list` | List pinned images for a deck. |
 | `images generate` | Generate and pin an image through an enabled local CLI. |
 | `config set` | Set optional user configuration. |
@@ -321,6 +322,9 @@ pptwise images search <query> \
   [--color <name-or-hex>] [--min-width <px>] [--min-height <px>] \
   [--sheet [file]] [--no-git-ignore] [--json]
 pptwise images fetch <provider:id> --deck <dir> --as <asset_id> [--query <text>]
+pptwise images add <https-url|file> --deck <dir> --as <asset_id> \
+  [--license cc0|pdm|cc-by[-<version>]|press|own] [--source <page-url>] \
+  [--author <name>] [--attribution <text>]
 pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
@@ -328,6 +332,8 @@ pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 `asset-brief` lists every `image` component a page holds, with its real frame, crop, safe zone, palette and a prompt. It does not list `image_grid`, `image_compare`, `device_mockup` or page backgrounds. A deck whose pages hold no `image` component yet prints one line saying so: the theme does not decide it, since every factory theme draws a `photo` page's picture.
 
 Search checks Pexels, then configured Pixabay, then commercially filtered Openverse sources. Each result carries the provider's own words for the picture when it has some: Pexels alt text, Pixabay tags, or the Openverse title. `--json` prints the same results as `{ query, hits, notes }`, each hit with the `id` that `images fetch` takes. Hits are numbered. `--sheet` also downloads every thumbnail and draws them in one JPEG, each under its number, at `.pptwise/image-search/<query>.jpg` or the file you name, and prints its path (`sheet` in `--json`). Look at that one picture to choose, then fetch the id with that number. A thumbnail that will not download is drawn from the full-size picture where the search has one, else crossed out, with a note naming it. Fetch and generate pin the picture as `<asset_id>.jpg` with a provenance sidecar `<asset_id>.json`. For a deck project they go into the deck's own `assets/`, which the deck registers by file name, so the pictures move with the deck. For a single IR file they go under `.pptwise/<place>/assets/`. Pictures an earlier version pinned under `.pptwise/<place>/assets/` for a deck project still count while the deck stays where it was. To keep them after a move, copy them into the deck's `assets/`. Generate uses an enabled local generator and falls back to the asset brief prompt when `--prompt` is omitted. A generator that a sandbox stops from writing its own home folder (`Operation not permitted`, `EPERM`, `FS_PERMISSION_DENIED`) is reported by name with the fix: run the command outside the sandbox, or allow that generator to write its home folder in the host. Copying its login files elsewhere is not a fix.
+
+`images add` pins a picture the stock search did not supply: a file of the project or the user's, or a picture found on the web. A picture from the web comes in only on the terms its own page states. `--license` names them, and only terms that let a deck use the picture as it is are taken: `cc0`, `pdm` (public domain), `cc-by` or `cc-by-<version>`, `press` (the subject's own press or newsroom material, used to show that subject), and `own` (the user's or their organization's own picture). Share-alike, non-commercial, and no-derivatives licenses are refused, and so is a license the list does not name. `--source` is the page that shows the picture and states its license, required for an address. `--author` is the author or owner that page names, required for `cc-by` and `press`. A file is the user's own unless `--license` says otherwise. A PNG stays a PNG, so a logo keeps its transparency, an SVG is drawn into a PNG (this needs `sharp`), and JPEG, WebP, and GIF become JPEG, the long edge held to 1920 px. The sidecar records `provider` (`web` or `file`), the license, author, source page, the address or file it came from, and, where the license asks for credit, the credit line, which the command also prints. An earlier pin of the same id in the other format is replaced, and a file under that id that pptwise did not pin is left alone with an error.
 
 Every download, thumbnails included, refuses a host that resolves to a private, loopback, link-local, multicast, or other reserved address. One reserved range is allowed: 198.18.0.0/15. It is a benchmark range the internet does not route, and fake-ip proxies such as Clash and Surge resolve every name into it before carrying the connection to the real host, so refusing it failed every download behind such a proxy.
 

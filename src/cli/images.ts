@@ -4,9 +4,9 @@
  * through the same sidecar path. Inject `fetch` / `resizeToJpeg` / `run`
  * so tests never touch the network or spawn real CLIs.
  */
-import { mkdir, mkdtemp, readFile, readdir, rename, rm, unlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, stat, unlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path"
 import { PptwiseError } from "../errors"
 import { sniffImageFormat } from "../ir/asset-sniff"
 import { isMissingModuleError } from "../platform/node"
@@ -50,8 +50,12 @@ const PER_PAGE = 8
 
 export type ResizeToJpeg = (bytes: Buffer, maxLongEdge: number) => Promise<Buffer>
 
+/** Where a pinned picture came from: a stock library, a local generator,
+ *  an address on the web (`images add <url>`), or a file (`images add <file>`). */
+export type PinnedProviderId = ImageProviderId | "web" | "file"
+
 export interface StockSidecar {
-  provider: ImageProviderId
+  provider: PinnedProviderId
   photo_id?: string
   license: string
   author?: string
@@ -62,6 +66,11 @@ export interface StockSidecar {
   prompt?: string
   downloaded_at?: string
   generated_at?: string
+  /** `images add <url>`: the address the picture was downloaded from. */
+  url?: string
+  /** `images add <file>`: the file it was copied from, relative to where the command ran. */
+  file?: string
+  added_at?: string
 }
 
 export interface SearchHit {
@@ -696,14 +705,16 @@ async function readSidecar(path: string): Promise<StockSidecar | null> {
     const raw = JSON.parse(await readFile(path, "utf8")) as unknown
     const rec = asRecord(raw)
     if (!rec) return null
-    const provider = asString(rec.provider) as ImageProviderId | undefined
+    const provider = asString(rec.provider) as PinnedProviderId | undefined
     const known =
       provider === "pexels" ||
       provider === "pixabay" ||
       provider === "openverse" ||
       provider === "grok" ||
       provider === "codex" ||
-      provider === "antigravity"
+      provider === "antigravity" ||
+      provider === "web" ||
+      provider === "file"
     if (!known || !provider) return null
     const photoId = asString(rec.photo_id)
     if ((provider === "pexels" || provider === "pixabay") && !photoId) return null
@@ -719,6 +730,9 @@ async function readSidecar(path: string): Promise<StockSidecar | null> {
       prompt: asString(rec.prompt),
       downloaded_at: asString(rec.downloaded_at),
       generated_at: asString(rec.generated_at),
+      url: asString(rec.url),
+      file: asString(rec.file),
+      added_at: asString(rec.added_at),
     }
   } catch {
     return null
@@ -832,7 +846,7 @@ export async function runImagesList(opts: ImagesListOptions): Promise<string> {
       if (!sidecar) continue
       listed.add(assetId)
       const id = sidecar.photo_id ? `${sidecar.provider}:${sidecar.photo_id}` : sidecar.provider
-      const rest = [sidecar.author, sidecar.license, sidecar.page_url ?? sidecar.generated_at].filter(Boolean)
+      const rest = [sidecar.author, sidecar.license, sidecar.page_url ?? sidecar.file ?? sidecar.generated_at].filter(Boolean)
       lines.push(`${assetId}  ${id}  ${rest.join("  ")}`)
     }
   }
@@ -854,27 +868,38 @@ async function writePinnedAsset(
   jpeg: Buffer,
   sidecar: StockSidecar,
 ): Promise<string> {
+  return writePinnedFile(assetsDir, assetId, "jpg", jpeg, sidecar)
+}
+
+/** Write a picture and its sidecar side by side, each through a temp name, so a failure leaves neither half. */
+async function writePinnedFile(
+  assetsDir: string,
+  assetId: string,
+  ext: "jpg" | "png",
+  bytes: Buffer,
+  sidecar: StockSidecar,
+): Promise<string> {
   await mkdir(assetsDir, { recursive: true })
-  const jpgPath = join(assetsDir, `${assetId}.jpg`)
+  const picturePath = join(assetsDir, `${assetId}.${ext}`)
   const jsonPath = join(assetsDir, `${assetId}.json`)
-  const tmpJpg = join(assetsDir, `.${assetId}.jpg.tmp`)
+  const tmpPicture = join(assetsDir, `.${assetId}.${ext}.tmp`)
   const tmpJson = join(assetsDir, `.${assetId}.json.tmp`)
   const json = JSON.stringify(sidecar, null, 2) + "\n"
   if (/"apiKey"\s*:/.test(json) || /"key"\s*:/.test(json) || /"clientSecret"\s*:/.test(json)) {
     throw new PptwiseError("internal error: sidecar would have contained a key field")
   }
   try {
-    await writeFile(tmpJpg, jpeg)
+    await writeFile(tmpPicture, bytes)
     await writeFile(tmpJson, json)
-    await rename(tmpJpg, jpgPath)
+    await rename(tmpPicture, picturePath)
     await rename(tmpJson, jsonPath)
   } catch (e) {
-    await unlink(tmpJpg).catch(() => undefined)
+    await unlink(tmpPicture).catch(() => undefined)
     await unlink(tmpJson).catch(() => undefined)
-    await unlink(jpgPath).catch(() => undefined)
+    await unlink(picturePath).catch(() => undefined)
     throw e
   }
-  return jpgPath
+  return picturePath
 }
 
 async function defaultResolvePrompt(opts: { deck: string; as: string; cwd: string }): Promise<string | undefined> {
@@ -968,4 +993,207 @@ export async function runImagesGenerate(opts: ImagesGenerateOptions): Promise<st
   } finally {
     await rm(workdir, { recursive: true, force: true })
   }
+}
+
+/**
+ * The licenses `images add` takes: the terms under which a picture found
+ * outside the stock libraries may go into a deck. Every one of them lets a
+ * deck use the picture as it is. Share-alike, non-commercial and
+ * no-derivatives terms are refused, since a deck cannot keep them, and so
+ * is any license this list does not name.
+ */
+export const ADD_LICENSES = ["cc0", "pdm", "cc-by", "press", "own"] as const
+
+interface AddLicense {
+  /** What the sidecar records. */
+  label: string
+  /** Whether the picture must be credited, which needs its author. */
+  credit: boolean
+}
+
+function parseAddLicense(raw: string): AddLicense {
+  const value = raw.trim().toLowerCase()
+  if (value === "cc0") return { label: "CC0 1.0", credit: false }
+  if (value === "pdm" || value === "public-domain") return { label: "Public Domain", credit: false }
+  if (value === "own") return { label: "Own", credit: false }
+  if (value === "press") return { label: "Press material", credit: true }
+  const by = /^cc-by(?:-(\d\.\d))?$/.exec(value)
+  if (by) return { label: by[1] ? `CC BY ${by[1]}` : "CC BY", credit: true }
+  if (/^cc-by-(sa|nc|nd)|^cc-by-nc|^cc-(sa|nc|nd)/.test(value)) {
+    throw new PptwiseError(
+      `--license ${raw}: share-alike, non-commercial and no-derivatives pictures are not taken, because a deck cannot keep those terms. Find another picture`,
+    )
+  }
+  throw new PptwiseError(
+    `--license ${raw} is not one images add takes. Use cc0, pdm (public domain), cc-by or cc-by-<version> (credit the author), press (the subject's own press material, credited to it), or own (the user's own picture), as the source page states it`,
+  )
+}
+
+export interface ImagesAddOptions {
+  deck: string
+  as: string
+  /** One of {@link ADD_LICENSES}, as the source page states it. Required for an address, `own` by default for a file. */
+  license?: string
+  /** The page that shows the picture and states its license. Required for an address. */
+  source?: string
+  author?: string
+  /** The credit line, when the source page gives its own. */
+  attribution?: string
+  cwd?: string
+  fetch?: typeof fetch
+  lookup?: DnsLookup
+  resizeToJpeg?: ResizeToJpeg
+  /** Turns an SVG into PNG bytes. */
+  rasterizeSvg?: (bytes: Buffer) => Promise<Buffer>
+  /** Brings a PNG down to the long edge, keeping it a PNG. */
+  resizePng?: (bytes: Buffer, maxLongEdge: number) => Promise<Buffer>
+  now?: () => Date
+}
+
+function isSvg(bytes: Buffer): boolean {
+  const head = bytes.subarray(0, 1024).toString("utf8").trimStart()
+  return /^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!DOCTYPE svg[^>]*>\s*)?<svg[\s>]/i.test(head)
+}
+
+async function loadSharp(why: string): Promise<typeof Sharp.default> {
+  try {
+    return (await import("sharp")).default as unknown as typeof Sharp.default
+  } catch (e) {
+    if (isMissingModuleError(e)) throw new PptwiseError(`${why} requires the optional dependency "sharp" (npm i sharp)`)
+    throw e
+  }
+}
+
+async function defaultRasterizeSvg(bytes: Buffer): Promise<Buffer> {
+  const sharpMod = await loadSharp("Turning an SVG into a picture")
+  // 288 dpi draws a logo of a few hundred SVG units at a size that stays
+  // sharp on a full-width slide, then the long edge is held to the cap.
+  return sharpMod(bytes, { density: 288 })
+    .resize({ width: MAX_LONG_EDGE, height: MAX_LONG_EDGE, fit: "inside", withoutEnlargement: true })
+    .png()
+    .toBuffer()
+}
+
+async function defaultResizePng(bytes: Buffer, maxLongEdge: number): Promise<Buffer> {
+  const sharpMod = await loadSharp("Resizing a PNG")
+  const image = sharpMod(bytes)
+  const meta = await image.metadata()
+  if (Math.max(meta.width ?? 0, meta.height ?? 0) <= maxLongEdge) return bytes
+  return image.resize({ width: maxLongEdge, height: maxLongEdge, fit: "inside" }).png().toBuffer()
+}
+
+function sourcePage(raw: string, flag: string): string {
+  let url: URL
+  try {
+    url = new URL(raw)
+  } catch {
+    throw new PptwiseError(`${flag} must be the address of the page that states the picture's license, such as https://commons.wikimedia.org/wiki/File:...`)
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") throw new PptwiseError(`${flag} must be a web address`)
+  return url.toString()
+}
+
+/**
+ * `pptwise images add <url|file> --deck <dir> --as <asset_id>`: pin one
+ * picture the stock search did not supply, a file of the project or the
+ * user's, or one the agent found on the web, with the same sidecar the
+ * stock pictures get.
+ *
+ * A picture from the web comes in only with the license its own page
+ * states (`--license`), that page (`--source`), and, where the license
+ * asks for credit, its author (`--author`), so every picture in a deck can
+ * say where it came from and who to credit. A file is the user's own
+ * unless `--license` says otherwise. PNG stays PNG, so a logo keeps its
+ * transparency. An SVG becomes a PNG. JPEG, WebP and GIF become JPEG. The
+ * long edge is held to 1920 px.
+ */
+export async function runImagesAdd(ref: string, opts: ImagesAddOptions): Promise<string> {
+  assertSafeFileSegment(opts.as, "asset id")
+  const cwd = opts.cwd ?? process.cwd()
+  const remote = /^https?:\/\//i.test(ref.trim())
+  if (!remote && /^[a-z][a-z0-9+.-]*:\/\//i.test(ref.trim())) {
+    throw new PptwiseError(`images add takes an https address or a file path, not ${ref}`)
+  }
+  if (remote && opts.license === undefined) {
+    throw new PptwiseError(
+      "a picture from the web needs --license, as its source page states it: cc0, pdm, cc-by, press or own. A page that states no license is no source: find another picture",
+    )
+  }
+  const license = parseAddLicense(opts.license ?? "own")
+  const author = opts.author?.trim() || undefined
+  if (license.credit && !author) {
+    throw new PptwiseError(`${license.label} pictures are credited to their author: pass --author with the name the source page gives`)
+  }
+  let source: string | undefined
+  if (opts.source !== undefined) source = sourcePage(opts.source, "--source")
+  else if (remote && opts.license?.trim().toLowerCase() !== "own") {
+    throw new PptwiseError("a picture from the web needs --source: the page that shows it and states its license")
+  }
+
+  let bytes: Buffer
+  let origin: { url: string } | { file: string }
+  if (remote) {
+    bytes = await downloadBytes(ref.trim(), opts.fetch, [], opts.lookup ?? (opts.fetch ? undefined : defaultDnsLookup))
+    origin = { url: ref.trim() }
+  } else {
+    const abs = resolve(cwd, ref)
+    let size: number
+    try {
+      const info = await stat(abs)
+      if (!info.isFile()) throw new PptwiseError(`${ref} is not a file`)
+      size = info.size
+    } catch (e) {
+      if (e instanceof PptwiseError) throw e
+      throw new PptwiseError(`cannot read ${ref}`)
+    }
+    if (size > BYTE_CAP) throw new PptwiseError(`${ref} is over the ${BYTE_CAP} byte cap`)
+    bytes = await readFile(abs)
+    const rel = relative(cwd, abs)
+    origin = { file: rel.startsWith("..") || isAbsolute(rel) ? basename(abs) : rel.split(sep).join("/") }
+  }
+
+  let ext: "jpg" | "png"
+  let out: Buffer
+  const format = sniffImageFormat(bytes)
+  if (format === "png") {
+    ext = "png"
+    out = await (opts.resizePng ?? defaultResizePng)(bytes, MAX_LONG_EDGE)
+  } else if (format !== null) {
+    ext = "jpg"
+    out = await toJpeg(bytes, undefined, opts.resizeToJpeg ?? defaultResizeToJpeg)
+  } else if (isSvg(bytes)) {
+    ext = "png"
+    out = await (opts.rasterizeSvg ?? defaultRasterizeSvg)(bytes)
+    if (sniffImageFormat(out) !== "png") throw new PptwiseError("the SVG did not draw as a picture")
+  } else {
+    throw new PptwiseError(`${ref} is not a picture a deck takes (PNG, JPEG, WebP, GIF or SVG)`)
+  }
+
+  const { assetsDir } = await resolveImageHome(opts.deck, cwd)
+  // One id is one picture: a pinned picture of the other extension is
+  // replaced, and a file of the user's under that id is left alone.
+  const other = join(assetsDir, `${opts.as}.${ext === "png" ? "jpg" : "png"}`)
+  if (await pathExists(other)) {
+    if (!(await readSidecar(join(assetsDir, `${opts.as}.json`)))) {
+      throw new PptwiseError(`${other} already holds the asset id "${opts.as}". Pass another --as, or remove that file`)
+    }
+    await unlink(other)
+  }
+
+  const credit =
+    opts.attribution?.trim() ||
+    (license.credit ? (license.label === "Press material" ? `Courtesy of ${author}` : `${author}, ${license.label}${source ? `, ${source}` : ""}`) : undefined)
+  const sidecar: StockSidecar = {
+    provider: remote ? "web" : "file",
+    license: license.label,
+    ...(author ? { author } : {}),
+    ...(source ? { page_url: source } : {}),
+    ...(credit ? { attribution: credit } : {}),
+    ...origin,
+    added_at: (opts.now ?? (() => new Date()))().toISOString(),
+  }
+  const pinned = await writePinnedFile(assetsDir, opts.as, ext, out, sidecar)
+  const lines = [`pinned ${remote ? "web" : "file"} picture as ${opts.as} → ${pinned}`]
+  if (credit) lines.push(`credit: ${credit}`)
+  return lines.join("\n")
 }

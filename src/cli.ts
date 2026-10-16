@@ -26,7 +26,7 @@ import {
 } from "./cli/commands"
 import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
-import { runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
+import { runImagesAdd, runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
 import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
 import { runPacksList, runPacksSync } from "./cli/packs/sync"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
@@ -580,6 +580,46 @@ images
       fail(e)
     }
   })
+images
+  .command("add <ref>")
+  .description(
+    "Pin one picture from an https address or a file into the deck's assets/, with a sidecar naming its source page, author and license. A picture from the web needs the license its own page states",
+  )
+  .requiredOption("--deck <dir>", "deck project directory or IR JSON file")
+  .requiredOption("--as <asset_id>", "local asset id (filename without extension)")
+  .option(
+    "--license <license>",
+    "as the source page states it: cc0, pdm (public domain), cc-by or cc-by-<version>, press (the subject's own press material), or own (the user's own). Required for an address, own by default for a file",
+  )
+  .option("--source <url>", "the page that shows the picture and states its license (required for an address)")
+  .option("--author <name>", "the author or owner the source page names (required for cc-by and press)")
+  .option("--attribution <text>", "the credit line, when the source page gives its own")
+  .addHelpText(
+    "after",
+    "\nExamples:\n  $ pptwise images add public/hero.jpg --deck .pptwise/decks/q3-review --as cover\n  $ pptwise images add https://upload.wikimedia.org/wikipedia/commons/x/xx/Example.jpg --deck .pptwise/decks/q3-review --as river \\\n      --license pdm --source https://commons.wikimedia.org/wiki/File:Example.jpg --author \"Jane Doe\"",
+  )
+  .action(
+    async (
+      ref: string,
+      opts: { deck: string; as: string; license?: string; source?: string; author?: string; attribution?: string },
+    ) => {
+      try {
+        console.log(
+          await runImagesAdd(ref, {
+            deck: opts.deck,
+            as: opts.as,
+            license: opts.license,
+            source: opts.source,
+            author: opts.author,
+            attribution: opts.attribution,
+            cwd: process.cwd(),
+          }),
+        )
+      } catch (e) {
+        fail(e)
+      }
+    },
+  )
 images
   .command("list")
   .description("List pinned stock photos for a deck")
