@@ -122,7 +122,7 @@ pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alterna
 
 `themeSource` 写明绑定的主题从哪来：`builtin`（内置）、`file`（查找到的主题文件）或 `pack`（内容包）。`drawnAs` 列出绑定主题按别的 kind 画的内容页，以及实际画它的 kind（见 [Menu lookup](./menu-lookup.md#content-pages)）。`writtenFor` 写明这份 deck 的页面是为哪个主题写的，只在这次 build 换到别的主题、有内容没画出来或被截短时出现。每一处都在 `warnings` 里（见 [Deck projects](./deck-projects.md#theme-binding-and-rebinding)）。
 
-绑定内置主题的 deck 第一次画出页面时，build 还会用另外最多三个主题画出这份 deck 自己的封面和一到两页内容页。候选主题来自 `theme try` 用的同一份短名单，按绑定主题的场合和 deck 的叙事策略挑。某个主题接不住的页面直接跳过。结果写到 `.pptwise/<place>/alternatives/`，带一份 `manifest.json`，报告里的 `alternatives` 列出每个主题的 id、显示名和页面文件，以及耗时（`ms`，16 页的 deck 大约十分之一秒）。之后的 build 不再重画。`--alternatives` 强制重画（主题文件绑定的 deck 也可以），`--no-alternatives` 跳过。换主题仍然是改 `deck.spec.json` 里的 `theme` 再 build 一次。
+除非有人要求，build 不会用别的主题画这份 deck：主题和大纲一起定下。用户要换主题时，`--alternatives` 用另外最多三个主题画出这份 deck 自己的封面和一到两页内容页。候选主题来自 `theme try` 用的同一份短名单，按绑定主题的场合和 deck 的叙事策略挑。某个主题接不住的页面直接跳过。结果写到 `.pptwise/<place>/alternatives/`，带一份 `manifest.json`，报告里的 `alternatives` 列出每个主题的 id、显示名和页面文件，以及耗时（`ms`，16 页的 deck 大约十分之一秒）。要过一次之后，同一主题下的 build 会再列出它们，画到的页面改过就重画。`--alternatives` 强制重画（主题文件绑定的 deck 也可以），`--no-alternatives` 不画，之后的 build 也不再给出。换主题仍然是改 `deck.spec.json` 里的 `theme` 再 build 一次。
 
 ## Render
 

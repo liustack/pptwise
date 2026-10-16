@@ -260,9 +260,18 @@ describe("pptwise build: the deck in other themes", () => {
     return JSON.parse(output) as BuildReport
   }
 
-  it("draws the deck's own cover and content pages in up to three other themes on its first build", async () => {
+  it("draws the deck in no other theme unless asked: the theme was settled with the outline", async () => {
     const { cwd } = await workspace()
     const report = await buildWith(cwd)
+    expect(report.status).toBe("ok")
+    expect(report.alternatives).toBeUndefined()
+    expect((await buildWith(cwd)).alternatives).toBeUndefined()
+    await expect(stat(join(cwd, ".pptwise", "weekly", ALTERNATIVES_DIRNAME))).rejects.toThrow()
+  })
+
+  it("draws the deck's own cover and content pages in up to three other themes with --alternatives", async () => {
+    const { cwd } = await workspace()
+    const report = await buildWith(cwd, true)
     const dir = join(cwd, ".pptwise", "weekly", ALTERNATIVES_DIRNAME)
     expect(report.themeSource).toBe("builtin")
     const alternatives = report.alternatives!
@@ -300,7 +309,7 @@ describe("pptwise build: the deck in other themes", () => {
 
   it("hands a later build the same pages while the deck's own are unchanged, and --alternatives draws them again", async () => {
     const { cwd } = await workspace()
-    const first = await buildWith(cwd)
+    const first = await buildWith(cwd, true)
     const files = first.alternatives!.themes.flatMap((theme) => theme.pages.map((page) => page.file))
     const drawn = await Promise.all(files.map((file) => stat(file).then((s) => s.mtimeMs)))
     const again = await buildWith(cwd)
@@ -313,7 +322,7 @@ describe("pptwise build: the deck in other themes", () => {
 
   it("draws them again from the deck as it is now once a page they show has changed", async () => {
     const { cwd } = await workspace()
-    const first = await buildWith(cwd)
+    const first = await buildWith(cwd, true)
     const cover = (report: BuildReport) => report.alternatives!.themes[0]!.pages.find((page) => page.type === "cover")!.file
     expect(await readFile(cover(first), "utf8")).toContain("Weekly")
     await editSpec(cwd, (spec) => {
@@ -328,7 +337,7 @@ describe("pptwise build: the deck in other themes", () => {
 
   it("offers none once the deck has moved to another theme", async () => {
     const { cwd } = await workspace()
-    const first = await buildWith(cwd)
+    const first = await buildWith(cwd, true)
     const picked = first.alternatives!.themes[1]!.theme
     await editSpec(cwd, (spec) => {
       spec.theme = picked
@@ -351,7 +360,7 @@ describe("pptwise build: the deck in other themes", () => {
 
   it("offers none to a deck that moved to another theme, even after it moves back", async () => {
     const { cwd } = await workspace()
-    const first = await buildWith(cwd)
+    const first = await buildWith(cwd, true)
     await editSpec(cwd, (spec) => {
       spec.theme = first.alternatives!.themes[0]!.theme
     })
@@ -385,7 +394,7 @@ describe("pptwise build: the deck in other themes", () => {
       ;(spec as { narrative: unknown }).narrative = { strategy: "storytelling", pacing: "balanced", audience: "public" }
       pages.cover = { footnote: "Taken from the team's own notes" }
     })
-    const offered = await buildWith(cwd)
+    const offered = await buildWith(cwd, true)
     const ids = offered.alternatives!.themes.map((theme) => theme.theme)
     expect(ids).toEqual(expect.arrayContaining(["brief", "swiss"]))
     const previews = new Map<string, string>()
@@ -413,7 +422,7 @@ describe("pptwise build: the deck in other themes", () => {
     const { cwd } = await workspace((_spec, pages) => {
       delete pages.how
     })
-    const report = await buildWith(cwd)
+    const report = await buildWith(cwd, true)
     expect(report.status).toBe("needs_revision")
     const drawn = report.alternatives!.themes.flatMap((theme) => theme.pages.map((page) => page.id))
     expect(drawn.length).toBeGreaterThan(0)
@@ -423,7 +432,7 @@ describe("pptwise build: the deck in other themes", () => {
 
   it("says in the text report how to switch", async () => {
     const { cwd } = await workspace()
-    const { output } = await runBuild("weekly", { cwd, gitIgnore: false })
+    const { output } = await runBuild("weekly", { cwd, gitIgnore: false, alternatives: true })
     expect(output).toMatch(/^alternatives: the deck's own pages in 1 \w+, 2 \w+/m)
     expect(output).toContain('To switch, change "theme" in deck.spec.json and build again.')
   })

@@ -1919,7 +1919,7 @@ function buildSummary(value) {
   if (Array.isArray(value.alternatives) && value.alternatives.length > 0) {
     lines.push(
       `Other themes under the pages, numbered as on the card: ${value.alternatives.map((theme) => `${theme.n} = ${theme.id} (${theme.name})`).join(', ')}. ` +
-        'Do not stop to ask. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+        'Ask which one the user wants with ask_user_question, one option per number plus keeping the current theme. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
     )
   }
   return lines.join('\n')
@@ -2805,7 +2805,7 @@ export function createPreviewService(cliPath) {
         alternatives: {
           type: 'boolean',
           description:
-            'false when the user named the theme or picked it from a theme wall: the card then shows this deck in no other themes, on this build and on its later builds. Leave it out otherwise.',
+            'true when the user asks for another theme after seeing the deck: the card then shows the deck\'s own pages in up to three other themes, numbered, and later builds keep them current. false draws none, on this build and later ones. Leave it out otherwise: the theme was settled with the outline.',
         },
       },
       required: ['target'],
@@ -2847,7 +2847,7 @@ export function createPreviewService(cliPath) {
       // The CLI runs in the same folder the preview goes to, so the build's
       // own `.pptwise/` and the card's copy sit in one project.
       const workspace = workspaceFor(exec, target)
-      const report = await runCliJson(cliPath, ['build', target, '--json', ...(args.alternatives === false ? ['--no-alternatives'] : [])], {
+      const report = await runCliJson(cliPath, ['build', target, '--json', ...(args.alternatives === true ? ['--alternatives'] : args.alternatives === false ? ['--no-alternatives'] : [])], {
         signal: exec?.signal,
         cwd: workspace,
         okCodes: [0, 1],

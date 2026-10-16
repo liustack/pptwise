@@ -3,8 +3,9 @@
  * shows beside the deck so the user can see the theme was a choice, and
  * switch with one sentence.
  *
- * A deck's first build that draws pages, or any build with
- * `--alternatives`, picks up to three other built-in themes from the same
+ * Only a build with `--alternatives` draws them: the theme is settled with
+ * the outline, so a deck is shown in other themes only when the user asks
+ * to change it. That build picks up to three other built-in themes from the same
  * shortlist `theme try` uses, keyed by the bound theme's occasions and the
  * deck's narrative strategy, and draws the deck's own cover and one or two
  * of its content pages in each. Pages are validated one at a time against
@@ -14,14 +15,14 @@
  * over rather than failing this one, and a theme that can draw none of the
  * content pages tried is passed over for the next.
  *
- * The offer stays with the deck as it is now. Every later build under the
- * same theme hands back the same themes: read off disk while the pages they
+ * Once asked for, the offer stays with the deck as it is now. Every later
+ * build under the same theme hands back the same themes: read off disk while the pages they
  * were drawn from are unchanged, and drawn again from the current pages
  * once one of those changed (`manifest.json` keeps a hash of what they were
  * drawn from). A deck moved to another theme gets none: the user has chosen.
- * So does a deck built with `--no-alternatives`, the flag for a theme the
- * user named. Both leave a manifest with no themes, which keeps later
- * builds from offering them again until `--alternatives` asks.
+ * So does a deck built with `--no-alternatives`. Both leave a manifest with
+ * no themes, which keeps later builds from offering them again until
+ * `--alternatives` asks.
  *
  * Switching is still a name change in `deck.spec.json` and a rebuild: these
  * pages are a preview of that rebuild, not a second deck. They are written
@@ -269,8 +270,6 @@ async function decline(dir: string, theme: string): Promise<undefined> {
 export interface OfferOptions {
   /** `--alternatives` (true) or `--no-alternatives` (false). */
   flag?: boolean
-  /** Whether a deck never offered any gets them unasked: one bound to a built-in theme. */
-  unasked: boolean
   /** The theme the deck's pages are recorded as written for (`./written-for.ts`), as the build read it. */
   writtenFor?: string
 }
@@ -279,7 +278,7 @@ export interface OfferOptions {
  * The alternatives this build hands back, drawing them when it has to.
  * `--alternatives` always draws them. `--no-alternatives` draws none and
  * declines them for the deck's later builds too. Otherwise a deck never
- * offered any gets them when `unasked` allows. A deck offered some gets the
+ * offered any gets none. A deck offered some gets the
  * same themes again while it keeps the theme it had then: read back while
  * their pages are current, drawn again from the deck as it is now when they
  * are not. A deck moved to another theme gets none, now or later.
@@ -290,7 +289,7 @@ export async function offerAlternatives(ir: PptxIR, bound: ThemeDefinition, work
   if (opts.flag === true) return writeBuildAlternatives(ir, bound, workspaceDir, opts.writtenFor)
   const started = performance.now()
   const manifest = await readManifest(dir)
-  if (manifest === undefined) return opts.unasked ? writeBuildAlternatives(ir, bound, workspaceDir, opts.writtenFor) : undefined
+  if (manifest === undefined) return undefined
   if (manifest.themes.length === 0) return undefined
   if (manifest.bound !== ir.theme.id) return decline(dir, ir.theme.id)
   if (manifest.source === alternativesSource(ir, bound, opts.writtenFor)) {

@@ -2188,9 +2188,9 @@ export interface BuildOptions {
   runGit?: GitRunner
   /**
    * `--alternatives` (true) or `--no-alternatives` (false): draw the deck's
-   * own pages in other themes, or not. Unset offers them on a deck's first
-   * build bound to a built-in theme and keeps that offer current on later
-   * builds under the same theme (`./build-alternatives.ts`).
+   * own pages in other themes, or not. Unset draws none on a deck never
+   * asked, and keeps an offer once asked current on later builds under the
+   * same theme (`./build-alternatives.ts`).
    */
   alternatives?: boolean
 }
@@ -2374,13 +2374,11 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   // The other themes are drawn the way switching to each draws the pages,
   // which reads the theme they are written for as it stands after this
   // build: a build that draws every page whole records the bound theme
-  // (`./written-for.ts`, below). A theme file or a pack is a choice someone
-  // already made on purpose, so only a built-in theme gets them unasked.
+  // (`./written-for.ts`, below).
   const recordsBound = isDir && errors.length === 0 && !drawnShort
   const switchReads = recordsBound ? ir.theme.id : writtenFor
   const alternatives = await offerAlternatives(ir, resolveIrTheme(ir, theme), workspace.dir, {
     flag: opts.alternatives,
-    unasked: resolvedTheme?.kind === "builtin",
     ...(switchReads !== undefined ? { writtenFor: switchReads } : {}),
   })
   if (alternatives !== undefined) report.alternatives = alternatives

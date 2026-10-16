@@ -497,10 +497,11 @@ describe("pptwise_build", () => {
     expect(await readdir(svc.root).catch(() => [])).toEqual([])
   })
 
-  it("keeps the deck's pages in other themes with the card, and tells the model not to stop for them", async () => {
-    const { svc, workspace, route, handler } = await setup("build-alternatives")
+  it("keeps the deck's pages in other themes with the card, and tells the model to ask which one", async () => {
+    const { svc, cliPath, workspace, route, handler } = await setup("build-alternatives")
     const target = await deck(workspace, ["alternatives"])
-    const value = await svc.buildTool.execute({ target }, inSession(workspace))
+    const value = await svc.buildTool.execute({ target, alternatives: true }, inSession(workspace))
+    expect((await calls(cliPath))[0]!.argv).toContain("--alternatives")
     expect(value.alternatives).toEqual([
       { n: 1, id: "memo", name: "Memo" },
       { n: 2, id: "swiss", name: "Swiss" },
@@ -508,7 +509,7 @@ describe("pptwise_build", () => {
     matchesSchema(value, svc.buildTool.output.schema)
     const text = svc.buildTool.output.render({}, value)[0]!.text
     expect(text).toContain(
-      'Other themes under the pages, numbered as on the card: 1 = memo (Memo), 2 = swiss (Swiss). Do not stop to ask. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
+      'Other themes under the pages, numbered as on the card: 1 = memo (Memo), 2 = swiss (Swiss). Ask which one the user wants with ask_user_question, one option per number plus keeping the current theme. When the user picks one, by number ("switch to 2") or by name, set "theme" in deck.spec.json to its id, change nothing else, and call pptwise_build again.',
     )
     // Copied, not pointed at: the next build may redraw the CLI's own folder.
     await rm(join(workspace, ".pptwise", "weekly", "alternatives"), { recursive: true })
@@ -524,16 +525,20 @@ describe("pptwise_build", () => {
     ])
   })
 
-  it("asks the CLI for none when the user named the theme", async () => {
-    const { svc, workspace, route, handler } = await setup("build-named-theme")
+  it("asks the CLI for none when told, and passes no flag when left out", async () => {
+    const { svc, cliPath, workspace, route, handler } = await setup("build-named-theme")
     const target = await deck(workspace, ["alternatives"])
     const value = await svc.buildTool.execute({ target, alternatives: false }, inSession(workspace))
+    expect((await calls(cliPath))[0]!.argv).toContain("--no-alternatives")
     expect(value).not.toHaveProperty("alternatives")
     expect(svc.buildTool.output.render({}, value)[0]!.text).not.toContain("other themes")
     const bundle = JSON.parse((await request(handler, `${route}/${value.previewId}`)).body.toString("utf8")) as Record<string, unknown>
     expect(bundle).not.toHaveProperty("alternatives")
-    // Left out, the CLI decides, as before.
-    expect(await svc.buildTool.execute({ target }, inSession(workspace))).toHaveProperty("alternatives")
+    // Left out, the CLI decides.
+    await svc.buildTool.execute({ target }, inSession(workspace))
+    const [, leftOut] = await calls(cliPath)
+    expect(leftOut!.argv).not.toContain("--alternatives")
+    expect(leftOut!.argv).not.toContain("--no-alternatives")
   })
 
   it("says nothing about other themes when the build drew none", async () => {
