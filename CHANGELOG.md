@@ -1,5 +1,15 @@
 # @liustack/pptwise
 
+## 0.47.0 - 2026-10-16
+
+### Minor Changes
+
+- 91bc9d5: The skill now plans at least one `photo` page in every deck unless the user said not to show pictures, more when the material has places, products, people or work to show. A deck no longer ends up with no picture because its theme draws none on the cover: every factory theme draws a `photo` page's picture, so the theme is still picked for the occasion, never for pictures.
+
+### Patch Changes
+
+- 622677e: `asset-brief` on a deck with no `image` component no longer prints `no image components found for theme "<id>"`, which read as if the theme drew no pictures. It now says no page holds an image component yet, that the theme does not decide this, and that `image_grid`, `image_compare`, `device_mockup` and page backgrounds are not listed. Every factory theme draws a `photo` page's picture.
+
 ## 0.46.0 - 2026-10-16
 
 ### Minor Changes
