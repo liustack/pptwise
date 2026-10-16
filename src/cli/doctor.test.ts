@@ -17,6 +17,9 @@ import {
   scanSkillCopies,
   SKILL_COPY_FILES,
 } from "./doctor"
+import { KEY, publish, startServer } from "./packs/__fixtures__/pack-server"
+import { runLicenseSet } from "./packs/license"
+import type { PackUpdateCheck } from "./packs/sync"
 
 // The self-test render goes through the real pipeline, which needs the Node
 // platform seams wired the same way `src/cli.ts` wires them at startup.
@@ -709,5 +712,86 @@ describe("runDoctor: images", () => {
     } finally {
       await rm(home, { recursive: true, force: true })
     }
+  })
+})
+
+describe("content packs in the doctor report", () => {
+  const PROXY_VARS = ["HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy"] as const
+
+  async function report(checkPacks?: () => Promise<PackUpdateCheck>, env: NodeJS.ProcessEnv = { PATH: "" }) {
+    const home = await makeHome()
+    try {
+      return await buildDoctorReport({ home, env, version: CURRENT, checkPacks })
+    } finally {
+      await rm(home, { recursive: true, force: true })
+    }
+  }
+
+  it("asks no server without a license and says how to log in", async () => {
+    const server = await startServer()
+    try {
+      const r = await report(undefined, { PATH: "", PPTWISE_PACKS_URL: server.url })
+      expect(r.packs).toEqual({ state: "none" })
+      expect(server.requests).toEqual([])
+      expect(r.warnings.some((w) => w.check === "content packs")).toBe(false)
+      expect(renderDoctorReport(r)).toContain("pptwise login <key>")
+    } finally {
+      await server.close()
+    }
+  })
+
+  it("compares the catalog with the installed packs and says to run sync", async () => {
+    const server = await startServer()
+    const saved = Object.fromEntries(PROXY_VARS.map((name) => [name, process.env[name]]))
+    for (const name of PROXY_VARS) delete process.env[name]
+    const home = await makeHome()
+    try {
+      await publish(server, { id: "sample", version: "2026.1.0", themes: ["sample-brief"] })
+      await runLicenseSet(KEY)
+      const r = await buildDoctorReport({ home, env: { PATH: "", PPTWISE_PACKS_URL: server.url }, version: CURRENT })
+      expect(r.packs).toEqual({ state: "updates", server: server.url, updates: [{ id: "sample", version: "2026.1.0", title: "Pack sample" }] })
+      expect(server.requests).toEqual(["/api/packs/catalog"])
+      expect(r.warnings).toContainEqual({ check: "content packs", message: "1 theme pack can be updated", fix: "pptwise sync" })
+      expect(r.errors).toEqual([])
+      const rendered = renderDoctorReport(r)
+      expect(rendered).toContain("1 theme pack can be updated — run `pptwise sync`")
+      expect(rendered).toContain("sample 2026.1.0 (new)")
+      const json = JSON.parse((await runDoctor({ home, env: { PATH: "", PPTWISE_PACKS_URL: server.url }, version: CURRENT, json: true })).output)
+      expect(json.packs).toMatchObject({ state: "updates", updates: [{ id: "sample" }] })
+    } finally {
+      for (const name of PROXY_VARS) {
+        if (saved[name] === undefined) delete process.env[name]
+        else process.env[name] = saved[name]
+      }
+      await server.close()
+      await rm(home, { recursive: true, force: true })
+    }
+  })
+
+  it("reports a revoked or unknown key as a warning, and a held key as it is", async () => {
+    const revoked = await report(async () => ({ state: "revoked", server: "https://pptwise.com", message: "This license key was revoked." }))
+    expect(revoked.warnings.map((w) => w.message)).toContainEqual(expect.stringMatching(/revoked \(This license key was revoked\.\)/))
+    expect(revoked.errors).toEqual([])
+    const unknown = await report(async () => ({ state: "unknown-key", server: "https://pptwise.com" }))
+    expect(unknown.warnings).toContainEqual(expect.objectContaining({ check: "content packs", fix: "pptwise login <key>" }))
+    const held = await report(async () => ({ state: "held", server: "https://pptwise.com", message: "This purchase is being reviewed." }))
+    expect(held.warnings.some((w) => w.check === "content packs")).toBe(false)
+    expect(renderDoctorReport(held)).toContain("held while its purchase is reviewed (This purchase is being reviewed.) — run `pptwise sync` once the review clears")
+  })
+
+  it("counts an unreachable server as not checked, never as a failure", async () => {
+    const r = await report(async () => ({ state: "unchecked", server: "https://pptwise.com", message: "could not reach the pack server at pptwise.com: fetch failed (ENOTFOUND)" }))
+    expect(r.errors).toEqual([])
+    expect(r.warnings.some((w) => w.check === "content packs")).toBe(false)
+    expect(renderDoctorReport(r)).toContain("[-] not checked: could not reach the pack server")
+  })
+
+  it("turns a license file it cannot read into a warning instead of failing the report", async () => {
+    const r = await report(async () => {
+      throw new Error("license.json is not valid JSON")
+    })
+    expect(r.packs).toEqual({ state: "unchecked", message: "license.json is not valid JSON" })
+    expect(r.errors).toEqual([])
+    expect(r.warnings).toContainEqual({ check: "content packs", message: "the pack catalog was not checked: license.json is not valid JSON" })
   })
 })

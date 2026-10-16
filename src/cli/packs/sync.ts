@@ -174,8 +174,8 @@ function catalogFailure(server: string, e: unknown): string {
 /** `GET /api/packs/catalog` with the key. A non-2xx answer throws
  *  `ServerRefusal`, and a request that never got an answer throws what
  *  fetch threw. */
-export function requestCatalog(server: string, key: string): Promise<Response> {
-  return get(`${server}/api/packs/catalog`, key, CATALOG_TIMEOUT_MS)
+export function requestCatalog(server: string, key: string, timeoutMs = CATALOG_TIMEOUT_MS): Promise<Response> {
+  return get(`${server}/api/packs/catalog`, key, timeoutMs)
 }
 
 async function readCatalog(res: Response): Promise<CatalogEntry[]> {
@@ -284,6 +284,73 @@ export async function syncPacks(opts: PackSyncOptions = {}): Promise<PackSyncRep
     return { license: true, ok: false, server, error: catalogFailure(server, e), packs: [] }
   }
   return syncFromCatalog(server, key, res, opts)
+}
+
+/**
+ * What a look at the catalog found, without installing anything.
+ * `none`: no license, nothing asked. `current`: every pack this pptwise can
+ * take is installed at the catalog's version. `updates`: `updates` lists
+ * the packs `pptwise sync` would install or update. `unknown-key` (401),
+ * `revoked` (403), `held` (423): the server's answer about the key.
+ * `unchecked`: no answer, another status, or a catalog this pptwise cannot
+ * read, with why in `message`.
+ */
+export type PackUpdateState = "none" | "current" | "updates" | "unknown-key" | "revoked" | "held" | "unchecked"
+
+export interface PackUpdate {
+  id: string
+  version: string
+  title: string
+  /** The version installed now, absent for a pack not installed yet. */
+  installed?: string
+}
+
+export interface PackUpdateCheck {
+  state: PackUpdateState
+  server?: string
+  updates?: PackUpdate[]
+  /** The server's sentence, or why the catalog was not checked. */
+  message?: string
+}
+
+const CHECK_TIMEOUT_MS = 10_000
+
+/**
+ * One catalog request, compared with the installed packs: what `pptwise
+ * sync` would install or update. Writes nothing and never throws for the
+ * network or the server. A pack this pptwise cannot take, or a malformed
+ * catalog entry, is not an update.
+ */
+export async function checkPackUpdates(opts: PackSyncOptions = {}): Promise<PackUpdateCheck> {
+  const key = await readLicenseKey()
+  if (key === undefined) return { state: "none" }
+  const server = packsServerUrl(opts.env ?? process.env)
+  let catalog: CatalogEntry[]
+  try {
+    catalog = await readCatalog(await requestCatalog(server, key, CHECK_TIMEOUT_MS))
+  } catch (e) {
+    if (e instanceof ServerRefusal) {
+      const said = e.said === undefined ? {} : { message: e.said }
+      if (e.status === 401) return { state: "unknown-key", server, ...said }
+      if (e.status === 403) return { state: "revoked", server, ...said }
+      if (e.status === 423) return { state: "held", server, ...said }
+      return { state: "unchecked", server, message: e.message }
+    }
+    const message = e instanceof PptwiseError ? e.message : reachFailure(server, e)
+    return { state: "unchecked", server, message }
+  }
+  const root = packsRoot()
+  const engineVersion = opts.engineVersion ?? VERSION
+  const updates: PackUpdate[] = []
+  for (const entry of catalog) {
+    if (malformedEntry(entry) !== undefined || engineMismatch(entry, engineVersion) !== undefined) continue
+    const installed = await installedVersion(root, entry.id)
+    if (installed === entry.version) continue
+    const update: PackUpdate = { id: entry.id, version: entry.version, title: entry.title }
+    if (installed !== undefined) update.installed = installed
+    updates.push(update)
+  }
+  return updates.length === 0 ? { state: "current", server } : { state: "updates", server, updates }
 }
 
 function formatItem(item: PackSyncItem, width: number): string {

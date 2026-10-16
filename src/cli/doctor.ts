@@ -1,5 +1,6 @@
-// `pptwise doctor`: diagnose this machine's install without a single network
-// call. Rendering a PPTX is still zero-config and fully local. Optional
+// `pptwise doctor`: diagnose this machine's install. Its one network call is
+// a single pack catalog request, made only when a license is configured, to
+// say whether `pptwise sync` has anything to install. Rendering a PPTX is still zero-config and fully local. Optional
 // stock-photo search reads Pexels/Pixabay/Openverse credentials from
 // `$PPTWISE_HOME/config.json` or the env, and this report says whether those
 // keys are present and where they came from — never the values. What can actually go wrong is: an
@@ -24,6 +25,7 @@ import { userConfigPath } from "./home"
 import { resolveGenerators, resolveImageKeys, type GeneratorId, type ImageProviderId, type KeySource } from "./image-config"
 import { probeGenerators, type ProcessRunner } from "./image-generators"
 import { findOnPath } from "./path-lookup"
+import { checkPackUpdates, type PackUpdateCheck } from "./packs/sync"
 import { compareVersions, PACKAGE_NAME } from "./update"
 import { inspectWorkspace, type GitIgnoreStatus, type GitRunner } from "./workspace"
 
@@ -220,6 +222,10 @@ export interface DoctorReport {
   workspace: DoctorWorkspace
   images: DoctorImages
   generators: DoctorGenerator[]
+  /** What the pack catalog offers beyond the installed packs. `state` is
+   *  `none` without a license and `unchecked` when the server could not be
+   *  asked, neither of which is a finding. */
+  packs: PackUpdateCheck
   /** Hard failures: the only thing that makes `pptwise doctor` exit non-zero. */
   errors: DoctorFinding[]
   /** Worth fixing, never fatal — a stale skill copy or a missing optional
@@ -247,6 +253,8 @@ export interface DoctorInput {
   runGit?: GitRunner
   /** Injectable process runner for generator `--version` probes. */
   runProcess?: ProcessRunner
+  /** Injectable pack catalog check. Defaults to {@link checkPackUpdates}. */
+  checkPacks?: () => Promise<PackUpdateCheck>
 }
 
 /** `PINNED="0.18.0"` out of a launcher's text — the exact line
@@ -557,7 +565,15 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   const nodeVersion = input.nodeVersion ?? process.version
 
   const cwd = input.cwd ?? process.cwd()
-  const [skills, dsh, capabilities, selfTest, projectHit, images, generators] = await Promise.all([
+  const checkPacks = input.checkPacks ?? (() => checkPackUpdates({ env }))
+  // A license file or PPTWISE_PACKS_URL that cannot be read throws here, and
+  // becomes a finding below. The network never throws: it reads `unchecked`.
+  let packsProblem: string | undefined
+  const packsCheck = checkPacks().catch((e: unknown): PackUpdateCheck => {
+    packsProblem = e instanceof Error ? e.message : String(e)
+    return { state: "unchecked", message: packsProblem }
+  })
+  const [skills, dsh, capabilities, selfTest, projectHit, images, generators, packs] = await Promise.all([
     scanSkillCopies(home, version),
     inspectDsh(home, version),
     inspectCapabilities(env),
@@ -565,6 +581,7 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
     findConfig(cwd),
     inspectImages(env),
     inspectGenerators(env, input.runProcess),
+    packsCheck,
   ])
   const workspace = await inspectWorkspace({
     cwd,
@@ -668,7 +685,29 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
     })
   }
 
-  return { version, runtime, skills, dsh, capabilities, selfTest, workspace, images, generators, errors, warnings }
+  if (packsProblem !== undefined) {
+    warnings.push({ check: "content packs", message: `the pack catalog was not checked: ${packsProblem}` })
+  } else if (packs.state === "updates") {
+    const count = packs.updates!.length
+    warnings.push({
+      check: "content packs",
+      message: `${count} theme pack${count === 1 ? "" : "s"} can be updated`,
+      fix: "pptwise sync",
+    })
+  } else if (packs.state === "unknown-key") {
+    warnings.push({
+      check: "content packs",
+      message: `the pack server does not recognize the saved license key${packs.message ? ` (${packs.message})` : ""}`,
+      fix: "pptwise login <key>",
+    })
+  } else if (packs.state === "revoked") {
+    warnings.push({
+      check: "content packs",
+      message: `the saved license key has been revoked${packs.message ? ` (${packs.message})` : ""}. Installed packs keep working`,
+    })
+  }
+
+  return { version, runtime, skills, dsh, capabilities, selfTest, workspace, images, generators, packs, errors, warnings }
 }
 
 function mark(state: "ok" | "warn" | "fail" | "n/a"): string {
@@ -679,7 +718,7 @@ export function renderDoctorReport(report: DoctorReport): string {
   const lines: string[] = []
 
   lines.push(`pptwise doctor — CLI ${report.version}`)
-  lines.push("(local diagnostics only: nothing is written, no network call is made)")
+  lines.push("(nothing is written. The one network call is a pack catalog request, made only when a license is configured)")
   lines.push("")
 
   lines.push("Installed skill copies (a copy keeps its install-time version forever)")
@@ -787,6 +826,10 @@ export function renderDoctorReport(report: DoctorReport): string {
   }
   lines.push("")
 
+  lines.push("Content packs (extra themes a license covers)")
+  for (const line of renderPacks(report.packs)) lines.push(`  ${line}`)
+  lines.push("")
+
   lines.push("Image generators (optional, off until enabled)")
   for (const gen of report.generators) {
     if (!gen.found) {
@@ -815,6 +858,31 @@ export function renderDoctorReport(report: DoctorReport): string {
   }
 
   return lines.join("\n")
+}
+
+function renderPacks(packs: PackUpdateCheck): string[] {
+  const said = packs.message ? ` (${packs.message})` : ""
+  switch (packs.state) {
+    case "none":
+      return [`${mark("n/a")} no license configured — \`pptwise login <key>\` installs the packs a license covers`]
+    case "current":
+      return [`${mark("ok")} every pack is up to date with ${packs.server}`]
+    case "updates": {
+      const updates = packs.updates!
+      return [
+        `${mark("warn")} ${updates.length} theme pack${updates.length === 1 ? "" : "s"} can be updated — run \`pptwise sync\``,
+        ...updates.map((u) => `    ${u.id} ${u.version}${u.installed === undefined ? " (new)" : ` (installed ${u.installed})`}`),
+      ]
+    }
+    case "unknown-key":
+      return [`${mark("warn")} the pack server does not recognize the saved license key${said}`, "    fix: pptwise login <key>"]
+    case "revoked":
+      return [`${mark("warn")} the saved license key has been revoked${said}. Installed packs keep working`]
+    case "held":
+      return [`${mark("n/a")} the license key is held while its purchase is reviewed${said} — run \`pptwise sync\` once the review clears`]
+    case "unchecked":
+      return [`${mark("n/a")} not checked: ${packs.message}`]
+  }
 }
 
 export interface DoctorOptions extends DoctorInput {

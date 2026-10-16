@@ -8,7 +8,7 @@ import { HELD, KEY, REVOKED, publish, sendJson, startServer, type FakePackServer
 import { runLicenseSet } from "./license"
 import { listInstalledPacks } from "./store"
 import { VERSION } from "../../version"
-import { packsServerUrl, runPacksList, runPacksSync, syncPacks, type PackSyncReport } from "./sync"
+import { checkPackUpdates, packsServerUrl, runPacksList, runPacksSync, syncPacks, type PackSyncReport } from "./sync"
 
 installNodePlatform()
 
@@ -333,5 +333,53 @@ describe("packs list", () => {
         ],
       },
     ])
+  })
+})
+
+describe("checkPackUpdates", () => {
+  const check = () => checkPackUpdates({ env: { PPTWISE_PACKS_URL: server.url }, engineVersion: ENGINE })
+
+  it("asks nothing without a license", async () => {
+    expect(await check()).toEqual({ state: "none" })
+    expect(server.requests).toEqual([])
+  })
+
+  it("lists the new and newer packs sync would install, and downloads nothing", async () => {
+    await publish(server, { id: "sample", version: "2026.1.0", themes: ["sample-brief"] })
+    await runLicenseSet(KEY)
+    await sync()
+    expect(await check()).toEqual({ state: "current", server: server.url })
+    await publish(server, { id: "sample", version: "2026.2.0", themes: ["sample-brief"] })
+    await publish(server, { id: "extra", version: "2026.1.0", title: "Extra pack", themes: ["extra-brief"] })
+    await publish(server, { id: "future", version: "2026.1.0", themes: ["future-brief"], engine: FUTURE_ENGINE })
+    server.requests.length = 0
+    expect(await check()).toEqual({
+      state: "updates",
+      server: server.url,
+      updates: [
+        { id: "sample", version: "2026.2.0", title: "Pack sample", installed: "2026.1.0" },
+        { id: "extra", version: "2026.1.0", title: "Extra pack" },
+      ],
+    })
+    expect(server.requests).toEqual(["/api/packs/catalog"])
+    expect(await installedVersions()).toEqual([["sample", "2026.1.0"]])
+  })
+
+  it("reports what the server says about the key", async () => {
+    await runLicenseSet(REVOKED)
+    expect(await check()).toEqual({ state: "revoked", server: server.url, message: "This key was revoked." })
+    await runLicenseSet(HELD)
+    expect(await check()).toEqual({ state: "held", server: server.url, message: "This purchase is being reviewed." })
+    await runLicenseSet("ptw_" + "a".repeat(32))
+    expect(await check()).toMatchObject({ state: "unknown-key" })
+  })
+
+  it("marks the catalog unchecked when the server cannot be reached", async () => {
+    await runLicenseSet(KEY)
+    const url = server.url
+    await server.close()
+    const result = await checkPackUpdates({ env: { PPTWISE_PACKS_URL: url }, engineVersion: ENGINE })
+    expect(result).toMatchObject({ state: "unchecked", server: url, message: expect.stringContaining("127.0.0.1") })
+    server = await startServer()
   })
 })
