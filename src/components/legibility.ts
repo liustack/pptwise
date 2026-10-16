@@ -224,6 +224,8 @@ export function layoutAtSize(
     lineHeightRatio?: number
     fontFamily?: string
     bold?: boolean
+    /** Even out a short last line, breaking between words (`balanceLines`). */
+    balance?: boolean
   },
 ): { lines: string[]; fontSize: number; lineHeight: number; truncated: boolean } {
   const content = text?.trim() ?? ""
@@ -241,6 +243,7 @@ export function layoutAtSize(
     bold: opts.bold,
     fontFamily: opts.fontFamily,
     minPt: fontSize,
+    ...(opts.balance ? { balanceLines: true } : {}),
   })
   const maxUnits = opts.maxWidth / fontSize
   const kept = laid.lines.slice(0, opts.maxLines)
@@ -255,7 +258,7 @@ export function layoutAtSize(
 
 export function layoutFormTitle(
   text: string,
-  opts: { maxWidth: number; fontSize: number; fontFamily?: string; maxLines?: number; floor?: number },
+  opts: { maxWidth: number; fontSize: number; fontFamily?: string; maxLines?: number; floor?: number; balance?: boolean },
 ) {
   const floor = opts.floor ?? FORM_TITLE_FLOOR
   return layoutAtSize(text, {
@@ -265,6 +268,7 @@ export function layoutFormTitle(
     lineHeightRatio: TITLE_LH,
     bold: true,
     fontFamily: opts.fontFamily,
+    ...(opts.balance ? { balance: true } : {}),
   })
 }
 

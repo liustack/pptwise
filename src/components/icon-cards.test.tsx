@@ -491,11 +491,6 @@ describe("icon_cards columns side by side", () => {
       expect(columns).toHaveLength(component.items.length)
       const words = columns.flat().map((l) => l.text).join("")
       for (const item of component.items) expect(words).toContain(item.text)
-      // The gutter takes width from the titles, and a short title shrinks
-      // to keep its one line rather than break in two.
-      for (const group of Array.from(container.querySelectorAll("svg > g > g"))) {
-        expect(group.querySelectorAll('text[font-weight="700"]')).toHaveLength(1)
-      }
       for (let i = 0; i + 1 < columns.length; i++) {
         for (const a of columns[i]!) {
           for (const b of columns[i + 1]!) {
@@ -507,4 +502,93 @@ describe("icon_cards columns side by side", () => {
       }
     })
   }
+
+  it("keeps the type its size and takes the gutter in more lines while the row has the height", () => {
+    // A brief page with four cards in a 293px row. The gutter's first cut
+    // set the type smaller to keep each line's count: titles from 36.6px to
+    // 28.9px and texts from 21.9px to 17.4px, with half the page empty
+    // under them. The row has the height for a title's second line and the
+    // texts' wrapping at the size the cards had before the gutter.
+    const ctx = themeCtx("brief")
+    const brief = {
+      type: "icon_cards" as const,
+      items: [
+        card("自建基建替换", "自建基建替换公有云托管，单个席位的月度成本下降三成一。", "target"),
+        card("客群场景复制", "华东区域的渗透率是华南的一半，销售覆盖密度是主要原因。", "gauge"),
+        card("开通流程自动化", "客户成功工程师的人均负荷已经接近上限，扩张速度受制于招聘。", "shield"),
+        card("渠道伙伴培育", "两家竞品在中小客户市场以低于成本的价格投标，短期内难以正面应对。", "rocket"),
+      ],
+    }
+    const { container } = svg(iconCards.render(brief, { x: 96, y: 216, w: 1088, h: 292.8 }, ctx))
+    const sizes = (weight: string | null) =>
+      new Set(
+        Array.from(container.querySelectorAll("text"))
+          .filter((t) => t.getAttribute("font-weight") === weight)
+          .map((t) => Number(t.getAttribute("font-size")).toFixed(1)),
+      )
+    expect(sizes("700")).toEqual(new Set(["36.6"]))
+    expect(sizes(null)).toEqual(new Set(["21.9"]))
+    expect(container.querySelectorAll("[data-truncated]")).toHaveLength(0)
+    const titles = Array.from(container.querySelectorAll('text[font-weight="700"]')).map((t) => t.textContent)
+    expect(titles).toEqual(["自建基建替换", "客群场景复制", "开通流程", "自动化", "渠道伙伴培育"])
+  })
+
+  it("sets a title just small enough that no English word breaks between its letters", () => {
+    // A rally page in English on brief: at the column's size, 「Co-branded」
+    // ran wider than its measure and broke as 「Co-brande」+「d packs」.
+    const fans = {
+      type: "icon_cards" as const,
+      items: [
+        card("Drink stations", "Fresh cups, a code on each", "cup-soda"),
+        card("Co-branded packs", "Pack codes track sell-through", "package"),
+        card("Stub swaps", "Store vouchers track visits", "ticket"),
+      ],
+    }
+    const { container } = svg(iconCards.render(fans, { x: 96, y: 216, w: 1088, h: 341.7 }, themeCtx("brief")))
+    const titles = Array.from(container.querySelectorAll('text[font-weight="700"]')).map((t) => t.textContent ?? "")
+    const words = new Set(fans.items.flatMap((item) => item.title.split(" ")))
+    for (const line of titles) for (const word of line.split(" ")) expect(words, line).toContain(word)
+    // Only as far as 「Co-branded」 needs: the titles stood at 46px before the
+    // gutter, and holding every title to one line set them at 32px.
+    const size = Number(container.querySelector('text[font-weight="700"]')!.getAttribute("font-size"))
+    expect(size).toBeGreaterThan(44)
+    expect(size).toBeLessThan(46)
+  })
+
+  it("breaks a title in two between words, not in even halves through one", () => {
+    // Balanced halves split 评测 and 标注 on a thesis page, and 三只 on a
+    // crayon one; the segmenter hands those words back a character at a time.
+    const field = {
+      type: "icon_cards" as const,
+      items: [
+        card("音系先验注入", "对照组实验排除了说话人重叠带来的数据泄漏解释。", "target"),
+        card("低资源评测协议", "评测集按村落分层抽样，避免了年龄偏置。", "gauge"),
+        card("半自动标注流水线", "方法迁移到藏缅语支后，仅声母系统的收益得到复现。", "shield"),
+        card("村落分层抽样", "半自动标注流水线把每小时标注成本从四百元降到九十元。", "rocket"),
+      ],
+    }
+    const play = {
+      type: "icon_cards" as const,
+      items: [
+        card("四人小组搭积木", "户外每天两小时，只因暴雨停过三次。", "target"),
+        card("绘本角的旧沙发", "搭积木从各玩各的，变成四人一组。", "gauge"),
+        card("小小值日生", "春游走了两公里，没有一个孩子要抱。", "shield"),
+        card("戏剧节三只小猪", "戏剧节排练了四个星期，每个孩子都有一句台词。", "rocket"),
+      ],
+    }
+    const titles = (theme: string, ir: typeof field) => {
+      const { container } = svg(iconCards.render(ir, { x: 96, y: 200, w: 1088, h: 307.2 }, themeCtx(theme)))
+      return Array.from(container.querySelectorAll("svg > g > g")).map((group) =>
+        Array.from(group.querySelectorAll('text[font-weight="700"]')).map((t) => t.textContent),
+      )
+    }
+    const all = [...titles("thesis", field), ...titles("crayon", play)]
+    expect(all.filter((lines) => lines.length === 2)).toHaveLength(4)
+    for (const lines of all) {
+      if (lines.length < 2) continue
+      expect(
+        [["低资源", "评测协议"], ["半自动", "标注流水线"], ["四人小组", "搭积木"], ["绘本角的", "旧沙发"], ["戏剧节", "三只小猪"]],
+      ).toContainEqual(lines)
+    }
+  })
 })

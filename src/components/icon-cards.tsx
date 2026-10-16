@@ -9,9 +9,11 @@ import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import { withBlockTitle } from "./block-title"
 import { OmittedText } from "./omitted-text"
 import { graphicInk, resolveSemanticColor } from "../render/ink"
+import { allowsLineBreakBetween, measureTextUnits } from "../lib/svg-text-layout"
 import { columnGutterEm } from "../lib/column-gutter"
 import {
   boardTypeScale,
+  capFormBody,
   fillCardType,
   formIconColumnCols,
   formLineHeight,
@@ -63,7 +65,13 @@ function layoutItemText(
     fontSize: titleSize,
     fontFamily: ctx.fonts.heading,
     maxLines: Math.max(1, titleMaxLines),
+    // A title the measure breaks in two is set in even halves, and then
+    // `splitTitleAtWord` moves a break that splits a word.
+    balance: true,
   })
+  if (title.lines.length === 2 && !title.truncated) {
+    title.lines = splitTitleAtWord(titleText, title.lines, lineMeasure(colW, titleSize, titleText), titleSize, ctx.fonts.heading)
+  }
   const text =
     bodyMaxLines > 0
       ? layoutFormBody(bodyText, {
@@ -82,6 +90,77 @@ function layoutItemText(
 }
 
 const NODE_R_MIN = 28
+
+const CJK_CHAR_RE = /[\u3400-\u9fff]/
+const WIDE_CHAR_RE = /[\u2e80-\u9fff\uff00-\uffef]/
+/** Characters that stand as words of their own between other words. */
+const PARTICLE_RE = /[的地得了着过是在和与及或也都就把被之而]/
+/** Particles that hold on to the word before them: a line never starts with one. */
+const TRAILING_PARTICLE_RE = /^[的地得了着过之]$/
+
+/**
+ * The offsets inside Chinese words, where a break would split one.
+ *
+ * `Intl.Segmenter` does not know many two-character words and hands them
+ * back a character at a time (评|测, 标|注, 午|间|延|时). A run of such
+ * single characters, other than particles, that is even in length is read
+ * as two-character words. An odd run is left open: its pairing could start
+ * at either end. A particle that holds on to the word before it (的, 了)
+ * counts as part of that word.
+ */
+function insideTitleWords(text: string): Set<number> {
+  const inside = new Set<number>()
+  if (typeof Intl === "undefined" || typeof Intl.Segmenter !== "function") return inside
+  let run: number[] = []
+  const closeRun = () => {
+    if (run.length % 2 === 0) for (let i = 1; i < run.length; i += 2) inside.add(run[i]!)
+    run = []
+  }
+  for (const { segment, index, isWordLike } of new Intl.Segmenter("zh", { granularity: "word" }).segment(text)) {
+    if (isWordLike && segment.length === 1 && CJK_CHAR_RE.test(segment) && !PARTICLE_RE.test(segment)) {
+      run.push(index)
+      continue
+    }
+    closeRun()
+    if (index > 0 && TRAILING_PARTICLE_RE.test(segment)) inside.add(index)
+    if (isWordLike && CJK_CHAR_RE.test(segment)) for (let at = index + 1; at < index + segment.length; at += 1) inside.add(at)
+  }
+  closeRun()
+  return inside
+}
+
+/**
+ * A Chinese title set in two lines, broken between words.
+ *
+ * The balanced wrap breaks a title in even halves and splits a word to do
+ * it (低资源评/测协议, 半自动标/注流水线). A card title is short, so an
+ * uneven pair of lines that keeps its words whole reads better: among the
+ * breaks whose lines both fit the measure, the one outside a word wins, then
+ * the narrower widest line. With no break outside a word the balanced
+ * lines stand. A break never falls inside a run of Latin letters or digits
+ * (6·14), and neither line is a lone character.
+ */
+function splitTitleAtWord(text: string, balanced: string[], measure: number, size: number, fontFamily: string | undefined): string[] {
+  const content = text.trim()
+  if (!CJK_CHAR_RE.test(content)) return balanced
+  const inside = insideTitleWords(content)
+  const units = (line: string) => measureTextUnits(line, { bold: true, fontFamily }) * size
+  let best: { lines: string[]; inside: boolean; widest: number } | null = null
+  for (let k = 1; k < content.length; k += 1) {
+    const before = content[k - 1]!
+    const after = content[k]!
+    const spaced = before === " " || after === " "
+    if (!spaced && !WIDE_CHAR_RE.test(before) && !WIDE_CHAR_RE.test(after)) continue
+    if (!allowsLineBreakBetween(before, after)) continue
+    const lines = [content.slice(0, k).trimEnd(), content.slice(k).trimStart()]
+    if (lines.some((line) => line.length < 2)) continue
+    const widest = Math.max(...lines.map(units))
+    if (widest > measure + 1e-6) continue
+    const split = { lines, inside: inside.has(k), widest }
+    if (!best || (split.inside !== best.inside ? !split.inside : split.widest < best.widest - 1e-6)) best = split
+  }
+  return best && !best.inside ? best.lines : balanced
+}
 
 function nodeRadius(colW: number): number {
   return Math.round(Math.min(44, Math.max(NODE_R_MIN, colW * 0.16)))
@@ -131,7 +210,21 @@ function geometry(
   const cols = formIconColumnCols(n, w, COL_INSET)
   const rows = Math.ceil(n / cols)
   const colW = w / cols
-  const settled = columnsAt(component, w, ctx, cols, rows, colW, nodeRadius(colW), boxH)
+  const natural = columnsAt(component, w, ctx, cols, rows, colW, nodeRadius(colW), boxH)
+  // The type keeps the column's sizes over the icon: a row too short for
+  // the gutter's extra lines at the node's natural size gives up node
+  // height first, and the type is set smaller only when the smallest node
+  // still leaves it short.
+  let settled = natural
+  if (boxH !== undefined && !natural.keptSizes) {
+    for (let r = natural.nodeR - 1; r >= NODE_R_MIN; r--) {
+      const smaller = columnsAt(component, w, ctx, cols, rows, colW, r, boxH, natural.nodeR)
+      if (smaller.keptSizes) {
+        settled = smaller
+        break
+      }
+    }
+  }
   // The icon is the one thing in a column that is not content. When the box
   // is too short for every title and text at the node's natural size, the
   // node gives up height first, as far as its own floor, before a word goes.
@@ -169,6 +262,7 @@ function columnsAt(
   colW: number,
   nodeR: number,
   boxH?: number,
+  typeR = nodeR,
 ) {
   const nodeSize = nodeR * 2
   // Every card keeps the tag row when any card has a tag, so the titles in a
@@ -188,15 +282,10 @@ function columnsAt(
       ? naturalInner
       : Math.max(1, (boxH - GAP * (rows - 1)) / rows)
   const innerH = Math.max(1, rowH)
-  // Each line is set in its own measure, its column less its gutter
-  // (`lineMeasure`). `contentW`, the column less its inset, is only where
-  // the type judges whether the box has room to grow (`fillCardType`).
-  const words = component.items.map((item) => `${item.title}${item.text}`).join("")
-  const filled = fillCardType({
-    innerH: Math.max(1, innerH - extraAbove),
-    contentW: Math.max(24, colW - COL_INSET),
-    // One measure for every line, at the widest gutter any card's words keep.
-    measure: (size) => lineMeasure(colW, size, words),
+  // The type is sized under the node it was first sized under, so a node
+  // giving up height leaves room for the gutter's lines, not larger type.
+  const common = {
+    innerH: Math.max(1, innerH - (typeR * 2 + GAP_NODE_TITLE + tagRow)),
     titleSize: start.title,
     bodySize: start.body,
     gap: GAP_TITLE_TEXT,
@@ -205,7 +294,23 @@ function columnsAt(
     fonts: { heading: ctx.fonts.heading, body: ctx.fonts.body },
     titleLhRatio: TITLE_LINE_HEIGHT_RATIO,
     bodyLhRatio: TEXT_LINE_HEIGHT_RATIO,
-  })
+  }
+  // The type is sized on the whole column, as it always was, and then set in
+  // each line's own measure, its column less the gutter: the gutter costs a
+  // line more of wrapping, not a smaller size, while the row has the height
+  // for it. Only a row too short for those lines sizes the type again
+  // against the measures themselves (`sizedInMeasure`).
+  const sized = fillCardType({ ...common, contentW: Math.max(24, colW - COL_INSET) })
+  // A Latin word wider than its measure would break between its letters,
+  // so the titles come down only as far as their longest word needs.
+  const keptTitle = Math.min(sized.titleSize, widestWordSize(component, colW, ctx))
+  const keptBody = capFormBody(keptTitle, sized.bodySize)
+  const kept = linesInMeasure(component, colW, ctx, keptTitle, keptBody)
+  const keptH = kept.titleLines * formLineHeight(keptTitle, TITLE_LINE_HEIGHT_RATIO) + GAP_TITLE_TEXT + kept.bodyLines * formLineHeight(keptBody, TEXT_LINE_HEIGHT_RATIO)
+  const keptSizes = kept.whole && extraAbove + keptH <= innerH
+  const filled = keptSizes
+    ? { titleSize: keptTitle, bodySize: keptBody, titleMaxLines: kept.titleLines, bodyMaxLines: kept.bodyLines }
+    : sizedInMeasure(common, colW, component)
   const fit = linesThatFit({
     innerH,
     titleSize: filled.titleSize,
@@ -229,7 +334,69 @@ function columnsAt(
     ),
   )
   const measuredH = boxH === undefined ? naturalMeasured : Math.min(boxH, rows * rowH + (rows - 1) * GAP)
-  return { cols, rows, colW, nodeR, nodeSize, layouts, rowH, measuredH, tagRow }
+  return { cols, rows, colW, nodeR, nodeSize, layouts, rowH, measuredH, tagRow, keptSizes }
+}
+
+/**
+ * The lines every title and text takes at these sizes in its own measure,
+ * and whether each is set whole: a title in two lines at most, a text in
+ * eight.
+ */
+function linesInMeasure(component: IconCardsComponent, colW: number, ctx: ComponentCtx, titleSize: number, bodySize: number) {
+  let titleLines = 1
+  let bodyLines = 0
+  let whole = true
+  for (const item of component.items) {
+    const titleText = stripEmphasis(item.title)
+    const title = layoutFormTitle(titleText, { maxWidth: lineMeasure(colW, titleSize, titleText), fontSize: titleSize, fontFamily: ctx.fonts.heading, maxLines: 2, balance: true })
+    titleLines = Math.max(titleLines, title.lines.length)
+    if (title.truncated || splitsAWord(titleText, lineMeasure(colW, titleSize, titleText), titleSize, ctx.fonts.heading)) whole = false
+    if (!item.text.trim()) continue
+    const bodyText = stripEmphasis(item.text)
+    const text = layoutFormBody(bodyText, { maxWidth: lineMeasure(colW, bodySize, bodyText), fontSize: bodySize, titleSize, maxLines: 8, lineHeightRatio: TEXT_LINE_HEIGHT_RATIO, fontFamily: ctx.fonts.body })
+    bodyLines = Math.max(bodyLines, text.lines.length)
+    if (text.truncated) whole = false
+  }
+  return { titleLines, bodyLines: Math.max(component.items.some((it) => it.text.trim()) ? 2 : 0, bodyLines), whole }
+}
+
+/**
+ * The largest title size at which every Latin word of every title fits its
+ * measure whole, or Infinity when no title has one.
+ */
+function widestWordSize(component: IconCardsComponent, colW: number, ctx: ComponentCtx): number {
+  let size = Infinity
+  for (const item of component.items) {
+    const title = stripEmphasis(item.title)
+    const words = title.split(/\s+/).filter((word) => /[A-Za-z]/.test(word))
+    if (words.length === 0) continue
+    const units = Math.max(...words.map((word) => measureTextUnits(word, { bold: true, fontFamily: ctx.fonts.heading })))
+    size = Math.min(size, colW / (units + columnGutterEm(title)) - 1e-3)
+  }
+  return size
+}
+
+/**
+ * Whether a Latin word of the title is wider than the measure, so the wrap
+ * would break it between letters: 「Co-brande」+「d packs」 on a rally page
+ * set at the column's size. A size that does that is no size to keep.
+ */
+function splitsAWord(title: string, measure: number, size: number, fontFamily: string | undefined): boolean {
+  return title
+    .split(/\s+/)
+    .filter((word) => /[A-Za-z]/.test(word))
+    .some((word) => measureTextUnits(word, { bold: true, fontFamily }) * size > measure + 1e-6)
+}
+
+/**
+ * The type sized against each line's own measure, for a row too short to
+ * take the column's sizes with the gutter's extra wrapping. A title that
+ * fits one line at the starting size keeps to one line (`fillCardType`).
+ */
+function sizedInMeasure(common: Omit<Parameters<typeof fillCardType>[0], "contentW" | "measure">, colW: number, component: IconCardsComponent) {
+  // One measure for every line, at the widest gutter any card's words keep.
+  const words = component.items.map((item) => `${item.title}${item.text}`).join("")
+  return fillCardType({ ...common, contentW: Math.max(24, colW - COL_INSET), measure: (size) => lineMeasure(colW, size, words) })
 }
 
 function measureIconColumns(component: IconCardsComponent, w: number, ctx: ComponentCtx): number {
