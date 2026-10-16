@@ -3,8 +3,8 @@
 // check (`findCrowdedColumns`): those that set items side by side with no
 // card ground between them. Icon cards never draw a ground, and neither do
 // the sentences under steps or the notes under a chevron band. People,
-// product and quote cards and matrix cells draw one, except on a ruled
-// theme, where the words stand on the paper under a hairline.
+// product, quote, kpi and numbered cards and matrix cells draw one, except on
+// a ruled theme, where the words stand on the paper under a hairline.
 import { beforeAll, describe, expect, it } from "vitest"
 import { findCrowdedColumns } from "../audit/deck-audit"
 import { installNodePlatform } from "../platform/node"
@@ -12,7 +12,9 @@ import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup } from "../render/serialize"
 import { chevronProcess } from "./chevron-process"
 import { iconCards } from "./icon-cards"
+import { kpi } from "./kpi"
 import { matrix } from "./matrix"
+import { numberedCards } from "./numbered-cards"
 import { peopleCards } from "./people-cards"
 import { productCards } from "./product-cards"
 import { quoteWall } from "./quote-wall"
@@ -40,6 +42,33 @@ const services = {
 }
 
 const cards = {
+  kpi_cards: (ctx: ReturnType<typeof boundThemeCtx>) =>
+    kpi.render(
+      {
+        type: "kpi_cards",
+        items: [
+          { value: "98.6%", label: "群众满意率", note: "有效投诉量同比下降四成" },
+          { value: "106", unit: "人", label: "帮办代办队伍", note: "覆盖全部十二个街道" },
+          { value: "2.1万", unit: "人次", label: "午间延时服务", note: "主要集中在社保与不动产" },
+          { value: "35%", label: "材料精简", note: "重复提交材料基本消除" },
+        ],
+      },
+      BOX,
+      ctx,
+    ),
+  numbered_cards: (ctx: ReturnType<typeof boundThemeCtx>) =>
+    numberedCards.render(
+      {
+        type: "numbered_cards",
+        // Nine or more stand in two columns.
+        items: ["全程网办", "帮办代办", "午间延时", "材料精简", "一窗通办", "跨省通办", "免证办理", "预约上门", "夜间值守", "周末不打烊"].map((title, i) => ({
+          title,
+          body: `第 ${i + 1} 项举措覆盖的事项与街道。`,
+        })),
+      },
+      { ...BOX, y: 160, h: 480 },
+      ctx,
+    ),
   people_cards: (ctx: ReturnType<typeof boundThemeCtx>) =>
     peopleCards.render(
       {

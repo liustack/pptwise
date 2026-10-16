@@ -555,7 +555,7 @@ export const kpi: SvgComponent<KpiComponent> = {
           const tagSpec = ordinaryTagSpec(ctx)
           const tagFits = item.tag ? tagWidth(item.tag.text, tagSpec) <= cardW - 40 : true
           return (
-            <g key={i}>
+            <g key={i} data-audit-column={ruled ? "" : undefined}>
               {ruled ? (
                 <line x1={cardX} y1={cardY} x2={cardX + cardW} y2={cardY} stroke={hairlineInk(ctx)} strokeWidth={HAIRLINE} />
               ) : (

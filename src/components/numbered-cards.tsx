@@ -402,7 +402,7 @@ export const numberedCards: SvgComponent<NumberedCardsComponent> = {
             ...(reversed ? { accent: onPill } : {}),
           })
         return (
-          <g key={i} data-card-marked={marked ? "1" : undefined}>
+          <g key={i} data-card-marked={marked ? "1" : undefined} data-audit-column={ruled ? "" : undefined}>
             <OmittedText text={omittedText} />
             <OmittedText text={omittedSub} />
             {ruled ? (

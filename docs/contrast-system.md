@@ -201,7 +201,7 @@ proportional font's letters run a few pixels off the estimate, and the
 terminal timeline above, with Latin names in its descriptions, stood 28px
 apart at 16px by the estimate and about a character apart on screen.
 
-Seven components opt in, the ones that set items side by side with no card
+Nine components opt in, the ones that set items side by side with no card
 ground between them. The horizontal timeline marks each milestone.
 `icon_cards` marks each card, since it never draws a ground: until 2026-10
 it offered each line its column less 16px, and four cards across a page
@@ -216,10 +216,12 @@ characters: until 2026-10 the steps set their sentences in the whole slot,
 and a brief page's mixed sentences stood 26px and 31px apart at 16px. The
 words inside a chevron stand on its own fill or outline and are not
 compared. `people_cards`,
-`product_cards`, `quote_wall` and `matrix` mark each card or cell only on a
-ruled theme, where the words stand on the paper under a hairline. On every
-other theme their words stand inside a card's own ground, and the card's edge
-is the break between one card and the next, so they are not compared.
+`product_cards`, `quote_wall`, `matrix`, `kpi_cards` and `numbered_cards`
+mark each card, cell or pill only on a ruled theme, where the words stand on
+the paper under a hairline (numbered cards stand side by side from nine
+items, in two columns). On every other theme their words stand inside a
+card's own ground, and the card's edge is the break between one card and the
+next, so they are not compared.
 
 Marking every leaf `data-audit-box` as a column across the whole gallery
 (2640 pages) and the showcase decks with their alternatives (1232 pages)
@@ -231,9 +233,8 @@ back by a defect. The rest stay out for what they are:
 - `logo_wall` sets each name inside its tile.
 - `sankey` sets its node labels down the sides of the flow, one column of
   labels per column of nodes, never two labels side by side on a row.
-- Components with no `data-audit-box` per item (`kpi_cards`, `numbered_cards`
-  and the like) give the check nothing to tell one item's words from the
-  next. They need a per-item group before they can opt in.
+- Marking every kpi and numbered card a column on every theme finds nothing
+  in the gallery or the showcase decks either (2026-10).
 
 ## Full-matrix regression net (`full-matrix-contrast.test.ts`)
 
