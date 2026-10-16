@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/banner.png" alt="pptwise: A real PowerPoint, not HTML." width="100%"></p>
 
-<h1 align="center">pptwise</h1>
+<h1 align="center">PPTwise</h1>
 
 <p align="center"><b>A real PowerPoint, not HTML.</b></p>
 
@@ -41,7 +41,7 @@ One page from the sample deck of each of the 24 themes, then eight up close, all
 
 ## Talk to us
 
-Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issues/new/choose), or follow **[@liustack](https://x.com/liustack)** on X. Share what you made with pptwise, which harness you use, and what the next release should solve. New releases land there first.
+Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issues/new/choose), or follow **[@liustack](https://x.com/liustack)** on X. Share what you made with PPTwise, which harness you use, and what the next release should solve. New releases land there first.
 
 ## Highlights
 
@@ -49,7 +49,7 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 **✏️ Open it in PowerPoint and keep working.** Every heading, bullet, and chart bar opens in PowerPoint for you to retype and restyle. Chart and table figures are the exception: every bar and cell is an editable shape with editable text, not a native PowerPoint chart or table object carrying data, so to change the numbers, have your AI rebuild that page. Start from 24 factory themes, copy one into your workspace, or extract colors and fonts from a deck your company already uses.
 
-**🔌 Installs into the agent you already use.** One command puts pptwise into DeepSeek Harness, Claude Code, or any agent that reads a skill folder (Codex and friends), and it knows how to build a deck the moment it lands.
+**🔌 Installs into the agent you already use.** One command puts PPTwise into DeepSeek Harness, Claude Code, or any agent that reads a skill folder (Codex and friends), and it knows how to build a deck the moment it lands.
 
 **🔁 Revisions without describing everything again.** One command opens a live preview in your browser. Tell your AI what to change in plain words, and the page refreshes itself as each revision lands.
 
@@ -59,15 +59,15 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 **Step 1, hand it to your AI.** Send it this line:
 
-> Install pptwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md, then run the health check and tell me the result.
+> Install PPTwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md, then run the health check and tell me the result.
 
-**On DeepSeek Harness, send this instead.** There pptwise is a native plugin rather than a skill folder, so it has its own guide. You pick the line, not your agent: an agent cannot reliably tell which harness it is running in.
+**On DeepSeek Harness, send this instead.** There PPTwise is a native plugin rather than a skill folder, so it has its own guide. You pick the line, not your agent: an agent cannot reliably tell which harness it is running in.
 
-> Install pptwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md, then run the health check and tell me the result.
+> Install PPTwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md, then run the health check and tell me the result.
 
 **Adding it yourself in DeepSeek Harness Desktop?** Open **Plugins**, choose **Add plugin**, and enter the package name `@liustack/pptwise@0.48.0`, not the GitHub address. The GitHub source does not carry the built engine, so a plugin added from it installs but cannot make a deck.
 
-There is no step 2. Your AI puts the skill folder where your harness reads it, and the skill brings its own version-pinned launcher, so there is no CLI to install by hand. pptwise renders a PPTX entirely locally: no API key, no account, nothing to configure for render. Optional stock-photo search needs the user's own Pexels key. The only prerequisite is Node 22.19+ (or Bun).
+There is no step 2. Your AI puts the skill folder where your harness reads it, and the skill brings its own version-pinned launcher, so there is no CLI to install by hand. PPTwise renders a PPTX entirely locally: no API key, no account, nothing to configure for render. Optional stock-photo search needs the user's own Pexels key. The only prerequisite is Node 22.19+ (or Bun).
 
 ## Quick start
 
@@ -153,7 +153,7 @@ An agent following the [skill](./skills/pptwise/SKILL.md) starts from your own m
 | Doc | Read it when |
 | :-- | :-- |
 | [Install guide](./INSTALL.md) | Handing installation to an agent or checking prerequisites |
-| [Agent skill](./skills/pptwise/SKILL.md) | Learning the workflow pptwise teaches an agent |
+| [Agent skill](./skills/pptwise/SKILL.md) | Learning the workflow PPTwise teaches an agent |
 | [CLI manual](./docs/cli.md) | Looking up commands, flags, audits, previews, and health checks |
 | [IR reference](./docs/ir.md) | Writing IR v5 pages, kinds, components, assets, and narrative in JSON |
 | [Themes](./docs/themes.md) | Copying, comparing, forking, binding, or authoring a complete v2 theme |
@@ -172,9 +172,9 @@ An agent following the [skill](./skills/pptwise/SKILL.md) starts from your own m
 
 ## Credits
 
-pptwise is an open-source project by [liustack](https://liustack.dev).
+PPTwise is an open-source project by [liustack](https://liustack.dev).
 
-Icon primitives are extracted from [lucide](https://lucide.dev) (ISC License). pptwise itself was extracted from a production AI-deck-generation system and CJK-typography-tuned (full-width punctuation width, Chinese line breaking, a Chinese-first font stack, explicit east-asian font-slot declarations) from day one.
+Icon primitives are extracted from [lucide](https://lucide.dev) (ISC License). PPTwise itself was extracted from a production AI-deck-generation system and CJK-typography-tuned (full-width punctuation width, Chinese line breaking, a Chinese-first font stack, explicit east-asian font-slot declarations) from day one.
 
 ## License
 

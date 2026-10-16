@@ -117,7 +117,7 @@ pptwise images generate --deck <dir> --as <asset_id>
 
 `config set` 不带值运行时，会用隐藏输入的提示来问 key，所以它不会留在 shell 历史里。key 也可以来自环境变量：`PPTWISE_PEXELS_API_KEY`、`PPTWISE_PIXABAY_API_KEY`、`PPTWISE_OPENVERSE_CLIENT_ID`、`PPTWISE_OPENVERSE_CLIENT_SECRET`。配置文件优先：文件里写了哪个图源，这个图源的 key 就全部从文件取，它的环境变量不再看。
 
-本地生成器是 grok、codex 和 antigravity，也就是同名的命令行 agent。每个都要单独安装并登录。它们默认关闭，因为 pptwise 运行它们时关掉了它们的权限确认（grok `--permission-mode bypassPermissions`，codex `--dangerously-bypass-approvals-and-sandbox`，antigravity `--dangerously-skip-permissions`），它们做事不会问任何人。只有用户能打开：
+本地生成器是 grok、codex 和 antigravity，也就是同名的命令行 agent。每个都要单独安装并登录。它们默认关闭，因为 PPTwise 运行它们时关掉了它们的权限确认（grok `--permission-mode bypassPermissions`，codex `--dangerously-bypass-approvals-and-sandbox`，antigravity `--dangerously-skip-permissions`），它们做事不会问任何人。只有用户能打开：
 
 ```bash
 pptwise config set images.generators.grok.enabled true

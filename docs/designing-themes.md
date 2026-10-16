@@ -8,7 +8,7 @@ read_when:
 
 # Designing themes
 
-A pptwise theme is a complete visual answer for a known set of semantic page moves. Design starts with the menu, not a palette sheet:
+A PPTwise theme is a complete visual answer for a known set of semantic page moves. Design starts with the menu, not a palette sheet:
 
 ```text
 occasion and identity

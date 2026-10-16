@@ -159,7 +159,7 @@ pptwise theme new --from acme-report \
 pptwise theme fork acme-report --brand "#C8102E" -o themes/acme-red.theme.json --id acme-red
 ```
 
-需要精确控制时，自己指定锚色，让 pptwise 围绕它们重推导整套配色：
+需要精确控制时，自己指定锚色，让 PPTwise 围绕它们重推导整套配色：
 
 ```bash
 pptwise theme fork acme-report \

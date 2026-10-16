@@ -1,11 +1,11 @@
 ---
 name: pptwise
-description: Generate a native, editable PPTX deck from an outline, notes, or source material with the pptwise CLI. Use when the user asks to create a PPT, deck, presentation, or slides and wants a deterministic, editable, theme-consistent result.
+description: Generate a native, editable PPTX deck from an outline, notes, or source material with the PPTwise CLI. Use when the user asks to create a PPT, deck, presentation, or slides and wants a deterministic, editable, theme-consistent result.
 ---
 
-# pptwise deck generation playbook
+# PPTwise deck generation playbook
 
-pptwise turns semantic JSON into native DrawingML `.pptx` files. Text and shapes stay editable in PowerPoint. Authors describe what each page is doing and which typed components it contains. The theme and engine own the page face, geometry, color, type, and decoration.
+PPTwise turns semantic JSON into native DrawingML `.pptx` files. Text and shapes stay editable in PowerPoint. Authors describe what each page is doing and which typed components it contains. The theme and engine own the page face, geometry, color, type, and decoration.
 
 Use this one-way chain. Do not skip backward or decide two layers at once.
 
@@ -31,7 +31,7 @@ If scripts are unavailable, use the first available route:
 3. `bunx --bun @liustack/pptwise@0.48.0 <args>`.
 4. Otherwise ask the user to install Node 22.19+ or Bun.
 
-Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing. Content packs are installed at setup, not per deck. When the user has a license, `pptwise login <key>` is the installation step: it checks the key with the pack server, saves it, and installs the packs. Relay its answer. A key whose purchase is still being reviewed is saved, and `pptwise sync` installs the packs once the review clears. `pptwise sync` runs again only when the user asks to update packs, a review clears, the license changes, or `pptwise doctor` reports packs that can be updated. These are the only commands that write the pptwise home folder (`~/.pptwise`), with `pptwise logout` and `config set`. Making a deck writes nothing there, so it works in a sandbox whose home folder is read-only. Never run `login`, `sync`, or `logout` as part of a deck task.
+Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing. Content packs are installed at setup, not per deck. When the user has a license, `pptwise login <key>` is the installation step: it checks the key with the pack server, saves it, and installs the packs. Relay its answer. A key whose purchase is still being reviewed is saved, and `pptwise sync` installs the packs once the review clears. `pptwise sync` runs again only when the user asks to update packs, a review clears, the license changes, or `pptwise doctor` reports packs that can be updated. These are the only commands that write the PPTwise home folder (`~/.pptwise`), with `pptwise logout` and `config set`. Making a deck writes nothing there, so it works in a sandbox whose home folder is read-only. Never run `login`, `sync`, or `logout` as part of a deck task.
 
 ## Read live truth first
 

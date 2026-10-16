@@ -355,7 +355,7 @@ pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 
 搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。结果按顺序编号。`--sheet` 还会下载每张缩略图，拼成一张 JPEG，每张图压着自己的编号，写到 `.pptwise/image-search/<query>.jpg` 或你给的文件，并打印路径（`--json` 里是 `sheet`）。看这一张图就能挑，再按编号对应的 id 去 fetch。下不到的缩略图，搜索结果里有原图就用原图画，没有就画叉，并在说明里点名。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
 
-`images add` 固定一张图库搜索没给的图：项目里或用户自己的文件，或者在网上找到的图。网上的图只按它自己页面写明的条款进来。`--license` 写明条款，而且只收允许 deck 原样使用的：`cc0`、`pdm`（公有领域）、`cc-by` 或 `cc-by-<版本>`、`press`（主体方自己的新闻或媒体素材，用来展示这个主体）、`own`（用户或其所在机构自己的图）。相同方式共享、非商业、禁止演绎的授权一律拒收，清单里没有的授权也拒收。`--source` 是展示这张图并写明授权的页面，地址来源必填。`--author` 是那个页面写的作者或所有者，`cc-by` 和 `press` 必填。本地文件默认是用户自己的，除非 `--license` 另说。PNG 保持 PNG，所以 logo 的透明背景还在，SVG 画成 PNG（需要 `sharp`），JPEG、WebP、GIF 转成 JPEG，长边不超过 1920 px。sidecar 记下 `provider`（`web` 或 `file`）、授权、作者、来源页、图片原本的地址或文件，授权要求署名时还记下署名行，命令也会把它打印出来。同一个 id 之前固定过另一种格式的图会被替换，不是 pptwise 固定的同 id 文件则原样保留并报错。
+`images add` 固定一张图库搜索没给的图：项目里或用户自己的文件，或者在网上找到的图。网上的图只按它自己页面写明的条款进来。`--license` 写明条款，而且只收允许 deck 原样使用的：`cc0`、`pdm`（公有领域）、`cc-by` 或 `cc-by-<版本>`、`press`（主体方自己的新闻或媒体素材，用来展示这个主体）、`own`（用户或其所在机构自己的图）。相同方式共享、非商业、禁止演绎的授权一律拒收，清单里没有的授权也拒收。`--source` 是展示这张图并写明授权的页面，地址来源必填。`--author` 是那个页面写的作者或所有者，`cc-by` 和 `press` 必填。本地文件默认是用户自己的，除非 `--license` 另说。PNG 保持 PNG，所以 logo 的透明背景还在，SVG 画成 PNG（需要 `sharp`），JPEG、WebP、GIF 转成 JPEG，长边不超过 1920 px。sidecar 记下 `provider`（`web` 或 `file`）、授权、作者、来源页、图片原本的地址或文件，授权要求署名时还记下署名行，命令也会把它打印出来。同一个 id 之前固定过另一种格式的图会被替换，不是 PPTwise 固定的同 id 文件则原样保留并报错。
 
 每次下载（缩略图也算）都拒绝解析到私有、回环、链路本地、组播或其他保留地址的主机。只有一段保留地址放行：198.18.0.0/15。这是公网不路由的基准测试段，Clash、Surge 这类 fake-ip 代理把所有域名都解析到这一段，再把连接转给真正的主机，拒绝它会让代理后面的每次下载都失败。
 
@@ -373,7 +373,7 @@ pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 
 配置文件优先于环境变量，按图源逐个算：`$PPTWISE_HOME/config.json` 里写了哪个图源，这个图源的 key 就全部从文件取，它的环境变量不再看。`config show` 会遮住 key。
 
-`images generate` 用本地的命令行 agent 出图：grok、codex 或 antigravity，每个都要单独安装并登录。用户打开之前它们一直关着，因为 pptwise 运行它们时关掉了它们的权限确认，它们做事不会问任何人：grok 带 `--permission-mode bypassPermissions`，codex 带 `--dangerously-bypass-approvals-and-sandbox`，antigravity 带 `--dangerously-skip-permissions`。每次都在一个新建的临时目录里运行，不在项目里，但没有什么能拦住它去别处。
+`images generate` 用本地的命令行 agent 出图：grok、codex 或 antigravity，每个都要单独安装并登录。用户打开之前它们一直关着，因为 PPTwise 运行它们时关掉了它们的权限确认，它们做事不会问任何人：grok 带 `--permission-mode bypassPermissions`，codex 带 `--dangerously-bypass-approvals-and-sandbox`，antigravity 带 `--dangerously-skip-permissions`。每次都在一个新建的临时目录里运行，不在项目里，但没有什么能拦住它去别处。
 
 | 键 | 默认 | 作用 |
 | --- | --- | --- |
@@ -406,13 +406,13 @@ pptwise logout
 
 内容包是一组带版本的额外主题，由 license 解锁。`login` 一步拿到它们：校验 key 的形状，问包服务器认不认这个 key，存进 `$PPTWISE_HOME/license.json`（只有本人可读），再像 `sync` 一样安装它覆盖的包。不给 `[key]` 时用隐藏输入询问，stdin 不是终端时改为打印用法并以 1 退出。服务器不认识（401）或已吊销（403）的 key 不保存。付款还在人工审核中（423）的 key 会保存，但暂不安装：审核通过后跑 `sync`。连不上服务器时什么都不保存。key 被接受但有包没装上时，key 照样保存，命令以 1 退出。
 
-`sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 pptwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`self-update` 升级后会用新版本跑一次它，`doctor` 会提示它有没有东西可装。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [内容包](./packs.zh-CN.md)。
+`sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 PPTwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`self-update` 升级后会用新版本跑一次它，`doctor` 会提示它有没有东西可装。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [内容包](./packs.zh-CN.md)。
 
 `logout` 删除已保存的 key。已装的包保持原样，照常可用。
 
 ### 旧写法
 
-pptwise 0.48 发布过这几条命令。它们照常可用，只是不再出现在 `pptwise --help` 里。
+PPTwise 0.48 发布过这几条命令。它们照常可用，只是不再出现在 `pptwise --help` 里。
 
 ```bash
 pptwise license set <key>
@@ -435,7 +435,7 @@ pptwise check-update
 pptwise self-update
 ```
 
-只有 `config set`、`login`、`sync`、`logout`、`self-update`（通过它跑的同步），以及旧写法 `license` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`login` 在安装时跑，不按 deck 跑。
+只有 `config set`、`login`、`sync`、`logout`、`self-update`（通过它跑的同步），以及旧写法 `license` 和 `packs sync` 会写 PPTwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`login` 在安装时跑，不按 deck 跑。
 
 设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。配置了 license 时，`doctor` 会请求一次包目录，报告 `sync` 有几个包可装或可更新，或者已保存的 key 服务器不认识、已吊销、付款在审核中。连不上服务器记为未检查，不算失败。`--json` 里这部分是 `packs`，`state` 取 `none`、`current`、`updates`（带 `updates`）、`unknown-key`、`revoked`、`held` 或 `unchecked`（带 `message`）。
 
@@ -443,4 +443,4 @@ pptwise self-update
 
 第一次往 `.pptwise/` 里写东西的命令用两种办法让它不进 git（作者先在里面建了 `decks/` 放 deck 时也一样）：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。
 
-DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。插件先往 `.pptwise/` 里写东西时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 所在的项目里（`.pptwise/decks/` 里的 deck 就放进外面那个 `.pptwise/`），两样都没有就拒绝并说明原因。五个名字不给 deck 产物用：pptwise 自己写的 `previews/`、`theme-try/` 和 `image-search/`，放 deck 源文件的 `decks/`，还有 `themes/`。deck 落到这几个名字上时，目录名后面加 `-deck`。
+DSH 插件的卡片也放在这个文件夹：deck 预览、主题墙和大纲写到会话所在项目的 `.pptwise/previews/<id>/`，一直留到你自己删。插件先往 `.pptwise/` 里写东西时，它也用同样两种办法让这个文件夹不进 git。只要项目没挪位置，之后哪个会话都能按卡片找回预览。调用拿不到工作目录时，预览放到绝对路径 deck 所在的项目里（`.pptwise/decks/` 里的 deck 就放进外面那个 `.pptwise/`），两样都没有就拒绝并说明原因。五个名字不给 deck 产物用：PPTwise 自己写的 `previews/`、`theme-try/` 和 `image-search/`，放 deck 源文件的 `decks/`，还有 `themes/`。deck 落到这几个名字上时，目录名后面加 `-deck`。

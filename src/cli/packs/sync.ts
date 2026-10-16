@@ -188,7 +188,7 @@ async function readCatalog(res: Response): Promise<CatalogEntry[]> {
   const parsed = CatalogSchema.safeParse(body)
   if (!parsed.success) {
     const detail = parsed.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join(". ")
-    throw new PptwiseError(`the pack catalog is not one this pptwise can read (${detail})`)
+    throw new PptwiseError(`the pack catalog is not one this PPTwise can read (${detail})`)
   }
   return parsed.data.packs
 }
@@ -207,10 +207,10 @@ function engineMismatch(entry: CatalogEntry, engineVersion: string): string | un
   try {
     fits = satisfiesRange(engineVersion, entry.engine)
   } catch {
-    return `needs a pptwise that reads the engine range "${entry.engine}", and this is ${engineVersion}. Run \`pptwise self-update\``
+    return `needs a PPTwise that reads the engine range "${entry.engine}", and this is ${engineVersion}. Run \`pptwise self-update\``
   }
   if (fits) return undefined
-  return `needs pptwise ${entry.engine}, and this is ${engineVersion}. Run \`pptwise self-update\``
+  return `needs PPTwise ${entry.engine}, and this is ${engineVersion}. Run \`pptwise self-update\``
 }
 
 async function installedVersion(root: string, id: string): Promise<string | undefined> {

@@ -3,11 +3,11 @@ summary: 'skills/pptwise/SKILL.md 的中文阅读镜像，仅供人工审阅该 
 mirror_of: skills/pptwise/SKILL.md
 ---
 
-# pptwise deck 生成操作手册
+# PPTwise deck 生成操作手册
 
 > 本文件是 [`skills/pptwise/SKILL.md`](./SKILL.md) 的中文阅读镜像。agent 只注册并执行英文版。两份文件如有出入，以英文版为准。
 
-pptwise 把语义 JSON 转成原生 DrawingML `.pptx`。文字与图形在 PowerPoint 中保持可编辑。作者只描述每页在怎么讲，以及页面包含哪些有类型的组件。页面的脸、几何、配色、字体和装饰归主题与引擎。
+PPTwise 把语义 JSON 转成原生 DrawingML `.pptx`。文字与图形在 PowerPoint 中保持可编辑。作者只描述每页在怎么讲，以及页面包含哪些有类型的组件。页面的脸、几何、配色、字体和装饰归主题与引擎。
 
 严格按这条单向链工作，不跨步，不同时决定两层。
 
@@ -33,7 +33,7 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 3. `bunx --bun @liustack/pptwise@0.48.0 <args>`。
 4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
 
-安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。内容包在安装时装好，不按 deck 装。用户有 license 时，安装步骤是 `pptwise login <key>`：它向包服务器校验 key、保存 key 并装好内容包，转告它的结果。付款还在审核中的 key 会先保存，审核通过后由 `pptwise sync` 安装内容包。之后只在用户要求更新内容包、审核通过、换了 license，或 `pptwise doctor` 报告有包可更新时再跑 `pptwise sync`。除了 `pptwise logout` 和 `config set`，只有这几条命令会写 pptwise 主目录（`~/.pptwise`）。做 deck 的过程一次都不写那里，所以主目录只读的沙箱里也能做。不要在 deck 任务里运行 `login`、`sync` 或 `logout`。
+安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。内容包在安装时装好，不按 deck 装。用户有 license 时，安装步骤是 `pptwise login <key>`：它向包服务器校验 key、保存 key 并装好内容包，转告它的结果。付款还在审核中的 key 会先保存，审核通过后由 `pptwise sync` 安装内容包。之后只在用户要求更新内容包、审核通过、换了 license，或 `pptwise doctor` 报告有包可更新时再跑 `pptwise sync`。除了 `pptwise logout` 和 `config set`，只有这几条命令会写 PPTwise 主目录（`~/.pptwise`）。做 deck 的过程一次都不写那里，所以主目录只读的沙箱里也能做。不要在 deck 任务里运行 `login`、`sync` 或 `logout`。
 
 ## 先读取现场真相
 

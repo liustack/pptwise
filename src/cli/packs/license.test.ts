@@ -58,7 +58,7 @@ describe("pptwise license set", () => {
         () => undefined,
         (e: unknown) => e as Error,
       )
-      expect(error?.message, value).toMatch(/not a pptwise license key/)
+      expect(error?.message, value).toMatch(/not a PPTwise license key/)
       // A near-miss is still most of a secret: the message never echoes it.
       if (value.length > 8) expect(error?.message).not.toContain(value)
     }

@@ -112,7 +112,7 @@ Setting up a source is the user's decision, done once on their machine. Tell the
 
 Run without a value, `config set` asks for the key with a hidden prompt, so it never lands in the shell history. Keys can also come from the environment: `PPTWISE_PEXELS_API_KEY`, `PPTWISE_PIXABAY_API_KEY`, `PPTWISE_OPENVERSE_CLIENT_ID`, and `PPTWISE_OPENVERSE_CLIENT_SECRET`. The config file wins: a provider named in the file takes all its keys from the file, and its environment variables are ignored.
 
-The local generators are grok, codex, and antigravity, the command-line agents of those names. Each must be installed and logged in on its own. They are off by default because pptwise runs each one with its permission checks turned off (grok `--permission-mode bypassPermissions`, codex `--dangerously-bypass-approvals-and-sandbox`, antigravity `--dangerously-skip-permissions`), so it acts without asking anyone. Only the user turns one on:
+The local generators are grok, codex, and antigravity, the command-line agents of those names. Each must be installed and logged in on its own. They are off by default because PPTwise runs each one with its permission checks turned off (grok `--permission-mode bypassPermissions`, codex `--dangerously-bypass-approvals-and-sandbox`, antigravity `--dangerously-skip-permissions`), so it acts without asking anyone. Only the user turns one on:
 
 ```bash
 pptwise config set images.generators.grok.enabled true

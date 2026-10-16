@@ -314,7 +314,7 @@ async function assertDecodableImage(id: string, pages: string[], dataUrl: string
   const decode = imageDecoder()
   if (!decode) {
     throw new PptwiseError(
-      `cannot verify image assets: no image decoder is available in this environment, so ${who} would ship unchecked. In Node, install the optional dependency "sharp" (npm i sharp) and call installNodePlatform() from "@liustack/pptwise/node" (the pptwise CLI does this automatically). In a browser, createImageBitmap is required`,
+      `cannot verify image assets: no image decoder is available in this environment, so ${who} would ship unchecked. In Node, install the optional dependency "sharp" (npm i sharp) and call installNodePlatform() from "@liustack/pptwise/node" (the PPTwise CLI does this automatically). In a browser, createImageBitmap is required`,
     )
   }
   try {

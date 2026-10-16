@@ -64,7 +64,7 @@ async function assertNotSymlink(path: string): Promise<void> {
 export function parseLicenseKey(value: string): string {
   const key = value.trim()
   if (!LICENSE_KEY_PATTERN.test(key)) {
-    throw new PptwiseError(`that is not a pptwise license key: ${KEY_SHAPE}. Copy the whole key again and retry.`)
+    throw new PptwiseError(`that is not a PPTwise license key: ${KEY_SHAPE}. Copy the whole key again and retry.`)
   }
   return key
 }

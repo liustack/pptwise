@@ -11,7 +11,7 @@ read_when:
 
 # IR v5
 
-IR is the typed semantic input to pptwise. Version 5 describes what the deck says, which theme it binds, and which components fill each page. It does not store face selection or random state.
+IR is the typed semantic input to PPTwise. Version 5 describes what the deck says, which theme it binds, and which components fill each page. It does not store face selection or random state.
 
 ```json
 {

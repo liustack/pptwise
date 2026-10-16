@@ -43,7 +43,7 @@ A key that is not saved leaves any key saved earlier in place. When the server c
 - Without a license it prints one line and exits 0, so an install script can run it unconditionally.
 - A pack already installed at the catalog's version is left alone. Nothing is downloaded.
 - A pack missing locally or at another version is downloaded, checked, and installed (see [Before install](#before-install)).
-- A pack whose `engine` range does not include the running pptwise is skipped with a note to update pptwise. An installed older version stays.
+- A pack whose `engine` range does not include the running PPTwise is skipped with a note to update PPTwise. An installed older version stays.
 - A pack that fails a check, or whose download breaks off, is reported and not installed. Other packs still sync. The version installed before, if any, stays in place.
 - When the catalog cannot be read (no network, 401, 403, 423, 503, an unreadable body), nothing on disk changes and the command says why. On 423 it says to run `sync` again once the review clears.
 
@@ -70,7 +70,7 @@ The exit code is 0 when every pack is installed, current, or skipped for its eng
 
 ### Older spellings
 
-pptwise 0.48 shipped these. They keep working and are left out of `pptwise --help`.
+PPTwise 0.48 shipped these. They keep working and are left out of `pptwise --help`.
 
 ```bash
 pptwise license set <key>
@@ -155,7 +155,7 @@ The CLI refuses a pack, and changes nothing on disk, unless all of these hold:
 1. The download's sha256 equals the catalog's.
 2. It is a readable zip whose entries all follow the path rules above.
 3. `pack.json` parses, and its `id` and `version` equal the catalog entry's.
-4. Its `engine` range includes the running pptwise.
+4. Its `engine` range includes the running PPTwise.
 5. Every listed theme file is in the archive and passes the checks every theme file passes: the strict schema, the menu contract, and the contrast floor.
 6. No theme id equals a factory preset, a retired theme id, another theme in the same pack, or a theme of another installed pack.
 

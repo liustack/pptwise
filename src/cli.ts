@@ -404,7 +404,7 @@ const brand = program.command("brand").description("Brand asset commands: find a
 brand
   .command("extract")
   .description(
-    "Read the brand color (accent1) and its second color (accent2) from a .thmx/.potx/.pptx file and repaint a theme around them, into a pptwise theme file — runs entirely locally, the file never leaves your machine",
+    "Read the brand color (accent1) and its second color (accent2) from a .thmx/.potx/.pptx file and repaint a theme around them, into a PPTwise theme file — runs entirely locally, the file never leaves your machine",
   )
   .argument("<file>", "a .thmx theme, .potx template, or .pptx presentation")
   .requiredOption("-o, --output <file>", "output theme JSON path (e.g. my-brand.theme.json)")
@@ -777,20 +777,20 @@ program
 
 program
   .command("check-update")
-  .description("Check npm for a newer pptwise release")
+  .description("Check npm for a newer PPTwise release")
   .action(async () => {
     const info = await checkForUpdate({ currentVersion: VERSION })
     if (!info.checked) fail(new Error(`update check failed: ${info.error}`))
     console.log(
       info.updateAvailable
         ? `update available: ${info.currentVersion} → ${info.latestVersion} (run \`pptwise self-update\`)`
-        : `pptwise ${info.currentVersion} is up to date`,
+        : `PPTwise ${info.currentVersion} is up to date`,
     )
   })
 
 program
   .command("self-update")
-  .description("Update the global pptwise install to the latest release, then sync content packs with it when a license is configured")
+  .description("Update the global PPTwise install to the latest release, then sync content packs with it when a license is configured")
   .action(async () => {
     let result
     try {

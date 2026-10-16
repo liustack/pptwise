@@ -130,7 +130,7 @@ describe("installPack", () => {
     })
 
     it("when pack.json's engine range excludes this pptwise", async () => {
-      await expectRefused(await buildPackZip({ ...v2, engine: ">=9.0.0" }), /pptwise >=9\.0\.0.*0\.37\.1/)
+      await expectRefused(await buildPackZip({ ...v2, engine: ">=9.0.0" }), /PPTwise >=9\.0\.0.*0\.37\.1/)
       await expectRefused(await buildPackZip({ ...v2, engine: "whenever" }), /engine range/)
     })
 

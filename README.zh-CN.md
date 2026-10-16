@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/banner.png" alt="pptwise：真正的 PPT，不是 HTML" width="100%"></p>
 
-<h1 align="center">pptwise</h1>
+<h1 align="center">PPTwise</h1>
 
 <p align="center"><b>真正的 PPT，不是 HTML</b></p>
 
@@ -41,7 +41,7 @@
 
 ## 交流
 
-欢迎随时提 [issue](https://github.com/liustack/pptwise/issues/new/choose)。也欢迎在 X 关注 **[@liustack](https://x.com/liustack)**，聊聊你用 pptwise 做了什么、在哪个 harness 上运行，以及下一版最该解决什么。新版本也会第一时间在那里发布。
+欢迎随时提 [issue](https://github.com/liustack/pptwise/issues/new/choose)。也欢迎在 X 关注 **[@liustack](https://x.com/liustack)**，聊聊你用 PPTwise 做了什么、在哪个 harness 上运行，以及下一版最该解决什么。新版本也会第一时间在那里发布。
 
 ## 亮点
 
@@ -59,15 +59,15 @@
 
 **第一步，交给你的 AI。** 把这行话发给它：
 
-> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md 安装 pptwise，装完跑一遍健康检查，把结果告诉我。
+> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL.md 安装 PPTwise，装完跑一遍健康检查，把结果告诉我。
 
-**在 DeepSeek Harness 上发另一句。** 那里 pptwise 是原生插件不是 skill 文件夹，所以有自己的一份指引。由你来挑发哪一句，不是让 agent 猜：agent 判断不了自己跑在哪个 harness 里。
+**在 DeepSeek Harness 上发另一句。** 那里 PPTwise 是原生插件不是 skill 文件夹，所以有自己的一份指引。由你来挑发哪一句，不是让 agent 猜：agent 判断不了自己跑在哪个 harness 里。
 
-> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md 安装 pptwise，装完跑一遍健康检查，把结果告诉我。
+> 按照 https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md 安装 PPTwise，装完跑一遍健康检查，把结果告诉我。
 
 **在 DeepSeek Harness Desktop 里自己添加？** 打开「插件」，点「添加插件」，填包名 `@liustack/pptwise@0.48.0`，不要填 GitHub 地址。GitHub 上的源码不带构建好的引擎，从那里加的插件能装上，但做不出 PPT。
 
-没有第二步。你的 AI 会把 skill 文件夹放到你这个 harness 读取的位置，skill 自带钉死版本的启动器，不需要你手动装 CLI。pptwise 在本地渲染 PPTX：渲染不要 API key、不用注册、无需配置。可选的图库搜索需要用户自己的 Pexels key。唯一前置是 Node 22.19+（或 Bun）。
+没有第二步。你的 AI 会把 skill 文件夹放到你这个 harness 读取的位置，skill 自带钉死版本的启动器，不需要你手动装 CLI。PPTwise 在本地渲染 PPTX：渲染不要 API key、不用注册、无需配置。可选的图库搜索需要用户自己的 Pexels key。唯一前置是 Node 22.19+（或 Bun）。
 
 ## 快速开始
 
@@ -153,7 +153,7 @@ Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进
 | 文档 | 适用场景 |
 | :-- | :-- |
 | [安装手册](./INSTALL.md) | 把安装交给 agent，或检查运行前提 |
-| [Agent skill](./skills/pptwise/SKILL.zh-CN.md) | 了解 pptwise 教给 agent 的完整工作流 |
+| [Agent skill](./skills/pptwise/SKILL.zh-CN.md) | 了解 PPTwise 教给 agent 的完整工作流 |
 | [CLI 手册](./docs/cli.zh-CN.md) | 查询命令、参数、审查、预览与健康检查 |
 | [IR 参考](./docs/ir.zh-CN.md) | 用 JSON 编写 IR v5 页面、kind、组件、资产与叙事 |
 | [主题](./docs/themes.zh-CN.md) | 拷贝、对比、分叉、绑定或编写完整 v2 主题 |
@@ -175,13 +175,13 @@ Deck 项目在 `deck.spec.json` 中绑定唯一主题，再把页面内容放进
   <img src="assets/wechat-qrcode.png" width="420" alt="微信公众号 liustack" />
 </p>
 
-⭐ 如果 pptwise 对你有用，请给[项目](https://github.com/liustack/pptwise)一个 star，并在 X 关注 **[@liustack](https://x.com/liustack)**。这是让更多开发者找到它最直接的方式。
+⭐ 如果 PPTwise 对你有用，请给[项目](https://github.com/liustack/pptwise)一个 star，并在 X 关注 **[@liustack](https://x.com/liustack)**。这是让更多开发者找到它最直接的方式。
 
 ## 致谢
 
-pptwise 是 [liustack](https://liustack.dev) 的开源项目。
+PPTwise 是 [liustack](https://liustack.dev) 的开源项目。
 
-图标原语抽取自 [lucide](https://lucide.dev)（ISC License）。pptwise 本身从一套生产环境的 AI 出 PPT 系统中抽取而来，从第一天起就针对 CJK 排版做了优化（全角标点宽度、中文换行、雅黑优先字体栈、显式东亚字体槽声明）。
+图标原语抽取自 [lucide](https://lucide.dev)（ISC License）。PPTwise 本身从一套生产环境的 AI 出 PPT 系统中抽取而来，从第一天起就针对 CJK 排版做了优化（全角标点宽度、中文换行、雅黑优先字体栈、显式东亚字体槽声明）。
 
 ## License
 

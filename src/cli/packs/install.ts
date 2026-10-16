@@ -101,9 +101,9 @@ function checkManifest(manifest: PackManifest, target: PackInstallTarget, engine
   try {
     fits = satisfiesRange(engineVersion, manifest.engine)
   } catch {
-    throw refuse(`${PACK_MANIFEST_FILENAME} has an engine range pptwise cannot read: "${manifest.engine}"`)
+    throw refuse(`${PACK_MANIFEST_FILENAME} has an engine range PPTwise cannot read: "${manifest.engine}"`)
   }
-  if (!fits) throw refuse(`the pack needs pptwise ${manifest.engine}, and this is ${engineVersion}`)
+  if (!fits) throw refuse(`the pack needs PPTwise ${manifest.engine}, and this is ${engineVersion}`)
 }
 
 /** Parse and gate every theme the manifest lists, and return their ids. */

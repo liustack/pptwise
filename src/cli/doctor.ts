@@ -610,7 +610,7 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
   if (!runtime.meetsMinimum) {
     errors.push({
       check: "runtime",
-      message: `Node ${runtime.node} is below the ${MIN_NODE} floor pptwise needs`,
+      message: `Node ${runtime.node} is below the ${MIN_NODE} floor PPTwise needs`,
       fix: `install Node ${MIN_NODE}+ from https://nodejs.org (or \`nvm install 22\`), open a new shell, then re-run \`pptwise doctor\``,
     })
   }
@@ -627,7 +627,7 @@ export async function buildDoctorReport(input: DoctorInput = {}): Promise<Doctor
       warnings.push({
         check: "skill copy",
         message: `${copy.path} is a leftover ${basename(copy.path)} skill copy`,
-        fix: `remove it and install the pptwise skill in ${join(copy.root, SKILL_DIR_NAME)}`,
+        fix: `remove it and install the PPTwise skill in ${join(copy.root, SKILL_DIR_NAME)}`,
       })
     } else if (copy.stale) {
       warnings.push({
@@ -736,7 +736,7 @@ export function renderDoctorReport(report: DoctorReport): string {
           : `pins ${copy.pinned}`
       lines.push(`  ${mark(state)} ${copy.harness}: ${copy.path} — ${pin}${copy.stale && !copy.legacy ? " (stale)" : ""}`)
       if (copy.legacy) {
-        lines.push(`      fix: remove it and install the pptwise skill in ${join(copy.root, SKILL_DIR_NAME)}`)
+        lines.push(`      fix: remove it and install the PPTwise skill in ${join(copy.root, SKILL_DIR_NAME)}`)
       } else if (copy.stale) {
         lines.push(`      fix: ${skillRefreshCommand(copy.path)}`)
       } else if (copy.pinned === null) {
@@ -854,7 +854,7 @@ export function renderDoctorReport(report: DoctorReport): string {
     lines.push(`  [!] ${warning.check}: ${warning.message}`)
   }
   if (report.errors.length === 0) {
-    lines.push(report.warnings.length === 0 ? "pptwise is healthy on this machine" : "nothing blocking — the warnings above are worth fixing when convenient")
+    lines.push(report.warnings.length === 0 ? "PPTwise is healthy on this machine" : "nothing blocking — the warnings above are worth fixing when convenient")
   }
 
   return lines.join("\n")

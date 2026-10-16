@@ -1,5 +1,5 @@
 ---
-summary: 'The fixed brief handed to a design tool before it draws a face or component for pptwise: canvas, vector, type, contrast and safe-zone rules, plus the commands that print the theme and component facts to attach'
+summary: 'The fixed brief handed to a design tool before it draws a face or component for PPTwise: canvas, vector, type, contrast and safe-zone rules, plus the commands that print the theme and component facts to attach'
 read_when:
   - drawing design boards for a face, component, or theme change
   - a showcase deck shows a page that needs redesign rather than a bug fix
@@ -9,7 +9,7 @@ read_when:
 
 # Design brief
 
-A design for pptwise is only useful if the engine can draw it and PowerPoint can open it as editable shapes. Paste this whole document into the design tool at the start of every design session, then attach the facts below for the theme and component in question. Without it, the boards come back attractive and impossible to build.
+A design for PPTwise is only useful if the engine can draw it and PowerPoint can open it as editable shapes. Paste this whole document into the design tool at the start of every design session, then attach the facts below for the theme and component in question. Without it, the boards come back attractive and impossible to build.
 
 ## What to draw
 

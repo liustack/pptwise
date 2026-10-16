@@ -1,10 +1,10 @@
-# Installing pptwise (for an AI agent)
+# Installing PPTwise (for an AI agent)
 
 You are an AI agent and your user told you to install `pptwise`. This document
 is the procedure for every harness that reads a **skill folder**: Claude Code,
 Codex, Grok CLI, and friends. Follow it in order.
 
-On **DeepSeek Harness (dsh)** pptwise is a native plugin instead, and that
+On **DeepSeek Harness (dsh)** PPTwise is a native plugin instead, and that
 install lives in its own file, [`INSTALL-dsh.md`](./INSTALL-dsh.md). Do not try
 to work out which harness you are in: whoever handed you this file already
 decided that. If your user says they are on dsh, ask them for that file rather
@@ -14,7 +14,7 @@ Every step is safe to run again, and every step names what to do when it
 fails. Commands are POSIX shell (macOS or Linux). A Windows note follows each
 block that needs one.
 
-There is nothing to configure to render a PPTX. pptwise renders entirely
+There is nothing to configure to render a PPTX. PPTwise renders entirely
 locally: no API key, no account, no engine to set up, no network calls at
 render time. Optional stock-photo search (`pptwise images search`) needs the
 user's own Pexels key (`pptwise config set pexels.apiKey`). The only
@@ -179,7 +179,7 @@ command from the registered skill's opening note in place of the launcher.
 The expected output is identical.
 
 **3. Content packs, only when the user has a license.** If the user gave you
-a pptwise license key, log in with it now. This checks the key, saves it, and
+a PPTwise license key, log in with it now. This checks the key, saves it, and
 installs the packs it covers:
 
 ```bash
@@ -188,7 +188,7 @@ bash ~/.claude/skills/pptwise/scripts/run.sh login <key>
 
 Relay what it prints. A key whose purchase is still being reviewed is saved,
 and `bash ~/.claude/skills/pptwise/scripts/run.sh sync` installs the packs once
-the review clears. Login writes into the pptwise home folder (`~/.pptwise`),
+the review clears. Login writes into the PPTwise home folder (`~/.pptwise`),
 which is why it belongs to installation: making a deck writes nothing there,
 so it also works in an agent sandbox whose home folder is read-only. Run `sync`
 again when the license changes or to pick up newer packs. Without a license,
@@ -196,10 +196,10 @@ skip this.
 
 **If it fails:**
 - The launcher printed a JSON diagnosis and exited 78 -> no runtime could run
-  pptwise: no compatible `pptwise` on `PATH`, no `npx`, and no `bunx`. Read the
+  PPTwise: no compatible `pptwise` on `PATH`, no `npx`, and no `bunx`. Read the
   `nextSteps` field in that JSON and relay it. The fix is installing Node
   22.19+ (https://nodejs.org) or Bun (https://bun.sh), then re-running this
-  step. Do not report pptwise as broken.
+  step. Do not report PPTwise as broken.
 - `doctor` reports the runtime below the version floor -> install Node 22.19+
   (https://nodejs.org) or Bun (https://bun.sh), then re-run.
 - `doctor` flags an installed skill copy as stale -> re-run step 2's copy for
@@ -239,7 +239,7 @@ version is compatible with the pin: on a 0.x pin, the same major and minor
 with a patch no older (every 0.x minor is a breaking release). From 1.0 on,
 the same major and no older.
 
-Building from source is for working on pptwise itself, not for using it:
+Building from source is for working on PPTwise itself, not for using it:
 
 ```bash
 git clone https://github.com/liustack/pptwise.git

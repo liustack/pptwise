@@ -35,7 +35,7 @@ the same install. They are deliberately absent from `package.json`
 `exports`, so Node refuses a bare `@liustack/pptwise/node` import from
 outside the package.
 
-If you need pptwise from your own program, shell out to the CLI: `pptwise
+If you need PPTwise from your own program, shell out to the CLI: `pptwise
 validate` / `render` / `preview` speak JSON and exit codes, and that
 contract *is* covered by semver.
 

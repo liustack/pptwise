@@ -193,7 +193,7 @@ Disassembly writes a version 1 spec, one content-only file for every non-placeho
 
 A deck lives in the project, and a `<target>` is always a path: a deck project directory or an IR file, resolved against the current directory. There is no deck folder under the home directory and no setting that points at one.
 
-A new deck goes in `.pptwise/decks/<name>/` under the project root, the directory holding `pptwise.config.json`, or the working directory without one. The skill and the DSH plugin's tools tell the model so, with `<name>` a few lowercase English words joined by hyphens. A place the user names wins, and a deck that already sits elsewhere is read where it is, never moved. Nothing in pptwise writes into `decks/`: the author does.
+A new deck goes in `.pptwise/decks/<name>/` under the project root, the directory holding `pptwise.config.json`, or the working directory without one. The skill and the DSH plugin's tools tell the model so, with `<name>` a few lowercase English words joined by hyphens. A place the user names wins, and a deck that already sits elsewhere is read where it is, never moved. Nothing in PPTwise writes into `decks/`: the author does.
 
 ```text
 my-project/

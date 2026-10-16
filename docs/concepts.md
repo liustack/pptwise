@@ -1,5 +1,5 @@
 ---
-summary: 'The four public nouns in pptwise: theme, spec, component, and kind, plus the theme-menu contract that connects them'
+summary: 'The four public nouns in PPTwise: theme, spec, component, and kind, plus the theme-menu contract that connects them'
 read_when:
   - first time touching the pptwise vocabulary
   - deciding whether a fact belongs to a theme, spec, component, or kind
@@ -8,7 +8,7 @@ read_when:
 
 # Concepts
 
-pptwise follows one causal chain:
+PPTwise follows one causal chain:
 
 ```text
 intent -> narrative -> theme -> spec -> fill -> render

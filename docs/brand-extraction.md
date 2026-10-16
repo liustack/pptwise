@@ -8,7 +8,7 @@ read_when:
 
 # Brand extraction
 
-`pptwise brand extract` reads the Office theme part from a `.thmx`, `.potx`, or `.pptx` file and writes one complete, self-contained version 2 pptwise theme. The operation is local and deterministic. The same input bytes and options produce the same theme data.
+`pptwise brand extract` reads the Office theme part from a `.thmx`, `.potx`, or `.pptx` file and writes one complete, self-contained version 2 PPTwise theme. The operation is local and deterministic. The same input bytes and options produce the same theme data.
 
 ```bash
 pptwise brand extract corp.pptx \
@@ -104,7 +104,7 @@ User Office files are never committed as fixtures. Tests build small OOXML packa
 | minor Latin font | With `--brand-fonts`, first in the body stack (the major face when absent). Otherwise not used. |
 | `dk1`, `lt1`, `lt2`, `accent3` to `accent6` | Not used. |
 
-`hlink` and `folHlink` may be parsed but are not mapped because pptwise has no hyperlink color token.
+`hlink` and `folHlink` may be parsed but are not mapped because PPTwise has no hyperlink color token.
 
 A template whose brand color has no chroma (a grey, a black or a white, OKLCH chroma under 0.04) is not refused. The theme is repainted around that grey, and the command says so first: the template has no colored brand color, and the theme comes out grey. `placement.brand.neutral` is `true` in that case, and `theme fork --brand` with a grey says the same.
 
@@ -139,7 +139,7 @@ Project commands load the bound file through normal four-level theme lookup and 
 
 ## Known limits
 
-- Many Western Office themes omit East Asian font faces. CJK text then uses pptwise's normal font fallback stack.
+- Many Western Office themes omit East Asian font faces. CJK text then uses PPTwise's normal font fallback stack.
 - Logos are stored in master and media parts rather than the theme part. Extraction does not import them. Add a logo as a deck asset and reference it through `brand.logo_asset_id`.
 - A visible dark slide background may come from a master `<p:bg>` rather than the Office theme part. Extraction never takes the template's ground anyway: pick a dark `--from` theme for a dark brand deck.
 - With `--brand-fonts`, a template font that is not on the export-safe list has no effect: the slides are set in the next safe face in the stack. A safe face without an exact width table is measured by estimate, so long lines can overflow. The command warns about both.

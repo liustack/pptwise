@@ -171,7 +171,7 @@ describe("pptwise login", () => {
 
   it("refuses a malformed key before any request", async () => {
     const error = await loginError("ptw_short")
-    expect(error.message).toMatch(/not a pptwise license key/)
+    expect(error.message).toMatch(/not a PPTwise license key/)
     expect(server.requests).toEqual([])
     expect(await readLicenseKey()).toBeUndefined()
   })

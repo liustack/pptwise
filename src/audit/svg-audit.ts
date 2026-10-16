@@ -186,7 +186,7 @@ function parseMarkup(markup: string): Document {
   const Parser = getPlatform().domParser ?? globalThis.DOMParser
   if (!Parser) {
     throw new Error(
-      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the pptwise CLI does this automatically)'
+      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the PPTwise CLI does this automatically)'
     )
   }
   return new Parser().parseFromString(markup, "image/svg+xml")

@@ -8,7 +8,7 @@ read_when:
 
 # Architecture
 
-pptwise turns semantic input into native editable PowerPoint through one causal chain:
+PPTwise turns semantic input into native editable PowerPoint through one causal chain:
 
 ```text
 intent -> narrative -> theme -> spec -> fill -> render

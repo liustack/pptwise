@@ -85,7 +85,7 @@ function parseSvg(markup: string): Element {
   const Parser = getPlatform().domParser ?? globalThis.DOMParser
   if (!Parser) {
     throw new Error(
-      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the pptwise CLI does this automatically)',
+      'DOMParser unavailable — in Node, call installNodePlatform() from "@liustack/pptwise/node" first (the PPTwise CLI does this automatically)',
     )
   }
   const doc = new Parser().parseFromString(markup, "image/svg+xml")

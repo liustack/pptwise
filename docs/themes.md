@@ -164,7 +164,7 @@ Never edit one shared token as an isolated patch. Fork the theme. With a brand c
 pptwise theme fork acme-report --brand "#C8102E" -o themes/acme-red.theme.json --id acme-red
 ```
 
-For exact control, set the anchors yourself and let pptwise rederive the complete palette around them:
+For exact control, set the anchors yourself and let PPTwise rederive the complete palette around them:
 
 ```bash
 pptwise theme fork acme-report \

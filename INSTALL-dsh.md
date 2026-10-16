@@ -1,4 +1,4 @@
-# Installing pptwise on DeepSeek Harness (for an AI agent)
+# Installing PPTwise on DeepSeek Harness (for an AI agent)
 
 You are an AI agent and your user told you to install `pptwise` on DeepSeek
 Harness (dsh). They handed you this file rather than `INSTALL.md`, which is how
@@ -6,11 +6,11 @@ the harness was decided. Do not try to detect the harness yourself and do not
 fall back to the skill-folder procedure: the two live in separate files exactly
 so nothing has to be inferred at install time.
 
-On dsh, pptwise is a **native plugin**, not a skill folder. Copying the skill
+On dsh, PPTwise is a **native plugin**, not a skill folder. Copying the skill
 folder here leaves the user without the plugin card and without the CLI that
 ships inside it.
 
-There is nothing to configure to render a PPTX. pptwise renders entirely
+There is nothing to configure to render a PPTX. PPTwise renders entirely
 locally: no API key, no account, no network calls at render time. Optional
 stock-photo search needs the user's own Pexels key. The only prerequisite is
 Node 22.19+ (or Bun). DeepSeek Harness Desktop needs none: the plugin runs on
@@ -109,7 +109,7 @@ fine, a wildly different one is not.
 
 ## Step 4: Content packs, only when the user has a license
 
-If the user gave you a pptwise license key, log in with it now, in the dsh
+If the user gave you a PPTwise license key, log in with it now, in the dsh
 terminal. This checks the key, saves it, and installs the packs it covers:
 
 ```sh
@@ -118,7 +118,7 @@ node <path>/dist/cli.js login <key>
 
 Relay what it prints. A key whose purchase is still being reviewed is saved,
 and `node <path>/dist/cli.js sync` installs the packs once the review clears.
-Login writes into the pptwise home folder (`~/.pptwise`), which is why it
+Login writes into the PPTwise home folder (`~/.pptwise`), which is why it
 belongs to installation: making a deck writes nothing there. Run `sync` again
 when the license changes or to pick up newer packs. Without a license, skip
 this step.
@@ -147,7 +147,7 @@ this step.
 
 ## Done
 
-Report the `doctor` result to the user and tell them pptwise is ready. The deck
+Report the `doctor` result to the user and tell them PPTwise is ready. The deck
 skill is registered in dsh's skill system, so they can ask for a deck in plain
 words from here on.
 
