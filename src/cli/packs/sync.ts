@@ -110,12 +110,13 @@ export function packsServerUrl(env: NodeJS.ProcessEnv = process.env): string {
   return raw.replace(/\/+$/, "")
 }
 
-class ServerRefusal extends Error {
+/** A non-2xx answer. `said` is the server's own sentence, when it sent one. */
+export class ServerRefusal extends Error {
   constructor(
     readonly status: number,
-    message: string,
+    readonly said: string | undefined,
   ) {
-    super(message)
+    super(said === undefined ? `HTTP ${status}` : `HTTP ${status}: ${said}`)
   }
 }
 
@@ -135,13 +136,12 @@ async function get(url: string, key: string, timeoutMs: number): Promise<Respons
     signal: AbortSignal.timeout(timeoutMs),
   })
   if (res.ok) return res
-  const said = await serverMessage(res)
-  throw new ServerRefusal(res.status, said === undefined ? `HTTP ${res.status}` : `HTTP ${res.status}: ${said}`)
+  throw new ServerRefusal(res.status, await serverMessage(res))
 }
 
 /** An error's message with what lies underneath it, when there is
  *  something (`fetch failed (ECONNREFUSED)`). */
-function describeError(e: unknown): string {
+export function describeError(e: unknown): string {
   const message = e instanceof Error ? e.message : String(e)
   const cause = e instanceof Error ? (e.cause as { code?: unknown; message?: unknown } | undefined) : undefined
   const detail = typeof cause?.code === "string" ? cause.code : typeof cause?.message === "string" ? cause.message : undefined
@@ -169,8 +169,14 @@ function catalogFailure(server: string, e: unknown): string {
   return `${reachFailure(server, e)}. ${UNCHANGED}`
 }
 
-async function fetchCatalog(server: string, key: string): Promise<CatalogEntry[]> {
-  const res = await get(`${server}/api/packs/catalog`, key, CATALOG_TIMEOUT_MS)
+/** `GET /api/packs/catalog` with the key. A non-2xx answer throws
+ *  `ServerRefusal`, and a request that never got an answer throws what
+ *  fetch threw. */
+export function requestCatalog(server: string, key: string): Promise<Response> {
+  return get(`${server}/api/packs/catalog`, key, CATALOG_TIMEOUT_MS)
+}
+
+async function readCatalog(res: Response): Promise<CatalogEntry[]> {
   let body: unknown
   try {
     body = await res.json()
@@ -247,21 +253,35 @@ async function syncOne(entry: CatalogEntry, ctx: { server: string; key: string; 
   }
 }
 
-export async function syncPacks(opts: PackSyncOptions = {}): Promise<PackSyncReport> {
-  const key = await readLicenseKey()
-  if (key === undefined) return { license: false, ok: true, packs: [] }
-  const server = packsServerUrl(opts.env ?? process.env)
+/**
+ * Install what the catalog answer `res` lists, with `key` for the
+ * downloads. The second half of a sync, for a caller that has already
+ * asked for the catalog.
+ */
+export async function syncFromCatalog(server: string, key: string, res: Response, opts: PackSyncOptions = {}): Promise<PackSyncReport> {
   let catalog: CatalogEntry[]
   try {
-    catalog = await fetchCatalog(server, key)
+    catalog = await readCatalog(res)
   } catch (e) {
-    const error = e instanceof PptwiseError ? `${e.message}. ${UNCHANGED}` : catalogFailure(server, e)
-    return { license: true, ok: false, server, error, packs: [] }
+    return { license: true, ok: false, server, error: `${(e as Error).message}. ${UNCHANGED}`, packs: [] }
   }
   const ctx = { server, key, root: packsRoot(), engineVersion: opts.engineVersion ?? VERSION }
   const packs: PackSyncItem[] = []
   for (const entry of catalog) packs.push(await syncOne(entry, ctx))
   return { license: true, ok: packs.every((p) => p.status !== "failed"), server, packs }
+}
+
+export async function syncPacks(opts: PackSyncOptions = {}): Promise<PackSyncReport> {
+  const key = await readLicenseKey()
+  if (key === undefined) return { license: false, ok: true, packs: [] }
+  const server = packsServerUrl(opts.env ?? process.env)
+  let res: Response
+  try {
+    res = await requestCatalog(server, key)
+  } catch (e) {
+    return { license: true, ok: false, server, error: catalogFailure(server, e), packs: [] }
+  }
+  return syncFromCatalog(server, key, res, opts)
 }
 
 function formatItem(item: PackSyncItem, width: number): string {

@@ -59,12 +59,19 @@ async function assertNotSymlink(path: string): Promise<void> {
   }
 }
 
-/** `pptwise license set <key>` */
-export async function runLicenseSet(value: string): Promise<string> {
+/** The key a user typed or pasted, trimmed, or an error saying what a key
+ *  looks like. Nothing is written and nothing is asked of the server. */
+export function parseLicenseKey(value: string): string {
   const key = value.trim()
   if (!LICENSE_KEY_PATTERN.test(key)) {
     throw new PptwiseError(`that is not a pptwise license key: ${KEY_SHAPE}. Copy the whole key again and retry.`)
   }
+  return key
+}
+
+/** Write `key` to the license file, readable by the owner only, and
+ *  return the file's path. */
+export async function saveLicenseKey(key: string): Promise<string> {
   const path = licensePath()
   await mkdir(pptwiseHome(), { recursive: true })
   await assertNotSymlink(path)
@@ -74,6 +81,13 @@ export async function runLicenseSet(value: string): Promise<string> {
   } catch {
     // platforms without POSIX permission bits
   }
+  return path
+}
+
+/** `pptwise license set <key>` */
+export async function runLicenseSet(value: string): Promise<string> {
+  const key = parseLicenseKey(value)
+  const path = await saveLicenseKey(key)
   return `Saved license ${licenseKeyPrefix(key)} to ${path}. Run \`pptwise packs sync\` to install your packs.`
 }
 
@@ -84,15 +98,23 @@ export async function runLicenseStatus(): Promise<string> {
   return `License ${licenseKeyPrefix(key)} configured in ${licensePath()}.`
 }
 
-/** `pptwise license clear` */
-export async function runLicenseClear(): Promise<string> {
+/** Delete the license file. Returns its path, or `undefined` when there
+ *  was none. Installed packs are not touched. */
+export async function clearLicenseKey(): Promise<string | undefined> {
   const path = licensePath()
   try {
     await lstat(path)
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") return "No license configured. Nothing to clear."
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return undefined
     throw e
   }
   await rm(path, { force: true })
+  return path
+}
+
+/** `pptwise license clear` */
+export async function runLicenseClear(): Promise<string> {
+  const path = await clearLicenseKey()
+  if (path === undefined) return "No license configured. Nothing to clear."
   return `Removed ${path}. Installed packs stay in place.`
 }
