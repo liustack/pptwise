@@ -17,7 +17,7 @@ mirror_of: skills/pptwise/references/validate.md
 pptwise build deck-dir/ --json
 ```
 
-`build` 一次跑完 assemble、validate、audit、preview 和 render，打印一份报告。只有每项检查都通过并写出 `.pptx` 时 `status` 才是 `ok`。否则是 `needs_revision`，命令以 1 退出。`errors` 里的每一项带 `stage`、`page`、`pageId`、要改的 `file`（页面内容是 `pages/<id>.json`，spec 锁定的内容是 `deck.spec.json`）、`field`，以及检查自己的 `message`，写明要改什么。audit 发现另带 `code`。警告放在 `warnings` 里，从不拦输出。还没写的页会被报为尚未写，audit 要等所有页写完才跑。只要 validate 通过，`preview` 就列出画好的页面。到指定文件修完每个错误，再 build。不要把页面转成 PNG 或当图片读来检查：报告就是检查结果。
+`build` 一次跑完 assemble、validate、audit、preview 和 render，打印一份报告。只有每项检查都通过并写出 `.pptx` 时 `status` 才是 `ok`。否则是 `needs_revision`，命令以 1 退出。`errors` 里的每一项带 `stage`、`page`、`pageId`、要改的 `file`（页面内容是 `pages/<id>.json`，spec 锁定的内容是 `deck.spec.json`）、`field`，以及检查自己的 `message`，写明要改什么。audit 发现另带 `code`。警告放在 `warnings` 里，从不拦输出。还没写的页会被报为尚未写，audit 要等所有页写完才跑。只要 validate 通过，`preview` 就列出画好的页面。到指定文件修完每个错误，再 build。报告是引擎的检查。build 通过之后，看 deck 是你的事：见下面的「看整份 deck 的联系表」。
 
 处理某一页时想单独跑一项检查：
 
@@ -48,7 +48,7 @@ pptwise render deck-dir/
 
 未填完的项目需要显式使用 `--draft`。可能丢失的内容仍会被拦截，除非用户明确接受 `--allow-dropped-content`，这个开关也让内容页越过 validate 的画页检查。应优先修复或拆页。
 
-deck 第一次 build 时，还会用另外最多三个主题画出它的封面和一两页内容页，列在 `alternatives` 里，带每个主题的 id。之后在同一主题下 build，会再列出它们，画到的页面改过就重画。用 `--no-alternatives` build 过，或者换过主题的 deck，不再给出备选。要换主题，把 `deck.spec.json` 里的 `theme` 改掉再 build。报告在 `drawnAs` 里列出按别的讲法画的页面，对新脸不画的装饰字段给出警告，需要改动的页面列在 `errors` 里。之前有一次 build 把每页都画全过，新主题画不全的页面就不再报错，而是去掉接不住的部分照常画出，给出警告，`writtenFor` 写明哪个主题能画全。`themeSource` 写明绑定的主题是 `builtin`（内置）、`file`（主题文件）还是 `pack`（内容包）。
+主题和大纲一起定下，所以除非有人要求，build 不会用别的主题画这份 deck。交付后用户要换主题时，带 `--alternatives` build 一次（`pptwise_build` 工具传 `alternatives: true`）：它用另外最多三个主题画出 deck 的封面和一两页内容页，列在 `alternatives` 里，带每个主题的 id。之后在同一主题下 build，会再列出它们，画到的页面改过就重画。用 `--no-alternatives` build 过，或者换过主题的 deck，不再给出备选。要换主题，把 `deck.spec.json` 里的 `theme` 改掉再 build。报告在 `drawnAs` 里列出按别的讲法画的页面，对新脸不画的装饰字段给出警告，需要改动的页面列在 `errors` 里。之前有一次 build 把每页都画全过，新主题画不全的页面就不再报错，而是去掉接不住的部分照常画出，给出警告，`writtenFor` 写明哪个主题能画全。`themeSource` 写明绑定的主题是 `builtin`（内置）、`file`（主题文件）还是 `pack`（内容包）。
 
 ## 审计几何
 
@@ -63,6 +63,22 @@ pptwise audit deck-dir/
 封面或章节页使用照片背景时，加上 `--pixels`。像素采样能发现文字落在真实图片不安全区域的问题。
 
 页面 `background` 涂成中间调颜色（大约和 `#777777`、`#6B7B8C` 一样亮）时报出的 `low-contrast`，要改背景，不是改字：主题字色读不清的地方渲染器已经改用纯黑，卡片也挑纯黑读得清的一侧加深或提亮，封面左上角的标记按它落在的色带取色。把颜色调浅或调深。
+
+## 看整份 deck 的联系表
+
+build 通过之后，像读者那样把整份 deck 看一遍。`--sheet` 把每一页缩小画进同一张图，每页下面标着页码，报告里的 `preview.sheet` 就是它（页面 SVG 旁边的 `sheet.jpg`）。它需要可选依赖 `sharp`。没有的话报告会说明，这一步跳过。
+
+```bash
+pptwise build deck-dir/ --json --sheet
+```
+
+有 `pptwise_build` 工具时传 `sheet: true`，图会在结果里直接给你。打开联系表，对照 `materials.md` 一页一页看：
+
+- **图。** 每张图都展示这一页说的事，也是配图规划要的那张。不是千篇一律的图库套路（握手、灯泡、指着屏幕的人）。主体在裁切框里，脸和产品没被切掉。压在背景图上的字，落在图里安静的地方。
+- **空洞。** 没有空着的图框，没有占位，没有大半空白的页面，没有规划里要而 deck 里缺的图。内容撑不满版面的页，补内容或换更满的配方。
+- **节奏。** 没有连着三页长得一样，没有一长串只有文字、中间不夹图片图表或数字的页，章节页彼此一致，封面和结尾是同一种口吻。
+
+按页码记下看到的问题，回到源文件改（第 4 步），带 `--sheet` 再 build，再看一遍。最多两轮。交付时告诉用户你看到了、但保留原样的地方。联系表用来判断观感。精确位置和对比度归 audit 管，不要从联系表上量。
 
 ## 评审整份 deck
 

@@ -44,17 +44,19 @@ IR 组件契约在填页时用 `pptwise inspect deck-dir/ --page <id>` 按页读
 
 ## 选择、创建并绑定主题
 
-主题是第二个决定，必须早于 spec。主题是一个完整文件，包含样式、页面菜单、可选品牌规则、`occasions` 与 `identity`。菜单只服务 11 种内容页讲法中的一个明确子集。
+主题和大纲一起定下，之后 spec 锁定。主题是一个完整文件，包含样式、页面菜单、可选品牌规则、`occasions` 与 `identity`。菜单只服务 11 种内容页讲法中的一个明确子集。
 
-先按场合，再按视觉个性强度挑出一个主题，随大纲用一句话说明理由。只有用户想先看看有哪些样子再选，才用他自己的封面标题画出候选：宿主有 `pptwise_themes` 工具时用它，否则用 CLI 出主题墙：
+先用你会选的主题写 spec，再把大纲和一面用用户自己的封面标题画出的候选主题墙放进同一条消息，让用户挑：宿主有 `pptwise_themes` 工具时用它，否则用 CLI 出主题墙：
 
 ```bash
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-带 `--title` 时，`theme try` 给每个点名的主题画一张封面和一张正文页，主题数不限，也可以写 `all`，不点名时按 `--occasion <words>` 画四到六个的短名单，并打印一份清单，列出每页一个 SVG，外加 `contact-sheet.html`。`--lang zh` 或 `--lang en` 决定默认正文页的语言。`--page <file>` 改画这份 deck 自己的一张正文页，写法同页面，带上它的 `kind`。某个主题画不了的页会从该主题那一行里拿掉，清单写明原因。把 SVG 或联系表给用户看。图是给用户的：不要自己读图来评判主题。不带 `--title` 时，`theme try` 用 2 到 4 个主题渲染一份固定的英文样张。
+带 `--title` 时，`theme try` 给每个点名的主题画一张封面和一张正文页，主题数不限，也可以写 `all`，不点名时按 `--occasion <words>` 画四到六个的短名单，并打印一份清单，列出每页一个 SVG，外加 `contact-sheet.html`。`--lang zh` 或 `--lang en` 决定默认正文页的语言。`--page <file>` 改画这份 deck 自己的一张正文页，写法同页面，带上它的 `kind`。某个主题画不了的页会从该主题那一行里拿掉，清单写明原因。把 SVG 或联系表给用户看。图是给用户的：不要自己读图来评判主题。`--brand '#C8102E'`（或品牌色加第二色，`'#156082,#E97132'`）多加一个选项：墙上第一个主题按品牌色重新上色，上色方式和 `theme fork --brand` 写出的一样。只有 `pptwise brand scan --json` 找到品牌时才传，值用它的 `next.brandFlag`。用户选中它时，运行墙打印的那行 `theme fork`，写到 `deck-dir/theme.json`。不带 `--title` 时，`theme try` 用 2 到 4 个主题渲染一份固定的英文样张。
 
-创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
+用户点名了主题，就不画墙直接绑定。用户说了直接做不用问，就先按场合，再按视觉个性强度挑出一个主题，和大纲一起列出来，接着往下做。
+
+只有用户给了品牌色，品牌素材检索找到品牌色且用户要用，或者用户交来公司模板、公司已有的 PPT，才创建主题。想要某种观感（「炫酷」「科技感」「高级」）是在现有主题里挑的理由。创建就是拷贝。即使从出厂预设开始，也优先创建工作区自有主题：
 
 ```bash
 pptwise theme new --from brief --id acme-report
@@ -66,7 +68,7 @@ pptwise theme new --from brief --id acme-report
 pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin
 ```
 
-已有主题要换成品牌色时，用 `--brand` fork 它。fork 保持菜单逐字节相同，并围绕这个颜色重新上色：
+已有主题要换成品牌色时，用 `--brand` fork 它。品牌素材检索的 `next.themeFork` 就是填好了找到的颜色的这一行。fork 保持菜单逐字节相同，并围绕这个颜色重新上色：
 
 ```bash
 pptwise theme fork acme --brand '#0B5FFF' --id acme-blue

@@ -240,8 +240,9 @@ function pathishToken(token: string): string | null {
  *  `icons` was added to the playbook and missed here (codex review R6): the
  *  playbook runs `schema`, `schema --spec|--kind|--component`, `inspect
  *  --page [--component|--fit]`, `icons`, `narratives`, `themes`, `theme
- *  try|new|fork`, `brand extract`, `spec validate`, `build`, `assemble`,
- *  `validate`, `audit`, `preview`, `render`, `doctor`, and `serve`. `build`
+ *  try|new|fork`, `brand extract|scan`, `spec validate`, `build`, `assemble`,
+ *  `validate`, `audit`, `preview`, `render`, `doctor`, and `serve`. `brand
+ *  scan` only reads the workspace and prints what it found. `build`
  *  runs assemble, validate, audit, preview and render in one pass and writes
  *  under the workspace's `.pptwise/`, so it needs nothing the others do not.
  *  Everything but
@@ -281,7 +282,7 @@ const ALLOWED_SUBCOMMANDS = new Set([
 const ALLOWED_GROUPS: Readonly<Record<string, readonly string[]>> = {
   spec: ["validate"],
   theme: ["new", "fork", "try"],
-  brand: ["extract"],
+  brand: ["extract", "scan"],
 }
 
 /** One human-readable list of everything `run_pptwise` accepts — the tool

@@ -5,9 +5,41 @@ mirror_of: skills/pptwise/references/branding.md
 
 # 品牌姿态与页脚标记
 
-何时读：决定整份 deck 的品牌可见度，加页码或保密标识，抽取 Office 品牌，或理解某页为什么没有品牌框时。
+何时读：查找项目自己的品牌素材，决定整份 deck 的品牌可见度，加页码或保密标识，抽取 Office 品牌，或理解某页为什么没有品牌框时。
 
 品牌信号只控制外观，不负责选择叙事或页面讲法。
+
+## 找品牌素材
+
+收集素材时、出大纲之前，先找项目自己关于品牌已经有的东西。在项目目录里运行：
+
+```bash
+pptwise brand scan --json
+```
+
+传一个目录就检索那个目录，比如公司官网的仓库。检索只在本机进行，跳过依赖、构建产物和隐藏目录，名字像密钥的文件一律不打开，到了固定上限就停，所以不用问也可以跑。它报告：
+
+- `logos`：名字像 logo 的文件和它们的尺寸。SVG 钉进来时会画成 PNG。
+- `images`：够放上幻灯片的大图，从大到小，带横竖。
+- `colors` 和 `fonts`：样式表、Tailwind 和 token 文件、网页 manifest、Office 模板里写着的颜色和字体。
+- `office`：模板和 deck，带它们的配色方案和字体。
+- `brand`：证据指向的品牌色和第二色，以及出处。有自己配色方案的 Office 模板优先。
+- `next`：`brandFlag` 即 `--brand` 的值，以及用上它的现成 `theme try`、`theme fork`、`brand extract` 命令，占位符写在尖括号里。
+- `summary`：一句话，告诉用户找到了什么。
+
+把找到的东西抄进 `materials.md`。找到品牌色时，随大纲画主题墙时把它传进去（`pptwise_themes` 工具传 `brand`，`theme try` 加 `--brand`）：墙上就多一个按品牌色重新上色的主题。检索结果是线索，不是定论：UI 组件库里叫 `primary` 的颜色不一定是品牌色。`brand` 为空时，只有用户提过品牌才问。
+
+检索找到的 logo 钉成 deck 的资产，在 spec 里指名：
+
+```bash
+pptwise images add public/logo.svg --deck deck-dir/ --as logo
+```
+
+```json
+"brand": { "logo_asset_id": "logo" }
+```
+
+项目自己的图也这样放进来，存成页面引用的 `asset_id`（见 `images.md`）。
 
 ## 页脚标记
 

@@ -1,0 +1,5 @@
+---
+"@liustack/pptwise": minor
+---
+
+The pptwise skill now runs clarify, gather materials, outline and theme, make, check, deliver. The user decides in two places only: one round of questions about the request, and the outline, theme and picture direction together in one message. Materials (facts with sources, the brand scan, and a picture plan per page) are written to `deck-dir/materials.md`, which every later step reads, described in the new `references/materials.md`. The theme wall is drawn with the deck's own title before any page is written, with a brand option when the scan found brand colors, and the theme stays fixed while the deck is made. Pictures come from the user and project first, then stock, then the web under the licenses `images add` takes, then an enabled generator, and `references/images.md` now says how to set up each source. After the build passes, the agent looks at the whole deck in one sheet for pictures, holes and rhythm, at most two rounds, and delivers with a live preview address.

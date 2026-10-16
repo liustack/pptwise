@@ -12,7 +12,7 @@ Fill at most four pages, then build. Use a `pptwise_build` tool when the host ha
 pptwise build deck-dir/ --json
 ```
 
-`build` runs assemble, validate, audit, preview, and render in one pass and prints one report. `status` is `ok` only when every check passed and the `.pptx` was written. Otherwise it is `needs_revision` and the command exits 1. Each entry in `errors` carries `stage`, `page`, `pageId`, the `file` to edit (`pages/<id>.json` for page content, `deck.spec.json` for what the spec locks), the `field`, and the check's own `message`, which says what to change. Audit findings add their `code`. Warnings sit in `warnings` and never block. A page not written yet is reported as such, and the audit waits until every page is written. `preview` names the drawn pages whenever validate passed. Fix every error at the named file, then build again. Do not convert the pages to PNG or read them as images to check them: the report is the check.
+`build` runs assemble, validate, audit, preview, and render in one pass and prints one report. `status` is `ok` only when every check passed and the `.pptx` was written. Otherwise it is `needs_revision` and the command exits 1. Each entry in `errors` carries `stage`, `page`, `pageId`, the `file` to edit (`pages/<id>.json` for page content, `deck.spec.json` for what the spec locks), the `field`, and the check's own `message`, which says what to change. Audit findings add their `code`. Warnings sit in `warnings` and never block. A page not written yet is reported as such, and the audit waits until every page is written. `preview` names the drawn pages whenever validate passed. Fix every error at the named file, then build again. The report is the engine's check. Looking at the deck is yours, once the build passes: see "Look at the deck sheet" below.
 
 To run one check alone while working on a page:
 
@@ -43,7 +43,7 @@ pptwise render deck-dir/
 
 An unfinished project requires explicit `--draft`. Content that would be dropped remains blocked unless the user explicitly accepts `--allow-dropped-content`, which also lets the deck past validate's drawing of its content pages. Prefer fixing or splitting the page.
 
-The first build of a deck also draws its cover and a content page or two in up to three other themes, listed under `alternatives` with each theme's id. Later builds under the same theme list them again, drawn anew whenever the pages they show have changed. A deck built with `--no-alternatives`, or moved to another theme, is offered none again. To change themes, set `theme` in `deck.spec.json` and build again. The report lists pages drawn as another kind under `drawnAs`, warns about furniture a new face leaves off, and names in `errors` any page that needs a change. After a build that drew every page whole, a page the new theme cannot draw whole is drawn with what it cannot take left off and a warning instead, and `writtenFor` names the theme that draws it whole. `themeSource` says whether the bound theme is `builtin`, a `file`, or from a `pack`.
+The theme is settled with the outline, so a build draws the deck in no other theme unless asked. When the user asks for another theme after delivery, build once with `--alternatives` (`alternatives: true` on `pptwise_build`): it draws the deck's cover and a content page or two in up to three other themes, listed under `alternatives` with each theme's id. Later builds under the same theme list them again, drawn anew whenever the pages they show have changed. A deck built with `--no-alternatives`, or moved to another theme, is offered none again. To change themes, set `theme` in `deck.spec.json` and build again. The report lists pages drawn as another kind under `drawnAs`, warns about furniture a new face leaves off, and names in `errors` any page that needs a change. After a build that drew every page whole, a page the new theme cannot draw whole is drawn with what it cannot take left off and a warning instead, and `writtenFor` names the theme that draws it whole. `themeSource` says whether the bound theme is `builtin`, a `file`, or from a `pack`.
 
 ## Audit geometry
 
@@ -58,6 +58,22 @@ The deterministic audit checks overflow, out-of-bounds content, low contrast, ov
 Add `--pixels` when cover or chapter pages use photo backgrounds. Pixel sampling catches text placed on an unsafe part of a real image.
 
 A `low-contrast` finding on a page painted a mid-tone `background` color, about as light as `#777777` or `#6B7B8C`, is fixed at the background, not the text: the renderer already sets text the theme's ink cannot carry there in pure black, shades cards to the side where that black still reads, and sets a cover's top-left mark against the band it stands on. Move the color lighter or darker.
+
+## Look at the deck sheet
+
+Once the build passes, look at the whole deck as a reader would. `--sheet` draws every page small into one picture, each under its page number, and the report names it as `preview.sheet` (`sheet.jpg` beside the page SVGs). It needs the optional `sharp` dependency. Without it the report says so and you skip this look.
+
+```bash
+pptwise build deck-dir/ --json --sheet
+```
+
+With a `pptwise_build` tool, pass `sheet: true` and the picture comes back in its result. Open the sheet and go page by page, with `materials.md` beside it:
+
+- **Pictures.** Each picture shows what its page says and what the picture plan asked for. It is not a generic stock cliché (handshakes, light bulbs, people pointing at screens). Its subject sits inside the crop, faces and products uncut. The words over a background picture stand on a calm part of it.
+- **Holes.** No empty picture frame, no placeholder, no page that is mostly blank, no picture the plan wanted and the deck lacks. A page whose content looks thin for its space gets more content or a fuller recipe.
+- **Rhythm.** No run of three pages that look alike, no long stretch of text pages without a picture, chart, or figure between them, chapter pages that match each other, and the cover and the ending in the same voice.
+
+Write down what you found by page number, fix it at the source (step 4), build with `--sheet` again, and look again. Stop after two rounds. Tell the user at delivery what you saw and left as it is. The sheet is for judging the look. Exact positions and contrast are the audit's job, so do not measure from it.
 
 ## Review the whole deck
 

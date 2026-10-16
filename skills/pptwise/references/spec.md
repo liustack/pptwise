@@ -39,17 +39,19 @@ Use `pptwise narratives --json` to map the answer to a named preset or to explic
 
 ## Choose, create, and bind a theme
 
-Theme is the second decision and must be settled before the spec. A theme is one complete file with style, a page menu, optional brand rules, `occasions`, and `identity`. The menu serves a deliberate subset of the 11 content kinds.
+Theme is settled together with the outline, and the spec is locked after that. A theme is one complete file with style, a page menu, optional brand rules, `occasions`, and `identity`. The menu serves a deliberate subset of the 11 content kinds.
 
-Pick one theme by occasion first and identity strength second, and say why in one line with the outline. Draw candidates with the user's own cover title only when the user asks to see looks before choosing: with a `pptwise_themes` tool when the host has one, otherwise with the CLI:
+Write the spec with the theme you would pick, then show the outline and a wall of candidates drawn with the user's own cover title in one message, and let the user pick: with a `pptwise_themes` tool when the host has one, otherwise with the CLI:
 
 ```bash
 pptwise theme try brief,swiss,memo --title "Q3 review" --subtitle "Board meeting" --json
 ```
 
-With `--title`, `theme try` draws the cover and one content page in each named theme, any number of them or `all`, or with no names a shortlist of four to six for `--occasion <words>`, and prints a manifest that names one SVG per page plus `contact-sheet.html`. `--lang zh` or `--lang en` sets the language of the default content page. `--page <file>` draws one of the deck's own content pages instead, written as a page carries it, with its `kind`. A page a theme cannot draw is left out of that theme's row, and the manifest says why. Show the user the SVGs or the contact sheet. They are for the user: do not read them yourself to judge a theme. Without `--title`, `theme try` renders a fixed English sample deck under two to four themes.
+With `--title`, `theme try` draws the cover and one content page in each named theme, any number of them or `all`, or with no names a shortlist of four to six for `--occasion <words>`, and prints a manifest that names one SVG per page plus `contact-sheet.html`. `--lang zh` or `--lang en` sets the language of the default content page. `--page <file>` draws one of the deck's own content pages instead, written as a page carries it, with its `kind`. A page a theme cannot draw is left out of that theme's row, and the manifest says why. Show the user the SVGs or the contact sheet. They are for the user: do not read them yourself to judge a theme. `--brand '#C8102E'` (or a brand and second color, `'#156082,#E97132'`) adds one more option, the first theme on the wall repainted in the brand's colors, the same repaint `theme fork --brand` writes. Pass it only when `pptwise brand scan --json` found a brand, as its `next.brandFlag`. When the user picks it, run the `theme fork` line the wall prints, writing `deck-dir/theme.json`. Without `--title`, `theme try` renders a fixed English sample deck under two to four themes.
 
-Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
+When the user named a theme, bind it without a wall. When the user said to go ahead without asking, pick one theme by occasion first and identity strength second, show it with the outline, and keep going.
+
+Create a theme only when the user names brand colors, the brand scan found them and the user took them, or the user hands over a company template or deck. A wish for a look ("cool", "techy", "premium") picks among existing themes. Create means copy. Prefer a workspace-owned theme even when the starting point is a factory preset:
 
 ```bash
 pptwise theme new --from brief --id acme-report
@@ -61,7 +63,7 @@ With an Office theme or template, choose the theme by occasion, then repaint it 
 pptwise brand extract corp.pptx -o themes/acme.theme.json --from bulletin
 ```
 
-With an existing theme and a brand color, fork it with `--brand`. The fork keeps the menu byte-identical and repaints the palette around that color:
+With an existing theme and a brand color, fork it with `--brand`. The brand scan's `next.themeFork` is this line with the found colors filled in. The fork keeps the menu byte-identical and repaints the palette around that color:
 
 ```bash
 pptwise theme fork acme --brand '#0B5FFF' --id acme-blue

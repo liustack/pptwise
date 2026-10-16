@@ -18,6 +18,7 @@ const REFERENCE_NAMES = [
   "branding",
   "images",
   "validate",
+  "materials",
 ] as const
 
 const EXPECTED_EN_REL = [
@@ -120,10 +121,38 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("pins the serial authoring chain in both languages", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
-    expect(en).toContain("intent -> narrative -> theme binding -> spec with kind -> fill -> render")
-    expect(zh).toContain("意图 -> 叙事 -> 主题绑定 -> 带 kind 的 spec -> 填充 -> 渲染")
-    for (const heading of ["### 1. Intent", "### 2. Narrative", "### 3. Bind a theme", "### 4. Write the spec with `kind`", "### 5. Fill pages", "### 6. Build, review, and deliver"]) {
+    expect(en).toContain("clarify -> gather materials -> outline and theme -> make -> check -> deliver")
+    expect(zh).toContain("需求澄清 -> 素材收集 -> 大纲和主题 -> 制作 -> 验收 -> 交付")
+    for (const heading of ["### 1. Clarify the request", "### 2. Gather materials, quietly", "### 3. Outline and theme, settled at once", "### 4. Make the deck", "### 5. Check what the deck looks like", "### 6. Deliver"]) {
       expect(en).toContain(heading)
+    }
+    for (const heading of ["### 1. 需求澄清", "### 2. 素材收集，静默做", "### 3. 大纲和主题，一次拍板", "### 4. 制作", "### 5. 验收", "### 6. 交付"]) {
+      expect(zh).toContain(heading)
+    }
+  })
+
+  it("lets the user decide in two places only, and asks the first at most once", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("The user decides in two places only: the one round of questions in step 1, and the outline and theme in step 3.")
+    expect(en).toContain("Never ask twice.")
+    expect(zh).toContain("用户只在两处拍板：第 1 步的那一轮提问，和第 3 步的大纲和主题。")
+    expect(zh).toContain("绝不问第二轮。")
+  })
+
+  it("gathers content and brand into one materials file every later step reads", () => {
+    for (const text of [read(EN_REL), read(ZH_REL)]) {
+      expect(text).toContain("`deck-dir/materials.md`")
+      expect(text).toContain("`references/materials.md`")
+      expect(text).toContain("`pptwise brand scan --json`")
+      expect(text).toContain("`next.brandFlag`")
+    }
+    expect(read(EN_REL)).toContain("Every later step reads it instead of memory, so the same materials make the same deck.")
+    expect(read(ZH_REL)).toContain("后面每一步都读这个文件，不靠记忆，同样的素材做出同样的 deck。")
+    for (const rel of [REF("materials.md"), REF("materials.zh-CN.md")]) {
+      const text = read(rel)
+      expect(text).toContain("deck-dir/materials.md")
+      expect(text).toContain("pptwise brand scan --json")
     }
   })
 
@@ -139,20 +168,20 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("lists the outline page by page before any page is written, even when the user said to go ahead", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
-    expect(en).toContain("Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says.")
-    expect(en).toContain("This step is never skipped")
-    expect(en).toContain("When the user said to go ahead or let you decide, list the outline and continue in the same reply.")
-    expect(zh).toContain("写任何页面文件之前，先在对话里逐页列出：页码、页型或 `kind`、标题、这一页讲什么。")
-    expect(zh).toContain("这一步不论 deck 多短都不能省。")
-    expect(zh).toContain("用户说了直接做或让你定，就列出大纲，在同一条回复里接着做。")
+    expect(en).toContain("1. **Outline**: one line per page with its number, page type or `kind`, heading, and what it says.")
+    expect(en).toContain("in step 3 still show the outline and the theme, then keep going in the same reply.")
+    expect(en.indexOf("**Outline**")).toBeLessThan(en.indexOf("### 4. Make the deck"))
+    expect(zh).toContain("1. **大纲**：每页一行，写页码、页型或 `kind`、标题、这一页讲什么。")
+    expect(zh).toContain("第 3 步照样把大纲和主题列出来，然后在同一条回复里接着做。")
+    expect(zh.indexOf("**大纲**")).toBeLessThan(zh.indexOf("### 4. 制作"))
   })
 
   it("shows the outline as a card where the harness has one, and asks through its question tool", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
-    expect(en).toContain("When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card.")
+    expect(en).toContain("Call `pptwise_outline` on the deck directory too where it exists.")
     expect(en).toContain("with `ask_user_question` when that tool exists")
-    expect(zh).toContain("有 `pptwise_outline` 工具时，同时对 deck 目录调用它，让用户以卡片看到同一份列表。")
+    expect(zh).toContain("有 `pptwise_outline` 工具时，同时对 deck 目录调用它。")
     expect(zh).toContain("有 `ask_user_question` 工具时用它来问")
   })
 
@@ -173,36 +202,58 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text).not.toMatch(/^pptwise render deck-dir\/$/m)
       expect(text).not.toMatch(/^pptwise audit deck-dir\/$/m)
     }
-    expect(en).toContain("One decision stops for the user: the outline, which also names the theme: the one the user named, or the one you picked and why.")
-    expect(en).toContain("Never convert pages to PNG or read page images to judge them")
     expect(en).toContain("Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`.")
-    expect(zh).toContain("只有一处停下来等用户：大纲，大纲里同时写明主题：用户点名的那个，或者你选的那个和理由。")
-    expect(zh).toContain("不要把页面转成 PNG 或读页面图片来判断")
+    expect(en).toContain("start `pptwise serve deck-dir/ --no-open` in the background, and give the address it prints")
     expect(zh).toContain("只交付这一份文件。")
+    expect(zh).toContain("在后台启动 `pptwise serve deck-dir/ --no-open`，把它打印的地址给用户")
     for (const rel of [REF("validate.md"), REF("validate.zh-CN.md")]) {
       expect(read(rel)).toContain("pptwise build deck-dir/ --json")
     }
   })
 
-  it("picks the theme by occasion, draws a wall only on request, and switches theme by its name", () => {
+  it("checks the deck by its report first and then by looking at its sheet, two rounds at most", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
-    expect(en).toContain("Otherwise pick the theme yourself.")
-    expect(en).toContain("It is their choice: give no reason for it, and build with `--no-alternatives` (`alternatives: false` on the `pptwise_build` tool)")
-    expect(en).toContain("Draw a theme wall only when the user asks to see looks before choosing")
-    expect(en).toContain("To switch later, change only `theme` in `deck.spec.json` and build again.")
-    expect(en).toContain("Name them in one line and keep going: do not stop to ask.")
-    expect(en).toContain("The latest build's result lists them with the numbers the card shows: read the number off it, not off files.")
-    expect(en).toContain("When the user asks for other colors without naming one, fork two or three fitting colors")
-    expect(zh).toContain("否则主题由你来挑。")
-    expect(zh).toContain("这是用户自己的选择：不写理由，build 时加 `--no-alternatives`（`pptwise_build` 工具传 `alternatives: false`）")
-    expect(zh).toContain("只有用户想先看看有哪些样子再选")
-    expect(zh).toContain("之后要换主题，只改 `deck.spec.json` 里的 `theme`，再 build 一次。")
-    expect(zh).toContain("用一句话提一下就继续，不要停下来问。")
-    expect(zh).toContain("最近一次 build 的结果按卡片上的编号列出它们：编号对应哪个主题，看那里，不用去翻文件。")
-    expect(zh).toContain("用户想换个颜色又没说哪种时，先 fork 两三个合适的配色")
     for (const text of [en, zh]) {
-      expect(text).toContain("`alternatives`")
+      expect(text).toContain("`pptwise build deck-dir/ --json --sheet`")
+      expect(text).toContain("`preview.sheet`")
+      expect(text).toContain("`sheet: true`")
+      expect(text).not.toMatch(/Never convert pages to PNG|不要把页面转成 PNG/)
+    }
+    expect(en).toContain("Stop after two rounds, and tell the user what you left as it is.")
+    expect(zh).toContain("最多两轮，保留原样的地方告诉用户。")
+    for (const rel of [REF("validate.md"), REF("validate.zh-CN.md")]) {
+      const text = read(rel)
+      expect(text).toContain("pptwise build deck-dir/ --json --sheet")
+      expect(text).not.toMatch(/Do not convert the pages to PNG|不要把页面转成 PNG/)
+    }
+    expect(read(REF("validate.md"))).toContain("Stop after two rounds.")
+    expect(read(REF("validate.zh-CN.md"))).toContain("最多两轮。")
+  })
+
+  it("settles the theme with the outline, brand option included, and draws other themes only on request", () => {
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("**Theme**: a wall drawn with the deck's own cover title.")
+    expect(en).toContain("Add `--brand '<next.brandFlag>'` for the brand option. When the user named a theme, show it instead of a wall.")
+    expect(en).toContain("The spec is now locked: the theme does not change while the deck is made.")
+    expect(en).toContain("When the user asks for another theme, build once with `--alternatives` (`alternatives: true` on `pptwise_build`)")
+    expect(en).toContain("The latest build's result lists them with the numbers the card shows: read the number off it, not off files.")
+    expect(en).toContain("To switch, change only `theme` in `deck.spec.json` and build again.")
+    expect(en).toContain("When the user asks for other colors without naming one, fork two or three fitting colors")
+    expect(en).not.toContain("Otherwise pick the theme yourself.")
+    expect(en).not.toContain("Name them in one line and keep going")
+    expect(zh).toContain("**主题**：用 deck 自己的封面标题画一面主题墙。")
+    expect(zh).toContain("加上 `--brand '<next.brandFlag>'` 就有品牌选项。用户点名了主题，就给他看那一个，不画墙。")
+    expect(zh).toContain("spec 从此锁定：制作过程中不再换主题。")
+    expect(zh).toContain("用户要换主题时，带 `--alternatives` build 一次（`pptwise_build` 传 `alternatives: true`）")
+    expect(zh).toContain("最近一次 build 的结果按卡片上的编号列出它们：编号对应哪个主题，看那里，不用去翻文件。")
+    expect(zh).toContain("换主题只改 `deck.spec.json` 里的 `theme`，再 build 一次。")
+    expect(zh).toContain("用户想换个颜色又没说哪种时，先 fork 两三个合适的配色")
+    expect(zh).not.toContain("否则主题由你来挑。")
+    expect(zh).not.toContain("用一句话提一下就继续")
+    for (const text of [en, zh]) {
+      expect(text).toContain("`--alternatives`")
       expect(text).toContain("`drawnAs`")
       // A kind the menu lacks is no longer a reason to rewrite the spec.
       expect(text).not.toMatch(/hard error that lists what the menu offers|会硬报错，并列出菜单提供的词/)
@@ -335,8 +386,10 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("pictures the cover and every photo page by default, chosen by looking at the contact sheet", () => {
     const en = read(EN_REL)
     const zh = read(ZH_REL)
-    expect(en).toContain("Give the deck pictures unless the user said not to. Every `photo` page gets one, and so does the cover when its `inspect` lists the photograph recipe.")
-    expect(zh).toContain("除非用户说了不要图，否则给 deck 配图。每个 `photo` 页都要配，封面的 `inspect` 列出照片配方时封面也配。")
+    expect(en).toContain("Give the deck pictures, following the picture plan, unless the user said not to: every `photo` page, the cover and chapter pages where their `inspect` lists a photograph recipe")
+    expect(en).toContain("Take them in this order: the user's and the project's own, then stock search, then the web, then a local generator when one is enabled.")
+    expect(zh).toContain("除非用户说了不要图，按配图规划给 deck 配图：每个 `photo` 页，`inspect` 列出照片配方的封面和章节页")
+    expect(zh).toContain("来源依次是：用户和项目自己的图，然后是图库搜索，然后是网上，最后是启用了的本地生成器。")
     for (const text of [en, zh]) {
       expect(text).toContain("pptwise asset-brief deck-dir/")
       expect(text).toContain("--orientation")

@@ -10,7 +10,7 @@ pptwise turns semantic JSON into native DrawingML `.pptx` files. Text and shapes
 Use this one-way chain. Do not skip backward or decide two layers at once.
 
 ```text
-intent -> narrative -> theme binding -> spec with kind -> fill -> render
+clarify -> gather materials -> outline and theme -> make -> check -> deliver
 ```
 
 ## Run the CLI
@@ -43,76 +43,65 @@ pptwise narratives --json
 pptwise themes --json
 ```
 
-`themes --json` lists installed content pack themes with `"source": "pack"`. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while filling, never whole. See step 5.
+`themes --json` lists installed content pack themes with `"source": "pack"`. Each theme row carries its `menu`: the keys of `menu.content` are the content kinds it offers. The IR component contract is read per page while making, never whole. See step 4.
 
-Scan the workspace before asking questions, `.pptwise/decks/` included: a file search that honours `.gitignore` skips it. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
+Scan the workspace before asking questions, `.pptwise/decks/` included: a file search that honours `.gitignore` skips it. An existing `deck.spec.json` already records the narrative, bound theme, page order, headings, and content kinds: a change to that deck starts at step 4. A deck-local `theme.json`, a workspace `themes/` file, a named theme, or a supplied `.thmx`, `.potx`, or branded `.pptx` is a theme signal.
 
-## Show the user before you check it yourself
+## Where the user decides
 
-Write every message to the user in the language they wrote in, from the first status line to the final answer. One decision stops for the user: the outline, which also names the theme: the one the user named, or the one you picked and why. Show it in the conversation and ask before writing pages. When the user has said to go ahead without asking ("just do it", "you decide"), do not ask, but still show the outline and continue. The theme is not a second stop: the user can change it at the outline or after any build.
-
-Show pages early and often. The user should see a page within the first minute, not at the end. Your own checks run on `pptwise build` reports. Never convert pages to PNG or read page images to judge them: the report already names every problem, and the pictures are for the user.
+Write every message to the user in the language they wrote in, from the first status line to the final answer. The user decides in two places only: the one round of questions in step 1, and the outline and theme in step 3. Everything else runs without stopping. When the user has said to go ahead without asking ("just do it", "you decide"), skip the questions in step 1, and in step 3 still show the outline and the theme, then keep going in the same reply.
 
 ## Workflow
 
-### 1. Intent
+### 1. Clarify the request
 
-Record four facts before choosing how to tell the story: audience, desired outcome, whether the deck will be presented or circulated, and available time. Derive facts already present in the request or workspace. If a user is present and material facts are still missing, ask all unresolved questions in one round.
+Settle four facts: audience, desired outcome, whether the deck will be presented or circulated, and available time. With them, settle the narrative: argument `strategy`, `pacing` (how dense the pages are), and `audience` (the tone). Use a named preset from `pptwise narratives --json` when it matches. Derive what the request and workspace already say, and ask what is still missing in one round, with `ask_user_question` when that tool exists. Never ask twice. When the user said to go ahead, infer the rest. Narrative never chooses a page face. See `references/spec.md`.
 
-### 2. Narrative
+### 2. Gather materials, quietly
 
-Choose the narrative before the theme. The narrative decides argument strategy, pacing, and tone. Use a named preset when it matches, or write explicit `strategy`, `pacing`, and `audience` axes. Pacing controls editorial budgets and the body-text baseline. Narrative never chooses a page face.
+Ask the user nothing here. Create the deck folder: `.pptwise/decks/<name>/` under the project folder (the folder holding `pptwise.config.json`, else the working directory), `<name>` a few lowercase English words joined by hyphens, such as `q3-review`. Put it elsewhere only when the user names a place. Edit a deck that already exists where it is, and never move it. Run commands from the project folder: `deck-dir/` below is the deck's path from there. Then gather two kinds of material:
 
-Say the narrative you chose in one line with the outline, so one answer from the user settles it. See `references/spec.md` for the compact interview and spec example.
+- **Content.** Do desk research by default: search the web for the figures, dates, and examples the deck needs, each with its source. When the user's material already holds the content, only add its sources. Never invent a figure.
+- **Visual.** Run `pptwise brand scan --json` for the project's logo, pictures, brand colors and fonts, and Office templates (see `references/branding.md`), and plan the picture each page should have (see `references/images.md`).
 
-### 3. Bind a theme
+Write both into `deck-dir/materials.md`, in the shape `references/materials.md` gives. Every later step reads it instead of memory, so the same materials make the same deck. When something changes, change the file first.
 
-A theme is one complete, self-contained file containing style, a page menu, optional brand rules, and occasion metadata. Its content menu serves a subset of the 11 global `kind` words. A page whose kind the menu lacks is drawn as the nearest kind it offers, so any theme can carry any spec.
+### 3. Outline and theme, settled at once
 
-Resolve theme names in this order:
+Write `deck-dir/deck.spec.json` from the materials. The spec locks narrative, theme, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. Bind the theme you would pick for now. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit best. Theme names resolve in this order:
 
 1. The deck directory.
 2. A workspace `themes/` directory while walking upward.
 3. Installed content packs (`pptwise packs list`).
 4. The 24 factory presets.
 
-When the user named a theme or picked one from a theme wall, bind it. It is their choice: give no reason for it, and build with `--no-alternatives` (`alternatives: false` on the `pptwise_build` tool) so no build offers them other themes. Otherwise pick the theme yourself. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit the request and the narrative best, and write one line on why with the outline. Draw a theme wall only when the user asks to see looks before choosing ("show me some styles"). Then call the `pptwise_themes` tool with the deck's cover title, subtitle, and `occasion`: the occasion words that fit. It draws each shortlisted theme's cover and one content page in the conversation, numbered. Pass `themes` only when the user named themes. Without the tool, draw the same wall:
+A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it, see `references/branding.md`.
+
+- `cover`, `chapter`, and `ending` are page types and do not use `kind`.
+- Every `content` page requires exactly one explicit `kind`. Authors write only a semantic `kind`, never a page face or geometry choice. `focus` and `summary` are optional writing hints.
+- Unless the user said not to show pictures, at least one content page is a `photo` page, more when the material has places, products, people, or work to show. Every factory theme draws its picture: pick the theme for the occasion, never for pictures.
+- When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
+
+Run `pptwise spec validate deck-dir/deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page. Then put three things to the user in one message, with `ask_user_question` when that tool exists:
+
+1. **Outline**: one line per page with its number, page type or `kind`, heading, and what it says. Call `pptwise_outline` on the deck directory too where it exists.
+2. **Theme**: a wall drawn with the deck's own cover title. Call `pptwise_themes` with the title, subtitle, and `occasion`. When the scan found the brand's colors, also pass `brand` set to its `next.brandFlag`: the wall then ends with one more option, the first theme repainted in the brand's colors. Offer one option per theme, labelled with its number. Without the tool, draw the same wall and show its SVGs or `contact-sheet.html`:
 
 ```bash
 pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <words> --json
 ```
 
-Show its SVGs or `contact-sheet.html`, and ask which one they want.
+   Add `--brand '<next.brandFlag>'` for the brand option. When the user named a theme, show it instead of a wall.
 
-Create a theme only when the user names brand colors or hands over a company template or deck. A wish for a look ("cool", "techy", "premium") picks among existing themes. Create means copy: copy the closest preset, extract a brand from an Office file, or fork for a color change. When the user asks for other colors without naming one, fork two or three fitting colors, draw them with `theme try`, and let the user choose before binding. The commands are in `references/spec.md`.
+3. **Pictures**: the direction from the materials, in one line: what the pictures show, and where they come from.
 
-Write the theme name into `deck.spec.json` before writing page content. There is no render-time theme switch. To switch later, change only `theme` in `deck.spec.json` and build again. Pages keep their kinds and files: the build lists pages drawn as another kind under `drawnAs`, warns about what the new faces leave off or cut, and names any page that still needs a change. After a build that drew every page whole, switching draws the deck in one build: the warnings say what each page lost.
+Bind what the user chose. For the brand option, run the `theme fork` line the wall printed, writing `deck-dir/theme.json` under the deck's own id, and bind that id. Validate again. The spec is now locked: the theme does not change while the deck is made. Creating and forking themes are in `references/spec.md`.
 
-### 4. Write the spec with `kind`
+### 4. Make the deck
 
-Start a new deck project in `.pptwise/decks/<name>/` under the project folder (the folder holding `pptwise.config.json`, else the working directory), `<name>` a few lowercase English words joined by hyphens, such as `q3-review`. Put it elsewhere only when the user names a place. Edit a deck that already exists where it is, and never move it. Run commands from the project folder: `deck-dir/` below is the deck's path from there. The spec locks theme, narrative, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. It contains no render selection state. A deck prints no page number, organization, date, or confidentiality line unless the spec's `footer` asks for it. Ask only for what the occasion needs, see `references/branding.md`.
+Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, `stage`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them. Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. See `references/components.md` and `references/density.md`.
 
-- `cover`, `chapter`, and `ending` are page types and do not use `kind`.
-- Every `content` page requires exactly one explicit `kind`.
-- Authors write only a semantic `kind`, never a page face or geometry choice.
-- `focus` and `summary` are optional writing hints.
-- Unless the user said not to show pictures, at least one content page is a `photo` page, more when the material has places, products, people, or work to show. Every factory theme draws its picture: pick the theme for the occasion, never for pictures.
-
-When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
-
-Run `pptwise spec validate deck-dir/deck.spec.json` until it prints `OK`. A `kind` the bound menu lacks is a note, not an error: the page is drawn as the nearest offered kind. Keep the kind that tells the truth about the page.
-
-The validated spec is the outline. Before you write any page file, list it in the conversation, one line per page: page number, page type or `kind`, heading, and what the page says. Put the theme above the pages, with its one-line reason when you picked it. This step is never skipped, whatever the deck's length. When a `pptwise_outline` tool exists, call it on the deck directory too, so the user sees the same list as a card. When the user said to go ahead or let you decide, list the outline and continue in the same reply. Otherwise ask them to confirm or change it, with `ask_user_question` when that tool exists, and wait for the answer before writing pages.
-
-The 11 words and their boundaries are in `references/layouts.md`. Full spec guidance and theme creation are in `references/spec.md`.
-
-### 5. Fill pages
-
-Write `pages/<id>.json` in batches of at most four. A page file may contain `components`, `background`, `image_side`, `footnote`, `fields`, `stamp`, `tag`, `ballot`, `years`, `stage`, and `notes`. Never repeat `type`, `kind`, or `heading`, because the spec owns them.
-
-Choose components that serve the page's `kind`. `quote` is a page kind. The quotation component is `blockquote`. Component ownership and lookalike choices are in `references/components.md`. Pacing and physical capacity are in `references/density.md`.
-
-Read one page's contract before writing it. `inspect` prints what the spec locked, the fields the page file may carry, the components the bound theme's face draws there, the counts `validate` holds the page to, and `validate`'s current findings on it. Anything outside its component list fails `validate` or draws the page as another kind, with a warning. Expand a component before writing it. The counts do not prove the content fits: when a page runs long, `--fit` draws it and says whether render would drop anything. Icon fields take a name from `pptwise icons`. `inspect` also lists the theme's signature layouts for the page: the drawings the theme's own samples are made of, each with how it looks and a recipe (`write:` the components, item counts and fields it takes). A page written to a recipe gets that drawing. Anything else is drawn in the face's plain layout. On a cover, chapter or ending whose face draws over a photograph, the recipe is a background photograph. Read them before writing the page, and write to one when the content you have holds it.
+Read one page's contract before writing it. `inspect` prints what the spec locked, the fields the page file may carry, the components the bound theme's face draws there, the counts `validate` holds the page to, and `validate`'s current findings on it. Expand a component before writing it. When a page runs long, `--fit` draws it and says whether render would drop anything. Icon fields take a name from `pptwise icons`. `inspect` also lists the theme's signature layouts for the page, each with how it looks and a recipe (`write:` the components, item counts and fields it takes). A page written to a recipe gets that drawing. On a cover, chapter or ending whose face draws over a photograph, the recipe is a background photograph. Write to one when the content you have holds it.
 
 ```bash
 pptwise inspect deck-dir/ --page <id>
@@ -121,23 +110,31 @@ pptwise inspect deck-dir/ --page <id> --fit
 pptwise icons
 ```
 
-Give the deck pictures unless the user said not to. Every `photo` page gets one, and so does the cover when its `inspect` lists the photograph recipe. Other pages get one only where the picture is the point, never to fill space. The user's own pictures come first. For the rest, once a batch is written and before building it, run `pptwise asset-brief deck-dir/` for each frame's shape (a cover background fills the slide: landscape), search with `pptwise images search "<two to four English words>" --orientation <shape> --sheet`, look at the numbered contact sheet it draws, and pin the number that fits with `pptwise images fetch <id> --deck deck-dir/ --as <asset_id>`. Where a `pptwise_images` tool exists, search with it: its result shows you the sheet. Search works with no key. The details are in `references/images.md`.
+Give the deck pictures, following the picture plan, unless the user said not to: every `photo` page, the cover and chapter pages where their `inspect` lists a photograph recipe, and other pages where the picture is the point, never to fill space. Take them in this order: the user's and the project's own, then stock search, then the web, then a local generator when one is enabled. Once a batch is written and before building it, run `pptwise asset-brief deck-dir/` for every frame's shape, crop and palette, search with `pptwise images search "<two to four English words>" --orientation <shape> --sheet`, look at the numbered contact sheet, and pin the number that fits with `pptwise images fetch <id> --deck deck-dir/ --as <asset_id>`. Where a `pptwise_images` tool exists, search with it. Pin a project file or a web picture with `pptwise images add`, which takes a web picture only with the license its own page states. The rules are in `references/images.md`.
 
-After each batch, build the deck. Use the `pptwise_build` tool when it exists: it shows the user the pages drawn so far. Otherwise run:
+After each batch, build. Use the `pptwise_build` tool when it exists. Otherwise run:
 
 ```bash
 pptwise build deck-dir/ --json
 ```
 
-Each entry in `errors` names its `page`, the `file` and `field` to edit, and the check's own fix. Fix every error and build again. Restructure content instead of deleting what a check caught. Pages not written yet are reported as such, which is expected until the last batch. The report also counts the pages the theme's signature layouts drew (`signature`), and gives each page drawn plain the nearest recipe and what to change. These are hints, never errors. After the first build with every page written, rewrite each plain page to its recipe where its content already holds it, and build again. Where it does not, leave the page plain. Never invent facts, figures or pictures to fill a recipe: a picture goes in only when it is the user's own or comes through the image workflow.
+Each entry in `errors` names its `page`, the `file` and `field` to edit, and the check's own fix. Fix every error and build again until `status` is `ok`. Pages not written yet are reported as such until the last batch. Restructure content instead of deleting what a check caught. The report also gives each page drawn plain the nearest signature recipe: rewrite a plain page to its recipe where its content already holds it. Never invent facts, figures or pictures to fill a recipe.
 
-The first build also draws the deck's cover and a content page or two in up to three other themes, listed under `alternatives` (the `pptwise_build` card shows them numbered under the pages). Later builds list the same themes, drawn again whenever the pages they show change. Name them in one line and keep going: do not stop to ask. When the user picks one ("switch to the second"), set `theme` to its id and build again. The latest build's result lists them with the numbers the card shows: read the number off it, not off files.
+### 5. Check what the deck looks like
 
-### 6. Build, review, and deliver
+The build report is the first check: `status` is `ok` and no warning is left that you could fix. The second is your own eyes. Build with the sheet, every page drawn small in one numbered picture, and look at it: `pptwise build deck-dir/ --json --sheet` prints its path as `preview.sheet`, and `pptwise_build` with `sheet: true` shows it to you. Look for three things:
 
-When every page is written, build until `status` is `ok`. Build runs assemble, validate, audit, preview, and render in one pass, and writes the `.pptx` only when all of them pass. `pptx` in the report is the deck's one final file, under `.pptwise/<deck>/`.
+- **Pictures**: each one shows what its page says, is not a generic stock cliché, keeps its subject inside the crop, and leaves the words over it readable.
+- **Holes**: an empty frame, a page that is mostly blank, a picture the plan wanted and the deck lacks.
+- **Rhythm**: three pages in a row that look the same, text page after text page, chapters that do not match.
 
-Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`. On DSH, hand it over with `present`. Elsewhere report its absolute path. Without an in-conversation preview tool, also give the report's `preview.html` path, or run `pptwise serve deck-dir/ --no-open` for a live browser review.
+Fix what you find in step 4 and look again. Stop after two rounds, and tell the user what you left as it is. `references/validate.md` has the details.
+
+### 6. Deliver
+
+`pptx` in the build report is the deck's one final file, under `.pptwise/<deck>/`. Deliver exactly that file. Do not run `render` again, copy, rename, or export another `.pptx`. On DSH, hand it over with `present`. Elsewhere, give its absolute path, start `pptwise serve deck-dir/ --no-open` in the background, and give the address it prints for a live review. Name the pictures that need a credit, from `pptwise images list`.
+
+The user's changes go back to step 4. When the user asks for another theme, build once with `--alternatives` (`alternatives: true` on `pptwise_build`): it draws the deck's cover and a page or two in three other themes, numbered. The latest build's result lists them with the numbers the card shows: read the number off it, not off files. To switch, change only `theme` in `deck.spec.json` and build again. Pages keep their kinds and files: the build lists pages drawn as another kind under `drawnAs` and warns about what the new faces leave off. When the user asks for other colors without naming one, fork two or three fitting colors, draw them with `theme try`, and let the user choose before binding.
 
 Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Use `render --draft` or `--allow-dropped-content` only when the user explicitly requests that compromise.
 
@@ -164,15 +161,17 @@ Add `pptwise audit deck-dir/ --pixels` when text sits over photo backgrounds. Us
 - Talk to the user in their language throughout, including progress notes and questions, and keep public deck copy in it too. Keep schema keys and enum values in English.
 - Never claim that `chart` or `data_table` values are native PowerPoint data objects. They export as editable grouped shapes and text. Change figures in the source and rerender.
 - Write the value itself. Never stand in for content with a leftover count or an ellipsis. validate rejects it.
+- Never put a picture in a deck whose source does not say it may be used, and never copy one from a page that states no license.
 - Preview is read-only. Revisions go back into `deck.spec.json`, `pages/*.json`, assets, or the bound theme file.
 - When an image generator fails because a sandbox will not let it write its own home folder, run `images generate` outside the sandbox or ask the user to allow it. Never copy, move, or redirect any login or credential file to get around it.
 
 ## Read when
 
 - `references/spec.md`: intent, narrative, theme creation, binding, rebinding, spec, and menu errors.
+- `references/materials.md`: the materials file, desk research, and the picture plan.
 - `references/layouts.md`: choosing among the 11 `kind` words.
 - `references/components.md`: component ownership, fields, and lookalike choices.
 - `references/density.md`: pacing, capacity, full-page components, and local decoration.
-- `references/branding.md`: footer marks (page numbers, organization, confidentiality), deck branding posture, frameless pages, logos, and brand extraction.
-- `references/images.md`: which pages get pictures, image assets, stock search and its contact sheet, generation, and `photo` versus `evidence`.
-- `references/validate.md`: build, assemble, validate, audit, preview, serve, render, and revision loops.
+- `references/branding.md`: brand scan, footer marks (page numbers, organization, confidentiality), deck branding posture, frameless pages, logos, and brand extraction.
+- `references/images.md`: which pages get pictures, where they come from, image assets, stock search and its contact sheet, web pictures and their licenses, source setup, generation, and `photo` versus `evidence`.
+- `references/validate.md`: build, the deck sheet and what to look for, assemble, validate, audit, preview, serve, render, and revision loops.

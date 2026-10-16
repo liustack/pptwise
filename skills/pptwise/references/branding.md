@@ -1,8 +1,40 @@
 # Branding posture and footer marks
 
-Read this when deciding deck-level brand visibility, adding page numbers or a confidentiality mark, extracting an Office brand, or understanding why a page has no brand frame.
+Read this when looking for a project's own brand material, deciding deck-level brand visibility, adding page numbers or a confidentiality mark, extracting an Office brand, or understanding why a page has no brand frame.
 
 A brand signal controls appearance. It does not choose the narrative or the page kind.
+
+## Find the brand material
+
+While gathering materials, before the outline, find what the project already says about its brand. From the project folder:
+
+```bash
+pptwise brand scan --json
+```
+
+Pass a folder to scan another one, such as the company website's repository. The scan stays on this machine, skips dependency, build, and hidden folders, never opens a file named like a secret, and stops at fixed limits, so it is safe to run unasked. It reports:
+
+- `logos`: files named like a logo, with their size. An SVG is drawn into a PNG when pinned.
+- `images`: pictures large enough for a slide, largest first, with their orientation.
+- `colors` and `fonts`: what the style sheets, Tailwind and token files, web manifests, and Office templates name.
+- `office`: templates and decks, with their color scheme and fonts.
+- `brand`: the brand color and second color the evidence points to, and where they came from. An Office template with its own color scheme comes first.
+- `next`: `brandFlag`, the `--brand` value, and ready `theme try`, `theme fork`, and `brand extract` lines that use it, with placeholders in angle brackets.
+- `summary`: one line to tell the user what was found.
+
+Copy what it found into `materials.md`. When it found a brand color, pass it to the theme wall with the outline (`brand` on the `pptwise_themes` tool, `--brand` on `theme try`): the wall then offers one theme repainted in the brand's colors. Treat what the scan found as a lead, not a verdict: a color named `primary` in a UI kit is not always the brand. When `brand` is empty, ask only if the user mentioned a brand.
+
+Pin a logo the scan found as a deck asset and name it in the spec:
+
+```bash
+pptwise images add public/logo.svg --deck deck-dir/ --as logo
+```
+
+```json
+"brand": { "logo_asset_id": "logo" }
+```
+
+The project's own pictures go in the same way, under the `asset_id` the page names (see `images.md`).
 
 ## Footer marks
 

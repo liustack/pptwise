@@ -89,7 +89,7 @@ describe("dsh plugin (skill registration, v0)", () => {
     expect(reg!.content).not.toMatch(/^---/m)
     expect(reg!.content).not.toContain("name: pptwise")
     expect(reg!.content).toContain("# pptwise deck generation playbook")
-    expect(reg!.content).toContain("intent -> narrative -> theme binding -> spec with kind -> fill -> render")
+    expect(reg!.content).toContain("clarify -> gather materials -> outline and theme -> make -> check -> deliver")
     expect(reg!.source).toBe("bundled")
   })
 
