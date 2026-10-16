@@ -112,6 +112,12 @@ function stripIpv6Brackets(hostname: string): string {
   return hostname
 }
 
+/**
+ * 198.18.0.0/15 is deliberately absent. It is the RFC 2544 benchmark range,
+ * which the internet does not route, and fake-ip proxies such as Clash and
+ * Surge answer every name with an address in it, then carry the connection
+ * to the real host. Refusing it failed every picture download behind one.
+ */
 function isPrivateIPv4(ipAddress: string): boolean {
   const octets = ipAddress.split(".").map((part) => Number.parseInt(part, 10))
   if (octets.length !== 4 || octets.some((value) => !Number.isFinite(value) || value < 0 || value > 255)) {
@@ -127,7 +133,6 @@ function isPrivateIPv4(ipAddress: string): boolean {
     inRange(value, "172.16.0.0", "172.31.255.255") ||
     inRange(value, "192.0.0.0", "192.0.0.255") ||
     inRange(value, "192.168.0.0", "192.168.255.255") ||
-    inRange(value, "198.18.0.0", "198.19.255.255") ||
     inRange(value, "224.0.0.0", "255.255.255.255")
   )
 }
