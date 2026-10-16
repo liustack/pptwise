@@ -54,7 +54,8 @@ export function createImagesTool(cliPath, ctx) {
     description:
       'Search free stock photos for one picture of a pptwise deck and look at the results: returns the hits numbered, ' +
       'with each one\'s size, description, author and license, and a contact sheet image of their thumbnails under the same numbers. ' +
-      'Use a short concrete English query of two to four words. Then pin your pick with `images fetch <id>` in the terminal.',
+      'Use a short concrete English query of two to four words. Then pin your pick with `images fetch <id>` in the terminal. ' +
+      'The user\'s and the project\'s own pictures come before stock: pin those with `images add`.',
     parameters: {
       type: 'object',
       properties: {

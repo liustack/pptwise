@@ -132,6 +132,8 @@ window.__ModuleLoader__.load({
         'edit.prefix': '第 {n} 页：',
         'alt.title': '其他主题',
         'alt.switch': '换成 {name}',
+        'theme.brand': '品牌色',
+        'theme.brand.title': '{base} 换成品牌色 {colors}',
       },
       en: {
         'outline.title': 'Outline',
@@ -187,6 +189,8 @@ window.__ModuleLoader__.load({
         'edit.prefix': 'Page {n}: ',
         'alt.title': 'Other themes',
         'alt.switch': 'Switch to {name}',
+        'theme.brand': 'brand colors',
+        'theme.brand.title': '{base} in the brand colors {colors}',
       },
     }
     var localeT = null
@@ -858,6 +862,8 @@ window.__ModuleLoader__.load({
         '.pw-cap>*{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}',
         '.pw-cap>:first-child{flex:none}',
         '.pw-theme-id{color:var(--dsw-alias-label-primary);font-weight:500}',
+        '.pw-cap>.pw-swatches{display:inline-flex;flex:none;gap:2px}',
+        '.pw-swatch{width:10px;height:10px;border-radius:2px;box-shadow:inset 0 0 0 0.5px var(--dsw-alias-border-l3)}',
         '.pw-num{display:inline-grid;place-items:center;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}',
         '.pw-edit{position:absolute;right:6px;bottom:6px;box-sizing:border-box;max-width:calc(100% - 12px);height:22px;padding:0 8px;overflow:hidden;border:0.5px solid var(--dsw-alias-border-l3);border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary);font:inherit;font-size:11px;line-height:20px;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 120ms ease}',
         '.pw-shot:hover .pw-edit,.pw-shot:focus-within .pw-edit{opacity:1;pointer-events:auto}',
@@ -1755,12 +1761,47 @@ window.__ModuleLoader__.load({
       }
 
       /**
+       * A brand row's colors (`theme try --brand`), each "#RRGGBB", or none
+       * for an ordinary theme.
+       */
+      function brandColors(theme) {
+        if (typeof theme.base !== 'string' || typeof theme.brand !== 'string') return []
+        return theme.brand
+          .split(',')
+          .map(function (color) {
+            return color.trim()
+          })
+          .filter(function (color) {
+            return /^#[0-9a-f]{6}$/i.test(color)
+          })
+      }
+
+      /**
        * A theme's caption: the number the question panel's options start
        * with ("1 brief"), the model is told this order in the result, then
-       * the theme's id and label.
+       * the theme's id and label. A brand row reads as its colors and the
+       * theme it repaints ("4 ■ brief brand colors"): its own id and label
+       * are the base's with a suffix, too long for a column.
        */
       function ThemeLabel(props) {
         var theme = props.theme
+        var colors = brandColors(theme)
+        if (colors.length > 0) {
+          return h(
+            'div',
+            { className: 'pw-cap pw-theme-cap', title: t('theme.brand.title', { base: theme.base, colors: colors.join(', ') }) },
+            h('span', { className: 'pw-num', 'data-theme-number': props.n }, String(props.n)),
+            h(
+              'span',
+              { className: 'pw-swatches', 'aria-hidden': 'true' },
+              colors.map(function (color) {
+                return h('span', { key: color, className: 'pw-swatch', 'data-brand-color': color, style: { background: color } })
+              }),
+            ),
+            h('span', { className: 'pw-theme-id' }, theme.base),
+            h('span', null, t('theme.brand')),
+          )
+        }
         return h(
           'div',
           { className: 'pw-cap pw-theme-cap', title: theme.label },

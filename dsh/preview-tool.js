@@ -2008,8 +2008,14 @@ function themesSummary(value) {
   const lines = [
     `pptwise-themes:${value.wallId} · drew ${value.themeCount} theme${value.themeCount === 1 ? '' : 's'} for "${value.title}", a cover and one content page each`,
     `In the card, numbered: ${value.themes.map((theme, i) => `${i + 1} ${theme.id}`).join(', ')}.`,
-    'The user is looking at them in this card. Ask which theme they want with ask_user_question, one option per theme in this order, each label starting with its number ("1 brief"), or, if they left the choice to you, name the one you picked and why. Do not describe the pages or tell them to open a URL.',
+    'The user is looking at them in this card. Ask which theme they want with ask_user_question, in the same message as the outline and the picture direction, one option per theme in this order, each label starting with its number ("1 brief"), or, if they left the choice to you, name the one you picked and keep going. Do not describe the pages or tell them to open a URL.',
   ]
+  value.themes.forEach((theme, i) => {
+    if (theme.base === undefined) return
+    lines.push(
+      `${i + 1} ${theme.id} is ${theme.base} repainted in the brand colors ${theme.brand}. If the user picks it, run \`pptwise theme fork ${theme.base} --brand '${theme.brand}' -o <deck-dir>/theme.json --id <deck theme id>\` and set that id as the spec's theme.`,
+    )
+  })
   // The CLI groups the pages it left out by reason, so a page that failed in
   // every theme reads as one line. A CLI from before that grouping sends none,
   // and the per-theme lines stand in.
@@ -2724,8 +2730,9 @@ export function createPreviewService(cliPath, ctx) {
     description:
       "Draw the user's own deck title as a cover, plus one content page, in four to six pptwise themes, " +
       'and show them to the user side by side in this conversation, numbered in the order the result lists them. ' +
-      'Call it when the user asks to see looks before a theme is chosen. Otherwise pick the theme yourself: the first pptwise_build shows the deck in other themes. ' +
-      'Without `themes` it draws a shortlist for `occasion`. The pages reach the user, not you: the result lists the themes in card order.',
+      'Call it once the spec validates, before any page is written, so the user picks the theme together with the outline. ' +
+      'Without `themes` it draws a shortlist for `occasion`. With `brand` it adds one more option: the first theme repainted in the brand\'s colors. ' +
+      'The pages reach the user, not you: the result lists the themes in card order.',
     parameters: {
       type: 'object',
       properties: {
@@ -2739,6 +2746,11 @@ export function createPreviewService(cliPath, ctx) {
           type: 'string',
           description:
             'Without `themes`: what the deck is for, as occasion words from `pptwise themes --json` (business, tech, education, ...) or a narrative preset from `pptwise narratives --json` (weekly-brief, pitch, ...), comma-separated. It picks the four to six themes drawn. Omitted, the wall is a spread of quiet to bold general themes.',
+        },
+        brand: {
+          type: 'string',
+          description:
+            'Only when `pptwise brand scan --json` found the project\'s brand: its `next.brandFlag`, "#RRGGBB" or "#RRGGBB,#RRGGBB". The wall then ends with the first theme repainted in those colors.',
         },
         themes: {
           type: 'array',
@@ -2768,6 +2780,8 @@ export function createPreviewService(cliPath, ctx) {
               properties: {
                 id: { type: 'string' },
                 label: { type: 'string' },
+                base: { type: 'string' },
+                brand: { type: 'string' },
                 skipped: {
                   type: 'array',
                   items: {
@@ -2804,6 +2818,7 @@ export function createPreviewService(cliPath, ctx) {
         if (typeof args.subtitle === 'string' && args.subtitle !== '') cliArgs.push('--subtitle', args.subtitle)
         if (typeof args.lang === 'string' && args.lang !== '') cliArgs.push('--lang', args.lang)
         if (!named && typeof args.occasion === 'string' && args.occasion.trim() !== '') cliArgs.push('--occasion', args.occasion)
+        if (typeof args.brand === 'string' && args.brand.trim() !== '') cliArgs.push('--brand', args.brand.trim())
         if (args.page !== undefined) {
           const pagePath = join(stageDir, SAMPLE_PAGE_FILE)
           await writeFile(pagePath, JSON.stringify(args.page))
@@ -2821,6 +2836,7 @@ export function createPreviewService(cliPath, ctx) {
         themes: manifest.themes.map((theme) => ({
           id: String(theme.id),
           label: String(theme.label),
+          ...(typeof theme.base === 'string' && typeof theme.brand === 'string' ? { base: theme.base, brand: theme.brand } : {}),
           ...(Array.isArray(theme.skipped) && theme.skipped.length > 0
             ? { skipped: theme.skipped.map((skip) => ({ type: String(skip.type), reason: String(skip.reason) })) }
             : {}),

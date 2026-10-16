@@ -2194,6 +2194,26 @@ describe("dsh theme wall card", () => {
     expect(screen.queryByText("Download .pptx")).toBeNull()
   })
 
+  it("captions the brand option by its colors and the theme it repaints", async () => {
+    const Card = makeCard({ key: "pptwise_themes" })
+    const bundle = wall(["brief", "memo", "brief-brand"])
+    Object.assign(bundle.themes[2]!, { label: "Brief · brand", base: "brief", brand: "#C8102E,#0033A0" })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: bundle }))
+    const { container } = render(<Card block={block} />)
+
+    await waitFor(() => expect(thumbnails(container)).toHaveLength(6))
+    const caption = container.querySelector('[data-theme="brief-brand"] .pw-theme-cap')!
+    expect(caption.querySelector("[data-theme-number]")!.textContent).toBe("3")
+    expect([...caption.querySelectorAll("[data-brand-color]")].map((el) => el.getAttribute("data-brand-color"))).toEqual([
+      "#C8102E",
+      "#0033A0",
+    ])
+    expect(caption.textContent).toBe("3briefbrand colors")
+    expect(caption).toHaveAttribute("title", "brief in the brand colors #C8102E, #0033A0")
+    // An ordinary theme keeps its id and label.
+    expect(container.querySelector('[data-theme="memo"] .pw-theme-cap')!.textContent).toBe("2memoMEMO")
+  })
+
   it("opens the contact sheet full size, still without a download", async () => {
     const Card = makeCard({ key: "pptwise_themes" })
     fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: wall(["brief"]) }))

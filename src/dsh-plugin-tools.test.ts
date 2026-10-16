@@ -25,7 +25,7 @@ interface ThemesValue {
   wallId: string
   title: string
   themeCount: number
-  themes: { id: string; label: string; skipped?: { type: string; reason: string }[] }[]
+  themes: { id: string; label: string; base?: string; brand?: string; skipped?: { type: string; reason: string }[] }[]
   notes?: string[]
 }
 
@@ -55,6 +55,7 @@ interface BuildValue {
 
 interface Tool<A, V> {
   name: string
+  description: string
   parameters: { properties: Record<string, unknown>; required: string[] }
   output: {
     schema: { properties: Record<string, unknown>; required: string[]; additionalProperties: boolean }
@@ -74,7 +75,7 @@ interface FakeResponse {
 }
 
 interface Service {
-  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
+  themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; brand?: string; themes?: string[]; page?: unknown }, ThemesValue>
   buildTool: Tool<{ target: string; alternatives?: boolean; sheet?: boolean }, BuildValue>
   outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
@@ -135,6 +136,11 @@ if (argv[0] === "theme" && argv[1] === "try") {
     }
     return entry
   })
+  if (opt("--brand")) {
+    const base = themes[0].id
+    writeFileSync(join(out, base + "-brand-cover.svg"), "<svg><text>" + base + " brand " + title + "</text></svg>")
+    themes.push({ id: base + "-brand", label: base.toUpperCase() + " · brand", source: "builtin", base, brand: opt("--brand").toUpperCase(), pages: [{ type: "cover", file: base + "-brand-cover.svg" }] })
+  }
   writeFileSync(join(out, "contact-sheet.html"), "<!doctype html><title>sheet " + title + "</title>")
   const manifest = { manifestVersion: 1, generator: "pptwise theme try", title, ...(opt("--subtitle") ? { subtitle: opt("--subtitle") } : {}), lang: opt("--lang") || "en", slide: { width: 1280, height: 720 }, contactSheet: "contact-sheet.html", themes }
   writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest))
@@ -321,6 +327,33 @@ describe("pptwise_themes", () => {
     expect(shortlist!.argv[shortlist!.argv.indexOf("--occasion") + 1]).toBe("weekly-brief")
     expect(named!.argv.slice(0, 3)).toEqual(["theme", "try", "brief,swiss"])
     expect(named!.argv).not.toContain("--occasion")
+  })
+
+  it("adds the brand option when asked, and tells the model how to bind it", async () => {
+    const { svc, cliPath, workspace } = await setup("themes-brand")
+    const plain = await svc.themesTool.execute({ title: "Q3 review" }, inSession(workspace))
+    const value = await svc.themesTool.execute({ title: "Q3 review", brand: " #c8102e " }, inSession(workspace))
+    const [first, second] = await calls(cliPath)
+    expect(first!.argv).not.toContain("--brand")
+    expect(second!.argv[second!.argv.indexOf("--brand") + 1]).toBe("#c8102e")
+    expect(plain.themes.map((t) => t.id)).toEqual(["brief", "swiss", "crayon"])
+    expect(value.themes.at(-1)).toEqual({ id: "brief-brand", label: "BRIEF · brand", base: "brief", brand: "#C8102E" })
+    matchesSchema(value, svc.themesTool.output.schema)
+    const text = svc.themesTool.output.render({}, value)[0]!.text
+    expect(text).toContain("In the card, numbered: 1 brief, 2 swiss, 3 crayon, 4 brief-brand.")
+    expect(text).toContain(
+      "4 brief-brand is brief repainted in the brand colors #C8102E. If the user picks it, run `pptwise theme fork brief --brand '#C8102E' -o <deck-dir>/theme.json --id <deck theme id>` and set that id as the spec's theme.",
+    )
+    expect(svc.themesTool.output.render({}, plain)[0]!.text).not.toContain("brand colors")
+  })
+
+  it("is called with the outline, before any page is written, and asks in the same message", async () => {
+    const { svc, workspace } = await setup("themes-with-outline")
+    const value = await svc.themesTool.execute({ title: "Q3 review" }, inSession(workspace))
+    expect(svc.themesTool.output.render({}, value)[0]!.text).toContain("in the same message as the outline and the picture direction")
+    expect(svc.themesTool.description).toContain("Call it once the spec validates, before any page is written, so the user picks the theme together with the outline.")
+    expect(svc.themesTool.description).not.toContain("Otherwise pick the theme yourself")
+    expect(Object.keys(svc.themesTool.parameters.properties)).toContain("brand")
   })
 
   it("tells the model the user is choosing, and stamps the id the card fetches the wall by", async () => {
