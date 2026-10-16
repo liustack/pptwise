@@ -1,19 +1,22 @@
 // @vitest-environment jsdom
 // Which components hold their items' words apart with the crowded-column
 // check (`findCrowdedColumns`): those that set items side by side with no
-// card ground between them. Icon cards never draw a ground. People, product
-// and quote cards and matrix cells draw one, except on a ruled theme, where
-// the words stand on the paper under a hairline.
+// card ground between them. Icon cards never draw a ground, and neither do
+// the sentences under steps or the notes under a chevron band. People,
+// product and quote cards and matrix cells draw one, except on a ruled
+// theme, where the words stand on the paper under a hairline.
 import { beforeAll, describe, expect, it } from "vitest"
 import { findCrowdedColumns } from "../audit/deck-audit"
 import { installNodePlatform } from "../platform/node"
 import { boundThemeCtx } from "../render/__fixtures__/theme-ctx"
 import { renderSvgMarkup } from "../render/serialize"
+import { chevronProcess } from "./chevron-process"
 import { iconCards } from "./icon-cards"
 import { matrix } from "./matrix"
 import { peopleCards } from "./people-cards"
 import { productCards } from "./product-cards"
 import { quoteWall } from "./quote-wall"
+import { steps } from "./steps"
 import { isRuled } from "./surfaces"
 
 beforeAll(async () => {
@@ -139,6 +142,44 @@ describe("components that declare their items as columns", () => {
         else expect(marked, theme).toBe(0)
         expect(findCrowdedColumns(page), theme).toEqual([])
       }
+    })
+  }
+
+  // A brief gallery page (2026-10): four steps whose sentences mix Chinese
+  // with Latin names, set in their whole slots 20px apart, stood 26px and
+  // 31px apart at 16px and read across the page.
+  const mixedSteps = {
+    type: "steps" as const,
+    items: [
+      { title: "方案评审", text: "现有 ECS 部署的扩容窗口是 12 分钟，业务 SLO 要求 90 秒。" },
+      { title: "Terraform 重构", text: "HPA 加 warm pool 可以把 P95 扩容时间压到 40 秒。" },
+      { title: "Staging 迁移", text: "Terraform state 按 environment 拆成 6 份，blast radius 收敛到单环境。" },
+      { title: "Canary 灰度", text: "ArgoCD 用 app-of-apps 管理 40 个 service，同步策略统一为 automated + prune。" },
+    ],
+  }
+
+  for (const theme of ["brief", "memo", "terminal", "vermilion"]) {
+    it(`marks each step's sentence a column and keeps mixed sentences a gutter apart on ${theme}`, () => {
+      const page = markup(steps.render(mixedSteps, { x: 96, y: 330, w: 1088, h: 300 }, boundThemeCtx(theme, {})))
+      expect(page.match(/data-audit-column/g)).toHaveLength(mixedSteps.items.length)
+      expect(findCrowdedColumns(page)).toEqual([])
+    })
+  }
+
+  for (const theme of ["brief", "memo", "terminal", "vermilion"]) {
+    it(`marks each chevron's note a column and keeps English notes two characters apart on ${theme}`, () => {
+      // Notes long enough to fill their measure: 24px of air read as one
+      // run-on line between English words at 16px.
+      const band = {
+        type: "chevron_process" as const,
+        items: ["Scope", "Build", "Pilot", "Scale", "Hand over"].map((title) => ({
+          title,
+          text: "Renewal rate recovered to ninety-one percent overall",
+        })),
+      }
+      const page = markup(chevronProcess.render(band, { x: 64, y: 260, w: 1152, h: 300 }, boundThemeCtx(theme, {})))
+      expect(page.match(/data-audit-column/g)).toHaveLength(band.items.length)
+      expect(findCrowdedColumns(page)).toEqual([])
     })
   }
 })

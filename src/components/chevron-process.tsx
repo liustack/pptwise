@@ -14,6 +14,7 @@ import {
   formTextClipMarker,
 } from "./legibility"
 import { SIBLING_AIR_PX } from "../render/spacing"
+import { columnGutterEm } from "../lib/column-gutter"
 import { DroppedContentMarker } from "../render/drop-marker"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
 
@@ -83,9 +84,14 @@ function resolve(component: ChevronProcessComponent, w: number, ctx: ComponentCt
   // A note prints on the page under the band, so it may run under the next
   // chevron's notch — it stops a sibling's air short of where the next note
   // starts, not where this chevron's own point begins. Two notes share a
-  // baseline, and 12px between them read as one run-on line.
+  // baseline, and 12px between them read as one run-on line. The air is at
+  // least the gutter two neighbouring notes keep (`columnGutterEm`, each its
+  // own half): two Chinese notes keep less than the sibling air, a note with
+  // letters in it two characters.
+  const ems = component.items.map((item) => columnGutterEm((item.text ?? "").trim()))
+  const air = (i: number): number => Math.max(SIBLING_AIR_PX, ((ems[i]! + ems[i + 1]!) / 2) * FORM_BODY_FLOOR)
   const noteWidth = (i: number): number =>
-    (i === chevrons.length - 1 ? w : chevrons[i + 1]!.textLeft - SIBLING_AIR_PX) - chevrons[i]!.textLeft
+    (i === chevrons.length - 1 ? w : chevrons[i + 1]!.textLeft - air(i)) - chevrons[i]!.textLeft
   const notes = component.items.map((item, i) => {
     const note = (item.text ?? "").trim()
     return note
@@ -219,19 +225,24 @@ export const chevronProcess: SvgComponent<ChevronProcessComponent> = {
                   {line}
                 </text>
               ))}
-              {noteFit?.lines.map((line, li) => (
-                <text
-                  key={`note-${li}`}
-                  data-truncated={formTextClipMarker(noteFit, li)}
-                  x={c.textLeft}
-                  y={g.band + NOTE_GAP + li * noteFit.lineHeight + noteFit.fontSize * 0.9}
-                  fontFamily={ctx.fonts.body}
-                  fontSize={noteFit.fontSize}
-                  fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, noteFit.fontSize)}
-                >
-                  {line}
-                </text>
-              ))}
+              {/* The note stands on the page beside the next one: a column the crowded-columns audit holds apart. */}
+              {noteFit ? (
+                <g data-audit-column="">
+                  {noteFit.lines.map((line, li) => (
+                    <text
+                      key={`note-${li}`}
+                      data-truncated={formTextClipMarker(noteFit, li)}
+                      x={c.textLeft}
+                      y={g.band + NOTE_GAP + li * noteFit.lineHeight + noteFit.fontSize * 0.9}
+                      fontFamily={ctx.fonts.body}
+                      fontSize={noteFit.fontSize}
+                      fill={accessibleInk(ctx.colors.muted, ctx.defaultBg ?? ctx.colors.bg, noteFit.fontSize)}
+                    >
+                      {line}
+                    </text>
+                  ))}
+                </g>
+              ) : null}
             </g>
           )
         })}

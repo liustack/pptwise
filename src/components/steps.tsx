@@ -13,6 +13,7 @@ import {
   formTextClipMarker,
 } from "./legibility"
 import type { ComponentCtx, RenderDef, SvgComponent } from "./types"
+import { columnGutterEm } from "../lib/column-gutter"
 
 type StepsComponent = Extract<Component, { type: "steps" }>
 
@@ -78,8 +79,27 @@ function footnoteH(text: string, maxWidth: number, fontFamily: string, maxLines:
   return laid.lines.length * laid.lineHeight
 }
 
-function itemFootH(component: StepsComponent, slotW: number, fontFamily: string, maxLines: number): number {
-  return Math.max(FOOT_SIZE, ...component.items.map((item) => footnoteH(stripEmphasis(item.text), slotW, fontFamily, maxLines)))
+function itemFootH(component: StepsComponent, footW: readonly number[], fontFamily: string, maxLines: number): number {
+  return Math.max(FOOT_SIZE, ...component.items.map((item, i) => footnoteH(stripEmphasis(item.text), footW[i]!, fontFamily, maxLines)))
+}
+
+/**
+ * The measure each step's sentence is set in. Stacked, the whole width. Side
+ * by side, the sentences stand on the page left-aligned with nothing between
+ * them but the gap, so a sentence's lines stop short of the next sentence by
+ * the gutter the two keep (`columnGutterEm`, each its own half). Two Chinese
+ * sentences keep a character and a quarter, which at the body size is the
+ * gap itself, so they keep their slot. A sentence with letters in it keeps
+ * two characters: a brief page's mixed lines stood 26px apart at 16px and
+ * read across. The last sentence has no neighbour on its right.
+ */
+function footWidths(component: StepsComponent, slotW: number, vertical: boolean): number[] {
+  const ems = component.items.map((item) => columnGutterEm(stripEmphasis(item.text)))
+  return ems.map((em, i) => {
+    const next = ems[i + 1]
+    if (vertical || next === undefined) return Math.max(1, slotW)
+    return Math.max(1, slotW - Math.max(0, ((em + next) / 2) * FOOT_SIZE - GAP))
+  })
 }
 
 function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): number {
@@ -87,7 +107,7 @@ function measureSteps(component: StepsComponent, w: number, ctx: ComponentCtx): 
   const vertical = needsVertical(n, w)
   const slotW = vertical ? w : (w - GAP * (n - 1)) / n
   const footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
-  const foot = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  const foot = itemFootH(component, footWidths(component, Math.max(1, slotW), vertical), ctx.fonts.body, footLines)
   const arrowH = vertical ? ARROW_H_VERTICAL : ARROW_H
   if (vertical) return n * (arrowH + FOOT_GAP + foot + GAP) - GAP + FOOT_DESCENT
   return arrowH + FOOT_GAP + foot + FOOT_DESCENT
@@ -180,11 +200,12 @@ export const steps: SvgComponent<StepsComponent> = {
   // lines back from the bottom of every sentence, cut and marked, rather than
   // printing the last of them under the box. Stacked steps drop whole steps
   // instead, below.
+  const footW = footWidths(component, Math.max(1, slotW), vertical)
   let footLines = vertical ? FOOT_LINES_VERTICAL : FOOT_LINES
-  let footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+  let footH = itemFootH(component, footW, ctx.fonts.body, footLines)
   while (!vertical && box.h !== undefined && footLines > 1 && arrowH + FOOT_GAP + footH + FOOT_DESCENT > box.h) {
     footLines -= 1
-    footH = itemFootH(component, Math.max(1, slotW), ctx.fonts.body, footLines)
+    footH = itemFootH(component, footW, ctx.fonts.body, footLines)
   }
   const stride = arrowH + FOOT_GAP + footH + (vertical ? GAP : 0)
   const titleMaxW = Math.max(1, slotW - BADGE_R * 2 - BADGE_INSET - 28)
@@ -225,7 +246,7 @@ export const steps: SvgComponent<StepsComponent> = {
           fontFamily: ctx.fonts.heading,
         })
         const foot = wrapClip(stripEmphasis(item.text), {
-          maxWidth: Math.max(1, slotW),
+          maxWidth: footW[i]!,
           fontSize: FOOT_SIZE,
           minPt: FORM_BODY_FLOOR,
           maxLines: footLines,
@@ -258,25 +279,28 @@ export const steps: SvgComponent<StepsComponent> = {
                 {title.text}
               </text>,
             )}
-            {foot.lines.map((line, li) =>
-              paintMarkedLine(
-                ctx,
-                markedLineSegments(item.text, foot.lines)[li]!,
-                { baseFill: ctx.colors.muted, fontWeight: "700", fontFamily: ctx.fonts.body, bold: false },
-                <text
-                  key={li}
-                  data-truncated={formTextClipMarker(foot, li)}
-                  x={x}
-                  y={y + arrowH + FOOT_GAP + (li + 1) * foot.lineHeight}
-                  fontSize={foot.fontSize}
-                  fill={ctx.colors.muted}
-                  fontFamily={ctx.fonts.body}
-                  dominantBaseline="alphabetic"
-                >
-                  {line}
-                </text>,
-              ),
-            )}
+            {/* The sentence stands on the page beside the next step's: a column the crowded-columns audit holds apart. */}
+            <g data-audit-column="">
+              {foot.lines.map((line, li) =>
+                paintMarkedLine(
+                  ctx,
+                  markedLineSegments(item.text, foot.lines)[li]!,
+                  { baseFill: ctx.colors.muted, fontWeight: "700", fontFamily: ctx.fonts.body, bold: false },
+                  <text
+                    key={li}
+                    data-truncated={formTextClipMarker(foot, li)}
+                    x={x}
+                    y={y + arrowH + FOOT_GAP + (li + 1) * foot.lineHeight}
+                    fontSize={foot.fontSize}
+                    fill={ctx.colors.muted}
+                    fontFamily={ctx.fonts.body}
+                    dominantBaseline="alphabetic"
+                  >
+                    {line}
+                  </text>,
+                ),
+              )}
+            </g>
           </g>
         )
       })}

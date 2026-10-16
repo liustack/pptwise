@@ -201,12 +201,21 @@ proportional font's letters run a few pixels off the estimate, and the
 terminal timeline above, with Latin names in its descriptions, stood 28px
 apart at 16px by the estimate and about a character apart on screen.
 
-Five components opt in, the ones that set items side by side with no card
+Seven components opt in, the ones that set items side by side with no card
 ground between them. The horizontal timeline marks each milestone.
 `icon_cards` marks each card, since it never draws a ground: until 2026-10
 it offered each line its column less 16px, and four cards across a page
 stood their sentences 16px to 35px apart at 23px to 43px type. Its lines now
-keep a gutter of their own size from the next column. `people_cards`,
+keep a gutter of their own size from the next column. `steps` marks each
+step's sentence and `chevron_process` each stage's note. Both stand on the
+page under their shapes, left-aligned, with only a gap between one and the
+next, so each stops short of its right-hand neighbour by the gutter the two
+keep. Two Chinese sentences keep their slot, since their gutter at the body
+size is no wider than the gap. A sentence with letters in it keeps two
+characters: until 2026-10 the steps set their sentences in the whole slot,
+and a brief page's mixed sentences stood 26px and 31px apart at 16px. The
+words inside a chevron stand on its own fill or outline and are not
+compared. `people_cards`,
 `product_cards`, `quote_wall` and `matrix` mark each card or cell only on a
 ruled theme, where the words stand on the paper under a hairline. On every
 other theme their words stand inside a card's own ground, and the card's edge
@@ -222,9 +231,9 @@ back by a defect. The rest stay out for what they are:
 - `logo_wall` sets each name inside its tile.
 - `sankey` sets its node labels down the sides of the flow, one column of
   labels per column of nodes, never two labels side by side on a row.
-- Components with no `data-audit-box` per item (`kpi_cards`, `numbered_cards`,
-  `steps`, `chevron_process` and the like) give the check nothing to tell one item's words
-  from the next. They need a per-item group before they can opt in.
+- Components with no `data-audit-box` per item (`kpi_cards`, `numbered_cards`
+  and the like) give the check nothing to tell one item's words from the
+  next. They need a per-item group before they can opt in.
 
 ## Full-matrix regression net (`full-matrix-contrast.test.ts`)
 
