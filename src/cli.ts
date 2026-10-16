@@ -28,11 +28,11 @@ import { runBrandScan } from "./cli/brand-scan"
 import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesAdd, runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
-import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
+import { readLicenseKey, runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
 import { runLogin, runLogout } from "./cli/packs/login"
 import { runPacksList, runPacksSync } from "./cli/packs/sync"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
-import { checkForUpdate, createSelfUpdater } from "./cli/update"
+import { checkForUpdate, createSelfUpdater, syncAfterUpdate } from "./cli/update"
 import { VERSION } from "./version"
 
 installNodePlatform()
@@ -790,18 +790,25 @@ program
 
 program
   .command("self-update")
-  .description("Update the global pptwise install to the latest release")
+  .description("Update the global pptwise install to the latest release, then sync content packs with it when a license is configured")
   .action(async () => {
+    let result
     try {
-      const result = await createSelfUpdater()({ currentVersion: VERSION })
-      console.log(
-        result.updated
-          ? `updated: ${result.currentVersion} → ${result.latestVersion}`
-          : `already at the latest version (${result.currentVersion})`,
-      )
+      result = await createSelfUpdater()({ currentVersion: VERSION })
     } catch (e) {
       fail(e)
     }
+    if (!result.updated) {
+      console.log(`already at the latest version (${result.currentVersion})`)
+      return
+    }
+    console.log(`updated: ${result.currentVersion} → ${result.latestVersion}`)
+    // The update stands whatever the sync does: a failed sync only prints.
+    const sync = await syncAfterUpdate({ licenseConfigured: async () => (await readLicenseKey()) !== undefined })
+    if (!sync.ran) return
+    console.log(`Syncing content packs with ${result.latestVersion}:`)
+    if (sync.output !== "") console.log(sync.output)
+    if (!sync.ok) console.log("The packs did not sync, and the update itself is done. Run `pptwise sync` to try again.")
   })
 
 program.parseAsync(process.argv, { from: "node" }).catch(fail)

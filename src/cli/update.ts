@@ -1,5 +1,6 @@
 // Ported from markpress src/update.ts (same author), minus its playwright
 // post-install step — pptwise has no browser dependency to refresh.
+import { join } from "node:path"
 import { runChild } from "./child"
 
 export const PACKAGE_NAME = "@liustack/pptwise"
@@ -99,5 +100,48 @@ export function createSelfUpdater(run: CommandRunner = runCommand) {
     if (!info.updateAvailable) return { ...info, updated: false }
     await run("npm", ["install", "-g", `${packageName}@latest`])
     return { ...info, updated: true }
+  }
+}
+
+/** Runs a command and hands back its exit code and output, failing or not. */
+export type ChildRunner = (command: string, args: string[]) => Promise<{ code: number; stdout: string; stderr: string }>
+
+export type PostUpdateSync = { ran: false } | { ran: true; ok: boolean; output: string }
+
+export interface SyncAfterUpdateOptions {
+  /** Whether a license is configured. A license file that cannot be read
+   *  throws, and that is reported as a sync that did not run cleanly. */
+  licenseConfigured: () => Promise<boolean>
+  packageName?: string
+  run?: CommandRunner
+  runCli?: ChildRunner
+  /** The runtime that starts the new CLI. Default this process's. */
+  execPath?: string
+}
+
+const runCliChild: ChildRunner = (command, args) => runChild(command, args)
+
+/**
+ * After `self-update` has installed a new version, sync content packs with
+ * that version, so packs that need it arrive in the same step. This process
+ * still runs the old code, so the sync runs in the CLI npm just installed,
+ * found under `npm root -g`. Without a license nothing runs. Never throws:
+ * a sync that fails is reported, and the update stands.
+ */
+export async function syncAfterUpdate({
+  licenseConfigured,
+  packageName = PACKAGE_NAME,
+  run = runCommand,
+  runCli = runCliChild,
+  execPath = process.execPath,
+}: SyncAfterUpdateOptions): Promise<PostUpdateSync> {
+  try {
+    if (!(await licenseConfigured())) return { ran: false }
+    const root = await run("npm", ["root", "-g"])
+    const cli = join(root, ...packageName.split("/"), "dist", "cli.js")
+    const { code, stdout, stderr } = await runCli(execPath, [cli, "sync"])
+    return { ran: true, ok: code === 0, output: [stdout.trim(), stderr.trim()].filter((s) => s !== "").join("\n") }
+  } catch (error) {
+    return { ran: true, ok: false, output: error instanceof Error ? error.message : String(error) }
   }
 }
