@@ -49,6 +49,8 @@ interface BuildValue {
   warnings: Issue[]
   alternatives?: { id: string; name: string }[]
   signature?: { pages: number; offered: number; drawn: number; plain: unknown[] }
+  sheet?: string
+  image?: { attachmentId: string; mediaType: string; bytes: number; width: number; height: number; name?: string }
 }
 
 interface Tool<A, V> {
@@ -73,7 +75,7 @@ interface FakeResponse {
 
 interface Service {
   themesTool: Tool<{ title: string; subtitle?: string; lang?: string; occasion?: string; themes?: string[]; page?: unknown }, ThemesValue>
-  buildTool: Tool<{ target: string; alternatives?: boolean }, BuildValue>
+  buildTool: Tool<{ target: string; alternatives?: boolean; sheet?: boolean }, BuildValue>
   outlineTool: Tool<{ target: string }, OutlineValue>
   registerRoute: (ctx: { webServer: { register: (r: RouteRegistration) => void } }) => void
   /** The test's own note of where the workspace keeps previews: `previewRoot(workspace)`. */
@@ -81,7 +83,7 @@ interface Service {
 }
 
 interface HostModule {
-  createPreviewService: (cliPath: string) => Service
+  createPreviewService: (cliPath: string, ctx?: unknown) => Service
   previewRoot: (anchor: string) => string
   PREVIEW_ROUTE: string
   __testing: {
@@ -154,6 +156,10 @@ if (argv[0] === "theme" && argv[1] === "try") {
     const pages = [{ page: 1, id: "cover", type: "cover", file: "001-cover.svg" }, { page: 2, id: "why", type: "content", file: "002-why.svg" }]
     writeFileSync(join(out, "manifest.json"), JSON.stringify({ title: name, pages, ...(broken ? {} : { checks: { ran: true } }) }))
     preview = { dir: out, html: join(out, "preview.html"), manifest: join(out, "manifest.json"), pages: pages.map((p) => ({ page: p.page, id: p.id, type: p.type, file: join(out, p.file) })) }
+    if (argv.includes("--sheet")) {
+      writeFileSync(join(out, "sheet.jpg"), "JPEG-" + name)
+      preview.sheet = join(out, "sheet.jpg")
+    }
   }
   const pptx = join(out, name + ".pptx")
   const errors = unassembled
@@ -539,6 +545,48 @@ describe("pptwise_build", () => {
     const [, leftOut] = await calls(cliPath)
     expect(leftOut!.argv).not.toContain("--alternatives")
     expect(leftOut!.argv).not.toContain("--no-alternatives")
+  })
+
+  it("asks for the deck sheet and names its file where the host cannot show the picture", async () => {
+    const { svc, cliPath, workspace } = await setup("build-sheet-file")
+    const target = await deck(workspace)
+    const value = await svc.buildTool.execute({ target, sheet: true }, inSession(workspace))
+    expect((await calls(cliPath))[0]!.argv).toContain("--sheet")
+    expect(await realpath(value.sheet!)).toBe(await realpath(join(workspace, ".pptwise", "weekly", "sheet.jpg")))
+    expect(value).not.toHaveProperty("image")
+    matchesSchema(value, svc.buildTool.output.schema)
+    const blocks = svc.buildTool.output.render({}, value)
+    expect(blocks.map((b) => b.type)).toEqual(["text"])
+    expect(blocks[0]!.text).toContain(`Deck sheet: ${value.sheet}. Every page small, under its page number`)
+  })
+
+  it("hands the model the deck sheet as a picture where the host and the model take one", async () => {
+    const { cliPath, workspace } = await setup("build-sheet-image")
+    const saved: { data: Buffer; mediaType: string; name?: string }[] = []
+    const services: Record<string, unknown> = {
+      llm: { resolveModelInfo: async () => ({ inputModalities: ["text", "image"] }) },
+      attachments: {
+        saveImage: async (input: { data: Buffer; mediaType: string; name?: string }) => {
+          saved.push(input)
+          return { attachmentId: "att-9", mediaType: input.mediaType, bytes: input.data.length, width: 1980, height: 576, name: input.name }
+        },
+      },
+    }
+    const { createPreviewService, previewRoot } = await host()
+    const svc = Object.assign(createPreviewService(cliPath, { get: (name: string) => services[name] }), { root: previewRoot(workspace) })
+    const target = await deck(workspace)
+    const session = { signal: new AbortController().signal, agent: { options: { provider: "deepseek", model: "v" }, session: { header: { cwd: workspace } } } }
+    const value = await svc.buildTool.execute({ target, sheet: true }, session)
+    expect(saved.map((s) => [s.mediaType, s.name, s.data.toString("utf8")])).toEqual([["image/jpeg", "sheet.jpg", "JPEG-weekly"]])
+    expect(value.image).toEqual({ attachmentId: "att-9", mediaType: "image/jpeg", bytes: 11, width: 1980, height: 576, name: "sheet.jpg" })
+    matchesSchema(value, svc.buildTool.output.schema)
+    const blocks = svc.buildTool.output.render({}, value) as { type: string; text?: string; attachment?: unknown }[]
+    expect(blocks.map((b) => b.type)).toEqual(["text", "image"])
+    expect(blocks[0]!.text).toContain("The deck sheet is below: every page small, under its page number.")
+    // Without the flag no sheet is asked for or shown.
+    const plain = await svc.buildTool.execute({ target }, session)
+    expect(plain).not.toHaveProperty("sheet")
+    expect(saved).toHaveLength(1)
   })
 
   it("says nothing about other themes when the build drew none", async () => {

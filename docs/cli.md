@@ -77,7 +77,7 @@ Fill no more than four pages between validation passes, and read each page's con
 ## Build
 
 ```bash
-pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alternatives]
+pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alternatives] [--sheet]
 ```
 
 `build` assembles a deck project (or reads an IR file), validates it, draws every page, audits the drawing, and renders the `.pptx`, in one process from one read of the sources. It exits 0 when the deck passed every check and 1 when it needs revision.
@@ -115,6 +115,8 @@ Output goes where `render` and `preview` put it by default: the pages, `preview.
   "notes": []
 }
 ```
+
+`--sheet` also draws every page small into one picture, `sheet.jpg` beside the page SVGs, each under its page number, four to a row. The report names it as `preview.sheet`, and the text report prints `sheet:`. It is for looking at the whole deck at once: whether the pictures fit their pages, where a page is empty, and how the pages follow one another. It needs the optional `sharp` dependency. Without it the build passes as usual and a note says there is no sheet. Every build removes the sheet an earlier one left, so a sheet on disk always shows the pages as they are now.
 
 A passing build has `"status": "ok"`, an empty `errors`, and `pptx` set to the absolute path of the deck's `.pptx`. A target that does not exist, or a configuration file that cannot be read, fails the command instead of producing a report.
 

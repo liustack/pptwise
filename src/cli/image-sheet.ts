@@ -70,21 +70,29 @@ export function numberStrokes(n: number, x: number, y: number, scale: number): s
   return lines.join("")
 }
 
+/** The size of one cell. Search thumbnails take the default 4:3 cell. */
+export interface CellSize {
+  width: number
+  height: number
+}
+
+const DEFAULT_CELL: CellSize = { width: CELL_WIDTH, height: CELL_HEIGHT }
+
 /** Where cell `index` sits on the sheet. */
-function cellOrigin(index: number): { left: number; top: number } {
+function cellOrigin(index: number, cell: CellSize): { left: number; top: number } {
   const col = index % SHEET_COLUMNS
   const row = Math.floor(index / SHEET_COLUMNS)
-  return { left: GAP + col * (CELL_WIDTH + GAP), top: GAP + row * (CELL_HEIGHT + GAP) }
+  return { left: GAP + col * (cell.width + GAP), top: GAP + row * (cell.height + GAP) }
 }
 
 /** The badges and the crosses for missing thumbnails, as one SVG over the sheet. */
-function overlaySvg(cells: SheetCell[], width: number, height: number): string {
+function overlaySvg(cells: SheetCell[], width: number, height: number, size: CellSize): string {
   const parts: string[] = []
   cells.forEach((cell, index) => {
-    const { left, top } = cellOrigin(index)
+    const { left, top } = cellOrigin(index, size)
     if (cell.bytes === null) {
       parts.push(
-        `<g stroke="#9a9a9a" stroke-width="3"><line x1="${left}" y1="${top}" x2="${left + CELL_WIDTH}" y2="${top + CELL_HEIGHT}"/><line x1="${left + CELL_WIDTH}" y1="${top}" x2="${left}" y2="${top + CELL_HEIGHT}"/></g>`,
+        `<g stroke="#9a9a9a" stroke-width="3"><line x1="${left}" y1="${top}" x2="${left + size.width}" y2="${top + size.height}"/><line x1="${left + size.width}" y1="${top}" x2="${left}" y2="${top + size.height}"/></g>`,
       )
     }
     const digits = String(cell.n).length
@@ -99,7 +107,7 @@ function overlaySvg(cells: SheetCell[], width: number, height: number): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${parts.join("")}</svg>`
 }
 
-async function loadSharp(): Promise<typeof Sharp.default> {
+export async function loadSharp(): Promise<typeof Sharp.default> {
   try {
     return (await import("sharp")).default as unknown as typeof Sharp.default
   } catch (e) {
@@ -114,24 +122,25 @@ async function loadSharp(): Promise<typeof Sharp.default> {
  * Draw the sheet as a JPEG. Each thumbnail is fitted whole into its cell,
  * so the sheet shows the picture's own shape. A thumbnail sharp cannot read
  * is drawn as a missing one. `missing` lists the numbers drawn that way.
+ * `size` is the cell's size, 360 by 270 unless given.
  */
-export async function drawContactSheet(cells: SheetCell[]): Promise<{ jpeg: Buffer; missing: number[] }> {
+export async function drawContactSheet(cells: SheetCell[], size: CellSize = DEFAULT_CELL): Promise<{ jpeg: Buffer; missing: number[] }> {
   if (cells.length === 0) throw new PptwiseError("a contact sheet needs at least one picture")
   const sharp = await loadSharp()
   const rows = Math.ceil(cells.length / SHEET_COLUMNS)
   const columns = Math.min(cells.length, SHEET_COLUMNS)
-  const width = GAP + columns * (CELL_WIDTH + GAP)
-  const height = GAP + rows * (CELL_HEIGHT + GAP)
+  const width = GAP + columns * (size.width + GAP)
+  const height = GAP + rows * (size.height + GAP)
   const drawn: SheetCell[] = []
   const layers: Sharp.OverlayOptions[] = []
   for (const [index, cell] of cells.entries()) {
-    const { left, top } = cellOrigin(index)
+    const { left, top } = cellOrigin(index, size)
     let fitted: Buffer | null = null
     if (cell.bytes !== null) {
       try {
         fitted = await sharp(cell.bytes)
           .rotate()
-          .resize({ width: CELL_WIDTH, height: CELL_HEIGHT, fit: "contain", background: CELL })
+          .resize({ width: size.width, height: size.height, fit: "contain", background: CELL })
           .flatten({ background: CELL })
           .jpeg({ quality: 82 })
           .toBuffer()
@@ -141,13 +150,13 @@ export async function drawContactSheet(cells: SheetCell[]): Promise<{ jpeg: Buff
       }
     }
     const missing = fitted === null
-    fitted ??= await sharp({ create: { width: CELL_WIDTH, height: CELL_HEIGHT, channels: 3, background: CELL } })
+    fitted ??= await sharp({ create: { width: size.width, height: size.height, channels: 3, background: CELL } })
       .jpeg()
       .toBuffer()
     layers.push({ input: fitted, left, top })
     drawn.push({ n: cell.n, bytes: missing ? null : fitted })
   }
-  layers.push({ input: Buffer.from(overlaySvg(drawn, width, height)), left: 0, top: 0 })
+  layers.push({ input: Buffer.from(overlaySvg(drawn, width, height, size)), left: 0, top: 0 })
   const jpeg = await sharp({ create: { width, height, channels: 3, background: PAGE } })
     .composite(layers)
     .jpeg({ quality: 82 })

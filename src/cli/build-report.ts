@@ -60,6 +60,8 @@ export interface BuildPreview {
   /** The page manifest `preview --html` writes. */
   manifest: string
   pages: BuildPreviewPage[]
+  /** `--sheet`: every page drawn small into one numbered JPEG (`sheet.jpg`), to look at the whole deck. */
+  sheet?: string
 }
 
 /** `builtin` for a factory preset, `file` for a theme file the lookup found, `pack` for an installed content pack's theme. */
@@ -305,6 +307,7 @@ export function formatBuildReport(report: BuildReport): string {
     lines.push(`alternatives: the deck's own pages in ${named} (${report.alternatives.dir}). To switch, change "theme" in ${SPEC_FILENAME} and build again.`)
   }
   if (report.preview !== null) lines.push(`preview: ${report.preview.html}`)
+  if (report.preview?.sheet !== undefined) lines.push(`sheet: ${report.preview.sheet}`)
   if (report.pptx !== null) lines.push(`pptx: ${report.pptx}`)
   lines.push(...report.notes)
   return lines.join("\n")

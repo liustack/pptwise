@@ -3,25 +3,15 @@
 //
 // `pptwise images search --sheet` draws every hit's thumbnail into one
 // numbered JPEG. In a terminal the model has to find a way to open that file.
-// Here the tool hands it over as an image in its own result, the way DSH's
-// `read_image` does: the picture is saved through the host's `attachments`
-// service and rides an `image` content block next to the numbered list, so
-// the model reads the numbers off the picture and fetches the id with that
-// number. Verified against DSH 0.1.2-rc.1: `ToolOutputDefinition.render`
-// returns `ContentBlock[]`, which includes `{ type: 'image', attachment }`,
-// and the DeepSeek adapter sends a tool result's images to the model in the
-// user message after it.
-//
-// The image goes in only when the host can carry it: an `attachments`
-// service is mounted and the session's model declares image input. Otherwise
-// the result names the sheet's path beside the same list, and nothing fails.
+// Here the tool hands it over as an image in its own result
+// (`attachJpeg` in `./preview-tool.js`), so the model reads the numbers off the picture and
+// fetches the id with that number. Where the host cannot carry the image, the
+// result names the sheet's path beside the same list, and nothing fails.
 //
 // Plain dependency-free JS like the rest of the plugin: the CLI does the
 // search and draws the sheet, and this file only reads its report and file.
 
-import { readFile } from 'node:fs/promises'
-import { basename } from 'node:path'
-import { runCliJson, sessionCwd } from './preview-tool.js'
+import { attachJpeg, IMAGE_SCHEMA, runCliJson, sessionCwd } from './preview-tool.js'
 
 export const IMAGES_TOOL_NAME = 'pptwise_images'
 
@@ -41,70 +31,6 @@ const HIT_SCHEMA = {
   },
   required: ['n', 'id', 'width', 'height', 'author', 'license'],
   additionalProperties: false,
-}
-
-const IMAGE_SCHEMA = {
-  type: 'object',
-  properties: {
-    attachmentId: { type: 'string' },
-    mediaType: { type: 'string' },
-    bytes: { type: 'number' },
-    width: { type: 'number' },
-    height: { type: 'number' },
-    name: { type: 'string' },
-  },
-  required: ['attachmentId', 'mediaType', 'bytes', 'width', 'height'],
-  additionalProperties: false,
-}
-
-/**
- * Whether this call's model takes images, read the way `read_image` reads it:
- * the session's routed provider and model, then the model's declared input.
- * Any part of that the host does not offer means no, never an error: the
- * search still answers in text.
- */
-async function routeTakesImages(ctx, exec) {
-  try {
-    const agent = exec && exec.agent
-    if (!agent) return false
-    const header = typeof agent.session?.requestHeader === 'function' ? agent.session.requestHeader() : undefined
-    const routed = header && header.config
-    const provider = (routed && routed.provider) ?? agent.options?.provider
-    const model = (routed && routed.model) ?? agent.options?.model
-    const llm = typeof ctx.get === 'function' ? ctx.get('llm') : undefined
-    if (provider === undefined || model === undefined || !llm || typeof llm.resolveModelInfo !== 'function') return false
-    const info = await llm.resolveModelInfo(provider, model, exec.signal)
-    return Array.isArray(info?.inputModalities) && info.inputModalities.includes('image')
-  } catch {
-    return false
-  }
-}
-
-/**
- * The sheet saved as a host attachment, or undefined where the host has no
- * store for one. A store that refuses the file (its own size or type limits)
- * leaves the search standing: the refusal comes back as `refused`, and the
- * result names the file instead.
- */
-async function attachSheet(ctx, exec, sheetPath) {
-  const attachments = typeof ctx.get === 'function' ? ctx.get('attachments') : undefined
-  if (!attachments || typeof attachments.saveImage !== 'function') return {}
-  if (!(await routeTakesImages(ctx, exec))) return {}
-  let ref
-  try {
-    ref = await attachments.saveImage({ data: await readFile(sheetPath), mediaType: 'image/jpeg', name: basename(sheetPath) })
-  } catch (error) {
-    return { refused: error instanceof Error ? error.message : String(error) }
-  }
-  const image = {
-    attachmentId: String(ref.attachmentId),
-    mediaType: String(ref.mediaType),
-    bytes: Number(ref.bytes),
-    width: Number(ref.width),
-    height: Number(ref.height),
-    ...(typeof ref.name === 'string' ? { name: ref.name } : {}),
-  }
-  return { image }
 }
 
 /** What the model reads: the numbered hits, the notes, and how to take one. */
@@ -187,7 +113,7 @@ export function createImagesTool(cliPath, ctx) {
         ...(typeof hit.source === 'string' ? { source: hit.source } : {}),
       }))
       const sheet = typeof report.sheet === 'string' ? report.sheet : undefined
-      const { image, refused } = sheet ? await attachSheet(ctx, exec, sheet) : {}
+      const { image, refused } = sheet ? await attachJpeg(ctx, exec, sheet) : {}
       const notes = report.notes.map(String)
       if (refused !== undefined) notes.push(`The contact sheet could not be attached here (${refused}). Open its file to look at it.`)
       return {

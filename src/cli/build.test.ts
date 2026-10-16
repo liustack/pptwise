@@ -254,6 +254,26 @@ describe("validateIssue", () => {
 })
 
 
+describe("pptwise build --sheet", () => {
+  it("draws every page into one numbered picture, and a build without it leaves none behind", async () => {
+    const { cwd } = await workspace()
+    const { output } = await runBuild("weekly", { json: true, cwd, gitIgnore: false, sheet: true })
+    const report = JSON.parse(output) as BuildReport
+    expect(report.status).toBe("ok")
+    const sheet = report.preview!.sheet!
+    expect(sheet).toBe(join(cwd, ".pptwise", "weekly", "sheet.jpg"))
+    const { default: sharp } = await import("sharp")
+    const meta = await sharp(await readFile(sheet)).metadata()
+    // Six pages, four to a row, in 16:9 cells.
+    expect([meta.format, meta.width, meta.height]).toEqual(["jpeg", 12 + 4 * (480 + 12), 12 + 2 * (270 + 12)])
+    const text = await runBuild("weekly", { cwd, gitIgnore: false, sheet: true })
+    expect(text.output).toContain(`sheet: ${sheet}`)
+    const plain = JSON.parse((await runBuild("weekly", { json: true, cwd, gitIgnore: false })).output) as BuildReport
+    expect(plain.preview!.sheet).toBeUndefined()
+    await expect(stat(sheet)).rejects.toThrow()
+  })
+})
+
 describe("pptwise build: the deck in other themes", () => {
   async function buildWith(cwd: string, alternatives?: boolean): Promise<BuildReport> {
     const { output } = await runBuild("weekly", { json: true, cwd, gitIgnore: false, alternatives })

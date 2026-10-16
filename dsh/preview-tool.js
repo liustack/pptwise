@@ -237,6 +237,82 @@ function escapeHtml(value) {
 export const TOOL_NAME = 'pptwise_preview'
 
 /** The theme wall: the user's own title drawn in every theme, from `theme try --title`. */
+// Pictures a DSH tool hands the model in its own result: the stock search's
+// contact sheet (`pptwise_images`) and the deck sheet (`pptwise_build` with
+// `sheet: true`). The picture is saved through the host's `attachments`
+// service and rides an `image` content block next to the tool's text, the way
+// DSH's `read_image` does. Verified against DSH 0.1.2-rc.1:
+// `ToolOutputDefinition.render` returns `ContentBlock[]`, which includes
+// `{ type: 'image', attachment }`, and the DeepSeek adapter sends a tool
+// result's images to the model in the user message after it. The image goes
+// in only when an `attachments` service is mounted and the session's model
+// declares image input. Otherwise the tool names the file instead.
+
+/** The output schema of an attached picture. */
+export const IMAGE_SCHEMA = {
+  type: 'object',
+  properties: {
+    attachmentId: { type: 'string' },
+    mediaType: { type: 'string' },
+    bytes: { type: 'number' },
+    width: { type: 'number' },
+    height: { type: 'number' },
+    name: { type: 'string' },
+  },
+  required: ['attachmentId', 'mediaType', 'bytes', 'width', 'height'],
+  additionalProperties: false,
+}
+
+/**
+ * Whether this call's model takes images, read the way `read_image` reads it:
+ * the session's routed provider and model, then the model's declared input.
+ * Any part of that the host does not offer means no, never an error: the
+ * tool still answers in text.
+ */
+async function routeTakesImages(ctx, exec) {
+  try {
+    const agent = exec && exec.agent
+    if (!agent) return false
+    const header = typeof agent.session?.requestHeader === 'function' ? agent.session.requestHeader() : undefined
+    const routed = header && header.config
+    const provider = (routed && routed.provider) ?? agent.options?.provider
+    const model = (routed && routed.model) ?? agent.options?.model
+    const llm = ctx && typeof ctx.get === 'function' ? ctx.get('llm') : undefined
+    if (provider === undefined || model === undefined || !llm || typeof llm.resolveModelInfo !== 'function') return false
+    const info = await llm.resolveModelInfo(provider, model, exec.signal)
+    return Array.isArray(info?.inputModalities) && info.inputModalities.includes('image')
+  } catch {
+    return false
+  }
+}
+
+/**
+ * The JPEG at `path` saved as a host attachment, or nothing where the host
+ * has no store for one or the model takes no images. A store that refuses
+ * the file (its own size or type limits) leaves the tool's answer standing:
+ * the refusal comes back as `refused`, and the tool names the file instead.
+ */
+export async function attachJpeg(ctx, exec, path) {
+  const attachments = ctx && typeof ctx.get === 'function' ? ctx.get('attachments') : undefined
+  if (!attachments || typeof attachments.saveImage !== 'function') return {}
+  if (!(await routeTakesImages(ctx, exec))) return {}
+  let ref
+  try {
+    ref = await attachments.saveImage({ data: await readFile(path), mediaType: 'image/jpeg', name: basename(path) })
+  } catch (error) {
+    return { refused: error instanceof Error ? error.message : String(error) }
+  }
+  const image = {
+    attachmentId: String(ref.attachmentId),
+    mediaType: String(ref.mediaType),
+    bytes: Number(ref.bytes),
+    width: Number(ref.width),
+    height: Number(ref.height),
+    ...(typeof ref.name === 'string' ? { name: ref.name } : {}),
+  }
+  return { image }
+}
+
 export const THEMES_TOOL_NAME = 'pptwise_themes'
 
 /** One pass of assemble, validate, audit, preview and render, from `build --json`. */
@@ -1916,6 +1992,8 @@ function buildSummary(value) {
     }
   }
   if (value.previewId) lines.push('The user can page through the drawn pages in this card. Do not tell them to open a URL.')
+  if (value.image) lines.push('The deck sheet is below: every page small, under its page number. Check each picture fits its page, no frame or page is empty, and no run of pages looks alike. Fix what you find and build again with sheet: true, at most twice.')
+  else if (value.sheet) lines.push(`Deck sheet: ${value.sheet}. Every page small, under its page number: open it to look at the whole deck.`)
   if (Array.isArray(value.alternatives) && value.alternatives.length > 0) {
     lines.push(
       `Other themes under the pages, numbered as on the card: ${value.alternatives.map((theme) => `${theme.n} = ${theme.id} (${theme.name})`).join(', ')}. ` +
@@ -2027,7 +2105,7 @@ function modelSummary(value) {
  * one had already registered at the first one's CLI — silent, and wrong in
  * exactly the situations (reload, second profile, test) where it matters.
  */
-export function createPreviewService(cliPath) {
+export function createPreviewService(cliPath, ctx) {
   /**
    * Previews are shared by every service that can see the project, on
    * purpose.
@@ -2802,6 +2880,11 @@ export function createPreviewService(cliPath) {
           description:
             'Deck project directory (or IR json file), the same target the CLI takes. ' + DECK_HOME_HINT,
         },
+        sheet: {
+          type: 'boolean',
+          description:
+            'true once the build passes, to look at the whole deck yourself: every page is drawn small into one numbered picture, which comes back in this result. Look for pictures that do not fit their page, empty frames and blank pages, and runs of pages that look alike.',
+        },
         alternatives: {
           type: 'boolean',
           description:
@@ -2831,12 +2914,16 @@ export function createPreviewService(cliPath) {
             },
           },
           signature: SIGNATURE_SCHEMA,
+          sheet: { type: 'string' },
+          image: IMAGE_SCHEMA,
         },
         required: ['status', 'errors', 'warnings'],
         additionalProperties: false,
       },
       render(_args, value) {
-        return [{ type: 'text', text: buildSummary(value) }]
+        const blocks = [{ type: 'text', text: buildSummary(value) }]
+        if (value.image) blocks.push({ type: 'image', attachment: { ...value.image } })
+        return blocks
       },
       presentationMeta(_args, value) {
         return { card: 'pptwise-build', status: value.status, ...(value.previewId ? { previewId: value.previewId } : {}) }
@@ -2847,7 +2934,7 @@ export function createPreviewService(cliPath) {
       // The CLI runs in the same folder the preview goes to, so the build's
       // own `.pptwise/` and the card's copy sit in one project.
       const workspace = workspaceFor(exec, target)
-      const report = await runCliJson(cliPath, ['build', target, '--json', ...(args.alternatives === true ? ['--alternatives'] : args.alternatives === false ? ['--no-alternatives'] : [])], {
+      const report = await runCliJson(cliPath, ['build', target, '--json', ...(args.alternatives === true ? ['--alternatives'] : args.alternatives === false ? ['--no-alternatives'] : []), ...(args.sheet === true ? ['--sheet'] : [])], {
         signal: exec?.signal,
         cwd: workspace,
         okCodes: [0, 1],
@@ -2886,6 +2973,9 @@ export function createPreviewService(cliPath) {
         })
         previewId = id
       }
+      const sheet = typeof report.preview?.sheet === 'string' ? report.preview.sheet : undefined
+      const { image, refused } = sheet ? await attachJpeg(ctx, exec, sheet) : {}
+      if (refused !== undefined) console.error(`[pptwise] deck sheet not attached: ${refused}`)
       return {
         status: report.status,
         ...(ok && typeof report.pptx === 'string' ? { pptx: report.pptx } : {}),
@@ -2895,6 +2985,8 @@ export function createPreviewService(cliPath) {
         warnings: Array.isArray(report.warnings) ? report.warnings.map(buildIssueValue) : [],
         ...(alternatives ? { alternatives } : {}),
         ...(signature ? { signature } : {}),
+        ...(sheet ? { sheet } : {}),
+        ...(image ? { image } : {}),
       }
     },
     timeoutMs: 180_000,

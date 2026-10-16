@@ -101,13 +101,15 @@ program
     "also draw the deck's cover and one or two content pages in up to 3 other themes, under .pptwise/<deck>/alternatives/, kept current on later builds (when the user asks for another theme)",
   )
   .option("--no-alternatives", "draw the deck in no other themes, on this build or later ones")
+  .option("--sheet", "also draw every page small into one numbered picture, sheet.jpg, to look at the whole deck (needs the optional sharp)")
   .addHelpText("after", "\nExample:\n  $ pptwise build my-deck/ --json")
-  .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean; alternatives?: boolean }) => {
+  .action(async (target: string, opts: { json?: boolean; gitIgnore?: boolean; alternatives?: boolean; sheet?: boolean }) => {
     try {
       const { output, ok } = await runBuild(target, {
         json: opts.json,
         gitIgnore: opts.gitIgnore,
         alternatives: opts.alternatives,
+        sheet: opts.sheet,
         cwd: process.cwd(),
       })
       console.log(output)

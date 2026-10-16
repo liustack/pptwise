@@ -188,7 +188,7 @@ export function apply(ctx) {
   // halves: they must agree on the same CLI path and the same decks, and a
   // second apply() (plugin reload, a second profile) must get its own pair
   // rather than reaching into the first one's.
-  const preview = createPreviewService(CLI_PATH)
+  const preview = createPreviewService(CLI_PATH, ctx)
   try {
     ctx.tools.register(preview.tool)
   } catch (error) {

@@ -52,6 +52,15 @@ describe("drawContactSheet", () => {
     expect(near(await pixel(jpeg, 12 + CELL_WIDTH / 2, 12 + CELL_HEIGHT / 2), [30, 30, 220])).toBe(true)
   })
 
+  it("lays cells out at the size it is given", async () => {
+    const green = await solid(1280, 720, [30, 160, 30])
+    const { jpeg } = await drawContactSheet([{ n: 1, bytes: green }, { n: 2, bytes: green }], { width: 480, height: 270 })
+    const meta = await sharp(jpeg).metadata()
+    expect(meta.width).toBe(12 + 2 * (480 + 12))
+    expect(meta.height).toBe(12 + 270 + 12)
+    expect(near(await pixel(jpeg, 12 + 480 + 12 + 240, 12 + 135), [30, 160, 30])).toBe(true)
+  })
+
   it("refuses an empty sheet", async () => {
     await expect(drawContactSheet([])).rejects.toThrow(/at least one picture/)
   })

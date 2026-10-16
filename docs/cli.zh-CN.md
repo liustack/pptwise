@@ -77,7 +77,7 @@ pptwise preview deck-dir/ --html
 ## Build
 
 ```bash
-pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alternatives]
+pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alternatives] [--sheet]
 ```
 
 `build` 组装 deck 工程（或读取 IR 文件），校验，画出每一页，检查画出来的结果，再渲染 `.pptx`，全部在一个进程里、基于对源文件的同一次读取完成。deck 通过全部检查时以 0 退出，需要修改时以 1 退出。
@@ -115,6 +115,8 @@ pptwise build <target> [--json] [--no-git-ignore] [--alternatives | --no-alterna
   "notes": []
 }
 ```
+
+`--sheet` 另外把每一页缩小画进同一张图，即页面 SVG 旁边的 `sheet.jpg`，每页下面标着页码，一行四页。报告里的 `preview.sheet` 指向它，文字报告打印 `sheet:`。它用来一眼看完整份 deck：图配得对不对，哪页空着，页与页之间的节奏。它需要可选依赖 `sharp`。没有的话 build 照常通过，并用一条 note 说明没有联系表。每次 build 都会删掉上一次留下的联系表，所以磁盘上的联系表总是现在这些页面的样子。
 
 通过的 build 是 `"status": "ok"`，`errors` 为空，`pptx` 是这份 deck 的 `.pptx` 的绝对路径。目标不存在、配置文件读不了时，命令直接失败，不产出结论。
 

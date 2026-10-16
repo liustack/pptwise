@@ -71,6 +71,7 @@ import {
 } from "./build-report"
 import { readWrittenFor, writeWrittenFor } from "./written-for"
 import { offerAlternatives } from "./build-alternatives"
+import { DECK_SHEET_FILE, writeDeckSheet } from "./deck-sheet"
 import { loadIrFile, resolveLocalAssets } from "./load-ir"
 import { buildContactSheetHtml, buildPreviewHtml, buildThemeWallHtml } from "./preview-html"
 import {
@@ -2193,6 +2194,8 @@ export interface BuildOptions {
    * same theme (`./build-alternatives.ts`).
    */
   alternatives?: boolean
+  /** `--sheet`: also draw every page into one numbered picture (`./deck-sheet.ts`). */
+  sheet?: boolean
 }
 
 export interface BuildCliResult {
@@ -2349,6 +2352,10 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
   await pruneRenderedSvgs(workspace.dir)
   const svgNames = await writeSlideSvgs(workspace.dir, ir, svgs)
   const review = await writePreviewReview(workspace.dir, ir, svgs, svgNames, theme)
+  // A sheet left by an earlier build shows pages that may have changed since.
+  await rm(join(workspace.dir, DECK_SHEET_FILE), { force: true })
+  const sheet = opts.sheet ? await writeDeckSheet(workspace.dir, svgs) : {}
+  if (sheet.note !== undefined) report.notes.push(`note: ${sheet.note}`)
   report.audited = review.checks !== undefined
   report.preview = {
     dir: workspace.dir,
@@ -2360,6 +2367,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
       type: slide.type ?? "content",
       file: join(workspace.dir, svgNames[i]!),
     })),
+    ...(sheet.path !== undefined ? { sheet: sheet.path } : {}),
   }
   // Under a theme the pages were not written for, a text the face cuts or
   // a label it leaves off (a scroll cover's column too long to stand, say)
