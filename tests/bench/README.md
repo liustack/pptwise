@@ -341,12 +341,12 @@ validate and render fine inside the tool loop but then fail `score.mts`'s own re
 resolves the same relative path against the result root, not the workspace. The same placement
 carries the theme the artifact binds: the bound name (`ir.theme.id`, or a deck project's
 `spec.theme`) is resolved through the CLI's own lookup (`resolveThemeByName` plus the rebind
-guard) anchored exactly where the tool loop anchored it — the workspace root the CLI ran in, and
-the artifact's own directory — and the one file that lookup hit is written beside the artifact as
+guard) anchored exactly where the tool loop anchored it, at the artifact's own directory and the
+`themes/` folders from there up, and the one file that lookup hit is written beside the artifact as
 `<id>.theme.json`, whatever shape it had in the workspace (`theme.json`, `<id>.theme.json`, a
 loose `<id>.json`, or any `themes/` entry). A built-in hit copies nothing. No theme file is chosen
 by name and no `themes/` directory is copied whole: a theme file that sat near the artifact but
-was never on the CLI's lookup path (a `themes/` inside a nested deck directory, say) would become
+was never on the CLI's lookup path (a `themes/` in a folder beside the deck's, say) would become
 a candidate at scoring time and silently change the result (codex review R8). When the CLI's own
 lookup failed (unknown name, a theme file it found but could not load, rebind refused), nothing
 resolved and no theme file is carried. The refusal itself is: placement writes `placement.json`

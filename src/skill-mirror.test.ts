@@ -293,7 +293,7 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text).toMatch(/(Never run `license set` or `packs sync` as part of a deck task|不要在 deck 任务里运行 `license set` 或 `packs sync`)/)
     }
     expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
-    expect(read(ZH_REL)).toMatch(/2\. 从当前目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
+    expect(read(ZH_REL)).toMatch(/2\. 从 deck 目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
     for (const rel of [REF("spec.md"), REF("spec.zh-CN.md")]) {
       expect(read(rel)).toMatch(/\n3\. (Installed content packs|已装的内容包).*\n4\. /)
     }

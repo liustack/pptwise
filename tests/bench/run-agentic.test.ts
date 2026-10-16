@@ -584,7 +584,7 @@ describe("locateArtifact + placeArtifact", () => {
     writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "bare-ir", file: join(workspace, "deck.json") })
-    const note = await placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir)
     expect(note).toMatch(/copied bare IR/)
   })
 
@@ -596,7 +596,7 @@ describe("locateArtifact + placeArtifact", () => {
     writeFileSync(join(workspace, "notes.json"), "{}") // stray, not part of the project
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "deck-project", dir: workspace })
-    await placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir)
     // deck.spec.json + pages/ land at the result root; the stray notes.json does not.
     expect(() => statSync(join(resultDir, "deck.spec.json"))).not.toThrow()
     expect(() => statSync(join(resultDir, "pages", "p-cover.json"))).not.toThrow()
@@ -622,7 +622,7 @@ describe("locateArtifact + placeArtifact", () => {
     mkdirSync(join(workspace, "assets"), { recursive: true })
     writeFileSync(join(workspace, "assets", "hero.png"), "fake-png-bytes")
     const located = locateArtifact(workspace)
-    const note = await placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir)
     expect(readFileSync(join(resultDir, "assets", "hero.png"), "utf8")).toBe("fake-png-bytes")
     expect(note).toContain("assets/")
   })
@@ -631,7 +631,7 @@ describe("locateArtifact + placeArtifact", () => {
     setup()
     writeFileSync(join(workspace, "deck.json"), '{"slides": []}')
     const located = locateArtifact(workspace)
-    await placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir)
     expect(existsSync(join(resultDir, "assets"))).toBe(false)
   })
 
@@ -639,9 +639,10 @@ describe("locateArtifact + placeArtifact", () => {
 
 // ── placeArtifact carries the theme the CLI resolved (codex review R3 / R8) ──
 //
-// The tool loop runs the CLI with cwd = workspace root; a bare IR's lookup
-// is anchored at the IR's own directory, a deck project's at the project
-// directory. Placement resolves the bound name through that same lookup and
+// The CLI anchors a bare IR's lookup at the IR's own directory and a deck
+// project's at the project directory, and walks the `themes/` folders up
+// from there, wherever it runs. Placement resolves the bound name through
+// that same lookup and
 // carries the one file it hit (or nothing, for a built-in) into the result
 // directory, so the scorer, rooted there, lands on the same definition. A
 // theme file that merely sits near the artifact but was never on the CLI's
@@ -701,18 +702,19 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
   const THESIS_PRIMARY = "#0E6245"
   const BRIEF_PRIMARY = "#1E2A4A"
 
-  it("R8: a nested bare IR's own themes/ is not on the CLI's lookup path and does not travel", async () => {
+  it("R8: a themes/ beside a nested bare IR is not on the CLI's lookup path and does not travel", async () => {
     setup()
     const target = join(workspace, "deck", "deck.json")
     save(target, quoteIr("thesis"))
     // a brief copy renamed thesis: it does not offer `quote`, so if it ever
-    // resolved, validate would fail and the primary would be brief's
-    save(join(workspace, "deck", "themes", "thesis.theme.json"), themeFileFromPreset("brief", { id: "thesis" }))
+    // resolved, validate would fail and the primary would be brief's. It sits
+    // in a folder next to the deck's, neither the deck's own nor above it.
+    save(join(workspace, "notes", "themes", "thesis.theme.json"), themeFileFromPreset("brief", { id: "thesis" }))
     expect(await cliTheme(target)).toEqual({ id: "thesis", primary: THESIS_PRIMARY })
 
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "bare-ir", file: target })
-    const note = await placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir)
     expect(note).not.toContain("themes/")
     expect(existsSync(join(resultDir, "themes"))).toBe(false)
     expect(existsSync(join(resultDir, "thesis.theme.json"))).toBe(false)
@@ -723,7 +725,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     expect(score.renderOk).toBe(true)
   })
 
-  it("R8: a nested deck project's own themes/ does not shadow the built-in the CLI used", async () => {
+  it("R8: a nested deck project's own themes/ shadows the built-in for the CLI, and that one file travels", async () => {
     setup()
     const deckDir = join(workspace, "deck")
     save(join(deckDir, "deck.spec.json"), fx02Spec("brief"))
@@ -731,14 +733,14 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     const shadow = themeFileFromPreset("brief", { id: "brief" })
     shadow.style.colors.primary = "#0A3D91"
     save(join(deckDir, "themes", "brief.theme.json"), shadow)
-    expect(await cliTheme(deckDir)).toEqual({ id: "brief", primary: BRIEF_PRIMARY })
+    expect(await cliTheme(deckDir)).toEqual({ id: "brief", primary: "#0A3D91" })
 
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "deck-project", dir: deckDir })
-    await placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir)
     expect(existsSync(join(resultDir, "themes"))).toBe(false)
     expect(existsSync(join(resultDir, "pages", "p-cover.json"))).toBe(true)
-    expect(await scoredTheme()).toEqual({ id: "brief", primary: BRIEF_PRIMARY })
+    expect(await scoredTheme()).toEqual({ id: "brief", primary: "#0A3D91" })
   })
 
   it("R3: a loose workspace themes/<id>.json theme the CLI accepted travels under its canonical name", async () => {
@@ -752,7 +754,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "bare-ir", file: target })
-    const note = await placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir)
     expect(note).toContain("sketch.theme.json")
     expect(JSON.parse(readFileSync(join(resultDir, "sketch.theme.json"), "utf8"))).toEqual(sketch)
     expect(existsSync(join(resultDir, "themes"))).toBe(false)
@@ -775,7 +777,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "bare-ir", file: target })
-    await placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir)
     expect(existsSync(join(resultDir, "thesis.json"))).toBe(false)
     expect(existsSync(join(resultDir, "thesis.theme.json"))).toBe(true)
     expect(await scoredTheme()).toEqual({ id: "thesis", primary: "#0A3D91" })
@@ -793,7 +795,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     const located = locateArtifact(workspace)
     // theme files beside the IR are never mistaken for the IR itself
     expect(located).toEqual({ kind: "bare-ir", file: target })
-    const note = await placeArtifact(located, resultDir, workspace)
+    const note = await placeArtifact(located, resultDir)
     expect(note).toContain("sketch.theme.json")
     expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(true)
     expect(existsSync(join(resultDir, "themes"))).toBe(false)
@@ -811,7 +813,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
     const located = locateArtifact(workspace)
     expect(located).toEqual({ kind: "deck-project", dir: deckDir })
-    await placeArtifact(located, resultDir, workspace)
+    await placeArtifact(located, resultDir)
     expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(true)
     expect(existsSync(join(resultDir, "pages", "p-cover.json"))).toBe(true)
     expect(await scoredTheme()).toEqual({ id: "sketch", primary: BRIEF_PRIMARY })
@@ -825,7 +827,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     const target = join(workspace, "deck.json")
     save(target, quoteIr("thesis"))
     save(join(workspace, "themes", "acme.theme.json"), themeFileFromPreset("brief", { id: "acme" }))
-    const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+    const note = await placeArtifact(locateArtifact(workspace), resultDir)
     expect(note).not.toContain("theme")
     expect(readdirSync(resultDir).filter((n) => n !== "workspace")).toEqual(["deck.json"])
   })
@@ -838,7 +840,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
     save(join(deckDir, "theme.json"), themeFileFromPreset("brief", { id: "brief" }))
     await expect(cliTheme(deckDir)).rejects.toThrow(/cannot rebind theme "brief" to "thesis"/)
 
-    const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+    const note = await placeArtifact(locateArtifact(workspace), resultDir)
     expect(note).toMatch(/cannot rebind theme "brief" to "thesis"/)
     expect(existsSync(join(resultDir, "theme.json"))).toBe(false)
     expect(readPlacement()).toMatchObject({ themeName: "thesis", stage: "rebind" })
@@ -894,7 +896,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
       const located = locateArtifact(workspace)
       expect(located).toEqual({ kind: "bare-ir", file: target })
-      const note = await placeArtifact(located, resultDir, workspace)
+      const note = await placeArtifact(located, resultDir)
       expect(note).toMatch(shape.error)
       expect(readdirSync(resultDir).filter((n) => n !== "workspace").sort()).toEqual(["deck.json", "placement.json"])
       expect(readPlacement()).toMatchObject({ themeName: "thesis", stage: "resolve", themeError: expect.stringMatching(shape.error) })
@@ -918,7 +920,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
 
       const located = locateArtifact(workspace)
       expect(located).toEqual({ kind: "deck-project", dir: workspace })
-      const note = await placeArtifact(located, resultDir, workspace)
+      const note = await placeArtifact(located, resultDir)
       expect(note).toMatch(shape.error)
       expect(existsSync(join(resultDir, "themes"))).toBe(false)
       expect(existsSync(join(resultDir, "brief.theme.json"))).toBe(false)
@@ -940,7 +942,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
       const refused = /cannot rebind theme "brief" to "sketch": menus differ/
       await expect(cliTheme(target)).rejects.toThrow(refused)
 
-      const note = await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      const note = await placeArtifact(locateArtifact(workspace), resultDir)
       expect(note).toMatch(refused)
       expect(readPlacement()).toMatchObject({ themeName: "sketch", stage: "rebind", themeError: expect.stringMatching(refused) })
       expect(existsSync(join(resultDir, "sketch.theme.json"))).toBe(false)
@@ -963,7 +965,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
       const refused = /cannot rebind theme "brief" to "sketch": menus differ/
       await expect(cliTheme(workspace)).rejects.toThrow(refused)
 
-      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      await placeArtifact(locateArtifact(workspace), resultDir)
       expect(readPlacement()).toMatchObject({ themeName: "sketch", stage: "rebind" })
       const score = await scoreQuestion("r9", resultDir, { id: "r9" })
       expect(score.validatePass).toBe(false)
@@ -974,7 +976,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
       setup()
       const target = join(workspace, "deck.json")
       save(target, quoteIr("thesis"))
-      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      await placeArtifact(locateArtifact(workspace), resultDir)
       expect(existsSync(join(resultDir, "placement.json"))).toBe(false)
     })
 
@@ -984,7 +986,7 @@ describe("placeArtifact carries the theme the CLI resolved", () => {
       save(target, quoteIr("nonesuch"))
       await expect(cliTheme(target)).rejects.toThrow(/unknown theme "nonesuch"/)
 
-      await placeArtifact(locateArtifact(workspace), resultDir, workspace)
+      await placeArtifact(locateArtifact(workspace), resultDir)
       expect(readPlacement()).toMatchObject({ themeName: "nonesuch", stage: "resolve", themeError: expect.stringMatching(/unknown theme "nonesuch"/) })
       const score = await scoreQuestion("r9", resultDir, { id: "r9" })
       expect(score.validatePass).toBe(false)

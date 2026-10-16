@@ -747,6 +747,14 @@ describe("themeWatchRoots", () => {
     expect(roots.some((root) => root.path === join(dir, "a", "themes", "acme.theme.json"))).toBe(true)
   })
 
+  it("for a deck outside the ceiling, watches only the deck's own themes/, never the chain to the root", () => {
+    const outside = resolve("/elsewhere/deck")
+    const roots = themeWatchRoots("acme", { startDir: outside, deckDir: outside, ceilingDir: ws })
+    expect(roots).toContainEqual({ path: join(outside, "themes", "acme.theme.json"), kind: "file" })
+    expect(roots.some((root) => root.path.startsWith(join(resolve("/elsewhere"), "themes") + sep))).toBe(false)
+    expect(roots.some((root) => root.path.startsWith(join(parse(ws).root, "themes") + sep))).toBe(false)
+  })
+
   it("watches nothing for a name the resolver would refuse", () => {
     expect(themeWatchRoots("../secret", { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])
     expect(themeWatchRoots(undefined, { startDir: "/ws", deckDir: "/ws", ceilingDir: "/ws" })).toEqual([])

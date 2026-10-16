@@ -73,7 +73,7 @@ pptwise themes --json
 按素材写 `deck-dir/deck.spec.json`。spec 锁定叙事、主题、品牌姿态、页脚标记、页面顺序、页型、标题，以及每张内容页的 `kind`。主题先绑你会选的那个。工作区里有主题文件、内容包主题或品牌文件时先用它，否则选 `themes --json` 里 `occasions` 和 `identity` 最贴合的出厂主题。主题名按四级查找：
 
 1. deck 目录。
-2. 从当前目录向上查找工作区 `themes/`。
+2. 从 deck 目录向上查找工作区 `themes/`。
 3. 已装的内容包（`pptwise packs list`）。
 4. 24 个出厂预设。
 

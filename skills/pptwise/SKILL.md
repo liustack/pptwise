@@ -71,7 +71,7 @@ Write both into `deck-dir/materials.md`, in the shape `references/materials.md` 
 Write `deck-dir/deck.spec.json` from the materials. The spec locks narrative, theme, branding posture, footer marks, page order, page type, heading, and the `kind` of every content page. Bind the theme you would pick for now. A theme file, pack theme, or brand file in the workspace comes first. Otherwise take the factory theme whose `occasions` and `identity` in `themes --json` fit best. Theme names resolve in this order:
 
 1. The deck directory.
-2. A workspace `themes/` directory while walking upward.
+2. A workspace `themes/` directory while walking upward from the deck.
 3. Installed content packs (`pptwise packs list`).
 4. The 24 factory presets.
 

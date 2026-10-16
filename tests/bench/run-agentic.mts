@@ -642,13 +642,13 @@ export function locateArtifact(workspaceDir: string): LocatedArtifact {
  * What theme placement found for one artifact, mirrored from the CLI's own
  * lookup (`applyDeckConfig`, src/cli/commands.ts): the bound name resolved
  * through `resolveThemeByName` plus the rebind guard, anchored exactly where
- * the tool loop anchored them — `startDir` is the workspace root the CLI ran
- * in (`doRunPptwise`'s `cwd`), `deckDir` is the IR's own directory or the
- * deck-project directory. Nothing is guessed from file names: a theme file
- * that sits near the artifact but was never on that lookup path (a
- * `themes/` inside a nested deck directory, a stray `<other>.theme.json`) is
- * not a theme the model rendered with, and carrying it would make it a
- * candidate at scoring time and change the result (codex review R8).
+ * the tool loop anchored them: the IR's own directory or the deck-project
+ * directory, and the `themes/` folders from there up, wherever the CLI ran.
+ * Nothing is guessed from file names: a theme file that sits near the
+ * artifact but was never on that lookup path (a `themes/` in a folder beside
+ * the deck, a stray `<other>.theme.json`) is not a theme the model rendered
+ * with, and carrying it would make it a candidate at scoring time and change
+ * the result (codex review R8).
  */
 type ThemeCarry =
   | { kind: "none" }
@@ -727,7 +727,6 @@ async function boundThemeName(
  */
 async function carryResolvedTheme(
   located: Exclude<LocatedArtifact, { kind: "none" }>,
-  workspaceDir: string,
   resultDir: string,
   lookup: CliThemeLookupFn,
 ): Promise<ThemeCarry> {
@@ -742,7 +741,7 @@ async function carryResolvedTheme(
   }
   let resolved: Awaited<ReturnType<CliThemeLookup["resolveThemeByName"]>>
   try {
-    resolved = await cli.resolveThemeByName(id, { startDir: workspaceDir, deckDir })
+    resolved = await cli.resolveThemeByName(id, { startDir: deckDir, deckDir })
   } catch (e) {
     return refused("resolve", e)
   }
@@ -775,13 +774,10 @@ function describeThemeCarry(carry: ThemeCarry, resultDir: string): string {
 /** Copies the located artifact into `resultDir` (the question root
  *  `score.mts` reads), returns a short description for logging. `none`
  *  leaves `resultDir` with only meta.json — a legitimate, recorded failure
- *  (`score.mts`'s "no artifact found" reason), not a thrown error.
- *  `workspaceDir` is the root the CLI ran in during the tool loop, the
- *  `startDir` of its theme lookup (see {@link carryResolvedTheme}). */
+ *  (`score.mts`'s "no artifact found" reason), not a thrown error. */
 export async function placeArtifact(
   located: LocatedArtifact,
   resultDir: string,
-  workspaceDir: string,
   lookup: CliThemeLookupFn = cliThemeLookup,
 ): Promise<string> {
   if (located.kind === "none") return "no artifact found in workspace"
@@ -800,7 +796,7 @@ export async function placeArtifact(
     const assetsSrc = join(artifactDir, "assets")
     const hadAssets = existsSync(assetsSrc)
     if (hadAssets) cpSync(assetsSrc, join(resultDir, "assets"), { recursive: true })
-    const theme = await carryResolvedTheme(located, workspaceDir, resultDir, lookup)
+    const theme = await carryResolvedTheme(located, resultDir, lookup)
     return (
       `copied bare IR ${relative(resultDir, located.file)} -> deck.json` +
       (hadAssets ? ` (+ ${relative(resultDir, assetsSrc)} -> assets/)` : "") +
@@ -814,7 +810,7 @@ export async function placeArtifact(
     const src = join(located.dir, name)
     if (existsSync(src)) cpSync(src, join(resultDir, name), { recursive: true })
   }
-  const theme = await carryResolvedTheme(located, workspaceDir, resultDir, lookup)
+  const theme = await carryResolvedTheme(located, resultDir, lookup)
   return `copied deck project ${relative(resultDir, located.dir)} -> result root` + describeThemeCarry(theme, resultDir)
 }
 
@@ -1302,7 +1298,7 @@ async function placeRun(
   lookup: CliThemeLookupFn = cliThemeLookup,
 ): Promise<string> {
   const located = locateArtifact(workspace)
-  if (located.kind !== "none") return placeArtifact(located, resultDir, workspace, lookup)
+  if (located.kind !== "none") return placeArtifact(located, resultDir, lookup)
   // The final message is only asked for once the workspace has turned up
   // nothing: a fresh run has it in hand, a resumed retry reads it back from
   // transcript.json, and that read must not stand between an intact

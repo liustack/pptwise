@@ -290,7 +290,7 @@ export async function collectDeckThemeInputs(arg: string, opts: { cwd?: string }
   } catch (e) {
     return unreadThemeInputs(e)
   }
-  return collectThemeInputs({ startDir: cwd, ...location })
+  return collectThemeInputs(location)
 }
 
 interface LoadedDeckTarget {
@@ -371,7 +371,7 @@ function assetPathIn(dir: string, cwd: string): (assetId: string) => string {
 
 async function loadDeckTarget(arg: string, cwd: string, projectHit: ProjectConfigHit): Promise<LoadedDeckTarget> {
   const location = await locateDeckTarget(arg, cwd)
-  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  const themeInputs = await collectThemeInputs(location)
   return readDeckTarget(location, themeInputs, cwd, projectHit)
 }
 
@@ -764,7 +764,7 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
     throw new PptwiseError(`pptwise inspect reads a deck project directory (deck.spec.json plus pages/), and ${target} is not one`)
   }
   assertSafeFileSegment(opts.page, "page id")
-  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  const themeInputs = await collectThemeInputs(location)
   const loaded = await readDeckTarget(location, themeInputs, cwd, projectHit, opts.page)
   const theme = (await applyDeckConfig(loaded.raw, themeInputs))?.definition
   if (theme === undefined) throw new PptwiseError(`${SPEC_FILENAME} binds no theme`)
@@ -1067,7 +1067,8 @@ export async function runSchema(opts: SchemaCommandOptions = {}): Promise<string
       assertThemeId(name)
       deckDir = await schemaDeckDir(cwd, opts.deck, name)
     }
-    const resolved = await resolveThemeSelection(opts.theme, { startDir: cwd, deckDir })
+    // With a deck, the lookup walks up from it, as the deck's own build does.
+    const resolved = await resolveThemeSelection(opts.theme, { startDir: deckDir ?? cwd, deckDir })
     schema = kindJsonSchema(opts.kind, {
       theme: resolved?.definition,
       extraThemes: resolved === undefined ? await readablePackDefinitions() : undefined,
@@ -1909,7 +1910,7 @@ async function renderDeckSlides(
   } catch (e) {
     throw new DeckBuildError(e, unreadThemeInputs(e))
   }
-  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  const themeInputs = await collectThemeInputs(location)
   try {
     const { raw, baseDir, isDir, resolvedTarget, workspaceAssetsDir, missingAssetPath } = await readDeckTarget(location, themeInputs, cwd, projectHit)
     const theme = (await applyDeckConfig(raw, themeInputs))?.definition
@@ -2316,7 +2317,7 @@ async function buildDeck(target: string, opts: BuildOptions): Promise<BuildRepor
     return { ...report, status: "needs_revision", errors }
   }
 
-  const themeInputs = await collectThemeInputs({ startDir: cwd, ...location })
+  const themeInputs = await collectThemeInputs(location)
   let loaded: LoadedDeckTarget
   let theme: ThemeDefinition | undefined
   let resolvedTheme: ResolvedTheme | undefined
@@ -2495,7 +2496,7 @@ export async function runAssemble(target: string, opts: AssembleOptions = {}): P
   // assemble bypasses that helper but hands the same spec and definition
   // to readDeckDir's assemble step, whose spec gate reads them.
   const themeInputs = (await isDeckDirectory(dir))
-    ? await collectThemeInputs({ startDir: cwd, resolvedTarget: dir, isDir: true })
+    ? await collectThemeInputs({ resolvedTarget: dir, isDir: true })
     : undefined
   const { ir, deckDir } = await readDeckDir(dir, {
     theme: themeInputs && themeFromInputs(themeInputs)?.definition,

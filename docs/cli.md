@@ -295,7 +295,7 @@ Each theme row also carries its `menu`: the face `cover`, `chapter`, and `ending
 }
 ```
 
-Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward, then installed content packs, then factory presets. Unknown names fail and list every place searched, each installed pack directory included. Deck and workspace files may keep a factory or pack id and shadow that theme. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
+Theme names resolve from the deck directory, then workspace `themes/` directories while walking upward from the deck (from the working directory for a command that takes no deck), then installed content packs, then factory presets. Unknown names fail and list every place searched, each installed pack directory included. Deck and workspace files may keep a factory or pack id and shadow that theme. A theme id is `^[a-z0-9-]+$`. Pass `--force` to overwrite an existing theme file.
 
 ## Brand extraction
 

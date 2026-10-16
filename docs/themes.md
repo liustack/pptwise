@@ -136,7 +136,7 @@ For a bare IR file, the binding is `"theme": { "id": "acme-report" }`.
 Name resolution uses four levels in order:
 
 1. The deck directory. It checks `theme.json`, `<name>.theme.json`, and a matching complete `<name>.json`.
-2. Workspace `themes/` directories while walking upward from the starting directory.
+2. Workspace `themes/` directories while walking upward from the deck (the deck directory, or the folder holding a bare IR file). A command with no deck, such as `theme new` or `theme fork`, walks up from the working directory.
 3. Installed content packs under `$PPTWISE_HOME/packs/`. See [Content packs](./packs.md).
 4. The 24 factory presets.
 

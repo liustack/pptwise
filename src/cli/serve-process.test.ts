@@ -148,10 +148,12 @@ describe.skipIf(!PATH_THROUGH_A_FILE_IS_ENOTDIR)("pptwise serve — the CLI proc
       ].join("\n"),
     )
 
-    // The process resolves the workspace `themes/` under its own `cwd`,
-    // which is the physical path even when the temp directory is reached
-    // through a symlink (`/var` on macOS), so the hook compares that.
-    const cli = await startCli(dir, irPath, {
+    // The process looks for `themes/` from the deck as the path names it,
+    // and its project ceiling is its `cwd`, which is the physical path even
+    // when the temp directory is reached through a symlink (`/var` on
+    // macOS). The deck is named by its physical path too, so both meet and
+    // the hook compares that.
+    const cli = await startCli(dir, await realpath(irPath), {
       NODE_OPTIONS: `--import=${pathToFileURL(hookPath).href}`,
       PPTWISE_TEST_EVENT_PARENT: await realpath(themes),
     })

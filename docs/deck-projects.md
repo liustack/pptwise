@@ -209,6 +209,6 @@ A deck in `decks/` builds to `.pptwise/<name>/`, its path inside `decks/` with h
 
 The output folder follows the deck's path, so a deck that moves builds to a new folder. The old one (its `.pptx`, `written-for.json`, and any pictures pinned there) stays until it is deleted, and the first build in the new place checks every page as strictly as a new deck's until a build draws them all whole. This is one reason a deck that already exists is edited where it is.
 
-A command run from inside `.pptwise/` (from the deck's own folder, say) works for the project that holds that `.pptwise/`. Output lands in the project's `.pptwise/`, never in one nested under the deck, and `theme new` writes to the project's `themes/`. The theme lookup walks up from the working directory as always, through `.pptwise/` to the project's `themes/`.
+A command run from inside `.pptwise/` (from the deck's own folder, say) works for the project that holds that `.pptwise/`. Output lands in the project's `.pptwise/`, never in one nested under the deck, and `theme new` writes to the project's `themes/`. The theme lookup walks up from the deck, through `.pptwise/` to the project's `themes/`, wherever the command runs from.
 
 Because the sources sit in `.pptwise/`, they share its git posture. The first command that writes there keeps the folder out of git, also when the author created it by starting a deck in it. A deck that should be committed belongs somewhere else in the project, or is added with `git add -f`.

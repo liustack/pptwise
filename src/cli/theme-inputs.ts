@@ -37,8 +37,6 @@ import {
 /** The target a build resolved, as `loadDeckTarget` (`./commands.ts`)
  *  resolves it: the deck project directory or the bare IR file. */
 export interface ThemeInputsTarget {
-  /** Where the workspace lookup starts: the working directory. */
-  startDir: string
   resolvedTarget: string
   isDir: boolean
 }
@@ -82,7 +80,10 @@ export async function collectThemeInputs(target: ThemeInputsTarget): Promise<The
     return withKey({ source: undefined, bound: { error: e }, resolved: undefined, localTheme: undefined })
   }
   const name = source.kind === "spec" ? themeNameFromUnknown(source.parsed) : irThemeIdOf(source.parsed)
-  return resolveThemeInputs({ name }, { startDir: target.startDir, deckDir }, source)
+  // The workspace lookup walks up from the deck, never from where the
+  // command runs: a deck binds the same theme whoever builds it from
+  // wherever, and `spec validate` reads the spec the same way.
+  return resolveThemeInputs({ name }, { startDir: deckDir, deckDir }, source)
 }
 
 /** The record of a build that failed before it could read any of its

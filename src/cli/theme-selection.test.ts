@@ -54,14 +54,16 @@ function tmp(prefix: string): Promise<string> {
   return mkdtemp(join(tmpdir(), prefix))
 }
 
-async function writeDeckDir(spec: Record<string, unknown>): Promise<string> {
-  const deckDir = await tmp("pptwise-sel-deck-")
+/** A deck directory, in a fresh temp folder or under `parent` when given (a workspace whose themes/ it should see). */
+async function writeDeckDir(spec: Record<string, unknown>, parent?: string): Promise<string> {
+  const deckDir = parent === undefined ? await tmp("pptwise-sel-deck-") : join(parent, "deck")
+  await mkdir(deckDir, { recursive: true })
   await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(spec))
   return deckDir
 }
 
-async function writeIrFile(raw: unknown): Promise<string> {
-  const d = await tmp("pptwise-sel-ir-")
+async function writeIrFile(raw: unknown, parent?: string): Promise<string> {
+  const d = parent ?? (await tmp("pptwise-sel-ir-"))
   const path = join(d, "deck.json")
   await writeFile(path, JSON.stringify(raw))
   return path
@@ -97,14 +99,17 @@ describe("theme selection chain", () => {
     await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "acme"/)
   })
 
-  it("3. workspace themes/acme.theme.json from a nested startDir -> acme", async () => {
+  it("3. workspace themes/acme.theme.json above a nested deck -> acme, wherever the command runs", async () => {
     const root = await tmp("pptwise-sel-ws-")
     await mkdir(join(root, "themes"))
     await extractTheme(join(root, "themes"), "acme", "acme.theme.json")
-    const nested = join(root, "deep", "cwd")
-    await mkdir(nested, { recursive: true })
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
-    await expect(runValidate(deckDir, nested)).resolves.toMatch(/theme "acme"/)
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme" }), join(root, "deep"))
+    const elsewhere = await tmp("pptwise-sel-elsewhere-")
+    await expect(runValidate(deckDir, elsewhere)).resolves.toMatch(/theme "acme"/)
+    // The lookup walks up from the deck, not from the working directory: a
+    // deck outside the workspace does not see its themes/.
+    const outside = await writeDeckDir(makeDeckPlan({ theme: "acme" }))
+    await expect(runValidate(outside, root)).rejects.toThrow(/unknown theme "acme"/)
   })
 
   it("4. spec.theme=brief with no files -> builtin", async () => {
@@ -151,7 +156,8 @@ describe("theme selection chain", () => {
   })
 
   it("10. rebind to same-menu fork allowed", async () => {
-    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme-blue" }))
+    const cwd = await projectDir()
+    const deckDir = await writeDeckDir(makeDeckPlan({ theme: "acme-blue" }), cwd)
     await extractTheme(deckDir, "acme", "theme.json")
     const bound = JSON.parse(await readFile(join(deckDir, "theme.json"), "utf8")) as {
       id: string
@@ -160,7 +166,6 @@ describe("theme selection chain", () => {
     bound.id = "acme-blue"
     bound.style.id = "acme-blue"
     bound.style.colors.primary = "#0B5FFF"
-    const cwd = await projectDir()
     await mkdir(join(cwd, "themes"))
     await writeFile(join(cwd, "themes", "acme-blue.theme.json"), JSON.stringify(bound))
     await expect(runValidate(deckDir, cwd)).resolves.toMatch(/theme "acme-blue"/)
@@ -197,7 +202,7 @@ describe("theme selection chain", () => {
     const root = await tmp("pptwise-sel-shadow-render-")
     await mkdir(join(root, "themes"))
     const themePath = await extractTheme(join(root, "themes"), "brief", "brief.theme.json")
-    const irPath = await writeIrFile({ ...IR_NO_THEME, theme: { id: "brief" } })
+    const irPath = await writeIrFile({ ...IR_NO_THEME, theme: { id: "brief" } }, root)
     const shadowed = await runPreview(irPath, join(root, "out-shadowed"), { cwd: root })
     expect(shadowed).toContain("wrote")
     const shadowedSvg = await readFile(join(root, "out-shadowed", "001-cover.svg"), "utf8")

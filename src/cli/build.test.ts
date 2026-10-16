@@ -12,7 +12,7 @@ import { BUILTIN_THEME_IDS, type PptxIR } from "../ir"
 import { getThemeDefinition } from "../themes/definitions"
 import { themeShortlist } from "../themes/select"
 import { ALTERNATIVES_DIRNAME, ALTERNATIVES_MAX, alternativeCandidates } from "./build-alternatives"
-import { runBuild, runRender, runThemeNew } from "./commands"
+import { runBuild, runRender, runSpecValidate, runThemeNew } from "./commands"
 
 installNodePlatform()
 
@@ -689,6 +689,20 @@ describe("pptwise build: a deck in .pptwise/decks/", () => {
       const report = await buildFrom(from, target)
       expect(report).toMatchObject({ status: "ok", theme: "acme", themeSource: "file" })
     }
+  })
+
+  it("binds the theme its own project holds, whatever folder the build runs from", async () => {
+    // The lookup walked up from the working directory, so a deck built by its
+    // path from another folder (a host's session folder, say) missed its
+    // project's themes/ and failed on an unknown theme, while spec validate,
+    // walking up from the spec, found it.
+    const { cwd, deck } = await homedDeck((spec) => {
+      spec.theme = "acme"
+    })
+    await runThemeNew({ from: "brief", id: "acme", cwd })
+    const elsewhere = await mkdtemp(join(tmpdir(), "pptwise-build-elsewhere-"))
+    expect(await runSpecValidate(join(deck, "deck.spec.json"))).toMatch(/theme "acme"/)
+    expect(await buildFrom(elsewhere, deck)).toMatchObject({ status: "ok", theme: "acme", themeSource: "file" })
   })
 
   it("keeps .pptwise/ out of git on the first build, though the author created it for the deck", async () => {

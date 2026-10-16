@@ -53,7 +53,7 @@
  * or `cwd` without one), every place the name could resolve to a file
  * (`themeCandidates`, `./theme-resolve.ts`: the deck directory's own
  * `theme.json` / `<name>.theme.json` / `<name>.json`, then `themes/` in each
- * directory from `cwd` up to the root, existing or not; see
+ * directory from the deck up to the root, existing or not; see
  * {@link themeWatchRoots}) is watched, so a theme file that lands there
  * refreshes the preview the moment it lands. That list is recomputed after
  * every build from the theme the spec binds *now*, so rebinding the spec to
@@ -240,11 +240,14 @@ export function themeWatchRoots(
 ): WatchRoot[] {
   if (themeName === undefined || !THEME_ID_PATTERN.test(themeName)) return []
   const ceiling = resolve(opts.ceilingDir)
-  const withinCeiling = new Set<string>()
+  const chain: string[] = []
   for (let dir = resolve(opts.startDir); ; dir = dirname(dir)) {
-    withinCeiling.add(dir)
+    chain.push(dir)
     if (dir === ceiling || dirname(dir) === dir) break
   }
+  // A start outside the ceiling (a deck outside the project) never meets
+  // it, and its chain would run to the root: only its own folder is watched.
+  const withinCeiling = new Set(chain[chain.length - 1] === ceiling ? chain : chain.slice(0, 1))
   return themeCandidates(themeName, opts)
     .filter((candidate) => candidate.deck || withinCeiling.has(resolve(candidate.anchor)))
     .map((candidate) => ({ path: candidate.path, kind: "file" }))
@@ -800,7 +803,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     )
     return watchRoots(resolvedTarget, isDir, [
       { path: workspaceAssets, kind: "dir" },
-      ...themeWatchRoots(watchedThemeName, { startDir: cwd, deckDir, ceilingDir: watchCeiling }),
+      ...themeWatchRoots(watchedThemeName, { startDir: deckDir, deckDir, ceilingDir: watchCeiling }),
     ])
   }
 
