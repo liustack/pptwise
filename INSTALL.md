@@ -179,18 +179,20 @@ command from the registered skill's opening note in place of the launcher.
 The expected output is identical.
 
 **3. Content packs, only when the user has a license.** If the user gave you
-a pptwise license key, save it and install the packs it covers now:
+a pptwise license key, log in with it now. This checks the key, saves it, and
+installs the packs it covers:
 
 ```bash
-bash ~/.claude/skills/pptwise/scripts/run.sh license set <key>
-bash ~/.claude/skills/pptwise/scripts/run.sh packs sync
+bash ~/.claude/skills/pptwise/scripts/run.sh login <key>
 ```
 
-These write into the pptwise home folder (`~/.pptwise`), which is why they
-belong to installation: making a deck writes nothing there, so it also works
-in an agent sandbox whose home folder is read-only. Run `packs sync` again
-when the license changes or to pick up newer packs. Without a license, skip
-this.
+Relay what it prints. A key whose purchase is still being reviewed is saved,
+and `bash ~/.claude/skills/pptwise/scripts/run.sh sync` installs the packs once
+the review clears. Login writes into the pptwise home folder (`~/.pptwise`),
+which is why it belongs to installation: making a deck writes nothing there,
+so it also works in an agent sandbox whose home folder is read-only. Run `sync`
+again when the license changes or to pick up newer packs. Without a license,
+skip this.
 
 **If it fails:**
 - The launcher printed a JSON diagnosis and exited 78 -> no runtime could run

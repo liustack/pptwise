@@ -140,7 +140,7 @@ Name resolution uses four levels in order:
 3. Installed content packs under `$PPTWISE_HOME/packs/`. See [Content packs](./packs.md).
 4. The 24 factory presets.
 
-Deck and workspace files may shadow a factory preset or a pack theme by keeping the same id. A pack theme never takes a preset's id, since `pptwise packs sync` refuses such a pack. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from brief -o deck-dir/theme.json --id brief`. Unknown names fail loudly and report the searched locations.
+Deck and workspace files may shadow a factory preset or a pack theme by keeping the same id. A pack theme never takes a preset's id, since `pptwise sync` refuses such a pack. Freeze is a copy that preserves the bound name, for example `pptwise theme new --from brief -o deck-dir/theme.json --id brief`. Unknown names fail loudly and report the searched locations.
 
 A folded name is read as the preset it folded into before the first level is searched: `arena` and `playbill` resolve as `rally`, and `heritage` as `luxe`. Validation then draws the deck exactly as the new name would and prints a warning that names the edit to make. No file can take a folded or renamed id back, so a `theme.json` that still carries one is refused with the name to use instead.
 

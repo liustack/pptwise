@@ -1,8 +1,8 @@
 ---
-summary: '客户端视角的内容包：license key、login 与 logout、packs sync 与 packs list、包服务器的两个接口、包文件格式、本地安装状态，以及包内主题在主题查找里的位置'
+summary: '客户端视角的内容包：license key、login、sync 与 logout、旧写法 license 与 packs、包服务器的两个接口、包文件格式、本地安装状态，以及包内主题在主题查找里的位置'
 read_when:
   - 登录、退出，或设置、查看、清除 license key
-  - 运行或排查 `pptwise packs sync`，或读它的 `--json` 报告
+  - 运行或排查 `pptwise sync`，或读它的 `--json` 报告
   - 某个包被跳过或拒装，或者包内主题解析不到
   - 用 `PPTWISE_PACKS_URL` 把 CLI 指向镜像或测试服务器
   - 制作或检查一个包文件
@@ -10,7 +10,7 @@ read_when:
 
 # 内容包
 
-内容包是一份带版本的压缩包，里面是 license key 解锁的额外主题。`pptwise packs sync` 下载 license 覆盖的包，装到 `$PPTWISE_HOME/packs/` 下。之后包里的主题和工作区主题一样按名解析，`pptwise themes --json` 也会列出它们。
+内容包是一份带版本的压缩包，里面是 license key 解锁的额外主题。`pptwise login <key>` 保存 key 并把它覆盖的包装到 `$PPTWISE_HOME/packs/` 下，之后用 `pptwise sync` 更新。装好后包里的主题和工作区主题一样按名解析，`pptwise themes --json` 也会列出它们。
 
 CLI 和包服务器之间只约定本文描述的接口，协议版本 1。
 
@@ -18,36 +18,34 @@ CLI 和包服务器之间只约定本文描述的接口，协议版本 1。
 
 ```bash
 pptwise login [key] [--json]
+pptwise sync [--json]
 pptwise logout
-pptwise license set <key>
-pptwise license status
-pptwise license clear
-pptwise packs sync [--json]
-pptwise packs list [--json]
 ```
 
-`login` 是一步到位的入口：校验 key 的形状，向服务器的目录接口确认它认不认这个 key，像 `license set` 一样保存 key，再用同一份目录响应像 `packs sync` 一样安装内容包。不给 `[key]` 时用隐藏输入询问。stdin 不是终端时打印用法并以 1 退出。形状不对的 key 在发请求之前就被拒绝。之后按目录接口的回应处理（见 [`GET /api/packs/catalog`](#get-apipackscatalog)）：
+### login
+
+`login` 是一步到位的入口：校验 key 的形状，向服务器的目录接口确认它认不认这个 key，保存 key，再用同一份目录响应像 `sync` 一样安装内容包。不给 `[key]` 时用隐藏输入询问。stdin 不是终端时打印用法并以 1 退出。形状不对的 key 在发请求之前就被拒绝。key 的形状是 `ptw_` 加 32 个 `a-z` 与 `2-7` 之间的字符，共 36 个字符。key 是否有效由服务器回答，不由 CLI 判断。key 写入 `$PPTWISE_HOME/license.json`，内容是 `{"key": "ptw_..."}`，只有本人可读（权限 0600）。之后按目录接口的回应处理（见 [`GET /api/packs/catalog`](#get-apipackscatalog)）：
 
 | 回应 | key | 内容包 | 退出码 |
 | --- | --- | --- | --- |
-| `200` | 保存 | 像 `packs sync` 一样同步 | 0，有包失败时为 1（key 仍保存，稍后跑 `packs sync`） |
+| `200` | 保存 | 像 `sync` 一样同步 | 0，有包失败时为 1（key 仍保存，稍后跑 `sync`） |
 | `401` | 不保存 | 不动 | 1 |
 | `403` | 不保存 | 不动 | 1 |
-| `423` | 保存 | 不同步：审核通过后跑 `packs sync` | 0 |
+| `423` | 保存 | 不同步：审核通过后跑 `sync` | 0 |
 | 无响应、其他状态 | 不保存 | 不动 | 1 |
 
-不保存时，之前保存的 key 原样保留。连不上服务器时，可以用 `license set` 先离线保存 key，之后再跑 `packs sync`。`--json` 输出 `{"outcome", "ok", "saved", "server"}`：被拒时带 `status` 和 `message`（服务器的说明，或请求失败的原因），key 被接受时带 `sync`（即下文的 `packs sync` 报告）。`outcome` 取 `accepted`、`held`（423）、`unknown`（401）、`revoked`（403）或 `failed`。`logout` 和 `license clear` 一样删除已保存的 key，已装的包保留。
+不保存时，之前保存的 key 原样保留。连不上服务器时，可以用 `license set`（见[旧写法](#旧写法)）先离线保存 key，之后再跑 `sync`。`--json` 输出 `{"outcome", "ok", "saved", "server"}`：被拒时带 `status` 和 `message`（服务器的说明，或请求失败的原因），key 被接受时带 `sync`（即下文的同步报告）。`outcome` 取 `accepted`、`held`（423）、`unknown`（401）、`revoked`（403）或 `failed`。
 
-`license set` 校验 key 的形状，写入 `$PPTWISE_HOME/license.json`，内容是 `{"key": "ptw_..."}`，只有本人可读（权限 0600）。key 的形状是 `ptw_` 加 32 个 `a-z` 与 `2-7` 之间的字符，共 36 个字符。key 是否有效由服务器回答，不由 CLI 判断。`license status` 说明是否已配置 key，只显示前 8 个字符。`license clear` 删除这个文件，已装的包保留。
+### sync
 
-`packs sync` 是安装步骤：`login` 会跑一次，换了 license、审核通过后或想装新版内容包时再跑。它和 `config set`、`login`、`logout`、`license set`、`license clear` 是仅有的会写 `$PPTWISE_HOME` 的命令。做 deck 只读已装的包，所以主目录只读时也能做。它读取 license，向服务器要目录，把目录里的每个包更新到位：
+`sync` 是安装步骤：`login` 会跑一次，`self-update` 升级后会用新版本跑一次，换了 license、审核通过后或想装新版内容包时再跑。`pptwise doctor` 会提示它有没有东西可装。它和 `config set`、`login`、`logout` 是仅有的会写 `$PPTWISE_HOME` 的命令。做 deck 只读已装的包，所以主目录只读时也能做。它读取 license，向服务器要目录，把目录里的每个包更新到位：
 
 - 没有 license 时只打印一行并以 0 退出，所以安装脚本可以无条件调用它。
 - 本地已装且版本与目录一致的包不动，不下载任何东西。
 - 本地缺失或版本不同的包，下载、校验后安装（见[安装前的检查](#安装前的检查)）。
 - `engine` 范围不包含当前 pptwise 版本的包会跳过，并提示更新 pptwise。已装的旧版本保留。
 - 某个包校验失败或下载中断时，报告原因且不安装。其他包照常同步。之前装的版本（如有）原样保留。
-- 目录读不到时（断网、401、403、423、503、响应无法解析），磁盘上什么都不变，命令会说明原因。遇到 423 时会提示审核通过后再跑 `packs sync`。
+- 目录读不到时（断网、401、403、423、503、响应无法解析），磁盘上什么都不变，命令会说明原因。遇到 423 时会提示审核通过后再跑 `sync`。
 
 每个包都已安装、已是最新，或因 engine 范围跳过时，退出码为 0。目录读不到或任一包失败时，退出码为 1。
 
@@ -66,7 +64,23 @@ pptwise packs list [--json]
 
 `status` 取值为 `installed`、`updated`（附 `previous`，即被替换的版本）、`current`、`incompatible`（附 `reason`）或 `failed`（附 `reason`）。目录失败时 `ok` 为 `false`，`packs` 为空，原因写在 `error`。没有 license 时报告为 `{"license": false, "ok": true, "packs": []}`。
 
-`packs list` 列出每个已装包的版本、标题和主题 id。`--json` 输出同样内容的数组，附每个包的目录和每个主题的文件路径。
+### logout
+
+`logout` 删除 license 文件。已装的包保留，照常可用。
+
+### 旧写法
+
+pptwise 0.48 发布过这几条命令。它们照常可用，只是不再出现在 `pptwise --help` 里。
+
+```bash
+pptwise license set <key>
+pptwise license status
+pptwise license clear
+pptwise packs sync [--json]
+pptwise packs list [--json]
+```
+
+`license set` 校验 key 的形状后直接保存，不问服务器。`license status` 说明是否已配置 key，只显示前 8 个字符。`license clear` 等于 `logout`，`packs sync` 等于 `sync`，报告也一样。`packs list` 列出每个已装包的版本、标题和主题 id。`--json` 输出同样内容的数组，附每个包的目录和每个主题的文件路径。
 
 ## 服务器
 
@@ -158,7 +172,7 @@ $PPTWISE_HOME/                 （缺省为 ~/.pptwise）
 
 安装时先解到 `packs/<id>/` 旁边的隐藏目录，再整体换入，所以一个包永远是某一个完整版本，不会是两个版本各半。`packs/` 下以 `.` 开头的条目是进行中的安装，永远不会被当成包读取。
 
-`packs/` 下不是可读包的目录（没有 `pack.json`、清单写的是另一个 id、列出的主题文件缺失或没通过主题文件检查、带了与出厂预设或已退役 id 重名的主题，或者带了其他已装包也有的主题 id）会连同路径和修复方法一起报出来。`packs sync` 从不安装这样的包，所以它们只会来自手动修改或复制的包。`themes` 与 `schema --kind` 按同一套检查判定一个包。目录里仍然列出的包，`packs sync` 会重新安装。其他这样的目录请手动删除。在修好之前：
+`packs/` 下不是可读包的目录（没有 `pack.json`、清单写的是另一个 id、列出的主题文件缺失或没通过主题文件检查、带了与出厂预设或已退役 id 重名的主题，或者带了其他已装包也有的主题 id）会连同路径和修复方法一起报出来。`sync` 从不安装这样的包，所以它们只会来自手动修改或复制的包。`themes` 与 `schema --kind` 按同一套检查判定一个包。目录里仍然列出的包，`sync` 会重新安装。其他这样的目录请手动删除。在修好之前：
 
 - 查找出厂预设的名字时不读包，因为包不允许带这些 id，所以预设照常可用。
 - 查找其他名字会失败，因为这个名字可能就在坏掉的包里。

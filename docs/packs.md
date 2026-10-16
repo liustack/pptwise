@@ -1,8 +1,8 @@
 ---
-summary: 'Content packs from the client side: the license key, login and logout, packs sync and packs list, the two pack-server endpoints, the pack archive format, local install state, and where pack themes sit in the theme lookup'
+summary: 'Content packs from the client side: the license key, login, sync and logout, the older license and packs spellings, the two pack-server endpoints, the pack archive format, local install state, and where pack themes sit in the theme lookup'
 read_when:
   - logging in or out, or setting up, checking, or clearing a license key
-  - running or debugging `pptwise packs sync`, or reading its `--json` report
+  - running or debugging `pptwise sync`, or reading its `--json` report
   - a pack was skipped or refused, or a pack theme does not resolve
   - pointing the CLI at a mirror or a test server with `PPTWISE_PACKS_URL`
   - building or checking a pack archive
@@ -10,7 +10,7 @@ read_when:
 
 # Content packs
 
-A content pack is a versioned archive of extra themes that a license key unlocks. `pptwise packs sync` downloads the packs a license covers and installs them under `$PPTWISE_HOME/packs/`. From then on their themes resolve by name like workspace themes, and `pptwise themes --json` lists them.
+A content pack is a versioned archive of extra themes that a license key unlocks. `pptwise login <key>` saves the key and installs the packs it covers under `$PPTWISE_HOME/packs/`, and `pptwise sync` brings them up to date later. From then on their themes resolve by name like workspace themes, and `pptwise themes --json` lists them.
 
 The CLI and the pack server agree only on the interface described here, protocol version 1.
 
@@ -18,36 +18,34 @@ The CLI and the pack server agree only on the interface described here, protocol
 
 ```bash
 pptwise login [key] [--json]
+pptwise sync [--json]
 pptwise logout
-pptwise license set <key>
-pptwise license status
-pptwise license clear
-pptwise packs sync [--json]
-pptwise packs list [--json]
 ```
 
-`login` is the one-step way in: it checks the key's shape, asks the server's catalog whether it knows the key, saves the key the way `license set` does, and installs packs from that same catalog answer the way `packs sync` does. Without `[key]` it asks for the key at a hidden prompt. When stdin is not a terminal it prints the usage and exits 1. A malformed key is refused before any request. What happens next depends on the catalog's answer (see [`GET /api/packs/catalog`](#get-apipackscatalog)):
+### login
+
+`login` is the one-step way in: it checks the key's shape, asks the server's catalog whether it knows the key, saves the key, and installs packs from that same catalog answer the way `sync` does. Without `[key]` it asks for the key at a hidden prompt. When stdin is not a terminal it prints the usage and exits 1. A malformed key is refused before any request. A key is `ptw_` followed by 32 characters from `a-z` and `2-7`, 36 characters in all. Whether a key is valid is the server's answer, not the CLI's. The key is written to `$PPTWISE_HOME/license.json` as `{"key": "ptw_..."}`, readable by the owner only (mode 0600). What happens next depends on the catalog's answer (see [`GET /api/packs/catalog`](#get-apipackscatalog)):
 
 | answer | key | packs | exit |
 | --- | --- | --- | --- |
-| `200` | saved | synced as `packs sync` does | 0, or 1 when a pack failed (the key stays saved: run `packs sync` later) |
+| `200` | saved | synced as `sync` does | 0, or 1 when a pack failed (the key stays saved: run `sync` later) |
 | `401` | not saved | untouched | 1 |
 | `403` | not saved | untouched | 1 |
-| `423` | saved | not synced: run `packs sync` once the review clears | 0 |
+| `423` | saved | not synced: run `sync` once the review clears | 0 |
 | no answer, other status | not saved | untouched | 1 |
 
-A key that is not saved leaves any key saved earlier in place. When the server cannot be reached, `license set` saves the key offline for a later `packs sync`. `--json` prints `{"outcome", "ok", "saved", "server"}`, with `status` and `message` (the server's sentence, or why the request failed) for a refusal, and `sync` (the `packs sync` report below) for an accepted key. `outcome` is `accepted`, `held` (423), `unknown` (401), `revoked` (403), or `failed`. `logout` removes the saved key, as `license clear` does. Installed packs stay installed.
+A key that is not saved leaves any key saved earlier in place. When the server cannot be reached, `license set` (see [Older spellings](#older-spellings)) saves the key offline for a later `sync`. `--json` prints `{"outcome", "ok", "saved", "server"}`, with `status` and `message` (the server's sentence, or why the request failed) for a refusal, and `sync` (the sync report below) for an accepted key. `outcome` is `accepted`, `held` (423), `unknown` (401), `revoked` (403), or `failed`.
 
-`license set` checks the key's shape and writes it to `$PPTWISE_HOME/license.json` as `{"key": "ptw_..."}`, readable by the owner only (mode 0600). A key is `ptw_` followed by 32 characters from `a-z` and `2-7`, 36 characters in all. Whether a key is valid is the server's answer, not the CLI's. `license status` says whether a key is configured and shows its first eight characters, never more. `license clear` deletes the file. Installed packs stay installed.
+### sync
 
-`packs sync` is an installation step: `login` runs it once, and it runs again when the license changes, after a review clears, or to pick up newer packs. With `config set`, `login`, `logout`, and `license set` and `clear`, it is one of the only commands that write `$PPTWISE_HOME`. Making a deck only reads the installed packs, so it works where the home folder is read-only. It reads the license, asks the server for its catalog, and brings every listed pack up to date:
+`sync` is an installation step: `login` runs it once, `self-update` runs it with the new version after an update, and it runs again when the license changes, after a review clears, or to pick up newer packs. `pptwise doctor` says when it has something to install. With `config set`, `login`, and `logout`, it is one of the only commands that write `$PPTWISE_HOME`. Making a deck only reads the installed packs, so it works where the home folder is read-only. It reads the license, asks the server for its catalog, and brings every listed pack up to date:
 
 - Without a license it prints one line and exits 0, so an install script can run it unconditionally.
 - A pack already installed at the catalog's version is left alone. Nothing is downloaded.
 - A pack missing locally or at another version is downloaded, checked, and installed (see [Before install](#before-install)).
 - A pack whose `engine` range does not include the running pptwise is skipped with a note to update pptwise. An installed older version stays.
 - A pack that fails a check, or whose download breaks off, is reported and not installed. Other packs still sync. The version installed before, if any, stays in place.
-- When the catalog cannot be read (no network, 401, 403, 423, 503, an unreadable body), nothing on disk changes and the command says why. On 423 it says to run `packs sync` again once the review clears.
+- When the catalog cannot be read (no network, 401, 403, 423, 503, an unreadable body), nothing on disk changes and the command says why. On 423 it says to run `sync` again once the review clears.
 
 The exit code is 0 when every pack is installed, current, or skipped for its engine range, and 1 when the catalog could not be read or any pack failed.
 
@@ -66,7 +64,23 @@ The exit code is 0 when every pack is installed, current, or skipped for its eng
 
 `status` is one of `installed`, `updated` (with `previous`, the version it replaced), `current`, `incompatible` (with `reason`), or `failed` (with `reason`). A catalog failure sets `ok` to `false`, leaves `packs` empty, and puts the message in `error`. Without a license the report is `{"license": false, "ok": true, "packs": []}`.
 
-`packs list` prints each installed pack with its version, title, and theme ids. `--json` prints the same as an array with each pack's directory and each theme's file path.
+### logout
+
+`logout` deletes the license file. Installed packs stay installed and keep working.
+
+### Older spellings
+
+pptwise 0.48 shipped these. They keep working and are left out of `pptwise --help`.
+
+```bash
+pptwise license set <key>
+pptwise license status
+pptwise license clear
+pptwise packs sync [--json]
+pptwise packs list [--json]
+```
+
+`license set` checks the key's shape and saves it without asking the server. `license status` says whether a key is configured and shows its first eight characters, never more. `license clear` is `logout`, and `packs sync` is `sync`, report included. `packs list` prints each installed pack with its version, title, and theme ids. `--json` prints the same as an array with each pack's directory and each theme's file path.
 
 ## Server
 
@@ -158,7 +172,7 @@ $PPTWISE_HOME/                 (default ~/.pptwise)
 
 An install unpacks into a hidden directory beside `packs/<id>/` and then swaps the whole directory in, so a pack is always one complete version, never half of two. Entries of `packs/` whose names start with `.` are installs in progress and are never read as packs.
 
-A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing or failing the theme file checks, a theme with a factory preset's or a retired id, or a theme id another installed pack also ships) is reported with its path and the way to repair it. `packs sync` never installs any of these, so they come from a pack edited or copied by hand. `themes` and `schema --kind` judge a pack by the same checks. `packs sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand. Until then:
+A directory under `packs/` that is not a readable pack (no `pack.json`, a manifest naming another id, a listed theme file missing or failing the theme file checks, a theme with a factory preset's or a retired id, or a theme id another installed pack also ships) is reported with its path and the way to repair it. `sync` never installs any of these, so they come from a pack edited or copied by hand. `themes` and `schema --kind` judge a pack by the same checks. `sync` reinstalls a pack the catalog still lists. Remove any other such directory by hand. Until then:
 
 - A lookup for a factory preset's name never reads the packs, since no pack may ship that id, so presets keep working.
 - A lookup for any other name fails, since the name may be in the damaged pack.

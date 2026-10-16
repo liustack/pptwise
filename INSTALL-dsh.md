@@ -109,18 +109,19 @@ fine, a wildly different one is not.
 
 ## Step 4: Content packs, only when the user has a license
 
-If the user gave you a pptwise license key, save it and install the packs it
-covers now, in the dsh terminal:
+If the user gave you a pptwise license key, log in with it now, in the dsh
+terminal. This checks the key, saves it, and installs the packs it covers:
 
 ```sh
-node <path>/dist/cli.js license set <key>
-node <path>/dist/cli.js packs sync
+node <path>/dist/cli.js login <key>
 ```
 
-These write into the pptwise home folder (`~/.pptwise`), which is why they
-belong to installation: making a deck writes nothing there. Run `packs sync`
-again when the license changes or to pick up newer packs. Without a license,
-skip this step.
+Relay what it prints. A key whose purchase is still being reviewed is saved,
+and `node <path>/dist/cli.js sync` installs the packs once the review clears.
+Login writes into the pptwise home folder (`~/.pptwise`), which is why it
+belongs to installation: making a deck writes nothing there. Run `sync` again
+when the license changes or to pick up newer packs. Without a license, skip
+this step.
 
 ## If it fails
 

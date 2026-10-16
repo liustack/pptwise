@@ -61,18 +61,14 @@ Fill no more than four pages between validation passes, and read each page's con
 | `config set` | Set optional user configuration. |
 | `config show` | Show effective user configuration with secrets masked. |
 | `login [key]` | Check a license key with the pack server, save it, and install the packs it covers. |
+| `sync` | Install or update the content packs a license covers. |
 | `logout` | Remove the saved license key and keep installed packs. |
-| `license set <key>` | Save the license key that unlocks content packs, without asking the server. |
-| `license status` | Show whether a license key is configured. |
-| `license clear` | Remove the saved license key. |
-| `packs sync` | Install or update the content packs a license covers. |
-| `packs list` | List installed packs and their themes. |
 | `init` | Create `pptwise.config.json` in the current directory. |
 | `preview <target>` | Write SVG pages and an optional self-contained review file. |
 | `serve <target>` | Start a live-reloading review server. |
-| `doctor` | Check runtime, skill copies, plugin state, optional capabilities, and a self-test render. |
+| `doctor` | Check runtime, skill copies, plugin state, optional capabilities, a self-test render, and pack updates. |
 | `check-update` | Check npm for a newer release. |
-| `self-update` | Update the global installation. |
+| `self-update` | Update the global installation, then sync content packs with it. |
 
 `layouts` exposes engine vocabulary for maintainers. Deck authors and authoring agents choose content `kind`, never internal face ids.
 
@@ -404,7 +400,21 @@ Serve watches the IR or project sources, including deck-local `theme.json`, and 
 
 ```bash
 pptwise login [key] [--json]
+pptwise sync [--json]
 pptwise logout
+```
+
+A content pack is a versioned set of extra themes unlocked by a license key. `login` is the one step to get them: it checks the key's shape, asks the pack server whether it knows the key, saves it to `$PPTWISE_HOME/license.json` (readable by the owner only), and installs the packs it covers, as `sync` would. Without `[key]` it asks for the key at a hidden prompt, and when stdin is not a terminal it exits 1 with the usage instead. A key the server does not know (401) or has revoked (403) is not saved. A key whose purchase is still being reviewed (423) is saved and nothing is installed yet: run `sync` once the review clears. When the server cannot be reached, nothing is saved. When the key is accepted but a pack fails to install, the key stays saved and the command exits 1.
+
+`sync` installs every pack the license covers that is missing or at another version, after checking its sha256, its `pack.json`, its engine range, and each theme file. A pack for a newer pptwise is skipped with a note to update. Without a license it prints one line and exits 0. A failed sync leaves installed packs as they were, and exits 1. `self-update` runs it with the new version after an update, and `doctor` says when it has something to install. `PPTWISE_PACKS_URL` points it at another server, which must be https (plain http only on `localhost`, `127.0.0.1`, or `::1`). See [Content packs](./packs.md) for the protocol, the archive format, and the `--json` reports.
+
+`logout` removes the saved key. Installed packs stay in place and keep working.
+
+### Older spellings
+
+pptwise 0.48 shipped these. They keep working and are left out of `pptwise --help`.
+
+```bash
 pptwise license set <key>
 pptwise license status
 pptwise license clear
@@ -412,11 +422,7 @@ pptwise packs sync [--json]
 pptwise packs list [--json]
 ```
 
-A content pack is a versioned set of extra themes unlocked by a license key. `login` is the one step to get them: it checks the key's shape, asks the pack server whether it knows the key, saves it, and installs the packs it covers, as `packs sync` would. Without `[key]` it asks for the key at a hidden prompt, and when stdin is not a terminal it exits 1 with the usage instead. A key the server does not know (401) or has revoked (403) is not saved. A key whose purchase is still being reviewed (423) is saved and nothing is installed yet: run `packs sync` once the review clears. When the server cannot be reached, nothing is saved, and `license set` saves the key offline for a later `packs sync`. When the key is accepted but a pack fails to install, the key stays saved and the command exits 1. `logout` removes the saved key, like `license clear`, and installed packs stay in place.
-
-`license set` checks the key's shape and saves it to `$PPTWISE_HOME/license.json`, readable by the owner only. `license status` shows at most the key's first eight characters. `license clear` removes the key and leaves installed packs in place.
-
-`packs sync` installs every pack the license covers that is missing or at another version, after checking its sha256, its `pack.json`, its engine range, and each theme file. A pack for a newer pptwise is skipped with a note to update. Without a license it prints one line and exits 0. A failed sync leaves installed packs as they were, and exits 1. `PPTWISE_PACKS_URL` points it at another server, which must be https (plain http only on `localhost`, `127.0.0.1`, or `::1`). See [Content packs](./packs.md) for the protocol, the archive format, and the `--json` report.
+`license set` checks the key's shape and saves it without asking the server, the way to keep a key when the server cannot be reached. Run `sync` later. `license status` shows at most the key's first eight characters. `license clear` is `logout`, and `packs sync` is `sync`. `packs list` prints each installed pack with its version and theme ids.
 
 ## Configuration and health
 
@@ -429,9 +435,11 @@ pptwise check-update
 pptwise self-update
 ```
 
-Only `config set`, `login`, `logout`, `license set`, `license clear`, and `packs sync` write the pptwise home folder (`$PPTWISE_HOME`, default `~/.pptwise`). Every command that makes or checks a deck at most reads it, and takes the defaults when its config cannot be read, so decks build where the home folder is read-only or missing. Run `login` and `packs sync` at installation, not per deck.
+Only `config set`, `login`, `sync`, `logout`, `self-update` (through the sync it runs), and the older `license` and `packs sync` write the pptwise home folder (`$PPTWISE_HOME`, default `~/.pptwise`). Every command that makes or checks a deck at most reads it, and takes the defaults when its config cannot be read, so decks build where the home folder is read-only or missing. Run `login` at installation, not per deck.
 
-Omit a secret value from `config set` to enter it through a hidden prompt. `doctor` exits with code 1 only on a hard failure. Optional `sharp` and LibreOffice capabilities are reported separately.
+Omit a secret value from `config set` to enter it through a hidden prompt. `doctor` exits with code 1 only on a hard failure. Optional `sharp` and LibreOffice capabilities are reported separately. With a license configured, `doctor` makes one request to the pack catalog and reports how many packs `sync` would install or update, or a saved key the server does not know, has revoked, or holds while its purchase is reviewed. A server it cannot reach is reported as not checked, never as a failure. `--json` carries this as `packs`, with `state` one of `none`, `current`, `updates` (with `updates`), `unknown-key`, `revoked`, `held`, or `unchecked` (with `message`).
+
+`self-update` installs the latest release with npm. When it updated and a license is configured, it then runs `sync` in the newly installed CLI, since the running process still holds the old code. A failed sync prints a note and leaves the update's exit code alone.
 
 The first command that writes into `.pptwise/` keeps it out of git two ways, also when the folder already holds a `decks/` the author started a deck in: it writes `.pptwise/.gitignore` holding `*`, and adds `.pptwise/` to the repository's local exclude file. Either alone is enough, so a `.git` that cannot be written (some agent sandboxes) only costs a note. `--no-git-ignore` skips both. Your shared `.gitignore` is never touched.
 

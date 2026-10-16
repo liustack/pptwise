@@ -61,18 +61,14 @@ pptwise preview deck-dir/ --html
 | `config set` | 设置可选用户配置。 |
 | `config show` | 显示已生效配置，秘密会遮盖。 |
 | `login [key]` | 向包服务器校验 license，保存它，并安装它覆盖的内容包。 |
+| `sync` | 安装或更新 license 覆盖的内容包。 |
 | `logout` | 删除已保存的 license，已装的包保留。 |
-| `license set <key>` | 保存解锁内容包的 license，不询问服务器。 |
-| `license status` | 显示是否已配置 license。 |
-| `license clear` | 删除已保存的 license。 |
-| `packs sync` | 安装或更新 license 覆盖的内容包。 |
-| `packs list` | 列出已装内容包及其主题。 |
 | `init` | 在当前目录创建 `pptwise.config.json`。 |
 | `preview <target>` | 写出 SVG 页面与可选的自包含评审文件。 |
 | `serve <target>` | 启动自动刷新的评审服务。 |
-| `doctor` | 检查运行时、skill 副本、插件状态、可选能力与自检渲染。 |
+| `doctor` | 检查运行时、skill 副本、插件状态、可选能力、自检渲染与内容包更新。 |
 | `check-update` | 检查 npm 是否有新版本。 |
-| `self-update` | 更新全局安装。 |
+| `self-update` | 更新全局安装，再用新版本同步内容包。 |
 
 `layouts` 暴露的是维护者使用的引擎词汇。Deck 作者与创作 agent 只选择内容 `kind`，不写内部脸 id。
 
@@ -404,7 +400,21 @@ Serve 监听 IR 或项目源文件，包括 deck 本地的 `theme.json`，并刷
 
 ```bash
 pptwise login [key] [--json]
+pptwise sync [--json]
 pptwise logout
+```
+
+内容包是一组带版本的额外主题，由 license 解锁。`login` 一步拿到它们：校验 key 的形状，问包服务器认不认这个 key，存进 `$PPTWISE_HOME/license.json`（只有本人可读），再像 `sync` 一样安装它覆盖的包。不给 `[key]` 时用隐藏输入询问，stdin 不是终端时改为打印用法并以 1 退出。服务器不认识（401）或已吊销（403）的 key 不保存。付款还在人工审核中（423）的 key 会保存，但暂不安装：审核通过后跑 `sync`。连不上服务器时什么都不保存。key 被接受但有包没装上时，key 照样保存，命令以 1 退出。
+
+`sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 pptwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`self-update` 升级后会用新版本跑一次它，`doctor` 会提示它有没有东西可装。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [内容包](./packs.zh-CN.md)。
+
+`logout` 删除已保存的 key。已装的包保持原样，照常可用。
+
+### 旧写法
+
+pptwise 0.48 发布过这几条命令。它们照常可用，只是不再出现在 `pptwise --help` 里。
+
+```bash
 pptwise license set <key>
 pptwise license status
 pptwise license clear
@@ -412,11 +422,7 @@ pptwise packs sync [--json]
 pptwise packs list [--json]
 ```
 
-内容包是一组带版本的额外主题，由 license 解锁。`login` 一步拿到它们：校验 key 的形状，问包服务器认不认这个 key，保存它，再像 `packs sync` 一样安装它覆盖的包。不给 `[key]` 时用隐藏输入询问，stdin 不是终端时改为打印用法并以 1 退出。服务器不认识（401）或已吊销（403）的 key 不保存。付款还在人工审核中（423）的 key 会保存，但暂不安装：审核通过后跑 `packs sync`。连不上服务器时什么都不保存，可以用 `license set` 先离线保存，之后再跑 `packs sync`。key 被接受但有包没装上时，key 照样保存，命令以 1 退出。`logout` 和 `license clear` 一样删除已保存的 key，已装的包保持原样。
-
-`license set` 校验 key 的形状后存进 `$PPTWISE_HOME/license.json`，只有本人可读。`license status` 最多显示 key 的前 8 个字符。`license clear` 删除 key，已装的包保持原样。
-
-`packs sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 pptwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [内容包](./packs.zh-CN.md)。
+`license set` 校验 key 的形状后直接保存，不问服务器，适合连不上服务器时先把 key 存下，之后再跑 `sync`。`license status` 最多显示 key 的前 8 个字符。`license clear` 等于 `logout`，`packs sync` 等于 `sync`。`packs list` 列出每个已装的包、版本和主题 id。
 
 ## 配置与体检
 
@@ -429,9 +435,11 @@ pptwise check-update
 pptwise self-update
 ```
 
-只有 `config set`、`login`、`logout`、`license set`、`license clear` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`login` 和 `packs sync` 在安装时跑，不按 deck 跑。
+只有 `config set`、`login`、`sync`、`logout`、`self-update`（通过它跑的同步），以及旧写法 `license` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`login` 在安装时跑，不按 deck 跑。
 
-设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。
+设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。配置了 license 时，`doctor` 会请求一次包目录，报告 `sync` 有几个包可装或可更新，或者已保存的 key 服务器不认识、已吊销、付款在审核中。连不上服务器记为未检查，不算失败。`--json` 里这部分是 `packs`，`state` 取 `none`、`current`、`updates`（带 `updates`）、`unknown-key`、`revoked`、`held` 或 `unchecked`（带 `message`）。
+
+`self-update` 用 npm 安装最新版。升级成功且配置了 license 时，它接着在新装的 CLI 里跑 `sync`，因为当前进程还是旧代码。同步失败只打印提示，不影响升级本身的退出码。
 
 第一次往 `.pptwise/` 里写东西的命令用两种办法让它不进 git（作者先在里面建了 `decks/` 放 deck 时也一样）：在里面写一个内容为 `*` 的 `.pptwise/.gitignore`，并把 `.pptwise/` 加进仓库本地 exclude 文件。任一种都够用，所以 `.git` 不可写时（有些 agent 沙箱就是这样）只多一条提示。`--no-git-ignore` 两样都跳过。共享的 `.gitignore` 永远不动。
 
