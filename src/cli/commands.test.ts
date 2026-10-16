@@ -518,25 +518,28 @@ describe("runAssetBrief with no image component", () => {
     const ir = { ...VALID_IR, theme: { id: "vermilion" } }
     await writeFile(join(d, "deck.json"), JSON.stringify(ir))
     const report = await runAssetBrief(join(d, "deck.json"), { cwd: d })
-    expect(report).toContain("no page in this deck holds an image component yet")
+    expect(report).toContain("no page in this deck holds a picture yet")
     expect(report).toContain("every photo page takes a picture")
     expect(report).not.toContain("vermilion")
   })
 
-  it("names the picture components the brief does not list", async () => {
+  it("briefs every item of an image grid, each with its slot", async () => {
     const d = await mkdtemp(join(tmpdir(), "pptwise-brief-grid-"))
     const ir = {
       ...VALID_IR,
       assets: { images: { a: { src: "logo.png" }, b: { src: "logo.png" } } },
       slides: [
         VALID_IR.slides[0],
-        { type: "content", kind: "photo", heading: "Two views", components: [{ type: "image_grid", items: [{ asset_id: "a" }, { asset_id: "b" }] }] },
+        { type: "content", kind: "photo", heading: "Two views", components: [{ type: "image_grid", items: [{ asset_id: "a" }, { asset_id: "b", caption: "Dock" }] }] },
       ],
     }
     await writeFile(join(d, "logo.png"), PNG_1PX)
     await writeFile(join(d, "deck.json"), JSON.stringify(ir))
     const report = await runAssetBrief(join(d, "deck.json"), { cwd: d })
-    expect(report).toContain("image_grid, image_compare, device_mockup and page backgrounds are not listed here.")
+    expect(report).toContain("page 2 (content) — a in image_grid items[0]")
+    expect(report).toContain("page 2 (content) — b in image_grid items[1]")
+    expect(report).toContain('  caption: "Dock"')
+    expect(report).toMatch(/2 picture frames, 0 to source, 0 not drawn by their page's layout$/)
   })
 })
 

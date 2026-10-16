@@ -155,7 +155,7 @@ program
 program
   .command("asset-brief")
   .description(
-    "Image-generation brief for every image slot in a deck: the real rendered frame, fit/crop mode, suggested pixel size, theme palette/mood, and a paste-ready prompt",
+    "Brief for every picture frame in a deck (image, image_grid items, image_compare sides, device_mockup screens, page backgrounds): the real rendered frame, fit/crop mode, suggested pixel size, theme palette/mood, and a paste-ready prompt",
   )
   .argument("<target>", "IR JSON file or deck project directory")
   .option("--json", "machine-readable output (the full AssetBrief)")

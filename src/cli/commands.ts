@@ -816,27 +816,22 @@ export async function runInspect(target: string, opts: InspectOptions): Promise<
 // ── asset-brief ──────────────────────────────────────────────────────────
 
 /**
- * `"page 3 (p-kpi, content) — pic (missing): frame 613x307 @ (571,203), aspect
- * 2:1, cover ..."` — one block per {@link AssetBriefItem}, grouped naturally
- * by page order (`buildAssetBrief` pushes items in slide/document order, same
- * convention {@link formatAuditFinding} relies on for audit findings). A
- * `rendered: false` item prints without the frame/pixel lines (there is
- * nothing real to report — {@link buildAssetBrief}'s own doc comment) but
- * still gets its palette/mood/prompt lines, matching the brief's own "never
- * silently drop it" contract. A `shared` item (>=2 `image` components on the
- * page reference the same `asset_id`) gets an explicit "(shared by N image
- * slots, frame not attributable to one)" header suffix — this asset_id's
- * frames are real but which specific component each one belongs to cannot be
- * determined from the render (`buildAssetBrief`'s own doc comment), so the
- * report says so instead of implying a pairing it can't back up.
+ * `"page 3 (content, p-kpi) — pic (missing): frame 613x307 @ (571,203), aspect
+ * 2:1, cover ..."`: one block per {@link AssetBriefItem}, in page order
+ * (`buildAssetBrief` pushes items in slide order, each page's background
+ * first). A picture that is not a plain `image` names what holds it, such as
+ * `in image_grid items[1]` or `in background`. A `rendered: false` item
+ * prints without the frame and pixel lines, there being nothing real to
+ * report, but keeps its palette, mood and prompt lines. A picture the page
+ * names in more than one frame says so: one picture has to suit each of them.
  */
 function formatAssetBriefItem(item: AssetBriefItem): string {
   const idSuffix = item.page.id !== undefined ? `, ${item.page.id}` : ""
-  const sharedSuffix = item.shared
-    ? ` (shared by ${item.occurrenceCount} image slots, frame not attributable to one)`
-    : ""
-  const header = `page ${item.page.index + 1} (${item.page.type}${idSuffix}) — ${item.asset_id}${item.missing ? " (missing)" : ""}${item.rendered ? "" : " (not rendered under the selected layout)"}${sharedSuffix}`
+  const holder = item.kind === "image" ? "" : ` in ${item.kind}${item.slot !== undefined ? ` ${item.slot}` : ""}`
+  const sharedSuffix = item.shared ? ` (one picture for ${item.occurrenceCount} frames on this page)` : ""
+  const header = `page ${item.page.index + 1} (${item.page.type}${idSuffix}) — ${item.asset_id}${holder}${item.missing ? " (missing)" : ""}${item.rendered ? "" : " (not drawn by this page's layout)"}${sharedSuffix}`
   const lines = [header]
+  if (item.caption !== undefined) lines.push(`  caption: ${JSON.stringify(item.caption)}`)
   if (item.frame && item.suggested_pixels) {
     lines.push(
       `  frame: ${item.frame.w}x${item.frame.h} @ (${item.frame.x},${item.frame.y}), aspect ${item.frame.aspect}, ${item.fit.mode}`,
@@ -850,15 +845,13 @@ function formatAssetBriefItem(item: AssetBriefItem): string {
   return lines.join("\n")
 }
 
-/** What `asset-brief` prints for a deck with no `image` component yet. */
-const EMPTY_ASSET_BRIEF = [
-  "no page in this deck holds an image component yet, so there is no frame to brief. The theme does not decide this: the brief reads the image components the pages hold. Write one into a page (every photo page takes a picture) and run asset-brief again.",
-  "image_grid, image_compare, device_mockup and page backgrounds are not listed here.",
-].join("\n")
+/** What `asset-brief` prints for a deck whose pages hold no picture yet. */
+const EMPTY_ASSET_BRIEF =
+  "no page in this deck holds a picture yet, so there is no frame to brief. The theme does not decide this: the brief reads the picture frames the pages hold (image, image_grid, image_compare, device_mockup, and background pictures). Write one into a page (every photo page takes a picture) and run asset-brief again."
 
 /**
- * Human-readable `pptwise asset-brief` report (asset-brief plan, task 1):
- * one {@link formatAssetBriefItem} block per image slot, followed by a
+ * Human-readable `pptwise asset-brief` report: one
+ * {@link formatAssetBriefItem} block per picture frame, followed by a
  * trailing summary line in the same "read just the last line" spirit
  * {@link formatAuditReport} already established for `audit`.
  */
@@ -866,14 +859,13 @@ function formatAssetBriefReport(brief: AssetBrief): string {
   // An empty brief says what the deck lacks, never what the theme lacks:
   // the old wording ("no image components found for theme X") read as a
   // verdict on the theme, and a model took it to mean the theme draws no
-  // pictures. Every factory theme draws a photo page's picture. The brief lists
-  // the `image` components the pages already hold.
+  // pictures.
   if (brief.items.length === 0) return EMPTY_ASSET_BRIEF
   const missingCount = brief.items.filter((i) => i.missing).length
   const notRenderedCount = brief.items.filter((i) => !i.rendered).length
   const lines = brief.items.map(formatAssetBriefItem)
   lines.push(
-    `${brief.items.length} image slot${brief.items.length === 1 ? "" : "s"}, ${missingCount} to generate, ${notRenderedCount} not rendered under their selected layout`,
+    `${brief.items.length} picture frame${brief.items.length === 1 ? "" : "s"}, ${missingCount} to source, ${notRenderedCount} not drawn by their page's layout`,
   )
   return lines.join("\n\n")
 }

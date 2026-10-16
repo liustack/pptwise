@@ -161,20 +161,11 @@ describe("buildAssetBrief — component never rendered under the selected layout
   })
 })
 
-describe("buildAssetBrief — shared asset_id across multiple components on one page", () => {
-  // Reviewer repro: a face draws two `image` components on one page
-  // (memo-sheet stacks both, one above the other). Two *different* `image`
-  // components legally share one `asset_id` (bare string, no uniqueness
-  // constraint — `src/ir/index.ts`) — since both resolve to the exact same
-  // dummy href, the rendered SVG offers no way to tell which `<image>`
-  // belongs to which component (href-based attribution is impossible in
-  // principle, not just unimplemented). The fix this test pins: never guess
-  // (the previous `Array.prototype.shift()`-off-a-FIFO-queue logic silently
-  // paired frames to occurrences in DOM/extraction order, which is *not*
-  // `slide.components` order on the face this was found on, so the queue was
-  // backwards and every frame was swapped) — instead emit one honest, explicitly `shared` item per real
-  // rendered frame, both present, neither claiming a specific component.
-  it("emits one shared item per rendered frame, both real frames present and correctly valued, no swapped attribution claim", () => {
+describe("buildAssetBrief — one asset_id named by two frames on one page", () => {
+  // memo-sheet stacks two `image` components, one above the other. Both name
+  // the same picture. Each frame is drawn under a key of its own, so each item
+  // reports its own component's frame, in the order the page names them.
+  it("reports each frame against its own component, and marks the picture as shared", () => {
     const themeId = registerTestTheme(`asset-brief-${themeSerial++}`, "brief", {
       content: { photo: "memo-sheet" },
     })
@@ -191,25 +182,103 @@ describe("buildAssetBrief — shared asset_id across multiple components on one 
         ],
       } as Slide,
     ])
-    const brief = buildAssetBrief(ir)
-    const sharedItems = brief.items.filter((i) => i.asset_id === "shared")
-    expect(sharedItems).toHaveLength(2)
-    expect(sharedItems.every((i) => i.shared === true)).toBe(true)
-    expect(sharedItems.every((i) => i.occurrenceCount === 2)).toBe(true)
-    expect(sharedItems.every((i) => i.rendered === true)).toBe(true)
-    const frames = sharedItems.map((i) => i.frame)
-    // Upper and lower frames must both survive, as a set. Order is
-    // DOM/extraction order, not a claim about which component produced
-    // which frame.
-    expect(frames).toContainEqual(expect.objectContaining({ x: 240, y: 186, w: 976, h: 200 }))
-    expect(frames).toContainEqual(expect.objectContaining({ x: 240, y: 440, w: 976, h: 200 }))
+    const items = buildAssetBrief(ir).items
+    expect(items.map((i) => [i.asset_id, i.field, i.shared, i.occurrenceCount])).toEqual([
+      ["shared", "slides.0.components.0.asset_id", true, 2],
+      ["shared", "slides.0.components.2.asset_id", true, 2],
+    ])
+    expect(items[0]!.frame).toMatchObject({ x: 240, y: 186, w: 976, h: 200 })
+    expect(items[1]!.frame).toMatchObject({ x: 240, y: 440, w: 976, h: 200 })
   })
 
-  it("single-occurrence pages are unaffected: no `shared`/`occurrenceCount` fields, same output shape as before", () => {
+  it("leaves `shared` and `occurrenceCount` off a picture named once", () => {
     const item = buildAssetBrief(probeDeck()).items[0]!
     expect(item.shared).toBeUndefined()
     expect(item.occurrenceCount).toBeUndefined()
     expect(item.kind).toBe("image")
+    expect(item.field).toBe("slides.0.components.0.asset_id")
+  })
+})
+
+describe("buildAssetBrief — every picture frame, not only image", () => {
+  it("lists a cover's background picture as a full-slide frame the words are set over", () => {
+    const ir = deck("brief", [
+      { type: "cover", id: "c", heading: "Q3 review", background: { kind: "asset", asset_id: "cover" }, components: [] } as unknown as Slide,
+    ])
+    const [item] = buildAssetBrief(ir).items
+    expect(item).toMatchObject({
+      asset_id: "cover",
+      kind: "background",
+      field: "slides.0.background.asset_id",
+      missing: true,
+      rendered: true,
+      frame: { x: 0, y: 0, w: 1280, h: 720, aspect: "16:9" },
+    })
+    expect(item!.fit.note).toContain("The page's words are set over this picture")
+  })
+
+  it("lists every item of an image grid with its slot and caption", () => {
+    const ir = deck("brief", [
+      {
+        type: "content",
+        kind: "photo",
+        id: "g",
+        heading: "Three sites",
+        components: [
+          { type: "image_grid", items: [{ asset_id: "a", caption: "North" }, { asset_id: "b", caption: "South" }, { asset_id: "c" }] } as unknown as Component,
+        ],
+      } as Slide,
+    ])
+    const items = buildAssetBrief(ir).items
+    expect(items.map((i) => [i.asset_id, i.kind, i.slot, i.caption, i.rendered])).toEqual([
+      ["a", "image_grid", "items[0]", "North", true],
+      ["b", "image_grid", "items[1]", "South", true],
+      ["c", "image_grid", "items[2]", undefined, true],
+    ])
+    const xs = items.map((i) => i.frame!.x)
+    expect(new Set(xs).size).toBe(3)
+  })
+
+  it("lists both sides of an image comparison under their labels", () => {
+    const ir = deck("brief", [
+      {
+        type: "content",
+        kind: "comparison",
+        id: "cmp",
+        heading: "Before and after",
+        components: [
+          { type: "image_compare", left: { asset_id: "before", label: "2019" }, right: { asset_id: "after", label: "2024" } } as unknown as Component,
+        ],
+      } as Slide,
+    ])
+    const items = buildAssetBrief(ir).items
+    expect(items.map((i) => [i.asset_id, i.kind, i.slot, i.caption, i.field])).toEqual([
+      ["before", "image_compare", "left", "2019", "slides.0.components.0.left.asset_id"],
+      ["after", "image_compare", "right", "2024", "slides.0.components.0.right.asset_id"],
+    ])
+    expect(items.every((i) => i.rendered)).toBe(true)
+    expect(items[0]!.frame!.x).toBeLessThan(items[1]!.frame!.x)
+  })
+
+  it("lists a device's screen and says to use a real screenshot", () => {
+    const ir = deck("brief", [
+      {
+        type: "content",
+        kind: "evidence",
+        id: "app",
+        heading: "The new checkout",
+        components: [{ type: "device_mockup", device: "browser", asset_id: "screen", caption: "Checkout, step 2" } as unknown as Component],
+      } as Slide,
+    ])
+    const [item] = buildAssetBrief(ir).items
+    expect(item).toMatchObject({ asset_id: "screen", kind: "device_mockup", caption: "Checkout, step 2", rendered: true })
+    expect(item!.fit.note).toContain("use a real screenshot of the product, never a generated picture of an interface")
+  })
+
+  it("does not list the brand logo, which is not a picture to source", () => {
+    const ir = probeDeck()
+    ir.brand = { logo_asset_id: "logo" } as PptxIR["brand"]
+    expect(buildAssetBrief(ir).items.map((i) => i.asset_id)).toEqual(["pic"])
   })
 })
 

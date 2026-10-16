@@ -351,7 +351,7 @@ pptwise images list --deck <dir>
 pptwise images generate --deck <dir> --as <asset_id> [--prompt <text>]
 ```
 
-`asset-brief` 列出页面里的每个 `image` 组件，给出真实画框、裁切、安全区、配色和提示词。它不列 `image_grid`、`image_compare`、`device_mockup` 和页面背景。页面里还没有 `image` 组件时，它只打印一行说明这一点：这不由主题决定，每个出厂主题的 `photo` 页都会画出图。
+`asset-brief` 列出页面里的每一个图框：每个 `image`，`image_grid` 的每一项（`slot` 为 `items[n]`），`image_compare` 的左右两边（`left`、`right`），`device_mockup` 的屏幕，以及每页的背景图，页面自己的或主题对这种页型的默认背景。每一项写明 `kind`、指名这张图的 `field`（例如 `slides.2.components.0.items.1.asset_id`）、deck 在图旁放的 `caption` 或标签，并给出真实画框、裁切、安全区、配色和提示词。铺满整页的背景会注明页面的字压在它上面，设备屏幕会注明要用真实截图。同一页在多个画框里指名同一张图时标为 `shared`，每个画框各自报告。页面版式不画的画框以 `rendered: false` 列出。品牌 logo 不在其中。页面里还没有图时，它只打印一行说明这一点：这不由主题决定，每个出厂主题的 `photo` 页都会画出图。
 
 搜索依次检查 Pexels、已配置的 Pixabay 和经过商业用途过滤的 Openverse 来源。每条结果带上图库自己对这张图的描述（Pexels 的 alt 文字、Pixabay 的标签、Openverse 的标题），图库没给就不带。`--json` 把同样的结果打印成 `{ query, hits, notes }`，每条 hit 带 `images fetch` 要用的 `id`。结果按顺序编号。`--sheet` 还会下载每张缩略图，拼成一张 JPEG，每张图压着自己的编号，写到 `.pptwise/image-search/<query>.jpg` 或你给的文件，并打印路径（`--json` 里是 `sheet`）。看这一张图就能挑，再按编号对应的 id 去 fetch。下不到的缩略图，搜索结果里有原图就用原图画，没有就画叉，并在说明里点名。Fetch 和 generate 把图存成 `<asset_id>.jpg`，旁边带来源 sidecar `<asset_id>.json`。目标是 deck 项目时，图写进这个 deck 自己的 `assets/`，deck 按文件名登记它们，所以 deck 换目录图也跟着走。目标是单个 IR 文件时，图写到 `.pptwise/<place>/assets/`。旧版本给 deck 项目存在 `.pptwise/<place>/assets/` 的图，deck 不挪位置时照样能用。要挪位置，先把它们复制进 deck 的 `assets/`。Generate 使用已启用的本地生成器，省略 `--prompt` 时读取 asset brief 提示词。生成器被沙箱挡住、写不了自己的主目录时（`Operation not permitted`、`EPERM`、`FS_PERMISSION_DENIED`），报错会点名这个生成器并给出办法：在沙箱外运行这条命令，或在宿主里允许它写自己的主目录。把它的登录文件复制到别处不算办法。
 
