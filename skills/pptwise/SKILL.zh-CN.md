@@ -98,6 +98,7 @@ pptwise theme try --title "<cover title>" --subtitle "<subtitle>" --occasion <wo
 - 每张 `content` 页必须显式写且只写一个 `kind`。
 - 作者只写语义 `kind`，从不选择页面的脸或几何。
 - `focus` 与 `summary` 是可选写作提示。
+- 除非用户说了不要图，至少一张内容页是 `photo` 页，素材里有地方、产品、人物或作品可以展示时更多。每个出厂主题都画得出它的图：主题按场合选，不为配图换主题。
 
 用户说了页数，spec 就正好是那么多页，封面和结尾页都算在内。不要为了过检查加页或删页。
 

@@ -354,6 +354,23 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
     expect(images.indexOf("Search works with no setup.")).toBeLessThan(images.indexOf("pptwise config set pexels.apiKey"))
   })
 
+  it("plans at least one photo page unless the user said no pictures, and never changes theme for one", () => {
+    // A model once picked a theme, wrote no photo page, read an empty
+    // asset-brief as "this theme has no pictures" and shipped a deck with
+    // none. Every factory theme draws a photo page's picture.
+    const en = read(EN_REL)
+    const zh = read(ZH_REL)
+    expect(en).toContain("- Unless the user said not to show pictures, at least one content page is a `photo` page")
+    expect(en).toContain("pick the theme for the occasion, never for pictures")
+    expect(zh).toContain("- 除非用户说了不要图，至少一张内容页是 `photo` 页")
+    expect(zh).toContain("主题按场合选，不为配图换主题")
+    expect(read(REF("spec.md"))).toContain("Unless the user said not to show pictures, at least one content page is a `photo` page")
+    expect(read(REF("spec.zh-CN.md"))).toContain("除非用户说了不要图，至少一张内容页是 `photo` 页")
+    for (const rel of [REF("spec.md"), REF("spec.zh-CN.md")]) expect(read(rel)).toContain('"kind": "photo"')
+    expect(read(REF("images.md"))).toContain("The spec holds at least one `photo` page")
+    expect(read(REF("images.zh-CN.md"))).toContain("spec 里至少一张 `photo` 页")
+  })
+
   it("keeps stock-image and live-review operational commands", () => {
     for (const rel of [REF("images.md"), REF("images.zh-CN.md")]) {
       const text = read(rel)

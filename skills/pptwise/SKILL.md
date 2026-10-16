@@ -96,6 +96,7 @@ Start a new deck project in `.pptwise/decks/<name>/` under the project folder (t
 - Every `content` page requires exactly one explicit `kind`.
 - Authors write only a semantic `kind`, never a page face or geometry choice.
 - `focus` and `summary` are optional writing hints.
+- Unless the user said not to show pictures, at least one content page is a `photo` page, more when the material has places, products, people, or work to show. Every factory theme draws its picture: pick the theme for the occasion, never for pictures.
 
 When the user names a page count, the spec has exactly that many pages, the cover and the ending included. Never add or drop pages to get past a check.
 

@@ -154,11 +154,14 @@ A valid deck spec opens with `cover`, closes with `ending`, and uses `content` o
     { "id": "decision", "type": "content", "kind": "points", "heading": "Two actions protect the annual target" },
     { "id": "options", "type": "content", "kind": "comparison", "heading": "The focused plan wins on payback" },
     { "id": "economics", "type": "content", "kind": "data", "heading": "Margin recovers before year end" },
+    { "id": "line", "type": "content", "kind": "photo", "heading": "The new line is running" },
     { "id": "delivery", "type": "content", "kind": "process", "heading": "Three releases close the gap" },
     { "id": "close", "type": "ending", "heading": "Approve the focused plan" }
   ]
 }
 ```
+
+Unless the user said not to show pictures, at least one content page is a `photo` page, more when the material has places, products, people, or work to show. It counts inside a page count the user named. Every factory theme draws a `photo` page's picture, so pick the theme for the occasion, never for pictures. The picture itself is sourced while filling, see `images.md`.
 
 The spec contains no page geometry or render selection state. Do not add retired author fields. Page files later contain only fillable content and never repeat `type`, `kind`, or `heading`.
 

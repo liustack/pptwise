@@ -159,11 +159,14 @@ pptwise theme fork acme --brand '#0B5FFF' --id acme-blue
     { "id": "decision", "type": "content", "kind": "points", "heading": "两项动作守住全年目标" },
     { "id": "options", "type": "content", "kind": "comparison", "heading": "聚焦方案回报更快" },
     { "id": "economics", "type": "content", "kind": "data", "heading": "利润率在年末前恢复" },
+    { "id": "line", "type": "content", "kind": "photo", "heading": "新产线已经投产" },
     { "id": "delivery", "type": "content", "kind": "process", "heading": "三次发布补齐缺口" },
     { "id": "close", "type": "ending", "heading": "批准聚焦方案" }
   ]
 }
 ```
+
+除非用户说了不要图，至少一张内容页是 `photo` 页，素材里有地方、产品、人物或作品可以展示时更多。用户给了页数时，它算在这个页数里。每个出厂主题的 `photo` 页都画得出图，所以主题按场合选，不为配图换主题。图本身在填充时找，见 `images.md`。
 
 spec 不含页面几何或渲染选择状态。不要加入已退役的作者字段。后续页面文件只装可填内容，不重复 `type`、`kind` 或 `heading`。
 
