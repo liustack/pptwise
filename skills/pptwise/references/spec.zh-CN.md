@@ -78,7 +78,7 @@ pptwise theme fork acme --brand '#0B5FFF' --id acme-blue
 
 1. deck 目录，包括 `theme.json` 与具名主题 JSON。
 2. 从 deck 向上查找的工作区 `themes/`。
-3. 已装的内容包，位于 `$PPTWISE_HOME/packs/`，安装时由 `pptwise packs sync` 装好。
+3. 已装的内容包，位于 `$PPTWISE_HOME/packs/`，安装时由 `pptwise login <key>` 装好。
 4. 出厂预设。
 
 工作区里的同名文件会遮住包内主题。包内主题的 id 不会与出厂预设重名。

@@ -284,13 +284,16 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
   it("installs content packs at setup, never per deck, and resolves names in four levels", () => {
     for (const rel of [EN_REL, ZH_REL]) {
       const text = read(rel)
-      // `packs sync` writes the pptwise home folder, and making a deck must
-      // not, so it is an installation step: named before the per-deck
+      // `login` and `sync` write the pptwise home folder, and making a deck
+      // must not, so they are installation steps: named before the per-deck
       // commands, and never one of them.
-      expect(text).not.toMatch(/^pptwise packs sync$/m)
-      expect(text.indexOf("`pptwise packs sync`")).toBeGreaterThan(-1)
-      expect(text.indexOf("`pptwise packs sync`")).toBeLessThan(text.indexOf("pptwise schema --spec"))
-      expect(text).toMatch(/(Never run `login`, `license set`, or `packs sync` as part of a deck task|不要在 deck 任务里运行 `login`、`license set` 或 `packs sync`)/)
+      expect(text).not.toMatch(/^pptwise (login|sync)\b/m)
+      for (const command of ["`pptwise login <key>`", "`pptwise sync`"]) {
+        expect(text.indexOf(command)).toBeGreaterThan(-1)
+        expect(text.indexOf(command)).toBeLessThan(text.indexOf("pptwise schema --spec"))
+      }
+      expect(text).not.toContain("packs sync")
+      expect(text).toMatch(/(Never run `login`, `sync`, or `logout` as part of a deck task|不要在 deck 任务里运行 `login`、`sync` 或 `logout`)/)
     }
     expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
     expect(read(ZH_REL)).toMatch(/2\. 从 deck 目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
