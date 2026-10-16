@@ -160,6 +160,8 @@ function catalogFailure(server: string, e: unknown): string {
         return `the pack server did not accept this license key (${e.message}). Check it with \`pptwise license status\` and set it again with \`${SET_HINT}\`. ${UNCHANGED}`
       case 403:
         return `this license key has been revoked (${e.message}). ${UNCHANGED}`
+      case 423:
+        return `the pack server is holding this license key while its purchase is reviewed (${e.message}). Run \`pptwise packs sync\` again once the review clears. ${UNCHANGED}`
       case 503:
         return `the pack server is not available right now (${e.message}). Try again later. ${UNCHANGED}`
       default:

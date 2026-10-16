@@ -4,7 +4,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { KEY, REVOKED, publish, sendJson, startServer, type FakePackServer } from "./__fixtures__/pack-server"
+import { HELD, KEY, REVOKED, publish, sendJson, startServer, type FakePackServer } from "./__fixtures__/pack-server"
 import { runLicenseSet } from "./license"
 import { listInstalledPacks } from "./store"
 import { VERSION } from "../../version"
@@ -207,6 +207,19 @@ describe("packs sync with a license", () => {
     const json = await runPacksSync({ json: true, env: { PPTWISE_PACKS_URL: server.url } })
     expect(json.failed).toBe(true)
     expect(JSON.parse(json.output)).toMatchObject({ ok: false, error: expect.stringMatching(/revoked/) })
+  })
+
+  it("tells a key held for review to sync again once the review clears, and changes nothing", async () => {
+    await publish(server, { id: "sample", version: "2026.1.0", themes: ["sample-brief"] })
+    await sync()
+    await runLicenseSet(HELD)
+    const report = await sync()
+    expect(report.ok).toBe(false)
+    expect(report.error).toMatch(/This purchase is being reviewed/)
+    expect(report.error).toContain("`pptwise packs sync` again once the review clears")
+    expect(report.error).not.toMatch(/revoked/)
+    expect(report.error).toMatch(/installed packs are unchanged/i)
+    expect(await installedVersions()).toEqual([["sample", "2026.1.0"]])
   })
 
   it("reports a server that is not configured", async () => {
