@@ -48,6 +48,7 @@ pptwise preview deck-dir/ --html
 | `theme new` | 把命名主题拷贝为自包含 v2 文件。 |
 | `theme fork` | 拷贝主题，围绕一个品牌色或几个指定锚色重新上色。 |
 | `theme try` | 用两到四个主题渲染固定试衣样稿，或用任意多个主题渲染调用方自己的封面和一页正文。 |
+| `brand scan [dir]` | 找出项目里的 logo 文件、图片、品牌色、字体和 Office 模板。 |
 | `brand extract` | 用 Office 模板的品牌色和字体给一个主题重新上色。 |
 | `narratives` | 列出命名叙事预设与三轴。 |
 | `icons` | 列出 `icon` 字段接受的全部图标名。 |
@@ -303,6 +304,25 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
 ```
 
 抽取完全在本机运行。它读出模板的品牌色（`accent1`）和第二个颜色（`accent2`），按 `theme fork --brand` 的同一套规则给 `--from` 指定的主题重新上色，写出完整 v2 主题。主题默认保留自己的字体。`--brand-fonts` 改把模板的西文字体排在最前，中文字体永不替换。字体不在导出安全名单上时（这时它根本不生效），或没有精确字宽表时（长行可能溢出），命令会给出警告。模板的背景色、文字色和其余强调色都不使用。`--from` 默认是 `bulletin`：在测过的品牌色里，它是能原样把品牌色放在门面上的商务主题。
+
+## 品牌素材检索
+
+```bash
+pptwise brand scan [dir] [--json]
+```
+
+`brand scan` 读出项目里已有的品牌素材，让用户在规划 deck 之前就能被问清配色、主题和配图。`dir` 默认是项目目录（有 `pptwise.config.json` 的那个），没有就是当前目录。它报告：
+
+- `logos`：名字像 logo 的文件（`logo`、`wordmark`、`brand`、`emblem`、favicon 或触屏图标），带尺寸。SVG 的 `deckReady` 是 `false`，`images add` 会把它转成 PNG。
+- `images`：长边至少 1000 px、短边至少 500 px 的 PNG、JPEG、WebP 和 GIF 图片，从大到小，带横竖。
+- `colors`：样式表（自定义属性、Sass 和 Less 变量、普通 `color` 和 `background` 声明里的颜色）、Tailwind 与设计 token 文件、web manifest、HTML 页面 `theme-color` 里找到的每个颜色，连同项目给它起的名字。名字里有 `brand`、`primary`、`theme-color`、`accent`、`secondary` 的分量更重。状态、文字、底色、灰色一类的名字（`danger`、`foreground`、`background`、`muted`、`gray`）几乎不算数。`neutral` 标出灰、黑、白。
+- `fonts`：每个字体栈打头的字体、Tailwind 的 `fontFamily`、Google Fonts 链接，以及 Office 模板的字体。
+- `office`：`.potx`、`.thmx`、`.pptx` 文件，各带配色方案名、`accent1` 和 `accent2`、字体。方案名叫 `Office` 的是自带的默认主题，说明不了品牌。
+- `brand`：证据指向的品牌色和第二色。有 Office 模板带着自己的配色方案时取模板的（模板优先于 deck），否则取带名字的颜色里分量最重的，再取色相不同的下一个。只被用过、从没起过名字的颜色不会被选上。
+- `next`：`--brand` 的值，以及用上它的 `theme try`、`theme fork`、`brand extract` 命令行，尖括号里是要替换的占位。
+- `summary`：一句话，文本报告第一行就打印它。
+
+检索只在本机进行，而且有上限。它不跟随符号链接，跳过隐藏目录（包括 `.git` 和 `.pptwise/`）、依赖目录、构建产物、缓存和测试目录。名字表明是机密的文件（`.env`、密钥、凭据、密码）不论扩展名都不打开。它最多看 20,000 个目录项、往下十层，最多读 400 个样式、token、manifest 和 HTML 文件的前 256 KB，图片只读文件头，Office 文件最多打开六个、每个不超过 64 MB。被上限截断的检索会设 `scanned.truncated`，摘要里也会说明。
 
 ## 叙事与引擎检查
 

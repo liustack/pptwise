@@ -48,6 +48,7 @@ Fill no more than four pages between validation passes, and read each page's con
 | `theme new` | Copy a named theme into a self-contained v2 file. |
 | `theme fork` | Copy a theme and repaint it around one brand color, or around exact anchor colors. |
 | `theme try` | Render the fixed fitting-room sample across two to four themes, or the caller's own cover and one content page across any number of themes. |
+| `brand scan [dir]` | Find a project's logo files, pictures, brand colors, fonts, and Office templates. |
 | `brand extract` | Repaint a theme around an Office template's brand color and fonts. |
 | `narratives` | List named narrative presets and axes. |
 | `icons` | List every icon name an `icon` field accepts. |
@@ -303,6 +304,25 @@ pptwise brand extract <file.thmx|file.potx|file.pptx> \
 ```
 
 Extraction is local. It reads the template's brand color (its `accent1`) and second color (its `accent2`), repaints the `--from` theme around them the way `theme fork --brand` does, and writes a complete v2 theme. The theme keeps its own fonts. `--brand-fonts` puts the template's Latin fonts first instead, never its Chinese ones, and warns when a font is not export-safe (it then has no effect) or has no exact width table (long lines may overflow). The template's background, text, and other accent colors are not used. `--from` defaults to `bulletin`, the business theme that keeps a brand color as given and on its face across the colors we tested.
+
+## Brand scan
+
+```bash
+pptwise brand scan [dir] [--json]
+```
+
+`brand scan` reads what a project already says about its brand, so the user can be asked about colors, theme, and pictures before the deck is planned. `dir` defaults to the project folder (the one holding `pptwise.config.json`), else the current directory. It reports:
+
+- `logos`: files named like a logo (`logo`, `wordmark`, `brand`, `emblem`, a favicon or touch icon), with their size. `deckReady` is `false` for an SVG, which `images add` turns into a PNG.
+- `images`: PNG, JPEG, WebP, and GIF pictures at least 1000 px on the long edge and 500 px on the short one, largest first, each with its orientation.
+- `colors`: every color found in style sheets (custom properties, Sass and Less variables, and the colors of plain `color` and `background` declarations), Tailwind and design-token files, web manifests, and the `theme-color` of HTML pages, with the names the project gives it. A name with `brand`, `primary`, `theme-color`, `accent`, or `secondary` counts for more. A state, ink, ground or grey name (`danger`, `foreground`, `background`, `muted`, `gray`) counts for almost nothing. `neutral` marks a grey, black, or white.
+- `fonts`: the lead family of each font stack, Tailwind `fontFamily`, Google Fonts links, and the fonts of Office templates.
+- `office`: `.potx`, `.thmx`, and `.pptx` files, each with its color scheme's name, its `accent1` and `accent2`, and its fonts. A scheme named `Office` is the stock theme and says nothing about the brand.
+- `brand`: the brand color and second color the evidence points to: an Office template's when one carries its own scheme (templates before decks), else the strongest named colored value and the next one of another hue. A color only ever used, never named, is not picked.
+- `next`: the `--brand` value, and the `theme try`, `theme fork`, and `brand extract` lines that use it, with placeholders in angle brackets.
+- `summary`: one line, which the text report prints first.
+
+The scan is local and bounded. It never follows a symlink and skips hidden folders (`.git` and `.pptwise/` among them), dependency folders, build output, caches, and test folders. It never opens a file whose name marks it as a secret (`.env`, keys, credentials, passwords), whatever its extension. It looks at no more than 20,000 directory entries ten folders deep, reads the first 256 KB of at most 400 style, token, manifest, and HTML files, reads only the headers of pictures, and opens at most six Office files of up to 64 MB. A scan cut short sets `scanned.truncated` and says so in its summary.
 
 ## Narratives and engine inspection
 

@@ -24,6 +24,7 @@ import {
   runThemes,
   runValidate,
 } from "./cli/commands"
+import { runBrandScan } from "./cli/brand-scan"
 import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesAdd, runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
@@ -396,7 +397,7 @@ program
 // `brand` is a command group (not a bare `brand-extract` command) to leave
 // room for future brand-asset extraction (logo from the slide master, etc.)
 // under the same namespace — brand-extract wave, 裁定 1.
-const brand = program.command("brand").description("Brand asset commands — extract your company's colors/fonts from an Office template")
+const brand = program.command("brand").description("Brand asset commands: find a project's brand material, or extract your company's colors/fonts from an Office template")
 brand
   .command("extract")
   .description(
@@ -423,6 +424,22 @@ brand
         brandFonts: opts.brandFonts,
         force: opts.force,
       }))
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+brand
+  .command("scan")
+  .description(
+    "Find what a project already says about its brand: logo files, pictures large enough for a slide, brand colors and fonts in style sheets, Tailwind and token files, and Office templates. Reads only this machine's files, skips dependency, build and hidden folders, and never opens secret files",
+  )
+  .argument("[dir]", "the folder to scan (default: the project folder, the one holding pptwise.config.json, else the current directory)")
+  .option("--json", "print the full report as JSON")
+  .addHelpText("after", "\nExamples:\n  $ pptwise brand scan\n  $ pptwise brand scan ../website --json")
+  .action(async (dir: string | undefined, opts: { json?: boolean }) => {
+    try {
+      console.log(await runBrandScan(dir, { json: opts.json }))
     } catch (e) {
       fail(e)
     }

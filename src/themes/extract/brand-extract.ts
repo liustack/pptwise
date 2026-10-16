@@ -237,6 +237,41 @@ function donorTheme(from: string | ThemeFile, identity: { id: string; label: str
   return ThemeFileSchema.parse({ ...copy, id: identity.id, label: identity.label, style: { ...copy.style, id: identity.id } }) as ThemeFile
 }
 
+/** What a template's theme part says about the brand, read without repainting anything. */
+export interface TemplateBrand {
+  /** The color scheme's own name, such as "Office" for the stock theme. */
+  schemeName?: string
+  /** The color {@link extractBrandTheme} repaints around. */
+  brand: string
+  /** The second color, when the template pairs one with the brand. */
+  second?: string
+  /** The template's Latin heading and body faces. */
+  fonts: { heading?: string; body?: string }
+}
+
+/**
+ * The brand color, second color, and fonts {@link extractBrandTheme} would
+ * read from a `.thmx`/`.potx`/`.pptx`, without drawing a theme. Throws the
+ * same errors it does for a file with no theme part or no accent color.
+ */
+export async function readTemplateBrand(bytes: Uint8Array | ArrayBuffer): Promise<TemplateBrand> {
+  const zip = await JSZip.loadAsync(bytes)
+  const part = await findThemePart(zip)
+  if (!part) throw new PptwiseError("no theme part found in this file")
+  const { schemeName, slots } = parseColors(part.xml)
+  const colors = templateColors(slots, part.path)
+  const fonts = parseFonts(part.xml)
+  return {
+    ...(schemeName !== undefined ? { schemeName } : {}),
+    brand: colors.brand.toUpperCase(),
+    ...(colors.second !== undefined ? { second: colors.second.toUpperCase() } : {}),
+    fonts: {
+      ...(fonts.major !== undefined ? { heading: fonts.major } : {}),
+      ...(fonts.minor !== undefined ? { body: fonts.minor } : {}),
+    },
+  }
+}
+
 /**
  * Repaint a theme around the brand color of a template, from the raw bytes
  * of a `.thmx`/`.potx`/`.pptx` file (only its theme part is read). The
