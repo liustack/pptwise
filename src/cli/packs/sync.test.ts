@@ -1,12 +1,10 @@
 // @vitest-environment node
-import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http"
-import type { AddressInfo } from "node:net"
 import { mkdtemp, readFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { installNodePlatform } from "@/platform/node"
-import { buildPackZip, sha256Hex, type PackFixture } from "./__fixtures__/pack-zip"
+import { KEY, REVOKED, publish, sendJson, startServer, type FakePackServer } from "./__fixtures__/pack-server"
 import { runLicenseSet } from "./license"
 import { listInstalledPacks } from "./store"
 import { VERSION } from "../../version"
@@ -14,8 +12,6 @@ import { packsServerUrl, runPacksList, runPacksSync, syncPacks, type PackSyncRep
 
 installNodePlatform()
 
-const KEY = "ptw_abcdefghijklmnopqrstuvwxyz234567"
-const REVOKED = "ptw_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 const ENGINE = "0.37.1"
 /**
  * A range neither `ENGINE` nor the real version meets. The CLI path reads
@@ -24,78 +20,6 @@ const ENGINE = "0.37.1"
  */
 const [MAJOR, MINOR] = VERSION.split(".").map(Number) as [number, number]
 const FUTURE_ENGINE = `>=${MAJOR}.${MINOR + 1}.0 <${MAJOR + 1}.0.0`
-
-/**
- * The two endpoints of the pack distribution contract, served from memory.
- * `packs` is what the catalog lists and what the zip endpoint serves.
- * `requests` records every path asked for, so a test can tell whether a
- * download happened.
- */
-interface FakePackServer {
-  url: string
-  requests: string[]
-  auth: (string | undefined)[]
-  packs: { entry: Record<string, unknown>; bytes: Buffer }[]
-  /** Answer the zip endpoint with these status and body instead. */
-  zipOverride?: (id: string, res: ServerResponse) => boolean
-  catalogOverride?: (res: ServerResponse) => boolean
-  close: () => Promise<void>
-}
-
-function sendJson(res: ServerResponse, status: number, body: unknown): void {
-  res.writeHead(status, { "content-type": "application/json" })
-  res.end(JSON.stringify(body))
-}
-
-async function startServer(): Promise<FakePackServer> {
-  const state = { requests: [], auth: [], packs: [] } as unknown as FakePackServer
-  const server: Server = createServer((req: IncomingMessage, res: ServerResponse) => {
-    const path = new URL(req.url ?? "/", "http://x").pathname
-    state.requests.push(path)
-    state.auth.push(req.headers.authorization)
-    const auth = req.headers.authorization
-    if (auth === `Bearer ${REVOKED}`) return sendJson(res, 403, { error: "This key was revoked." })
-    if (auth !== `Bearer ${KEY}`) return sendJson(res, 401, { error: "Unknown license key." })
-    if (path === "/api/packs/catalog") {
-      if (state.catalogOverride?.(res)) return
-      return sendJson(res, 200, { catalog: 1, packs: state.packs.map((p) => p.entry) })
-    }
-    const m = /^\/api\/packs\/([^/]+)\/([^/]+)\.zip$/.exec(path)
-    const hit = m && state.packs.find((p) => p.entry.id === m[1] && p.entry.version === m[2])
-    if (!m || !hit) return sendJson(res, 404, { error: "No such pack." })
-    if (state.zipOverride?.(m[1]!, res)) return
-    res.writeHead(200, { "content-type": "application/zip", "content-length": String(hit.bytes.length) })
-    res.end(hit.bytes)
-  })
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
-  state.url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
-  state.close = () =>
-    new Promise<void>((resolve) => {
-      server.closeAllConnections()
-      server.close(() => resolve())
-    })
-  return state
-}
-
-async function publish(server: FakePackServer, fixture: PackFixture, entry: Record<string, unknown> = {}): Promise<Buffer> {
-  // The catalog entry and the archive's pack.json say the same thing, as the contract has them.
-  const engine = fixture.engine ?? ">=0.37.0 <1.0.0"
-  const bytes = await buildPackZip({ ...fixture, engine })
-  server.packs = server.packs.filter((p) => p.entry.id !== fixture.id)
-  server.packs.push({
-    bytes,
-    entry: {
-      id: fixture.id,
-      version: fixture.version,
-      title: fixture.title ?? `Pack ${fixture.id}`,
-      size: bytes.length,
-      sha256: sha256Hex(bytes),
-      engine,
-      ...entry,
-    },
-  })
-  return bytes
-}
 
 const originalHome = process.env.PPTWISE_HOME
 // A developer's proxy would carry the requests for 127.0.0.1 away from the fake server.
