@@ -9,6 +9,7 @@ import { ordinaryTagSpec, paintTag, tagInks, tagWidth } from "./tag"
 import { withBlockTitle } from "./block-title"
 import { OmittedText } from "./omitted-text"
 import { graphicInk, resolveSemanticColor } from "../render/ink"
+import { columnGutterEm } from "../lib/column-gutter"
 import {
   boardTypeScale,
   fillCardType,
@@ -31,19 +32,17 @@ const GAP_NODE_TITLE = 18
 const GAP_TITLE_TEXT = 10
 const COL_INSET = 16
 /**
- * The gutter between one column's words and the next, in characters of the
- * words' own size: every line is centred in its column and set at most its
- * column less this many characters. Columns used to offer every line the
- * column less 16px, and four services across a vermilion page, or three
- * goals across a crayon one, stood their titles and sentences a few pixels
- * apart (2026-10). A gap narrower than a character does not read as a
- * column break, so the words ran into one line across the page.
+ * The widest a line of `text` at `size` may be set in a column `colW` wide:
+ * the column less the gutter that text keeps from the next column
+ * (`columnGutterEm`). Every line is centred in its column, so two
+ * neighbouring lines stand at least a gutter apart. Columns used to offer
+ * every line the column less 16px, and four services across a vermilion
+ * page, or three goals across a crayon one, stood their titles and
+ * sentences a few pixels apart and read as one line across the page
+ * (2026-10).
  */
-const COLUMN_GUTTER_EM = 2
-
-/** The widest a line of type at `size` may be set in a column `colW` wide. */
-function lineMeasure(colW: number, size: number): number {
-  return Math.max(24, colW - COLUMN_GUTTER_EM * size)
+function lineMeasure(colW: number, size: number, text: string): number {
+  return Math.max(24, colW - columnGutterEm(text) * size)
 }
 /** The row a card's tag (`items[].tag`) takes under its node: the ordinary tag's 28px label and 10px of air. */
 const TAG_ROW = 38
@@ -57,16 +56,18 @@ function layoutItemText(
   titleMaxLines: number,
   bodyMaxLines: number,
 ) {
-  const title = layoutFormTitle(stripEmphasis(item.title), {
-    maxWidth: lineMeasure(colW, titleSize),
+  const titleText = stripEmphasis(item.title)
+  const bodyText = stripEmphasis(item.text)
+  const title = layoutFormTitle(titleText, {
+    maxWidth: lineMeasure(colW, titleSize, titleText),
     fontSize: titleSize,
     fontFamily: ctx.fonts.heading,
     maxLines: Math.max(1, titleMaxLines),
   })
   const text =
     bodyMaxLines > 0
-      ? layoutFormBody(stripEmphasis(item.text), {
-          maxWidth: lineMeasure(colW, bodySize),
+      ? layoutFormBody(bodyText, {
+          maxWidth: lineMeasure(colW, bodySize, bodyText),
           fontSize: bodySize,
           titleSize,
           maxLines: bodyMaxLines,
@@ -187,13 +188,15 @@ function columnsAt(
       ? naturalInner
       : Math.max(1, (boxH - GAP * (rows - 1)) / rows)
   const innerH = Math.max(1, rowH)
-  // Each line is set in its own measure, its column less two characters of
-  // its size. `contentW`, the column less its inset, is only where the type
-  // judges whether the box has room to grow (`fillCardType`).
+  // Each line is set in its own measure, its column less its gutter
+  // (`lineMeasure`). `contentW`, the column less its inset, is only where
+  // the type judges whether the box has room to grow (`fillCardType`).
+  const words = component.items.map((item) => `${item.title}${item.text}`).join("")
   const filled = fillCardType({
     innerH: Math.max(1, innerH - extraAbove),
     contentW: Math.max(24, colW - COL_INSET),
-    measure: (size) => lineMeasure(colW, size),
+    // One measure for every line, at the widest gutter any card's words keep.
+    measure: (size) => lineMeasure(colW, size, words),
     titleSize: start.title,
     bodySize: start.body,
     gap: GAP_TITLE_TEXT,
@@ -347,7 +350,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
 function paintCardTag(tag: NonNullable<IconCardItem["tag"]>, cx: number, top: number, colW: number, ctx: ComponentCtx): React.ReactElement {
   const spec = ordinaryTagSpec(ctx)
   const w = tagWidth(tag.text, spec)
-  if (w > lineMeasure(colW, spec.size)) return <g data-dropped={1} data-dropped-kind="label" />
+  if (w > lineMeasure(colW, spec.size, tag.text)) return <g data-dropped={1} data-dropped-kind="label" />
   return paintTag({ tag, x: cx - w / 2, y: top, spec, inks: tagInks(ctx, tag, false, ctx.defaultBg ?? ctx.colors.bg, spec.size) })
 }
 

@@ -20,7 +20,6 @@ beforeAll(async () => {
   await installNodePlatform()
 })
 
-const FONT = 'font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="23"'
 const BOX = { x: 64, y: 260, w: 1152, h: 320 }
 
 function markup(node: React.ReactElement): string {
@@ -96,15 +95,30 @@ const cards = {
 
 describe("components that declare their items as columns", () => {
   it("finds icon cards set the way they shipped, each line their column less 16px", () => {
-    // Four columns 288px wide, a sentence of 23px type centred in each and
-    // wrapped at 272px: neighbouring lines stood 30px apart, under two characters.
-    const lines = ["群众满意率九十八点六，", "帮办代办队伍一百零六人", "午间延时服务累计接待两", "高频事项申请材料平均精"]
-    const columns = lines
-      .map((line, i) => `<g data-audit-column=""><text x="${64 + 144 + i * 288}" y="400" text-anchor="middle" ${FONT}>${line}</text></g>`)
+    // Four columns 288px wide on a vermilion page, a bold 43px title centred
+    // in each and set in 272px: the six-character titles stood 29px apart,
+    // under a character, and read as one line.
+    const titles = ["全程网办", "帮办代办服务", "午间延时服务", "材料清单精简"]
+    const columns = titles
+      .map((line, i) => `<g data-audit-column=""><text x="${64 + 144 + i * 288}" y="400" text-anchor="middle" font-weight="700" font-family="PingFang SC, sans-serif" font-size="43.2">${line}</text></g>`)
       .join("")
     const issues = findCrowdedColumns(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">${columns}</svg>`)
-    expect(issues).toHaveLength(3)
-    for (const issue of issues) expect(issue.gap).toBeLessThan(2 * issue.size)
+    expect(issues.map((i) => [i.a, i.b])).toEqual([
+      ["帮办代办服务", "午间延时服务"],
+      ["午间延时服务", "材料清单精简"],
+    ])
+    for (const issue of issues) expect(issue.gap).toBeLessThan(issue.size)
+  })
+
+  it("holds Chinese to a character and a quarter, and a line with letters to two", () => {
+    // Two 20px lines 30px apart: a gutter between Chinese words, and too
+    // close once one of them carries a Latin name the estimate can miss.
+    const page = (left: string, right: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+      <g data-audit-column=""><text x="100" y="100" font-size="20">${left}</text></g>
+      <g data-audit-column=""><text x="${100 + left.length * 20 + 30}" y="100" font-size="20">${right}</text></g>
+    </svg>`
+    expect(findCrowdedColumns(page("渗透率是华南", "竞品在中小"))).toEqual([])
+    expect(findCrowdedColumns(page("渗透率是华南", "竞品在 SMB"))).toHaveLength(1)
   })
 
   for (const theme of ["vermilion", "memo", "crayon", "bulletin"]) {

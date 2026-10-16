@@ -5,6 +5,7 @@ import type { ThemeDefinition } from "../themes/definitions"
 import { resolveIrTheme } from "../themes/resolve-ir-theme"
 import { PptwiseError } from "../errors"
 import { measureMonoTextUnits, measureTextUnits } from "../lib/svg-text-layout"
+import { columnGutterEm } from "../lib/column-gutter"
 import { getPlatform } from "../platform/registry"
 import { isBold, isMonoFontFamily } from "../render/fonts"
 import { dropPhrase, parseDropKind, type DropKind } from "../render/drop-marker"
@@ -2564,16 +2565,7 @@ export function findOverlapIssues(markup: string): OverlapIssue[] {
 // Crowded columns: items set side by side whose words run together.
 // ────────────────────────────────────────────────────────────────────────
 
-/**
- * Words in two neighbouring columns closer than this share of their type
- * size read as one line. Two characters, the gutter a timeline keeps between
- * its milestones: the terminal page that shipped crowded (2026-10) had its
- * descriptions 19px to 28px apart by this estimate at 16px, and real glyphs
- * run a few pixels wider than the estimate, so on screen they stood about a
- * character apart and read as one sentence.
- */
-const CROWDED_GAP_EM = 2
-/** Rounding room, so a gap laid out at exactly two characters passes. */
+/** Rounding room, so a gap laid out at exactly the gutter passes. */
 const CROWDED_SLACK = 0.5
 
 /** Estimated ascent above a text baseline, as a fraction of font-size. */
@@ -2596,11 +2588,15 @@ interface ColumnLine {
   bottom: number
   size: number
   text: string
+  /** The gutter this line keeps from the next column, in characters (`columnGutterEm`). */
+  gutterEm: number
 }
 
 /**
- * Lines of text in two different columns that stand on one row less than
- * two characters apart (`CROWDED_GAP_EM`), or run into each other.
+ * Lines of text in two different columns that stand on one row closer than
+ * a gutter (`columnGutterEm`: a character and a quarter of their type for
+ * Chinese, two characters for a line with letters in it), or run into each
+ * other.
  *
  * A component that sets its items side by side, each item's words in an
  * open column with no card edge between them, marks each item's group with
@@ -2642,7 +2638,7 @@ export function findCrowdedColumns(markup: string): CrowdedIssue[] {
         const anchor = el.getAttribute("text-anchor") ?? "start"
         const left = anchor === "end" ? tx - width : anchor === "middle" ? tx - width / 2 : tx
         const baseline = ay + Number(el.getAttribute("y") ?? 0) * as
-        own.push({ left, right: left + width, top: baseline - fontSize * TEXT_ASCENT_RATIO, bottom: baseline + fontSize * TEXT_DESCENT_RATIO, size: fontSize, text: content.slice(0, 24) })
+        own.push({ left, right: left + width, top: baseline - fontSize * TEXT_ASCENT_RATIO, bottom: baseline + fontSize * TEXT_DESCENT_RATIO, size: fontSize, text: content.slice(0, 24), gutterEm: columnGutterEm(content) })
       }
     }
     for (const child of Array.from(el.children)) visit(child, ax, ay, as, own)
@@ -2659,7 +2655,9 @@ export function findCrowdedColumns(markup: string): CrowdedIssue[] {
           if (shared < Math.min(a.bottom - a.top, b.bottom - b.top) / 2) continue
           const gap = Math.max(b.left - a.right, a.left - b.right)
           const size = Math.min(a.size, b.size)
-          if (gap + CROWDED_SLACK >= size * CROWDED_GAP_EM) continue
+          // Each line keeps its own gutter's half of the gap: a character and
+          // a quarter for Chinese, two for a line with letters in it.
+          if (gap + CROWDED_SLACK >= (size * (a.gutterEm + b.gutterEm)) / 2) continue
           if (!worst || gap < worst.gap) worst = { a: a.text, b: b.text, gap, size }
         }
       }
@@ -2672,7 +2670,7 @@ export function findCrowdedColumns(markup: string): CrowdedIssue[] {
 function crowdedMessage(issue: CrowdedIssue): string {
   const where = issue.gap < 0 ? `run ${Math.round(-issue.gap)}px into each other` : `stand ${Math.round(issue.gap)}px apart`
   return (
-    `the words of two neighbouring columns ${where} on one row, less than two characters of their ${Math.round(issue.size)}px type, ` +
+    `the words of two neighbouring columns ${where} on one row, closer than a gutter of their ${Math.round(issue.size)}px type, ` +
     `so they read as one line: "${issue.a}" and "${issue.b}". This is a rendering defect: report it`
   )
 }

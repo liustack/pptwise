@@ -5,6 +5,7 @@ import { render } from "@testing-library/react"
 import { renderSvgMarkup, parseSvgRoot } from "../render/serialize"
 import { assertSubset } from "../render/subset-validate"
 import { measureTextUnits } from "../lib/svg-text-layout"
+import { columnGutterEm } from "../lib/column-gutter"
 import { iconCards } from "./icon-cards"
 import { isRuled } from "./surfaces"
 import { FORM_BODY_FLOOR } from "./legibility"
@@ -484,7 +485,7 @@ describe("icon_cards columns side by side", () => {
     ["four services on vermilion", "vermilion", services, { x: 64, y: 300, w: 1152, h: 300 }],
     ["three goals on crayon", "crayon", goals, { x: 64, y: 260, w: 1152, h: 300 }],
   ] as const) {
-    it(`keep two characters between one column's words and the next: ${label}`, () => {
+    it(`keep a gutter between one column's words and the next: ${label}`, () => {
       const { container } = svg(iconCards.render(component, box, themeCtx(theme)))
       const columns = columnLines(container)
       expect(columns).toHaveLength(component.items.length)
@@ -499,7 +500,8 @@ describe("icon_cards columns side by side", () => {
         for (const a of columns[i]!) {
           for (const b of columns[i + 1]!) {
             if (a.bottom <= b.top || b.bottom <= a.top) continue
-            expect(b.left - a.right, `"${a.text}" and "${b.text}"`).toBeGreaterThanOrEqual(2 * Math.min(a.size, b.size) - 0.5)
+            const gutter = (columnGutterEm(a.text ?? "") * a.size + columnGutterEm(b.text ?? "") * b.size) / 2
+            expect(b.left - a.right, `"${a.text}" and "${b.text}"`).toBeGreaterThanOrEqual(gutter - 0.5)
           }
         }
       }

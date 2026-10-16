@@ -187,15 +187,26 @@ pixels less on screen) and read as one sentence across the page.
 A component that sets its items side by side in open columns marks each
 item's group with `data-audit-column`. `findCrowdedColumns` measures the
 lines in those groups with the same estimators and reports, as `overlap`,
-two lines in different columns that share a row less than two characters of
-their type apart (`CROWDED_GAP_EM`). Words in one column are never compared.
+two lines in different columns that share a row closer than a gutter
+(`columnGutterEm` in `src/lib/column-gutter.ts`). Words in one column are
+never compared.
+
+The gutter is a character and a quarter of the type for a Chinese line and
+two characters for a line with Latin, Greek or Cyrillic letters in it, and
+each line keeps its own half of the gap. Chinese reads a gap as a break once
+it is clearly wider than the widest blank inside a line, a full-width comma
+or bracket of about a character, and its estimated width is exact. Four
+Chinese cards that stood 1.3 to 1.4 characters apart read as four columns. A
+proportional font's letters run a few pixels off the estimate, and the
+terminal timeline above, with Latin names in its descriptions, stood 28px
+apart at 16px by the estimate and about a character apart on screen.
 
 Five components opt in, the ones that set items side by side with no card
 ground between them. The horizontal timeline marks each milestone.
 `icon_cards` marks each card, since it never draws a ground: until 2026-10
 it offered each line its column less 16px, and four cards across a page
 stood their sentences 16px to 35px apart at 23px to 43px type. Its lines now
-keep two characters of their own size from the next column. `people_cards`,
+keep a gutter of their own size from the next column. `people_cards`,
 `product_cards`, `quote_wall` and `matrix` mark each card or cell only on a
 ruled theme, where the words stand on the paper under a hairline. On every
 other theme their words stand inside a card's own ground, and the card's edge
