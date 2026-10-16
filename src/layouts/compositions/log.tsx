@@ -3,6 +3,7 @@ import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
 import { baselineIn, consoleInks, consoleText, fitMono, monoWidth, paintIcon, paintMono, paintPanel, toneInk } from "./console"
 import type { Recipe } from "./recipe"
+import { figureColumn } from "./rail-console"
 
 type Timeline = Extract<Component, { type: "timeline" }>
 
@@ -23,7 +24,11 @@ type Timeline = Extract<Component, { type: "timeline" }>
  * Takes, in the console setting: a `timeline` of two to seven milestones on
  * no lanes, then up to three more components, which stand in a 428px column
  * beside the log, drawn by whichever composition takes them (`handOn`):
- * durations to scale and a note, as the board drew them, is `span`.
+ * durations to scale and a note, as the board drew them, is `span`. A
+ * `kpi_cards` of one to three figures of any other kind (「16 个月」, 「4 位」)
+ * that no composition takes stands in the figure panels `rail` sets beside
+ * its chart on the same board (`figureColumn`): its label in mono, the figure
+ * in bold mono, its note under it, the marked one on the mark's tint.
  *
  * Declines: a timeline on lanes, a title or description past one line, more
  * milestones than the panel holds at a 56px pitch, and a column nobody takes.
@@ -41,7 +46,10 @@ const AXIS = { min: 94, gap: 24, stroke: 1.5, textGap: 24 } as const
 export const logRecipe: Recipe = {
   look: "A timeline set as an incident log",
   kinds: ["process"],
-  shapes: [{ parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].value~duration", "!items[].unit|icon|delta|tag|source|note"] }, { type: "callout", optional: true }, { type: "callout", optional: true }] }],
+  shapes: [
+    { parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].value~duration", "!items[].unit|icon|delta|tag|source|note"] }, { type: "callout", optional: true }, { type: "callout", optional: true }] },
+    { parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [1, 3] }] },
+  ],
 }
 
 export const logComposition: Composition = ({ components, ctx, rect, setting, handOn }) => {
@@ -56,7 +64,10 @@ function drawLog(timeline: Timeline, rest: readonly Component[], props: Paramete
   const milestones = timeline.milestones
   if (milestones.length < 2 || milestones.length > 7 || milestones.some((m) => m.lane !== undefined)) return null
   const side = rest.length > 0 ? { x: rect.x + rect.w - SIDE.w, y: rect.y, w: SIDE.w, h: rect.h } : null
-  const column = side && handOn ? handOn(rest, side) : null
+  const handed = side && handOn ? handOn(rest, side) : null
+  // Figures no composition takes (not lengths of time) stand in the board's figure panels.
+  const lone = rest.length === 1 && rest[0]!.type === "kpi_cards" ? rest[0] : null
+  const column = handed ?? (side && lone ? figureColumn(lone, side, ctx) : null)
   if (side && !column) return null
   const panel = { x: rect.x, y: rect.y, w: side ? rect.w - SIDE.w - SIDE.gap : rect.w, h: rect.h }
   const inks = consoleInks(ctx)

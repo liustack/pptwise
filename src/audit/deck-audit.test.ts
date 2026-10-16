@@ -3181,6 +3181,8 @@ describe("findCrowdedColumns: neighbouring columns whose words run together", ()
   })
 
   it("holds the page that shipped crowded clean now that its timeline keeps a gutter", () => {
+    // The terminal page that shipped crowded, set on a theme that draws it as
+    // an ordinary horizontal timeline. terminal itself now sets it as its log.
     const milestones = [
       { date: "2025-06-25", title: "原创 OC「溟月」", desc: "上善无形发布原创角色，当时与 DeepSeek 无关。", icon: "palette" },
       { date: "2026-04-25", title: "改成女仆鲸鱼娘", desc: "ZipZipPipe 换深蓝白女仆装，出第一批表情包。", icon: "brush" },
@@ -3188,7 +3190,7 @@ describe("findCrowdedColumns: neighbouring columns whose words run together", ()
       { date: "2026-07-10", title: "Q 版大肥鱼破圈", desc: "这个刀子真甜做成 Q 版模型，人设从此定型。", icon: "sparkles" },
       { date: "2026-08-02", title: "作者补版权声明", desc: "声明仅限非商用二创。", icon: "copyright" },
     ]
-    const ir = deck("terminal", [
+    const ir = deck("brief", [
       {
         type: "content",
         kind: "process",

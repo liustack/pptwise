@@ -172,6 +172,27 @@ describe("the console compositions on terminal and two themes unlike it", () => 
       expect(root.querySelector("[data-gauge-module='log']")).not.toBeNull()
       expect(root.querySelector("[data-gauge-module='span']")).not.toBeNull()
     })
+    it(`log sets figures that are not lengths of time in figure panels beside it on ${theme}`, () => {
+      // A terminal page (2026-10): a relay of five milestones and two plain
+      // figures with units and notes, which span declines. The page fell to
+      // the ordinary renderer, a horizontal timeline crowded into its cells.
+      const { ctx } = testCtx(theme)
+      const figures = {
+        type: "kpi_cards",
+        items: [
+          { value: "16", unit: "个月", label: "从「溟月」到出圈", note: "2025-06-25 → 2026-10" },
+          { value: "**4**", unit: "位", label: "接力画完这张脸", note: "原创角色 → 鲸鱼娘 → 名字 → Q 版" },
+        ],
+      }
+      const drawn = compose({ components: [cascade[0], figures] as never, ctx: chinese(ctx), rect: BAND, setting: "console" }, ["log", "span"] as CompositionId[])
+      expect(drawn).not.toBeNull()
+      const { root } = renderNode(drawn!)
+      expect(root.querySelector("[data-gauge-module='log']")).not.toBeNull()
+      expect(root.querySelector("[data-gauge-module='span']")).toBeNull()
+      const all = texts(root).map(textOf)
+      for (const words of ["16个月", "4位", "从「溟月」到出圈", "2025-06-25 → 2026-10", "接力画完这张脸"]) expect(all.some((t) => t.replace(/\s/g, "") === words.replace(/\s/g, "")), words).toBe(true)
+      expect(root.querySelectorAll("[data-figure-marked='1']")).toHaveLength(1)
+    })
   }
 
   it("declines outside the console setting", () => {
