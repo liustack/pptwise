@@ -252,8 +252,9 @@ function pathishToken(token: string): string | null {
  *  error), `check-update`/`self-update`/`images` (network side effects
  *  with no benchmark value), `config` (writes user-level settings outside
  *  the workspace), `init` (nothing in the SKILL workflow needs a
- *  scaffolded `pptwise.config.json`), and `packs` and `license` (they
- *  write user-level state outside the workspace, sync reaches the network,
+ *  scaffolded `pptwise.config.json`), and `packs`, `license`, `login`, and
+ *  `logout` (they write user-level state outside the workspace, sync and
+ *  login reach the network,
  *  and a run should not depend on whether the machine running it holds a
  *  license: the playbook names them as installation steps, never part of a
  *  deck task). `migrate` was on the first list and

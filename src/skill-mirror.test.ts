@@ -290,7 +290,7 @@ describe("pptwise SKILL model and bilingual mirrors", () => {
       expect(text).not.toMatch(/^pptwise packs sync$/m)
       expect(text.indexOf("`pptwise packs sync`")).toBeGreaterThan(-1)
       expect(text.indexOf("`pptwise packs sync`")).toBeLessThan(text.indexOf("pptwise schema --spec"))
-      expect(text).toMatch(/(Never run `license set` or `packs sync` as part of a deck task|不要在 deck 任务里运行 `license set` 或 `packs sync`)/)
+      expect(text).toMatch(/(Never run `login`, `license set`, or `packs sync` as part of a deck task|不要在 deck 任务里运行 `login`、`license set` 或 `packs sync`)/)
     }
     expect(read(EN_REL)).toMatch(/2\. A workspace `themes\/` directory.*\n3\. Installed content packs.*\n4\. The 24 factory presets\./)
     expect(read(ZH_REL)).toMatch(/2\. 从 deck 目录向上查找工作区 `themes\/`。\n3\. 已装的内容包.*\n4\. 24 个出厂预设。/)
