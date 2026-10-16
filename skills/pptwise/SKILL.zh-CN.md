@@ -29,8 +29,8 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 无法执行脚本时，使用第一条可行路径：
 
 1. 已安装版本与钉定版本兼容时，运行 `pptwise <args>`。钉定版本为 0.x 时要求主版本和次版本都相同，补丁版本不低于钉定值。1.0 及以后要求主版本相同，且不低于钉定版本。
-2. `npx --yes --package @liustack/pptwise@0.47.0 pptwise <args>`。
-3. `bunx --bun @liustack/pptwise@0.47.0 <args>`。
+2. `npx --yes --package @liustack/pptwise@0.48.0 pptwise <args>`。
+3. `bunx --bun @liustack/pptwise@0.48.0 <args>`。
 4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
 
 安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。内容包在安装时装好，不按 deck 装。用户有 license 时，`pptwise license set <key>` 和 `pptwise packs sync` 属于安装步骤，之后只在用户要求更新内容包或换了 license 时再跑 `packs sync`。除了 `config set`，只有这几条命令会写 pptwise 主目录（`~/.pptwise`）。做 deck 的过程一次都不写那里，所以主目录只读的沙箱里也能做。不要在 deck 任务里运行 `license set` 或 `packs sync`。
