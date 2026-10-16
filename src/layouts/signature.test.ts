@@ -41,6 +41,11 @@ describe("recipe lines", () => {
     expect(meetsNeed(chart, "chart_type=bar")).toBe(false)
   })
 
+  it("read a figure an author wrote as a number as the number it is", () => {
+    const kpis = { type: "kpi_cards", items: [{ value: 16, label: "months" }, { value: "4", label: "hands" }] } as Component
+    expect(meetsNeed(kpis, "items[*].value~figure")).toBe(true)
+  })
+
   it("say what a page lacks for a shape, in the order an author would fix it", () => {
     const shape = { parts: [{ type: "kpi_cards", count: [3, 4] }, { type: "blockquote" }], page: ["footnote"] } as const
     expect(shapeGaps(shape, { components: [KPIS, PROSE] })).toEqual([

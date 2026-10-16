@@ -204,7 +204,8 @@ export function meetsNeed(component: Component, need: string): boolean {
   const words = /^(.+)~(\w+)$/.exec(need)
   if (words !== null) {
     const rule = WORDS[words[2]!]!
-    return meets(component, words[1]!.split("."), (value) => typeof value === "string" && rule.test(value))
+    // A figure may be written as a number (`"value": 16`): its words are the digits.
+    return meets(component, words[1]!.split("."), (value) => (typeof value === "string" || typeof value === "number") && rule.test(String(value)))
   }
   const [path, want] = need.split("=", 2) as [string, string | undefined]
   const allowed = want?.split("|")
