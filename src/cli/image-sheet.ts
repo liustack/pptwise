@@ -8,6 +8,12 @@
  * The numbers are drawn as strokes, not set in a font: sharp renders SVG
  * through librsvg, and which fonts it finds differs per machine. Strokes look
  * the same everywhere.
+ *
+ * A photo takes its number on a badge over its top left corner, where a
+ * corner of a picture is never what decides it. The deck sheet
+ * (`./deck-sheet.ts`) takes its numbers in a band above each row instead: a
+ * page's top left corner is where a section label, a crumb or a logo stands,
+ * and a badge there hid it from whoever looked at the sheet to check pages.
  */
 import type * as Sharp from "sharp"
 import { PptwiseError } from "../errors"
@@ -25,6 +31,9 @@ export const CELL_WIDTH = 360
 export const CELL_HEIGHT = 270
 const GAP = 12
 const BADGE = 52
+/** The band above each row that holds the numbers of a sheet numbered `above`. */
+const LABEL_BAND = 36
+const LABEL_SCALE = 1.25
 const PAGE = "#ffffff"
 const CELL = "#e6e6e6"
 
@@ -78,22 +87,30 @@ export interface CellSize {
 
 const DEFAULT_CELL: CellSize = { width: CELL_WIDTH, height: CELL_HEIGHT }
 
-/** Where cell `index` sits on the sheet. */
-function cellOrigin(index: number, cell: CellSize): { left: number; top: number } {
+/** Where a cell's number goes: on a badge over its top left corner, or in a band above its row, clear of the picture. */
+export type SheetNumbers = "badge" | "above"
+
+/** Where cell `index` sits on the sheet, under its row's number band when there is one. */
+function cellOrigin(index: number, cell: CellSize, band: number): { left: number; top: number } {
   const col = index % SHEET_COLUMNS
   const row = Math.floor(index / SHEET_COLUMNS)
-  return { left: GAP + col * (cell.width + GAP), top: GAP + row * (cell.height + GAP) }
+  return { left: GAP + col * (cell.width + GAP), top: GAP + band + row * (band + cell.height + GAP) }
 }
 
-/** The badges and the crosses for missing thumbnails, as one SVG over the sheet. */
-function overlaySvg(cells: SheetCell[], width: number, height: number, size: CellSize): string {
+/** The numbers and the crosses for missing thumbnails, as one SVG over the sheet. */
+function overlaySvg(cells: SheetCell[], width: number, height: number, size: CellSize, numbers: SheetNumbers): string {
   const parts: string[] = []
+  const band = numbers === "above" ? LABEL_BAND : 0
   cells.forEach((cell, index) => {
-    const { left, top } = cellOrigin(index, size)
+    const { left, top } = cellOrigin(index, size, band)
     if (cell.bytes === null) {
       parts.push(
         `<g stroke="#9a9a9a" stroke-width="3"><line x1="${left}" y1="${top}" x2="${left + size.width}" y2="${top + size.height}"/><line x1="${left + size.width}" y1="${top}" x2="${left}" y2="${top + size.height}"/></g>`,
       )
+    }
+    if (numbers === "above") {
+      parts.push(`<g stroke="#111111" stroke-width="3.5" stroke-linecap="round">${numberStrokes(cell.n, left, top - band + (band - 18 * LABEL_SCALE) / 2, LABEL_SCALE)}</g>`)
+      return
     }
     const digits = String(cell.n).length
     const scale = 2
@@ -122,19 +139,25 @@ export async function loadSharp(): Promise<typeof Sharp.default> {
  * Draw the sheet as a JPEG. Each thumbnail is fitted whole into its cell,
  * so the sheet shows the picture's own shape. A thumbnail sharp cannot read
  * is drawn as a missing one. `missing` lists the numbers drawn that way.
- * `size` is the cell's size, 360 by 270 unless given.
+ * `size` is the cell's size, 360 by 270 unless given. `numbers` puts each
+ * number on a badge over the cell (the default) or in a band above its row.
  */
-export async function drawContactSheet(cells: SheetCell[], size: CellSize = DEFAULT_CELL): Promise<{ jpeg: Buffer; missing: number[] }> {
+export async function drawContactSheet(
+  cells: SheetCell[],
+  size: CellSize = DEFAULT_CELL,
+  numbers: SheetNumbers = "badge",
+): Promise<{ jpeg: Buffer; missing: number[] }> {
   if (cells.length === 0) throw new PptwiseError("a contact sheet needs at least one picture")
   const sharp = await loadSharp()
+  const band = numbers === "above" ? LABEL_BAND : 0
   const rows = Math.ceil(cells.length / SHEET_COLUMNS)
   const columns = Math.min(cells.length, SHEET_COLUMNS)
   const width = GAP + columns * (size.width + GAP)
-  const height = GAP + rows * (size.height + GAP)
+  const height = GAP + rows * (band + size.height + GAP)
   const drawn: SheetCell[] = []
   const layers: Sharp.OverlayOptions[] = []
   for (const [index, cell] of cells.entries()) {
-    const { left, top } = cellOrigin(index, size)
+    const { left, top } = cellOrigin(index, size, band)
     let fitted: Buffer | null = null
     if (cell.bytes !== null) {
       try {
@@ -156,7 +179,7 @@ export async function drawContactSheet(cells: SheetCell[], size: CellSize = DEFA
     layers.push({ input: fitted, left, top })
     drawn.push({ n: cell.n, bytes: missing ? null : fitted })
   }
-  layers.push({ input: Buffer.from(overlaySvg(drawn, width, height, size)), left: 0, top: 0 })
+  layers.push({ input: Buffer.from(overlaySvg(drawn, width, height, size, numbers)), left: 0, top: 0 })
   const jpeg = await sharp({ create: { width, height, channels: 3, background: PAGE } })
     .composite(layers)
     .jpeg({ quality: 82 })

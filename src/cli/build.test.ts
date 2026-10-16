@@ -264,8 +264,8 @@ describe("pptwise build --sheet", () => {
     expect(sheet).toBe(join(cwd, ".pptwise", "weekly", "sheet.jpg"))
     const { default: sharp } = await import("sharp")
     const meta = await sharp(await readFile(sheet)).metadata()
-    // Six pages, four to a row, in 16:9 cells.
-    expect([meta.format, meta.width, meta.height]).toEqual(["jpeg", 12 + 4 * (480 + 12), 12 + 2 * (270 + 12)])
+    // Six pages, four to a row, in 16:9 cells, each row under a band for its numbers.
+    expect([meta.format, meta.width, meta.height]).toEqual(["jpeg", 12 + 4 * (480 + 12), 12 + 2 * (36 + 270 + 12)])
     const text = await runBuild("weekly", { cwd, gitIgnore: false, sheet: true })
     expect(text.output).toContain(`sheet: ${sheet}`)
     const plain = JSON.parse((await runBuild("weekly", { json: true, cwd, gitIgnore: false })).output) as BuildReport

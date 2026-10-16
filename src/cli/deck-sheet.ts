@@ -1,6 +1,7 @@
 /**
  * The deck sheet `pptwise build --sheet` writes: every page of the deck drawn
- * small into one JPEG, each under its page number. It is for looking at the
+ * small into one JPEG, each under its page number, which stands in a band
+ * above the page rather than over its corner, so nothing on the page is hidden. It is for looking at the
  * deck as a reader does, all at once: whether the pictures fit their pages,
  * where a page is empty, and how the pages follow one another. The audit
  * measures the pages. This only shows them.
@@ -48,7 +49,7 @@ export async function writeDeckSheet(dir: string, svgs: readonly string[]): Prom
     }
     cells.push({ n: i + 1, bytes })
   }
-  const { jpeg, missing } = await drawContactSheet(cells, DECK_SHEET_CELL)
+  const { jpeg, missing } = await drawContactSheet(cells, DECK_SHEET_CELL, "above")
   const path = join(dir, DECK_SHEET_FILE)
   await writeFile(path, jpeg)
   return missing.length > 0 ? { path, note: `the deck sheet could not draw page ${missing.join(", ")}: open its SVG to look at it` } : { path }

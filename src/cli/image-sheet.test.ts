@@ -61,6 +61,27 @@ describe("drawContactSheet", () => {
     expect(near(await pixel(jpeg, 12 + 480 + 12 + 240, 12 + 135), [30, 160, 30])).toBe(true)
   })
 
+  it("numbers a deck's pages in a band above each row, leaving every corner of the page to show", async () => {
+    // A page's top left corner holds its section label or crumb, and a badge
+    // over it hid that from a look at the deck sheet (2026-10).
+    const red = await solid(1280, 720, [220, 30, 30])
+    const cells = Array.from({ length: 5 }, (_, index) => ({ n: index + 1, bytes: red }))
+    const { jpeg } = await drawContactSheet(cells, { width: 480, height: 270 }, "above")
+    const meta = await sharp(jpeg).metadata()
+    expect(meta.height).toBe(12 + 2 * (36 + 270 + 12))
+    const { data, info } = await sharp(jpeg).raw().toBuffer({ resolveWithObject: true })
+    for (const [left, top] of [
+      [12, 12 + 36],
+      [12, 12 + 36 + 270 + 12 + 36],
+    ]) {
+      expect(near(await pixel(jpeg, left! + 3, top! + 3), [220, 30, 30])).toBe(true)
+      // The band above the page holds the number in dark strokes on the white sheet.
+      let darkest = 255
+      for (let x = left!; x < left! + 30; x++) for (let y = top! - 36; y < top!; y++) darkest = Math.min(darkest, data[(y * info.width + x) * info.channels]!)
+      expect(darkest).toBeLessThan(80)
+    }
+  })
+
   it("refuses an empty sheet", async () => {
     await expect(drawContactSheet([])).rejects.toThrow(/at least one picture/)
   })
