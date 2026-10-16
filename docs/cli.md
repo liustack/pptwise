@@ -236,7 +236,7 @@ pptwise theme fork <name> --primary "#0B5FFF" \
 
 pptwise theme try <id,id,...> [-o <dir>]
 pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
-  [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
+  [--brand <hex>[,<hex>]] [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
 `theme new` copies a preset or resolved workspace theme. Pass either an output path or an id. A created theme is complete and independent.
@@ -251,6 +251,8 @@ Passing `--brand` together with any anchor flag is an error. Quote hex values in
 `theme try` requires two to four distinct names. It writes a contact sheet under `.pptwise/theme-try/` by default. It never changes a deck binding.
 
 With `--title`, `theme try` draws the caller's own pages instead of the fixed sample: a cover with that title (and `--subtitle` as its subheading), and one content page. The content page is three short points in the language `--lang` names, `zh` or `en`, by default `zh` when the title has Chinese, Japanese or Korean characters and `en` otherwise. `--page <file>` replaces it with one content page written the way a deck page is in IR: `kind`, `heading`, `components`, and `type` if you like, which must be `content`. The names may be one or more, or `all` for every theme `themes` lists. With no names, `theme try` draws a shortlist of four to six: the themes whose occasions match `--occasion` (occasion words such as `business` or `tech`, or a narrative preset such as `weekly-brief`, comma-separated), filled from a spread of quiet to bold general themes when fewer than four match. Without `--occasion` it draws that spread: brief, swiss, journal, terminal. The language decides only the sample page, never which themes are drawn.
+
+`--brand <hex>[,<hex>]` adds one more row: the first theme on the wall repainted around a brand color, or a brand and second color, the same repaint `theme fork --brand` writes. The row's id is `<theme>-brand`, its label ends in `· brand`, and it carries `base` (the theme it was made from) and `brand` (the colors as read). Nothing is bound or written outside the output directory. When the user picks it, bind it with `theme fork <base> --brand '<brand>' -o <deck-dir>/theme.json --id <id>`, which the text report prints. Put the theme the brand should wear first in the ids, or let `--occasion` order the shortlist.
 
 Each page is validated alone against each theme. A page a theme refuses, such as a title its cover would cut or components no face it offers for that kind can take, is left out of that theme and listed under `skipped` with validate's own message. `--json` adds `notes`, one line per distinct reason naming the themes it applies to, so a page that fails in every theme reads as one line. The output directory gets one SVG per drawn page, named `<theme>-cover.svg` and `<theme>-content.svg`, a `contact-sheet.html` with one row per theme, and `manifest.json`. `--json` prints the manifest with the absolute output directory as `dir`. Drawing all 22 presets takes about half a second.
 

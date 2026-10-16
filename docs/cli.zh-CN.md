@@ -236,7 +236,7 @@ pptwise theme fork <name> --primary "#0B5FFF" \
 
 pptwise theme try <id,id,...> [-o <dir>]
 pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
-  [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
+  [--brand <hex>[,<hex>]] [--subtitle <text>] [--lang zh|en] [--page <page.json>] [--json] [-o <dir>]
 ```
 
 `theme new` 拷贝一个预设或已解析的工作区主题。输出路径与 id 至少传一个。新主题是完整且独立的对象。
@@ -251,6 +251,8 @@ pptwise theme try [<id,...|all>] --title <text> [--occasion <words>] \
 `theme try` 要求两个到四个互不重复的名称。默认把对比图写到 `.pptwise/theme-try/`。它永远不会修改 deck 绑定。
 
 带 `--title` 时，`theme try` 不画固定样稿，改画调用方自己的页面：一张用这个标题的封面（`--subtitle` 作副题），加一页正文。正文默认是三条短要点，语言由 `--lang` 指定，可选 `zh` 或 `en`，不传时标题里有中日韩文字就用 `zh`，否则用 `en`。`--page <file>` 用一页自己的正文替换它，写法和 IR 里的 deck 页面一样：`kind`、`heading`、`components`，`type` 可写可不写，写的话必须是 `content`。主题名可以是一个或多个，也可以写 `all`，表示 `themes` 列出的全部主题。不写主题名时，`theme try` 画一份四到六个的短名单：场合与 `--occasion` 相符的主题（场合词如 `business`、`tech`，或叙事预设如 `weekly-brief`，逗号分隔），不足四个时从一组从克制到张扬的通用主题里补齐。不传 `--occasion` 时就画这组通用主题：brief、swiss、journal、terminal。语言只决定样例正文页，不影响画哪些主题。
+
+`--brand <hex>[,<hex>]` 多加一行：墙上第一个主题按品牌色（或品牌色加第二色）重新上色，上色方式和 `theme fork --brand` 写出的完全一样。这一行的 id 是 `<主题>-brand`，标签以 `· brand` 结尾，带 `base`（从哪个主题改来）和 `brand`（读到的颜色）。不绑定任何东西，输出目录以外什么也不写。用户选中它时，用 `theme fork <base> --brand '<brand>' -o <deck-dir>/theme.json --id <id>` 绑定，文字报告会打印这一行。想让品牌穿在哪个主题上，就把它放在 id 列表第一个，或者交给 `--occasion` 排短名单。
 
 每一页单独按每个主题校验。主题拒绝的页面，比如封面会截断的标题、这个 kind 能落到的脸都接不住的组件，会从这个主题里去掉，列在 `skipped` 下，并附上 validate 的原话。`--json` 另给 `notes`，同一个原因只写一行，并列出它涉及的主题，所以一页在所有主题里都失败时只读到一行。输出目录里每张画出的页面一个 SVG，命名为 `<theme>-cover.svg` 和 `<theme>-content.svg`，另有每个主题一行的 `contact-sheet.html` 和 `manifest.json`。`--json` 把清单打印出来，并用 `dir` 给出输出目录的绝对路径。画完 22 个预设约需半秒。
 

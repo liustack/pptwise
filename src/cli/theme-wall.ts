@@ -93,7 +93,18 @@ export interface ThemeWallInput {
   lang: ThemeWallLang
   /** The caller's content page, or the default one in `lang` when absent. */
   contentPage?: Record<string, unknown>
-  themes: readonly { id: string; label: string; source: string; definition: ThemeDefinition }[]
+  themes: readonly {
+    id: string
+    label: string
+    source: string
+    definition: ThemeDefinition
+    /** The theme a brand row was repainted from (`theme try --brand`). */
+    base?: string
+    /** The `--brand` value a brand row is repainted in. */
+    brand?: string
+    /** Why the row cannot be drawn at all, such as a brand color the theme cannot carry. */
+    unavailable?: string
+  }[]
 }
 
 export interface ThemeWallPage {
@@ -116,6 +127,10 @@ export interface ThemeWallTheme {
   label: string
   /** `builtin`, `pack`, or `file` for a deck or workspace theme file. */
   source: string
+  /** For the brand row (`--brand`): the theme it was repainted from. */
+  base?: string
+  /** For the brand row: the brand color, or brand and second color, it is repainted in. */
+  brand?: string
   pages: ThemeWallPage[]
   skipped?: ThemeWallSkip[]
 }
@@ -182,7 +197,7 @@ export function buildThemeWall(input: ThemeWallInput): ThemeWall {
     const skipped: ThemeWallSkip[] = []
     const row: ThemeWallSheetRow = { id: theme.id, label: theme.label, cells: [] }
     for (const [type, slide] of [["cover", cover], ["content", content]] as const) {
-      const drawn = drawPage(slide, theme)
+      const drawn = theme.unavailable !== undefined ? { reason: theme.unavailable } : drawPage(slide, theme)
       const pageKind = type === "content" && kind !== undefined ? { kind } : {}
       if ("reason" in drawn) {
         skipped.push({ type, ...pageKind, reason: drawn.reason })
@@ -199,6 +214,8 @@ export function buildThemeWall(input: ThemeWallInput): ThemeWall {
       id: theme.id,
       label: theme.label,
       source: theme.source,
+      ...(theme.base !== undefined ? { base: theme.base } : {}),
+      ...(theme.brand !== undefined ? { brand: theme.brand } : {}),
       pages,
       ...(skipped.length > 0 ? { skipped } : {}),
     }
@@ -252,6 +269,9 @@ export function formatThemeWall(manifest: ThemeWallManifest, dir: string): strin
   const lines = [
     `wrote ${manifest.themes.length} theme${manifest.themes.length === 1 ? "" : "s"} (cover and one content page each) to ${dir}`,
     `  themes: ${manifest.themes.map((theme) => theme.id).join(", ")}`,
+    ...manifest.themes
+      .filter((theme) => theme.brand !== undefined)
+      .map((theme) => `  brand: ${theme.id} is ${theme.base} in ${theme.brand}. Bind it with: pptwise theme fork ${theme.base} --brand '${theme.brand}' -o <deck-dir>/theme.json --id <id>`),
     `  manifest: ${THEME_WALL_MANIFEST_FILE}`,
     `  contact sheet: ${manifest.contactSheet}`,
     ...themeWallSkipNotes(manifest.themes),

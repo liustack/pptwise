@@ -357,14 +357,15 @@ theme
   .option("--page <file>", "with --title: one content page as a deck page carries it (type, kind, heading, components), in place of the default")
   .option("--json", "with --title: print the manifest as JSON")
   .option("--occasion <words>", "with --title and no ids: occasion words or a narrative preset, comma-separated, that pick the shortlist")
+  .option("--brand <hex[,hex]>", "with --title: add the first theme repainted around this brand color, or brand and second color, as one more option, as theme fork --brand would")
   .addHelpText(
     "after",
-    "\nExamples:\n  $ pptwise theme try brief,swiss,memo\n  $ pptwise theme try all --title \"Q3 review\" --subtitle \"Board meeting\" --json\n  $ pptwise theme try --title \"Q3 review\" --occasion business --json",
+    "\nExamples:\n  $ pptwise theme try brief,swiss,memo\n  $ pptwise theme try all --title \"Q3 review\" --subtitle \"Board meeting\" --json\n  $ pptwise theme try --title \"Q3 review\" --occasion business --json\n  $ pptwise theme try --title \"Q3 review\" --occasion business --brand '#C8102E' --json",
   )
   .action(
     async (
       ids: string | undefined,
-      opts: { output?: string; title?: string; subtitle?: string; lang?: string; page?: string; json?: boolean; occasion?: string },
+      opts: { output?: string; title?: string; subtitle?: string; lang?: string; page?: string; json?: boolean; occasion?: string; brand?: string },
     ) => {
       try {
         console.log(
@@ -377,6 +378,7 @@ theme
             page: opts.page,
             json: opts.json,
             occasion: opts.occasion,
+            brand: opts.brand,
           }),
         )
       } catch (e) {

@@ -369,6 +369,8 @@ describe("runThemeTry --title (the caller's own pages)", () => {
       id: string
       label: string
       source: string
+      base?: string
+      brand?: string
       pages: { type: string; kind?: string; file: string }[]
       skipped?: { type: string; kind?: string; reason: string }[]
     }[]
@@ -485,6 +487,31 @@ describe("runThemeTry --title (the caller's own pages)", () => {
     await expect(runThemeTry("brief", { cwd, title: "Q3", occasion: "business" })).rejects.toThrow(/not both/)
     await expect(runThemeTry(undefined, { cwd })).rejects.toThrow(/expects 2-4 theme ids, or --title/)
     await expect(runThemeTry("brief,swiss", { cwd, occasion: "business" })).rejects.toThrow(/--occasion draw .* need --title/)
+  })
+
+  it("adds the first theme repainted in the brand's colors as one more option, as theme fork --brand would bind it", async () => {
+    const cwd = await tmp("pptwise-theme-wall-brand-")
+    const plain = JSON.parse(await runThemeTry("ink,swiss", { output: join(cwd, "a"), cwd, title: "Q3 review", json: true })) as WallManifest
+    const branded = JSON.parse(
+      await runThemeTry("ink,swiss", { output: join(cwd, "b"), cwd, title: "Q3 review", brand: "#c8102e", json: true }),
+    ) as WallManifest
+    expect(plain.themes.map((theme) => theme.id)).toEqual(["ink", "swiss"])
+    expect(branded.themes.map((theme) => [theme.id, theme.label, theme.base, theme.brand])).toEqual([
+      ["ink", "Ink", undefined, undefined],
+      ["swiss", "Swiss", undefined, undefined],
+      ["ink-brand", "Ink · brand", "ink", "#C8102E"],
+    ])
+    const brandRow = branded.themes[2]!
+    expect(brandRow.pages.map((page) => page.file)).toEqual(["ink-brand-cover.svg", "ink-brand-content.svg"])
+    const repainted = await readFile(join(cwd, "b", "ink-brand-cover.svg"), "utf8")
+    expect(repainted.toUpperCase()).toContain("#C8102E")
+    // The ink row itself keeps its own colors, the same drawing as without --brand.
+    expect(await readFile(join(cwd, "b", "ink-cover.svg"), "utf8")).toBe(await readFile(join(cwd, "a", "ink-cover.svg"), "utf8"))
+    const summary = await runThemeTry("ink,swiss", { output: join(cwd, "c"), cwd, title: "Q3 review", brand: "#C8102E,#1F3A93" })
+    expect(summary).toContain("themes: ink, swiss, ink-brand")
+    expect(summary).toContain("brand: ink-brand is ink in #C8102E,#1F3A93. Bind it with: pptwise theme fork ink --brand '#C8102E,#1F3A93' -o <deck-dir>/theme.json --id <id>")
+    await expect(runThemeTry("ink,swiss", { cwd, title: "Q3", brand: "red" })).rejects.toThrow(/brand/i)
+    await expect(runThemeTry("ink,swiss", { cwd, brand: "#C8102E" })).rejects.toThrow(/--brand draw .* need --title/)
   })
 
   it("says once that a content page failed in every theme, instead of once per theme", async () => {

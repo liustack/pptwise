@@ -117,7 +117,7 @@ import {
   type ThemeInputs,
 } from "./theme-inputs"
 import { forkTheme } from "./theme-fork"
-import { describePlacement, parseBrandOption, regenerateFromBrand } from "../themes/brand/brand-regen"
+import { describePlacement, parseBrandOption, type BrandColors, regenerateFromBrand } from "../themes/brand/brand-regen"
 import { themeFileFromPreset } from "../themes/presets"
 import { THEME_TRY_SAMPLE_IR } from "./fixtures/theme-try-sample"
 import { offeredContentKinds, resolveEffectiveFace } from "../render/layout-selection"
@@ -1524,6 +1524,11 @@ export interface ThemeTryOptions {
    * that pick a shortlist of four to six themes.
    */
   occasion?: string
+  /**
+   * `--brand`: with `title`, draw every theme repainted around this brand
+   * color, or brand and second color, the way `theme fork --brand` would.
+   */
+  brand?: string
 }
 
 /**
@@ -1592,6 +1597,7 @@ export async function runThemeTry(idsRaw: string | undefined, opts: ThemeTryOpti
     ["--page", opts.page],
     ["--json", opts.json || undefined],
     ["--occasion", opts.occasion],
+    ["--brand", opts.brand],
   ].filter(([, value]) => value !== undefined)
   if (needsTitle.length > 0) {
     throw new PptwiseError(`${needsTitle.map(([flag]) => flag).join(", ")} draw the caller's own pages and need --title`)
@@ -1665,6 +1671,27 @@ async function themeWallNames(raw: string): Promise<string[]> {
 }
 
 /**
+ * The wall's brand option: the first theme on the wall, repainted around the
+ * brand the way `theme fork <id> --brand` writes it, kept in memory under
+ * the row's own id, `<id>-brand`. The row names the theme it was made from (`base`) and the
+ * `--brand` value, which is all a fork needs to bind it. A theme the brand
+ * cannot repaint still gets its row, with both pages left out and the reason.
+ */
+async function brandWallRow(base: ResolvedTheme, colors: BrandColors): Promise<ThemeWallInput["themes"][number]> {
+  const label = base.definition.label ?? base.id
+  const source = base.kind === "builtin" ? "builtin" : base.pack !== undefined ? "pack" : "file"
+  const row = { id: `${base.id}-brand`, label: `${label} · brand`, source, base: base.id, brand: [colors.brand, ...(colors.second ? [colors.second] : [])].join(",") }
+  try {
+    const file = await themeFileFromResolved(base, { id: row.id, label: row.label })
+    const { file: repainted } = regenerateFromBrand(file, colors, { id: row.id, label: row.label })
+    return { ...row, definition: compileThemeDefinition(repainted) }
+  } catch (error) {
+    const why = error instanceof Error ? error.message.split("\n")[0]! : String(error)
+    return { ...row, definition: base.definition, unavailable: `the brand color does not repaint ${base.id}: ${why}` }
+  }
+}
+
+/**
  * `pptwise theme try <ids|all> --title <text>`: the caller's cover and one
  * content page in each named theme, as SVG files, a manifest naming them,
  * and a contact sheet. See `./theme-wall.ts`.
@@ -1675,11 +1702,15 @@ async function runThemeWall(idsRaw: string, opts: ThemeTryOptions & { title: str
   if (title === "") throw new PptwiseError("--title is empty. Pass the deck's cover title")
   const names = await themeWallNames(idsRaw)
   const themes: ThemeWallInput["themes"][number][] = []
+  const brand = opts.brand !== undefined ? parseBrandOption(opts.brand) : undefined
+  let brandBase: ResolvedTheme | undefined
   for (const name of names) {
     const resolved = await resolveThemeByName(name, { startDir: cwd })
     const source = resolved.kind === "builtin" ? "builtin" : resolved.pack !== undefined ? "pack" : "file"
     themes.push({ id: resolved.id, label: resolved.definition.label ?? resolved.id, source, definition: resolved.definition })
+    brandBase ??= resolved
   }
+  if (brand && brandBase) themes.push(await brandWallRow(brandBase, brand))
   let contentPage: Record<string, unknown> | undefined
   if (opts.page !== undefined) {
     const pagePath = resolve(cwd, opts.page)
