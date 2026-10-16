@@ -6,7 +6,7 @@ read_when:
   - 读取一页的填写契约，或在 render 前检查一页放不放得下
   - 创建、分叉、对比、抽取或解析主题
   - 排查 audit 输出、图片获取或安装状态
-  - 设置 license 或同步内容包
+  - 用 license 登录、退出，或同步内容包
 ---
 
 # CLI
@@ -60,7 +60,9 @@ pptwise preview deck-dir/ --html
 | `images generate` | 通过已启用的本地 CLI 生成并固定图片。 |
 | `config set` | 设置可选用户配置。 |
 | `config show` | 显示已生效配置，秘密会遮盖。 |
-| `license set <key>` | 保存解锁内容包的 license。 |
+| `login [key]` | 向包服务器校验 license，保存它，并安装它覆盖的内容包。 |
+| `logout` | 删除已保存的 license，已装的包保留。 |
+| `license set <key>` | 保存解锁内容包的 license，不询问服务器。 |
 | `license status` | 显示是否已配置 license。 |
 | `license clear` | 删除已保存的 license。 |
 | `packs sync` | 安装或更新 license 覆盖的内容包。 |
@@ -401,6 +403,8 @@ Serve 监听 IR 或项目源文件，包括 deck 本地的 `theme.json`，并刷
 ## 内容包
 
 ```bash
+pptwise login [key] [--json]
+pptwise logout
 pptwise license set <key>
 pptwise license status
 pptwise license clear
@@ -408,7 +412,9 @@ pptwise packs sync [--json]
 pptwise packs list [--json]
 ```
 
-内容包是一组带版本的额外主题，由 license 解锁。`license set` 校验 key 的形状后存进 `$PPTWISE_HOME/license.json`，只有本人可读。`license status` 最多显示 key 的前 8 个字符。`license clear` 删除 key，已装的包保持原样。
+内容包是一组带版本的额外主题，由 license 解锁。`login` 一步拿到它们：校验 key 的形状，问包服务器认不认这个 key，保存它，再像 `packs sync` 一样安装它覆盖的包。不给 `[key]` 时用隐藏输入询问，stdin 不是终端时改为打印用法并以 1 退出。服务器不认识（401）或已吊销（403）的 key 不保存。付款还在人工审核中（423）的 key 会保存，但暂不安装：审核通过后跑 `packs sync`。连不上服务器时什么都不保存，可以用 `license set` 先离线保存，之后再跑 `packs sync`。key 被接受但有包没装上时，key 照样保存，命令以 1 退出。`logout` 和 `license clear` 一样删除已保存的 key，已装的包保持原样。
+
+`license set` 校验 key 的形状后存进 `$PPTWISE_HOME/license.json`，只有本人可读。`license status` 最多显示 key 的前 8 个字符。`license clear` 删除 key，已装的包保持原样。
 
 `packs sync` 找出 license 覆盖、但本地缺失或版本不同的包，逐个下载安装。装前校验 sha256、`pack.json`、engine 范围与每个主题文件。需要更新版 pptwise 的包会跳过并提示更新。没有 license 时只打印一行并以 0 退出。同步失败时已装的包保持原样，并以 1 退出。`PPTWISE_PACKS_URL` 可以改指另一台服务器，地址必须是 https（只有 `localhost`、`127.0.0.1`、`::1` 上允许明文 http）。协议、包格式与 `--json` 报告见 [内容包](./packs.zh-CN.md)。
 
@@ -423,7 +429,7 @@ pptwise check-update
 pptwise self-update
 ```
 
-只有 `config set`、`license set`、`license clear` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`packs sync` 在安装时跑，不按 deck 跑。
+只有 `config set`、`login`、`logout`、`license set`、`license clear` 和 `packs sync` 会写 pptwise 主目录（`$PPTWISE_HOME`，缺省为 `~/.pptwise`）。做 deck、查 deck 的命令最多只读它，读不到配置就用默认值，所以主目录只读或不存在时照样能做 deck。`login` 和 `packs sync` 在安装时跑，不按 deck 跑。
 
 设置秘密时省略 `config set` 的 value，可以通过隐藏输入填写。`doctor` 只在硬失败时以退出码 1 结束。可选的 `sharp` 与 LibreOffice 能力会单独报告。
 

@@ -1,7 +1,7 @@
 ---
-summary: '客户端视角的内容包：license key、packs sync 与 packs list、包服务器的两个接口、包文件格式、本地安装状态，以及包内主题在主题查找里的位置'
+summary: '客户端视角的内容包：license key、login 与 logout、packs sync 与 packs list、包服务器的两个接口、包文件格式、本地安装状态，以及包内主题在主题查找里的位置'
 read_when:
-  - 设置、查看或清除 license key
+  - 登录、退出，或设置、查看、清除 license key
   - 运行或排查 `pptwise packs sync`，或读它的 `--json` 报告
   - 某个包被跳过或拒装，或者包内主题解析不到
   - 用 `PPTWISE_PACKS_URL` 把 CLI 指向镜像或测试服务器
@@ -17,6 +17,8 @@ CLI 和包服务器之间只约定本文描述的接口，协议版本 1。
 ## 命令
 
 ```bash
+pptwise login [key] [--json]
+pptwise logout
 pptwise license set <key>
 pptwise license status
 pptwise license clear
@@ -24,16 +26,28 @@ pptwise packs sync [--json]
 pptwise packs list [--json]
 ```
 
+`login` 是一步到位的入口：校验 key 的形状，向服务器的目录接口确认它认不认这个 key，像 `license set` 一样保存 key，再用同一份目录响应像 `packs sync` 一样安装内容包。不给 `[key]` 时用隐藏输入询问。stdin 不是终端时打印用法并以 1 退出。形状不对的 key 在发请求之前就被拒绝。之后按目录接口的回应处理（见 [`GET /api/packs/catalog`](#get-apipackscatalog)）：
+
+| 回应 | key | 内容包 | 退出码 |
+| --- | --- | --- | --- |
+| `200` | 保存 | 像 `packs sync` 一样同步 | 0，有包失败时为 1（key 仍保存，稍后跑 `packs sync`） |
+| `401` | 不保存 | 不动 | 1 |
+| `403` | 不保存 | 不动 | 1 |
+| `423` | 保存 | 不同步：审核通过后跑 `packs sync` | 0 |
+| 无响应、其他状态 | 不保存 | 不动 | 1 |
+
+不保存时，之前保存的 key 原样保留。连不上服务器时，可以用 `license set` 先离线保存 key，之后再跑 `packs sync`。`--json` 输出 `{"outcome", "ok", "saved", "server"}`：被拒时带 `status` 和 `message`（服务器的说明，或请求失败的原因），key 被接受时带 `sync`（即下文的 `packs sync` 报告）。`outcome` 取 `accepted`、`held`（423）、`unknown`（401）、`revoked`（403）或 `failed`。`logout` 和 `license clear` 一样删除已保存的 key，已装的包保留。
+
 `license set` 校验 key 的形状，写入 `$PPTWISE_HOME/license.json`，内容是 `{"key": "ptw_..."}`，只有本人可读（权限 0600）。key 的形状是 `ptw_` 加 32 个 `a-z` 与 `2-7` 之间的字符，共 36 个字符。key 是否有效由服务器回答，不由 CLI 判断。`license status` 说明是否已配置 key，只显示前 8 个字符。`license clear` 删除这个文件，已装的包保留。
 
-`packs sync` 是安装步骤：`license set` 之后跑一次，换了 license 或想装新版内容包时再跑。它和 `config set`、`license set`、`license clear` 是仅有的会写 `$PPTWISE_HOME` 的命令。做 deck 只读已装的包，所以主目录只读时也能做。它读取 license，向服务器要目录，把目录里的每个包更新到位：
+`packs sync` 是安装步骤：`login` 会跑一次，换了 license、审核通过后或想装新版内容包时再跑。它和 `config set`、`login`、`logout`、`license set`、`license clear` 是仅有的会写 `$PPTWISE_HOME` 的命令。做 deck 只读已装的包，所以主目录只读时也能做。它读取 license，向服务器要目录，把目录里的每个包更新到位：
 
 - 没有 license 时只打印一行并以 0 退出，所以安装脚本可以无条件调用它。
 - 本地已装且版本与目录一致的包不动，不下载任何东西。
 - 本地缺失或版本不同的包，下载、校验后安装（见[安装前的检查](#安装前的检查)）。
 - `engine` 范围不包含当前 pptwise 版本的包会跳过，并提示更新 pptwise。已装的旧版本保留。
 - 某个包校验失败或下载中断时，报告原因且不安装。其他包照常同步。之前装的版本（如有）原样保留。
-- 目录读不到时（断网、401、403、503、响应无法解析），磁盘上什么都不变，命令会说明原因。
+- 目录读不到时（断网、401、403、423、503、响应无法解析），磁盘上什么都不变，命令会说明原因。遇到 423 时会提示审核通过后再跑 `packs sync`。
 
 每个包都已安装、已是最新，或因 engine 范围跳过时，退出码为 0。目录读不到或任一包失败时，退出码为 1。
 
@@ -92,13 +106,14 @@ Authorization: Bearer ptw_...
 | --- | --- |
 | `401` | 没有带 key，或 key 不存在。 |
 | `403` | key 已被吊销。 |
+| `423` | key 存在，但背后的付款正在人工审核。客户端应保留 key，稍后再同步。审核通过后 key 开始生效，审核结果为吊销时改答 `403`。 |
 | `503` | 服务器还没有配置好内容包服务。 |
 
 key 被吊销只会挡住新的下载，不做任何远程删除：已经装好的包保留，照常可用。
 
 ### `GET /api/packs/<id>/<version>.zip`
 
-`200` 以 `application/zip` 返回压缩包，其字节的哈希等于目录里同一条目的 `sha256`。`401` 和 `403` 的含义与目录接口相同。`404` 表示没有这个包或这个版本。
+`200` 以 `application/zip` 返回压缩包，其字节的哈希等于目录里同一条目的 `sha256`。`401`、`403` 和 `423` 的含义与目录接口相同。`404` 表示没有这个包或这个版本。
 
 ## 包文件
 

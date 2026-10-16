@@ -1,7 +1,7 @@
 ---
-summary: 'Content packs from the client side: the license key, packs sync and packs list, the two pack-server endpoints, the pack archive format, local install state, and where pack themes sit in the theme lookup'
+summary: 'Content packs from the client side: the license key, login and logout, packs sync and packs list, the two pack-server endpoints, the pack archive format, local install state, and where pack themes sit in the theme lookup'
 read_when:
-  - setting up, checking, or clearing a license key
+  - logging in or out, or setting up, checking, or clearing a license key
   - running or debugging `pptwise packs sync`, or reading its `--json` report
   - a pack was skipped or refused, or a pack theme does not resolve
   - pointing the CLI at a mirror or a test server with `PPTWISE_PACKS_URL`
@@ -17,6 +17,8 @@ The CLI and the pack server agree only on the interface described here, protocol
 ## Commands
 
 ```bash
+pptwise login [key] [--json]
+pptwise logout
 pptwise license set <key>
 pptwise license status
 pptwise license clear
@@ -24,16 +26,28 @@ pptwise packs sync [--json]
 pptwise packs list [--json]
 ```
 
+`login` is the one-step way in: it checks the key's shape, asks the server's catalog whether it knows the key, saves the key the way `license set` does, and installs packs from that same catalog answer the way `packs sync` does. Without `[key]` it asks for the key at a hidden prompt. When stdin is not a terminal it prints the usage and exits 1. A malformed key is refused before any request. What happens next depends on the catalog's answer (see [`GET /api/packs/catalog`](#get-apipackscatalog)):
+
+| answer | key | packs | exit |
+| --- | --- | --- | --- |
+| `200` | saved | synced as `packs sync` does | 0, or 1 when a pack failed (the key stays saved: run `packs sync` later) |
+| `401` | not saved | untouched | 1 |
+| `403` | not saved | untouched | 1 |
+| `423` | saved | not synced: run `packs sync` once the review clears | 0 |
+| no answer, other status | not saved | untouched | 1 |
+
+A key that is not saved leaves any key saved earlier in place. When the server cannot be reached, `license set` saves the key offline for a later `packs sync`. `--json` prints `{"outcome", "ok", "saved", "server"}`, with `status` and `message` (the server's sentence, or why the request failed) for a refusal, and `sync` (the `packs sync` report below) for an accepted key. `outcome` is `accepted`, `held` (423), `unknown` (401), `revoked` (403), or `failed`. `logout` removes the saved key, as `license clear` does. Installed packs stay installed.
+
 `license set` checks the key's shape and writes it to `$PPTWISE_HOME/license.json` as `{"key": "ptw_..."}`, readable by the owner only (mode 0600). A key is `ptw_` followed by 32 characters from `a-z` and `2-7`, 36 characters in all. Whether a key is valid is the server's answer, not the CLI's. `license status` says whether a key is configured and shows its first eight characters, never more. `license clear` deletes the file. Installed packs stay installed.
 
-`packs sync` is an installation step: run it once after `license set`, and again when the license changes or to pick up newer packs. With `config set` and `license set` and `clear`, it is one of the only commands that write `$PPTWISE_HOME`. Making a deck only reads the installed packs, so it works where the home folder is read-only. It reads the license, asks the server for its catalog, and brings every listed pack up to date:
+`packs sync` is an installation step: `login` runs it once, and it runs again when the license changes, after a review clears, or to pick up newer packs. With `config set`, `login`, `logout`, and `license set` and `clear`, it is one of the only commands that write `$PPTWISE_HOME`. Making a deck only reads the installed packs, so it works where the home folder is read-only. It reads the license, asks the server for its catalog, and brings every listed pack up to date:
 
 - Without a license it prints one line and exits 0, so an install script can run it unconditionally.
 - A pack already installed at the catalog's version is left alone. Nothing is downloaded.
 - A pack missing locally or at another version is downloaded, checked, and installed (see [Before install](#before-install)).
 - A pack whose `engine` range does not include the running pptwise is skipped with a note to update pptwise. An installed older version stays.
 - A pack that fails a check, or whose download breaks off, is reported and not installed. Other packs still sync. The version installed before, if any, stays in place.
-- When the catalog cannot be read (no network, 401, 403, 503, an unreadable body), nothing on disk changes and the command says why.
+- When the catalog cannot be read (no network, 401, 403, 423, 503, an unreadable body), nothing on disk changes and the command says why. On 423 it says to run `packs sync` again once the review clears.
 
 The exit code is 0 when every pack is installed, current, or skipped for its engine range, and 1 when the catalog could not be read or any pack failed.
 
@@ -92,13 +106,14 @@ Pack ids are lowercase letters, digits, and inner hyphens (`^[a-z0-9][a-z0-9-]*$
 | --- | --- |
 | `401` | No key was sent, or the key does not exist. |
 | `403` | The key has been revoked. |
+| `423` | The key exists, but the payment behind it is being reviewed by hand. A client keeps the key and syncs again later. The key starts working when the review clears, or answers `403` if the review revokes it. |
 | `503` | The server is not configured to serve packs. |
 
 A revoked key only stops new downloads. Nothing is deleted remotely: packs already installed stay installed and keep working.
 
 ### `GET /api/packs/<id>/<version>.zip`
 
-`200` returns the archive as `application/zip`. Its bytes hash to the `sha256` of the same catalog entry. `401` and `403` mean what they mean for the catalog. `404` means there is no such pack or version.
+`200` returns the archive as `application/zip`. Its bytes hash to the `sha256` of the same catalog entry. `401`, `403`, and `423` mean what they mean for the catalog. `404` means there is no such pack or version.
 
 ## Pack archive
 
