@@ -393,6 +393,10 @@ export function sleep(ms: number): Promise<void> {
  *  finish, for a test asserting that no such rebuild happened. */
 export const DEBOUNCE_GRACE_MS = 800
 
+/** A theme poll interval no test outlives: started with it, a server only
+ *  rebuilds for a theme file on that file's event. */
+export const WATCHER_ONLY_MS = 10 * 60_000
+
 /**
  * Whether a path that runs through a plain file fails with ENOTDIR here.
  *
@@ -493,12 +497,13 @@ export const openHandles: ServeHandle[] = []
  *  this returns and wait for that write to be seen. */
 export async function startServe(
   target: string,
-  opts: { port?: number; cwd?: string } = {},
+  opts: { port?: number; cwd?: string; themePollMs?: number } = {},
 ): Promise<ServeHandle> {
   const handle = await createServeServer({
     target,
     port: opts.port ?? 0,
     cwd: opts.cwd,
+    themePollMs: opts.themePollMs,
   })
   openHandles.push(handle)
   await untilWatchersLive()

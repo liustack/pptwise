@@ -148,6 +148,11 @@ export interface ServeOptions {
    *  auto-increments). */
   port?: number
   cwd?: string
+  /** How often the theme inputs are collected again and compared,
+   *  {@link THEME_POLL_MS} unless given. Tests only: a test stretches it
+   *  past its own length, so a refresh it sees can only have come from a
+   *  file event, never from the timed check. */
+  themePollMs?: number
 }
 
 export interface ServeHandle {
@@ -1018,7 +1023,7 @@ export async function createServeServer(options: ServeOptions): Promise<ServeHan
     watchedTarget = { resolvedTarget: initial.resolvedTarget, isDir: initial.isDir }
     watchers.update(currentWatchRoots())
     heartbeat = setInterval(() => writeToAll(": heartbeat\n\n"), HEARTBEAT_MS)
-    themePoll = setInterval(() => void checkThemeSource(), THEME_POLL_MS)
+    themePoll = setInterval(() => void checkThemeSource(), options.themePollMs ?? THEME_POLL_MS)
     await new Promise<void>((resolveListen, rejectListen) => {
       const onError = (err: NodeJS.ErrnoException) => {
         server.removeListener("listening", onListening)

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { DEBOUNCE_GRACE_MS, INVALID_IR_SHAPE, PNG_1PX, VALID_IR, atomicReplace, connectSSE, fsGate, get, getHeaders, holdNextThemeCheck, holdReads, makeDeckPlan, makeDir, pollUntil, post, resolveGate, settledRevision, sleep, startServe, untilWatchersLive } from "./__fixtures__/serve-harness"
+import { DEBOUNCE_GRACE_MS, INVALID_IR_SHAPE, PNG_1PX, VALID_IR, atomicReplace, connectSSE, fsGate, get, getHeaders, holdNextThemeCheck, holdReads, makeDeckPlan, makeDir, pollUntil, post, resolveGate, settledRevision, sleep, startServe, untilWatchersLive, WATCHER_ONLY_MS } from "./__fixtures__/serve-harness"
 import { spawn } from "node:child_process"
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, join, parse, resolve, sep } from "node:path"
@@ -793,7 +793,8 @@ describe("createServeServer — theme files that appear after startup", () => {
   it("a workspace themes/<name>.theme.json created mid-session shadows the built-in, and its edits and removal both reach the preview", async () => {
     const dir = await makeDir("pptwise-serve-late-theme-")
     const deckDir = await makeBriefDeck(dir)
-    const handle = await startServe(deckDir, { cwd: dir })
+    // No timed check: every refresh below comes from a file event.
+    const handle = await startServe(deckDir, { cwd: dir, themePollMs: WATCHER_ONLY_MS })
     expect((await get(handle.port, "/")).body.toUpperCase()).toContain(BUILTIN_BRIEF_PRIMARY)
 
     // No themes/ anywhere at startup: the deck renders the factory brief.
@@ -819,8 +820,11 @@ describe("createServeServer — theme files that appear after startup", () => {
     await mkdir(join(deckDir, "pages"), { recursive: true })
     await writeFile(join(deckDir, "deck.spec.json"), JSON.stringify(makeDeckPlan()))
     await writeFile(join(deckDir, "pages", "p-a.json"), JSON.stringify({ components: [{ type: "paragraph", text: "first draft" }] }))
-    // Started from inside the deck: the project is still the folder holding .pptwise/.
-    const handle = await startServe(deckDir, { cwd: deckDir })
+    // Started from inside the deck: the project is still the folder holding
+    // .pptwise/. No timed check, so the theme refresh below comes from the
+    // watcher on the project's themes/, not from the poll that would find it
+    // within two seconds anyway.
+    const handle = await startServe(deckDir, { cwd: deckDir, themePollMs: WATCHER_ONLY_MS })
     const sse = await connectSSE(handle.port)
     await writeFile(join(deckDir, "pages", "p-a.json"), JSON.stringify({ components: [{ type: "paragraph", text: "revised draft" }] }))
     await sse.waitFor("reload")
