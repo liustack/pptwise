@@ -1,5 +1,7 @@
 import type { Component, PageKind, Slide } from "@/ir"
 import type { CompositionSetting } from "./shared"
+import { parseDuration } from "../../lib/duration"
+import { stripEmphasis } from "../../render/emphasis"
 
 /*
  * Recipes: what an author writes to get a composition.
@@ -33,10 +35,12 @@ export type RecipePageField = "footnote" | "kicker" | "tag" | "stamp" | "ballot"
  * fields the drawing needs filled, as paths into the component: `caption`,
  * `items[].icon` (at least one item carries an icon), `items[*].icon` (every
  * item does), `direction=horizontal` (the field holds that value),
- * `chart_type=bar|line` (one of those), `items[*]~colon` and
- * `milestones[*].desc~figure` (its words are written `lead: rest`, or hold
- * a number). A field the schema requires is named only for a value or a way
- * of writing it. `optional` marks a part the drawing does without, every
+ * `chart_type=bar|line` (one of those), `items[*]~colon`,
+ * `milestones[*].desc~figure` and `items[*].value~duration` (its words are
+ * written `lead: rest`, hold a number, or are a length of time such as
+ * `2h52m`), and `!items[].unit|note` (no item fills either field: the drawing
+ * has no place for them and steps aside when one is written). A field the
+ * schema requires is named only for a value or a way of writing it. `optional` marks a part the drawing does without, every
  * combination of a shape's optional parts left out tested.
  */
 export interface RecipePart {
@@ -197,10 +201,39 @@ const WORDS: Readonly<Record<string, { test: (text: string) => boolean; as: (whe
   colon: { test: (text) => /^[^：:]+[：:]\s*\S/u.test(text.trim()), as: (where) => `${where} as "lead: rest"` },
   // `周末翻台率从 2.1 提到 2.8`, `2019`.
   figure: { test: (text) => /\d/u.test(text), as: (where) => `a number in ${where}` },
+  // `2h52m`, `22h 06m`, `**14h32m**`: a length of time as a console prints it.
+  duration: { test: (text) => parseDuration(stripEmphasis(text)) !== null, as: (where) => `${where} as a length of time such as 2h52m` },
 }
 
-/** Whether `component` meets one need: the field is filled, holds one of the values named, or its words are written as named, on some entry of a `[]` list and on every entry of a `[*]` one. */
+/** A need that fields are left out (`!items[].unit|note`): the steps to their owner, and the fields. */
+function absentNeed(need: string): { owner: string[]; fields: string[] } | null {
+  if (!need.startsWith("!")) return null
+  // Left out of every entry is "no entry fills it", read on some entry and negated.
+  const steps = need.slice(1).split(".").map((step) => step.replace(/\[\*\]$/, "[]"))
+  const fields = steps.pop()!.split("|")
+  return { owner: steps, fields }
+}
+
+/** The fields of an absent need that `component` fills anyway. */
+function filledAbsent(component: Component, absent: { owner: string[]; fields: string[] }): string[] {
+  return absent.fields.filter((field) => meets(component, [...absent.owner, field], present))
+}
+
+/** `a`, `a and b`, `a, b and c`. */
+function joinAnd(words: readonly string[], last = "and"): string {
+  return words.length <= 1 ? (words[0] ?? "") : `${words.slice(0, -1).join(", ")} ${last} ${words[words.length - 1]}`
+}
+
+/** The noun one entry of an absent need's owner goes by, or undefined when the fields sit on the component itself. */
+function absentOwnerNoun(absent: { owner: string[] }): string | undefined {
+  const owner = absent.owner[absent.owner.length - 1]
+  return owner === undefined ? undefined : singular(owner.replace(/\[\*?\]$/, ""))
+}
+
+/** Whether `component` meets one need: the field is filled, holds one of the values named, or its words are written as named, on some entry of a `[]` list and on every entry of a `[*]` one, or for a `!` need, none of its fields is filled anywhere. */
 export function meetsNeed(component: Component, need: string): boolean {
+  const absent = absentNeed(need)
+  if (absent !== null) return filledAbsent(component, absent).length === 0
   const words = /^(.+)~(\w+)$/.exec(need)
   if (words !== null) {
     const rule = WORDS[words[2]!]!
@@ -217,8 +250,14 @@ export function isWordsNeed(need: string): boolean {
   return need.includes("~")
 }
 
-/** `items[].icon` as `icon on an item`, `items[*].icon` as `icon on every item`, `direction=horizontal` as `direction horizontal`. */
+/** `items[].icon` as `icon on an item`, `items[*].icon` as `icon on every item`, `direction=horizontal` as `direction horizontal`, `!items[].unit|note` as `no unit or note on any item`. */
 export function describeNeed(need: string): string {
+  const absent = absentNeed(need)
+  if (absent !== null) {
+    const noun = absentOwnerNoun(absent)
+    const fields = joinAnd(absent.fields, "or")
+    return noun === undefined ? `no ${fields}` : `no ${fields} on any ${noun}`
+  }
   const words = /^(.+)~(\w+)$/.exec(need)
   if (words !== null) return WORDS[words[2]!]!.as(wordsWhere(words[1]!))
   const [path, want] = need.split("=", 2) as [string, string | undefined]
@@ -334,6 +373,13 @@ export function shapeGaps(shape: RecipeShape, slide: Pick<Slide, "components"> &
     }
     for (const need of part.needs ?? []) {
       if (meetsNeed(component, need)) continue
+      const absent = absentNeed(need)
+      if (absent !== null) {
+        const noun = absentOwnerNoun(absent)
+        const filled = joinAnd(filledAbsent(component, absent).map((field) => `the ${field}`))
+        gaps.push(noun === undefined ? `in the ${part.type}, take out ${filled}` : `in the ${part.type}, take ${filled} off every ${noun}`)
+        continue
+      }
       gaps.push(isWordsNeed(need) ? `in the ${part.type}, write ${describeNeed(need)}` : `set ${describeNeed(need)} in the ${part.type}`)
     }
   })

@@ -41,7 +41,7 @@ const AXIS = { min: 94, gap: 24, stroke: 1.5, textGap: 24 } as const
 export const logRecipe: Recipe = {
   look: "A timeline set as an incident log",
   kinds: ["process"],
-  shapes: [{ parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].value~figure"] }, { type: "callout", optional: true }, { type: "callout", optional: true }] }],
+  shapes: [{ parts: [{ type: "timeline", count: [2, 7] }, { type: "kpi_cards", count: [2, 2], needs: ["items[*].value~duration", "!items[].unit|icon|delta|tag|source|note"] }, { type: "callout", optional: true }, { type: "callout", optional: true }] }],
 }
 
 export const logComposition: Composition = ({ components, ctx, rect, setting, handOn }) => {

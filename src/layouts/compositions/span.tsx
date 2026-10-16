@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Component } from "@/ir"
 import { kpiValueText } from "../../components/kpi"
+import { parseDuration } from "../../lib/duration"
 import { blendOver, readableOn } from "../../render/ink"
 import { blockTag, compositionTag, type Composition } from "./shared"
 import { fitFixed, paintLines } from "./type"
@@ -58,17 +59,6 @@ const PANEL = { pad: 24, header: { top: 14, box: 20, size: 13 }, gap: 16 } as co
 const ROW = { first: 60, pitch: 84, labelSize: 14, bar: 12, barH: 30, valueSize: 16, valueGap: 10 } as const
 const NOTE = { size: 14, lineHeight: 20, maxLines: 2, below: 44, foot: 30 } as const
 
-const UNIT_MINUTES: Record<string, number> = { d: 1440, h: 60, m: 1, s: 1 / 60 }
-
-/** A length of time written as a console prints it ("2h52m", "22h 06m"), in minutes, or `null`. */
-export function parseDuration(text: string): number | null {
-  const plain = text.trim()
-  if (!/^(\d+(\.\d+)?\s*[dhms]\s*)+$/u.test(plain)) return null
-  let minutes = 0
-  for (const match of plain.matchAll(/(\d+(?:\.\d+)?)\s*([dhms])/gu)) minutes += Number(match[1]) * UNIT_MINUTES[match[2]!]!
-  return minutes > 0 ? minutes : null
-}
-
 interface SpanShape {
   kpis: KpiCards
   info: Callout | undefined
@@ -90,7 +80,7 @@ function spanShape(components: readonly Component[]): SpanShape | null {
 export const spanRecipe: Recipe = {
   look: "Two or three lengths of time to scale",
   kinds: ["data"],
-  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 3], needs: ["items[*].value~figure"] }] }],
+  shapes: [{ parts: [{ type: "kpi_cards", count: [2, 3], needs: ["items[*].value~duration", "!items[].unit|icon|delta|tag|source|note"] }] }],
 }
 
 export const spanComposition: Composition = ({ components, ctx, rect, setting }) => {

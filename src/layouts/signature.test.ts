@@ -46,6 +46,28 @@ describe("recipe lines", () => {
     expect(meetsNeed(kpis, "items[*].value~figure")).toBe(true)
   })
 
+  it("ask a span's figures for lengths of time and nothing it does not set", () => {
+    // A terminal page (2026-10) wrote 「16 个月」 and 「4 位」 with notes, and
+    // the hint said the page had the recipe and only its words ran long.
+    const shape = { parts: RECIPES.span.shapes[0]!.parts }
+    expect(describePart(shape.parts[0]!)).toBe(
+      "kpi_cards (2 to 3 items, each item's value as a length of time such as 2h52m, no unit, icon, delta, tag, source or note on any item)",
+    )
+    const plain = {
+      type: "kpi_cards",
+      items: [
+        { value: "16", unit: "个月", label: "从「溟月」到出圈", note: "2025-06-25 → 2026-10" },
+        { value: "4", unit: "位", label: "接力画完这张脸" },
+      ],
+    } as Component
+    expect(shapeGaps(shape, { components: [plain] })).toEqual([
+      "in the kpi_cards, write each item's value as a length of time such as 2h52m",
+      "in the kpi_cards, take the unit and the note off every item",
+    ])
+    const durations = { type: "kpi_cards", items: [{ value: "**2h52m**", label: "DynamoDB down" }, { value: "14h32m", label: "the whole event" }] } as Component
+    expect(shapeGaps(shape, { components: [durations] })).toEqual([])
+  })
+
   it("say what a page lacks for a shape, in the order an author would fix it", () => {
     const shape = { parts: [{ type: "kpi_cards", count: [3, 4] }, { type: "blockquote" }], page: ["footnote"] } as const
     expect(shapeGaps(shape, { components: [KPIS, PROSE] })).toEqual([

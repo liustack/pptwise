@@ -42,6 +42,8 @@ function subNeeds(needs: readonly string[], key: string): { whole: boolean; rest
   let whole = false
   const rest: string[] = []
   for (const need of needs) {
+    // A need that fields are left out keeps nothing: stripping leaves them out.
+    if (need.startsWith("!")) continue
     const path = need.split(/[=~]/, 1)[0]!
     const [head, ...tail] = path.split(".")
     if (head!.replace(/\[\*?\]$/, "") !== key) continue
