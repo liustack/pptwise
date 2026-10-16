@@ -762,7 +762,7 @@ program
 program
   .command("doctor")
   .description(
-    "Diagnose this machine's install: installed skill copies and what each pins, dsh plugin status, Node/Bun against the engines floor, the optional sharp/soffice capabilities, and a self-test render — exits 1 only on a hard failure",
+    "Diagnose this machine's install: installed skill copies and what each pins, dsh plugin status, Node/Bun against the engines floor, the optional sharp/soffice capabilities, a self-test render, and, with a license, the content packs `pptwise sync` would update (one catalog request) — exits 1 only on a hard failure",
   )
   .option("--json", "machine-readable output (the full DoctorReport)")
   .action(async (opts: { json?: boolean }) => {
