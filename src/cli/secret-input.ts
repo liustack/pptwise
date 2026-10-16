@@ -8,17 +8,22 @@ export interface SecretInputIo {
 
 /**
  * Read a secret. TTY: hidden prompt on stderr so stdout stays clean.
- * Non-TTY: first line of stdin, trimmed. Empty after trim is an error.
+ * Non-TTY: first line of stdin, trimmed. Empty after trim is an error
+ * that names the secret as `what`.
  */
-export async function readSecret(prompt: string, io: SecretInputIo = { stdin: process.stdin, stderr: process.stderr }): Promise<string> {
+export async function readSecret(
+  prompt: string,
+  io: SecretInputIo = { stdin: process.stdin, stderr: process.stderr },
+  what = "API key",
+): Promise<string> {
   const { stdin, stderr } = io
   const isTTY = Boolean((stdin as NodeJS.ReadStream).isTTY)
   if (!isTTY) {
     const line = await readFirstLine(stdin)
-    if (line === "") throw new PptwiseError("API key cannot be empty")
+    if (line === "") throw new PptwiseError(`${what} cannot be empty`)
     return line
   }
-  return await readHiddenTty(prompt, stdin, stderr)
+  return await readHiddenTty(prompt, stdin, stderr, what)
 }
 
 function readFirstLine(stdin: NodeJS.ReadableStream): Promise<string> {
@@ -51,7 +56,7 @@ function readFirstLine(stdin: NodeJS.ReadableStream): Promise<string> {
   })
 }
 
-function readHiddenTty(prompt: string, stdin: NodeJS.ReadableStream, stderr: NodeJS.WritableStream): Promise<string> {
+function readHiddenTty(prompt: string, stdin: NodeJS.ReadableStream, stderr: NodeJS.WritableStream, what: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const rl = readline.createInterface({ input: stdin, output: stderr, terminal: true })
     const mutable = rl as unknown as { _writeToOutput: (s: string) => void }
@@ -70,7 +75,7 @@ function readHiddenTty(prompt: string, stdin: NodeJS.ReadableStream, stderr: Nod
         rl.close()
         stderr.write("\n")
         const value = answer.trim()
-        if (value === "") reject(new PptwiseError("API key cannot be empty"))
+        if (value === "") reject(new PptwiseError(`${what} cannot be empty`))
         else resolve(value)
       })
     })

@@ -27,4 +27,14 @@ describe("readSecret", () => {
     })
     await expect(readSecret("pexels.apiKey (input hidden): ", { stdin, stderr })).rejects.toThrow(/empty/)
   })
+
+  it("names the secret it was asked for in the empty error", async () => {
+    const stdin = Readable.from(["\n"])
+    const stderr = new Writable({
+      write(_chunk, _enc, cb) {
+        cb()
+      },
+    })
+    await expect(readSecret("License key (input hidden): ", { stdin, stderr }, "License key")).rejects.toThrow("License key cannot be empty")
+  })
 })

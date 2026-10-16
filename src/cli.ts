@@ -29,6 +29,7 @@ import { runConfigSet, runConfigShow } from "./cli/config-cmd"
 import { runDoctor } from "./cli/doctor"
 import { runImagesAdd, runImagesFetch, runImagesGenerate, runImagesList, runImagesSearch } from "./cli/images"
 import { runLicenseClear, runLicenseSet, runLicenseStatus } from "./cli/packs/license"
+import { runLogin, runLogout } from "./cli/packs/login"
 import { runPacksList, runPacksSync } from "./cli/packs/sync"
 import { DEFAULT_PORT, runServe } from "./cli/serve"
 import { checkForUpdate, createSelfUpdater } from "./cli/update"
@@ -470,6 +471,35 @@ config
   .action(async () => {
     try {
       console.log(await runConfigShow())
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+program
+  .command("login")
+  .description(
+    "Check a license key with the pack server, save it, and install the packs it covers. Without <key>, asks for it at a hidden prompt. A key the server refuses is not saved",
+  )
+  .argument("[key]", "the license key (ptw_...)")
+  .option("--json", "machine-readable output")
+  .addHelpText("after", "\nExamples:\n  $ pptwise login ptw_...\n  $ pptwise login")
+  .action(async (key: string | undefined, opts: { json?: boolean }) => {
+    try {
+      const { output, failed } = await runLogin(key, { json: opts.json })
+      console.log(output)
+      if (failed) process.exitCode = 1
+    } catch (e) {
+      fail(e)
+    }
+  })
+
+program
+  .command("logout")
+  .description("Remove the saved license key. Installed packs stay in place")
+  .action(async () => {
+    try {
+      console.log(await runLogout())
     } catch (e) {
       fail(e)
     }
