@@ -1,5 +1,27 @@
 # @liustack/pptwise
 
+## 0.46.0 - 2026-10-16
+
+### Minor Changes
+
+- 441b150: The DSH plugin has a `pptwise_images` tool. It searches free stock photos and hands the model the hits numbered, with each one's description, plus the contact sheet of their thumbnails as an image it can look at, so the model picks a photo by sight before pinning it with `images fetch`. Where the session's model takes no images, the result names the sheet's file instead.
+- d8e92e1: `images search --sheet` draws the results' thumbnails as one numbered picture, `.pptwise/image-search/<query>.jpg` (or the file you name), and prints its path. Look at that one image to pick a photo, then fetch the id with the same number. Results are numbered in the text and in `--json` (`n`), and `--json` names the sheet as `sheet`. A thumbnail that will not download is drawn from the full-size picture when there is one, else crossed out with a note.
+- b6a9911: The skill now gives a deck pictures without being asked: the cover, where its theme draws over a photograph, and every `photo` page, other pages only where the picture is the point. The model reads the frame from `asset-brief`, searches the free stock libraries, looks at the numbered contact sheet and pins the one that fits. It needs no key: with none set, search uses Openverse, and a Pexels or Pixabay key only improves the results. Say you want no pictures and it adds none.
+
+### Patch Changes
+
+- fc8e940: `audit` and `build` now report icon cards whose words stand closer to the next card's than a gutter (a character and a quarter for Chinese, two characters for a line with Latin letters), as they already did for timeline milestones. People, product and quote cards and matrix cells are checked the same way on ruled themes, where they draw no card behind their words.
+- 3bbee96: `audit`, and so `build`, now report an `overlap` when the milestones of a timeline laid across the page stand less than two characters apart on one row. Their words then read as one line, and the area check could not see it, since the labels never touch. The build holds back the `.pptx` until it is fixed.
+- aeace06: A command run from inside a project's `.pptwise/` folder, such as from a deck in `.pptwise/decks/<name>/`, now works for the project that holds that folder. Its output goes to the project's `.pptwise/` rather than a new `.pptwise/` nested under the deck, `theme new` writes to the project's `themes/`, and the DSH plugin keeps its previews in the same place.
+- 60e6690: `.pptwise/` is now kept out of git on the first build or preview even when it already existed because a deck was started inside it. Before, a folder created by writing a deck there was taken as one pptwise had set up already, and the deck, its pages and its `.pptx` all showed up in `git status`.
+- 5825c93: A deck kept in `.pptwise/decks/<name>/` now builds to `.pptwise/<name>/` instead of `.pptwise/pptwise-decks-<name>/`. No deck output takes the names `decks` or `themes` any more, and a deck whose output folder would be another deck's sources is refused with a message that names the clash, instead of reading that deck's files and clearing its `.pptx`.
+- db856b7: The skill and the DSH plugin's tools now say where a new deck goes: `.pptwise/decks/<name>/` in the project, with a short lowercase English name, unless the user names another place. A deck that already exists is edited where it is. Models no longer have to guess, and stop leaving new deck folders in the project's top level.
+- aa2f810: `icon_cards` keeps a clear gap between one column's words and the next. Columns used to set their titles and sentences a few pixels apart, so four cards across a page read as one line of text. Each line is now set in its column less a gutter of its own size: a character and a quarter for Chinese, two characters for a line with Latin letters in it. The type keeps the size it had and takes the gutter in an extra line where the row has the height, with a smaller icon if need be. A Chinese title that wraps breaks between words, and a title comes down only as far as its longest English word needs to stay whole. Type is set smaller only when the row is too short for those lines.
+- 9f10879: Picture downloads work behind a fake-ip proxy such as Clash or Surge. These proxies resolve every name into 198.18.0.0/15, which the download guard refused as reserved, so `images fetch` and every `--sheet` thumbnail failed. That benchmark range is now allowed. Private, loopback, link-local, and the other reserved ranges are still refused.
+- 2639dc5: `images search` now prints each photo's description from the stock library under its id: the Pexels alt text, the Pixabay tags, or the Openverse title. It tells what a picture shows before anyone opens the thumbnail.
+- f96bc8c: `images search --json` prints the results as JSON: the query, every hit with the id `images fetch` takes, its size, description, author, license and attribution, and the notes that go with them.
+- 1acc663: A timeline laid across the page keeps two characters between one milestone's words and the next. The gap used to be 12px, so five milestones with a sentence each ran their descriptions together into what read as one line. Labels that already stood apart are drawn as before.
+
 ## 0.45.1 - 2026-10-14
 
 ### Patch Changes
