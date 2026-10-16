@@ -41,7 +41,7 @@ export interface InstalledPack {
  *  what is wrong, and how to repair it. */
 export function damagedPackError(dir: string, detail: string): PptwiseError {
   return new PptwiseError(
-    `installed pack ${dir} cannot be read: ${detail}. Run \`pptwise packs sync\` to reinstall it, or remove the directory.`,
+    `installed pack ${dir} cannot be read: ${detail}. Run \`pptwise sync\` to reinstall it, or remove the directory.`,
   )
 }
 

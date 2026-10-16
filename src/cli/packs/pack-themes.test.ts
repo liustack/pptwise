@@ -145,8 +145,8 @@ describe("theme lookup with installed packs", () => {
   it("fails loudly on a damaged pack when the name could be in it", async () => {
     await installSample()
     await mkdir(join(packsRoot(), "broken"), { recursive: true })
-    await expect(resolveThemeByName("sample-brief", { startDir: cwd })).rejects.toThrow(/broken.*pptwise packs sync/s)
-    await expect(resolveThemeByName("nope", { startDir: cwd })).rejects.toThrow(/broken.*pptwise packs sync/s)
+    await expect(resolveThemeByName("sample-brief", { startDir: cwd })).rejects.toThrow(/broken.*pptwise sync/s)
+    await expect(resolveThemeByName("nope", { startDir: cwd })).rejects.toThrow(/broken.*pptwise sync/s)
   })
 
   it("names the pack and the repair when the theme it found fails the theme file checks", async () => {
@@ -156,7 +156,7 @@ describe("theme lookup with installed packs", () => {
       join(dir, "pack.json"),
       JSON.stringify({ pack: 1, id: "odd", version: "1", title: "Odd", engine: "*", themes: ["themes/odd-one.theme.json"] }),
     )
-    await expect(resolveThemeByName("odd-one", { startDir: cwd })).rejects.toThrow(/installed pack .*odd cannot be read: invalid theme file.*pptwise packs sync/s)
+    await expect(resolveThemeByName("odd-one", { startDir: cwd })).rejects.toThrow(/installed pack .*odd cannot be read: invalid theme file.*pptwise sync/s)
   })
 
   it("keeps a damaged pack from blocking preset names and retired ids", async () => {
@@ -226,8 +226,8 @@ describe("pptwise themes with installed packs", () => {
     const rows = JSON.parse(await runThemes(true)) as Array<Record<string, unknown>>
     expect(rows.slice(0, 24).every((row) => row.source === "builtin")).toBe(true)
     expect(rows.slice(24)).toEqual([
-      { source: "pack", pack: "broken", error: expect.stringMatching(/broken.*pptwise packs sync/s) },
-      { source: "pack", pack: "odd", error: expect.stringMatching(/odd-one\.theme\.json.*pptwise packs sync/s) },
+      { source: "pack", pack: "broken", error: expect.stringMatching(/broken.*pptwise sync/s) },
+      { source: "pack", pack: "odd", error: expect.stringMatching(/odd-one\.theme\.json.*pptwise sync/s) },
       expect.objectContaining({ id: "sample-brief", source: "pack", pack: "sample" }),
     ])
     const text = (await runThemes(false)).split("\n")
@@ -289,7 +289,7 @@ describe("installed packs, as themes and schema --kind read them", () => {
     expect(Object.keys(themes)).not.toContain("sample-second")
     expect(Object.keys(themes)).toContain("brief")
     expect(stderr).toContain(join(packsRoot(), "sample"))
-    expect(stderr).toContain("pptwise packs sync")
+    expect(stderr).toContain("pptwise sync")
 
     // themes --json judges the same pack the same way: one error row, no themes.
     const rows = (await list()).filter((row) => row.pack === "sample")

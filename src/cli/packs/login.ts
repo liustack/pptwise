@@ -53,8 +53,8 @@ export interface LoginOptions extends PackSyncOptions {
 }
 
 const USAGE = "pptwise login <key>"
-const SYNC_LATER = "Run `pptwise packs sync` later to finish installing."
-const OFFLINE_SAVE = "Try again in a moment, or save the key now with `pptwise license set <key>` and run `pptwise packs sync` later."
+const SYNC_LATER = "Run `pptwise sync` later to finish installing."
+const OFFLINE_SAVE = "Try again in a moment, or save the key now with `pptwise license set <key>` and run `pptwise sync` later."
 
 async function askForKey(opts: LoginOptions): Promise<string> {
   const io = opts.io ?? { stdin: process.stdin, stderr: process.stderr }
@@ -104,7 +104,7 @@ function formatLogin(key: string, path: string, report: LoginReport): string {
       return [
         saved,
         `The pack server is holding this key while its purchase is reviewed.${quote}`,
-        "Run `pptwise packs sync` once the review clears to install your packs.",
+        "Run `pptwise sync` once the review clears to install your packs.",
       ].join("\n")
     }
     case "accepted": {

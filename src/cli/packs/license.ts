@@ -15,7 +15,7 @@ export const LICENSE_FILENAME = "license.json"
 export const LICENSE_KEY_PATTERN = /^ptw_[a-z2-7]{32}$/
 
 const KEY_SHAPE = 'a license key is "ptw_" followed by 32 characters from a-z and 2-7'
-const SET_HINT = "pptwise license set <key>"
+const LOGIN_HINT = "pptwise login <key>"
 
 export function licensePath(): string {
   return join(pptwiseHome(), LICENSE_FILENAME)
@@ -36,11 +36,11 @@ export async function readLicenseKey(): Promise<string | undefined> {
   try {
     raw = JSON.parse(text)
   } catch {
-    throw new PptwiseError(`${path} is not valid JSON. Set the key again with \`${SET_HINT}\`.`)
+    throw new PptwiseError(`${path} is not valid JSON. Log in again with \`${LOGIN_HINT}\`.`)
   }
   const key = typeof raw === "object" && raw !== null ? (raw as { key?: unknown }).key : undefined
   if (typeof key !== "string" || !LICENSE_KEY_PATTERN.test(key)) {
-    throw new PptwiseError(`${path} holds no valid license key. Set the key again with \`${SET_HINT}\`.`)
+    throw new PptwiseError(`${path} holds no valid license key. Log in again with \`${LOGIN_HINT}\`.`)
   }
   return key
 }
@@ -88,13 +88,13 @@ export async function saveLicenseKey(key: string): Promise<string> {
 export async function runLicenseSet(value: string): Promise<string> {
   const key = parseLicenseKey(value)
   const path = await saveLicenseKey(key)
-  return `Saved license ${licenseKeyPrefix(key)} to ${path}. Run \`pptwise packs sync\` to install your packs.`
+  return `Saved license ${licenseKeyPrefix(key)} to ${path}. Run \`pptwise sync\` to install your packs.`
 }
 
 /** `pptwise license status` */
 export async function runLicenseStatus(): Promise<string> {
   const key = await readLicenseKey()
-  if (key === undefined) return `No license configured. Set one with \`${SET_HINT}\`.`
+  if (key === undefined) return `No license configured. Log in with \`${LOGIN_HINT}\`.`
   return `License ${licenseKeyPrefix(key)} configured in ${licensePath()}.`
 }
 

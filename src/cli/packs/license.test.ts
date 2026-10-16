@@ -88,7 +88,7 @@ describe("pptwise license status", () => {
   it("says no license is configured and how to set one", async () => {
     const out = await runLicenseStatus()
     expect(out).toMatch(/no license configured/i)
-    expect(out).toContain("pptwise license set <key>")
+    expect(out).toContain("pptwise login <key>")
   })
 
   it("shows only the first eight characters of a configured key", async () => {
@@ -103,7 +103,7 @@ describe("pptwise license status", () => {
     await writeFile(join(home, "license.json"), "{not json")
     await expect(runLicenseStatus()).rejects.toThrow(join(home, "license.json"))
     await writeFile(join(home, "license.json"), JSON.stringify({ key: "nope" }))
-    await expect(runLicenseStatus()).rejects.toThrow(/license set/)
+    await expect(runLicenseStatus()).rejects.toThrow(/pptwise login <key>/)
   })
 })
 

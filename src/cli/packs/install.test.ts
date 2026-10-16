@@ -190,7 +190,7 @@ describe("installPack", () => {
     await mkdir(join(root, "junk"), { recursive: true })
     await writeFile(join(root, "junk", "readme.txt"), "not a pack")
     await expect(install(await buildPackZip({ id: "sample", version: "2026.1.0", themes: ["sample-brief"] }))).rejects.toThrow(
-      /junk.*pptwise packs sync|pptwise packs sync.*junk/s,
+      /junk.*pptwise sync|pptwise sync.*junk/s,
     )
   })
 })

@@ -77,7 +77,7 @@ export interface PackSyncOptions {
   engineVersion?: string
 }
 
-const SET_HINT = "pptwise license set <key>"
+const LOGIN_HINT = "pptwise login <key>"
 const UNCHANGED = "Installed packs are unchanged."
 
 /** The host names plain http may reach: this machine's loopback, where a
@@ -157,11 +157,11 @@ function catalogFailure(server: string, e: unknown): string {
   if (e instanceof ServerRefusal) {
     switch (e.status) {
       case 401:
-        return `the pack server did not accept this license key (${e.message}). Check it with \`pptwise license status\` and set it again with \`${SET_HINT}\`. ${UNCHANGED}`
+        return `the pack server did not accept this license key (${e.message}). Log in again with the whole key: \`${LOGIN_HINT}\`. ${UNCHANGED}`
       case 403:
         return `this license key has been revoked (${e.message}). ${UNCHANGED}`
       case 423:
-        return `the pack server is holding this license key while its purchase is reviewed (${e.message}). Run \`pptwise packs sync\` again once the review clears. ${UNCHANGED}`
+        return `the pack server is holding this license key while its purchase is reviewed (${e.message}). Run \`pptwise sync\` again once the review clears. ${UNCHANGED}`
       case 503:
         return `the pack server is not available right now (${e.message}). Try again later. ${UNCHANGED}`
       default:
@@ -303,7 +303,7 @@ function formatItem(item: PackSyncItem, width: number): string {
 }
 
 export function formatPackSyncReport(report: PackSyncReport): string {
-  if (!report.license) return `No license configured, so there are no packs to sync. Set one with \`${SET_HINT}\`.`
+  if (!report.license) return `No license configured, so there are no packs to sync. Log in with \`${LOGIN_HINT}\`.`
   if (report.packs.length === 0) return `The pack catalog at ${report.server} lists no packs.`
   const width = Math.max(...report.packs.map((p) => `${p.id} ${p.version}`.length))
   return [`Packs from ${report.server}:`, ...report.packs.map((p) => formatItem(p, width))].join("\n")
@@ -318,7 +318,7 @@ export function formatPackSyncReport(report: PackSyncReport): string {
 export async function runPacksSync(opts: PackSyncOptions & { json?: boolean } = {}): Promise<{ output: string; failed: boolean }> {
   const report = await syncPacks(opts)
   if (opts.json) return { output: JSON.stringify(report, null, 2), failed: !report.ok }
-  if (report.error !== undefined) throw new PptwiseError(`packs sync failed: ${report.error}`)
+  if (report.error !== undefined) throw new PptwiseError(`sync failed: ${report.error}`)
   return { output: formatPackSyncReport(report), failed: !report.ok }
 }
 
@@ -326,7 +326,7 @@ export async function runPacksSync(opts: PackSyncOptions & { json?: boolean } = 
 export async function runPacksList(opts: { json?: boolean } = {}): Promise<string> {
   const packs = await listInstalledPacks()
   if (opts.json) return JSON.stringify(packs, null, 2)
-  if (packs.length === 0) return "No packs installed. With a license configured, run `pptwise packs sync`."
+  if (packs.length === 0) return "No packs installed. Log in with `pptwise login <key>` to install the packs your license covers."
   const width = Math.max(...packs.map((p) => `${p.id} ${p.version}`.length))
   return packs
     .map((p) => {

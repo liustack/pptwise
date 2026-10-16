@@ -88,7 +88,7 @@ describe("pptwise login", () => {
     expect(failed).toBe(true)
     expect(await readLicenseKey()).toBe(KEY)
     expect(output).toMatch(/not installed/)
-    expect(output).toContain("pptwise packs sync")
+    expect(output).toContain("pptwise sync")
   })
 
   it("keeps the key when the catalog cannot be read and says to sync again later", async () => {
@@ -100,7 +100,7 @@ describe("pptwise login", () => {
     expect(failed).toBe(true)
     expect(await readLicenseKey()).toBe(KEY)
     expect(output).toMatch(/catalog/)
-    expect(output).toContain("pptwise packs sync")
+    expect(output).toContain("pptwise sync")
   })
 
   it("saves nothing for a key the server does not know (401)", async () => {
@@ -129,7 +129,7 @@ describe("pptwise login", () => {
     expect(failed).toBe(false)
     expect(await readLicenseKey()).toBe(HELD)
     expect(output).toContain("This purchase is being reviewed.")
-    expect(output).toContain("`pptwise packs sync`")
+    expect(output).toContain("`pptwise sync`")
     expect(output).not.toMatch(/revoked/)
     expect(server.requests.filter((p) => p.endsWith(".zip"))).toEqual([])
     expect(await listInstalledPacks()).toEqual([])

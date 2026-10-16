@@ -225,7 +225,7 @@ async function resolvePackTheme(name: string): Promise<{ hit: ResolvedTheme | un
   // The store read the id a moment ago. A file rewritten since then must
   // not answer to a name it no longer carries.
   if (file.id !== name) {
-    throw new PptwiseError(`installed pack theme ${found.theme.path} no longer has id "${name}". Run \`pptwise packs sync\` to reinstall its pack.`)
+    throw new PptwiseError(`installed pack theme ${found.theme.path} no longer has id "${name}". Run \`pptwise sync\` to reinstall its pack.`)
   }
   const accepted = await acceptThemeFile(found.theme.path, file)
   return { hit: { ...accepted, pack: { id: found.pack.id, version: found.pack.version } }, searched: [] }

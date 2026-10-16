@@ -62,7 +62,7 @@ describe("installed pack store", () => {
 
   it("fails loudly on a pack directory it cannot read, naming it and the way to repair it", async () => {
     await mkdir(join(root, "broken"), { recursive: true })
-    await expect(listInstalledPacks()).rejects.toThrow(/broken.*pptwise packs sync/s)
+    await expect(listInstalledPacks()).rejects.toThrow(/broken.*pptwise sync/s)
   })
 
   it("fails loudly on a manifest whose id is not its directory", async () => {

@@ -494,6 +494,24 @@ program
     }
   })
 
+/** `pptwise sync` and its older spelling `pptwise packs sync`. */
+async function syncAction(opts: { json?: boolean }): Promise<void> {
+  try {
+    const { output, failed } = await runPacksSync({ json: opts.json })
+    console.log(output)
+    // exitCode rather than exit(): a long --json report piped to another
+    // process is flushed in full before the process ends.
+    if (failed) process.exitCode = 1
+  } catch (e) {
+    fail(e)
+  }
+}
+
+const SYNC_DESCRIPTION =
+  "Install or update every pack your license covers. Without a license it prints a one-line note and exits 0. A failed sync leaves installed packs as they were"
+
+program.command("sync").description(SYNC_DESCRIPTION).option("--json", "machine-readable output").action(syncAction)
+
 program
   .command("logout")
   .description("Remove the saved license key. Installed packs stay in place")
@@ -505,7 +523,11 @@ program
     }
   })
 
-const license = program.command("license").description("The license key that unlocks content packs")
+// The 0.48 spellings. They keep working for scripts written against them,
+// and stay out of the top-level help, where login, sync, and logout cover them.
+const license = program
+  .command("license", { hidden: true })
+  .description("The license key that unlocks content packs (older spelling: use login and logout)")
 license
   .command("set <key>")
   .description("Save a license key to $PPTWISE_HOME/license.json (readable by you only)")
@@ -537,24 +559,10 @@ license
     }
   })
 
-const packs = program.command("packs").description("Content packs: extra themes installed under $PPTWISE_HOME/packs")
-packs
-  .command("sync")
-  .description(
-    "Install or update every pack your license covers. Without a license it prints a one-line note and exits 0. A failed sync leaves installed packs as they were",
-  )
-  .option("--json", "machine-readable output")
-  .action(async (opts: { json?: boolean }) => {
-    try {
-      const { output, failed } = await runPacksSync({ json: opts.json })
-      console.log(output)
-      // exitCode rather than exit(): a long --json report piped to another
-      // process is flushed in full before the process ends.
-      if (failed) process.exitCode = 1
-    } catch (e) {
-      fail(e)
-    }
-  })
+const packs = program
+  .command("packs", { hidden: true })
+  .description("Content packs: extra themes installed under $PPTWISE_HOME/packs (older spelling: use sync)")
+packs.command("sync").description(`${SYNC_DESCRIPTION}. Same as \`pptwise sync\``).option("--json", "machine-readable output").action(syncAction)
 packs
   .command("list")
   .description("List installed packs and the themes each one ships")
