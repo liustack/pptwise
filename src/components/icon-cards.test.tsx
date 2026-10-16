@@ -442,3 +442,67 @@ describe("a title over the cards and a card's tone", () => {
     expect(strokes).toContain(ctx.colors.accent)
   })
 })
+
+describe("icon_cards columns side by side", () => {
+  // Two pages as authors wrote them (2026-10): a vermilion report with four
+  // services, and a crayon lecture with three goals. Each line was offered
+  // its column less 16px, so neighbouring titles and sentences stood a few
+  // pixels apart, under one character, and read as one line across the page.
+  const services = {
+    type: "icon_cards" as const,
+    items: [
+      card("全程网办", "群众满意率九十八点六，有效投诉量同比下降四成。", "target"),
+      card("帮办代办服务", "帮办代办队伍一百零六人，覆盖全部十二个街道。", "gauge"),
+      card("午间延时服务", "午间延时服务累计接待两万一千人次，主要集中在社保与不动产。", "shield"),
+      card("材料清单精简", "高频事项申请材料平均精简三成五，重复提交材料基本消除。", "rocket"),
+    ],
+  }
+  const goals = {
+    type: "icon_cards" as const,
+    items: [
+      card("看懂", "每月都扣了税，为什么年底还要再算一遍", "book-open"),
+      card("**算对**", "跟着一道例题，从全年收入一路算到退税", "calculator"),
+      card("去办", "判断自己要不要办，什么时候、在哪儿办", "smartphone"),
+    ],
+  }
+
+  const columnLines = (container: ParentNode) =>
+    Array.from(container.querySelectorAll("svg > g > g")).map((group) =>
+      Array.from(group.querySelectorAll("text")).map((t) => {
+        const size = Number(t.getAttribute("font-size"))
+        const bold = t.getAttribute("font-weight") === "700" || t.getAttribute("font-weight") === "bold"
+        const width = measureTextUnits(t.textContent ?? "", { bold, fontFamily: t.getAttribute("font-family") ?? "" }) * size
+        const x = Number(t.getAttribute("x"))
+        const anchor = t.getAttribute("text-anchor")
+        const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x
+        const y = Number(t.getAttribute("y"))
+        return { text: t.textContent, size, left, right: left + width, top: y - 0.8 * size, bottom: y + 0.2 * size }
+      }),
+    )
+
+  for (const [label, theme, component, box] of [
+    ["four services on vermilion", "vermilion", services, { x: 64, y: 300, w: 1152, h: 300 }],
+    ["three goals on crayon", "crayon", goals, { x: 64, y: 260, w: 1152, h: 300 }],
+  ] as const) {
+    it(`keep two characters between one column's words and the next: ${label}`, () => {
+      const { container } = svg(iconCards.render(component, box, themeCtx(theme)))
+      const columns = columnLines(container)
+      expect(columns).toHaveLength(component.items.length)
+      const words = columns.flat().map((l) => l.text).join("")
+      for (const item of component.items) expect(words).toContain(item.text)
+      // The gutter takes width from the titles, and a short title shrinks
+      // to keep its one line rather than break in two.
+      for (const group of Array.from(container.querySelectorAll("svg > g > g"))) {
+        expect(group.querySelectorAll('text[font-weight="700"]')).toHaveLength(1)
+      }
+      for (let i = 0; i + 1 < columns.length; i++) {
+        for (const a of columns[i]!) {
+          for (const b of columns[i + 1]!) {
+            if (a.bottom <= b.top || b.bottom <= a.top) continue
+            expect(b.left - a.right, `"${a.text}" and "${b.text}"`).toBeGreaterThanOrEqual(2 * Math.min(a.size, b.size) - 0.5)
+          }
+        }
+      }
+    })
+  }
+})

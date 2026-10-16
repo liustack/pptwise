@@ -30,12 +30,27 @@ const TEXT_LINE_HEIGHT_RATIO = 1.4
 const GAP_NODE_TITLE = 18
 const GAP_TITLE_TEXT = 10
 const COL_INSET = 16
+/**
+ * The gutter between one column's words and the next, in characters of the
+ * words' own size: every line is centred in its column and set at most its
+ * column less this many characters. Columns used to offer every line the
+ * column less 16px, and four services across a vermilion page, or three
+ * goals across a crayon one, stood their titles and sentences a few pixels
+ * apart (2026-10). A gap narrower than a character does not read as a
+ * column break, so the words ran into one line across the page.
+ */
+const COLUMN_GUTTER_EM = 2
+
+/** The widest a line of type at `size` may be set in a column `colW` wide. */
+function lineMeasure(colW: number, size: number): number {
+  return Math.max(24, colW - COLUMN_GUTTER_EM * size)
+}
 /** The row a card's tag (`items[].tag`) takes under its node: the ordinary tag's 28px label and 10px of air. */
 const TAG_ROW = 38
 
 function layoutItemText(
   item: IconCardItem,
-  contentW: number,
+  colW: number,
   ctx: ComponentCtx,
   titleSize: number,
   bodySize: number,
@@ -43,7 +58,7 @@ function layoutItemText(
   bodyMaxLines: number,
 ) {
   const title = layoutFormTitle(stripEmphasis(item.title), {
-    maxWidth: contentW,
+    maxWidth: lineMeasure(colW, titleSize),
     fontSize: titleSize,
     fontFamily: ctx.fonts.heading,
     maxLines: Math.max(1, titleMaxLines),
@@ -51,7 +66,7 @@ function layoutItemText(
   const text =
     bodyMaxLines > 0
       ? layoutFormBody(stripEmphasis(item.text), {
-          maxWidth: contentW,
+          maxWidth: lineMeasure(colW, bodySize),
           fontSize: bodySize,
           titleSize,
           maxLines: bodyMaxLines,
@@ -155,7 +170,6 @@ function columnsAt(
   boxH?: number,
 ) {
   const nodeSize = nodeR * 2
-  const contentW = Math.max(24, colW - COL_INSET)
   // Every card keeps the tag row when any card has a tag, so the titles in a
   // row stay level.
   const tagRow = component.items.some((item) => item.tag) ? TAG_ROW : 0
@@ -173,9 +187,13 @@ function columnsAt(
       ? naturalInner
       : Math.max(1, (boxH - GAP * (rows - 1)) / rows)
   const innerH = Math.max(1, rowH)
+  // Each line is set in its own measure, its column less two characters of
+  // its size. `contentW`, the column less its inset, is only where the type
+  // judges whether the box has room to grow (`fillCardType`).
   const filled = fillCardType({
     innerH: Math.max(1, innerH - extraAbove),
-    contentW,
+    contentW: Math.max(24, colW - COL_INSET),
+    measure: (size) => lineMeasure(colW, size),
     titleSize: start.title,
     bodySize: start.body,
     gap: GAP_TITLE_TEXT,
@@ -199,7 +217,7 @@ function columnsAt(
   const layouts = component.items.map((item) =>
     layoutItemText(
       item,
-      contentW,
+      colW,
       ctx,
       filled.titleSize,
       filled.bodySize,
@@ -208,7 +226,7 @@ function columnsAt(
     ),
   )
   const measuredH = boxH === undefined ? naturalMeasured : Math.min(boxH, rows * rowH + (rows - 1) * GAP)
-  return { cols, rows, colW, nodeR, nodeSize, contentW, layouts, rowH, measuredH, tagRow }
+  return { cols, rows, colW, nodeR, nodeSize, layouts, rowH, measuredH, tagRow }
 }
 
 function measureIconColumns(component: IconCardsComponent, w: number, ctx: ComponentCtx): number {
@@ -271,7 +289,7 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
               // A card that says what kind of news it is draws its icon in the theme's ink for it.
               item.tone ? graphicInk(resolveSemanticColor(item.tone, ctx.colors), fill) : ink,
             )}
-            {item.tag ? paintCardTag(item.tag, cx, stackTop + g.nodeSize + GAP_NODE_TITLE, g.contentW, ctx) : null}
+            {item.tag ? paintCardTag(item.tag, cx, stackTop + g.nodeSize + GAP_NODE_TITLE, g.colW, ctx) : null}
             {layout.title.lines.map((line, li) =>
               paintMarkedLine(
                 ctx,
@@ -323,13 +341,13 @@ export const iconCards: SvgComponent<IconCardsComponent> = {
 
 /**
  * A card's tag, centred in its row under the node, at the ordinary size and
- * in the ordinary inks. A tag wider than the card is declared dropped rather
- * than cut.
+ * in the ordinary inks. A tag wider than its column's measure is declared
+ * dropped rather than cut.
  */
-function paintCardTag(tag: NonNullable<IconCardItem["tag"]>, cx: number, top: number, contentW: number, ctx: ComponentCtx): React.ReactElement {
+function paintCardTag(tag: NonNullable<IconCardItem["tag"]>, cx: number, top: number, colW: number, ctx: ComponentCtx): React.ReactElement {
   const spec = ordinaryTagSpec(ctx)
   const w = tagWidth(tag.text, spec)
-  if (w > contentW) return <g data-dropped={1} data-dropped-kind="label" />
+  if (w > lineMeasure(colW, spec.size)) return <g data-dropped={1} data-dropped-kind="label" />
   return paintTag({ tag, x: cx - w / 2, y: top, spec, inks: tagInks(ctx, tag, false, ctx.defaultBg ?? ctx.colors.bg, spec.size) })
 }
 

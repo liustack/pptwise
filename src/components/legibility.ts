@@ -362,6 +362,35 @@ function maxTitleSize(contentW: number, titles: string[], fontFamily?: string): 
   return Math.max(FORM_TITLE_FLOOR, cap)
 }
 
+/**
+ * `maxTitleSize` for a measure that narrows as the type grows (a gutter
+ * counted in characters): the largest size at which every title fits the
+ * measure a title of that size is offered, found by search. A title that
+ * fits one line at the starting size keeps to one line, the others to two:
+ * growing the type never breaks a short title in two. Against a narrowing
+ * measure it would, and four services on a vermilion page grew their titles
+ * to two lines of four characters and two (2026-10).
+ */
+function maxTitleSizeIn(
+  measure: (fontSize: number) => number,
+  titles: string[],
+  startSize: number,
+  fontFamily?: string,
+): number {
+  const widths = titles.map((title) => measureTextUnits(title, { bold: true, fontFamily }))
+  const lines = widths.map((units) => (units * startSize <= measure(startSize) ? 1 : 2))
+  const fits = (size: number) => widths.every((units, i) => units <= 0 || units * size <= lines[i]! * measure(size))
+  if (fits(72)) return 72
+  let lo = 0
+  let hi = 72
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2
+    if (fits(mid)) lo = mid
+    else hi = mid
+  }
+  return Math.max(FORM_TITLE_FLOOR, lo)
+}
+
 function bodyLineCount(
   text: string,
   maxWidth: number,
@@ -406,6 +435,12 @@ export function linesThatFit(opts: {
 export function fillCardType(opts: {
   innerH: number
   contentW: number
+  /**
+   * The measure a line of type at a size is set in, when it depends on the
+   * size: a column whose gutter is counted in characters of its words.
+   * Defaults to `contentW` at every size.
+   */
+  measure?: (fontSize: number) => number
   titleSize: number
   bodySize: number
   gap: number
@@ -423,31 +458,42 @@ export function fillCardType(opts: {
   let bodySize = capFormBody(titleSize, Math.max(FORM_BODY_FLOOR, opts.bodySize))
   const longest = opts.longestBody ?? ""
   const titles = opts.titles ?? []
-  const cap = maxTitleSize(opts.contentW, titles, opts.fonts?.heading)
+  const measure = opts.measure ?? (() => opts.contentW)
+  const cap = opts.measure
+    ? maxTitleSizeIn(opts.measure, titles, titleSize, opts.fonts?.heading)
+    : maxTitleSize(opts.contentW, titles, opts.fonts?.heading)
 
   // The lines the longest-wrapping title really takes at size `t`, at most
   // two. Sizing the type and handing out lines have to count the same
   // title lines: sizing against one line while the page then reserved two
   // left the body a line short, and its last line was cut.
-  const titleLinesAt = (t: number) =>
+  const titleLinesAt = (t: number, w = measure(t)) =>
     Math.max(
       1,
       ...titles.map(
         (title) =>
-          layoutFormTitle(title, { maxWidth: opts.contentW, fontSize: t, maxLines: 2, fontFamily: opts.fonts?.heading })
+          layoutFormTitle(title, { maxWidth: w, fontSize: t, maxLines: 2, fontFamily: opts.fonts?.heading })
             .lines.length,
       ),
     )
-  const stackH = (t: number, b: number, lines: number) =>
-    extra + titleLinesAt(t) * formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
+  const stackH = (t: number, b: number, lines: number, w = measure(t)) =>
+    extra + titleLinesAt(t, w) * formLineHeight(t, titleLh) + opts.gap + lines * formLineHeight(b, bodyLh)
 
-  const linesFor = (b: number, maxLines: number) =>
-    Math.max(longest.trim() ? 1 : 0, bodyLineCount(longest, opts.contentW, b, maxLines, opts.fonts?.body))
+  const linesFor = (b: number, maxLines: number, w = measure(b)) =>
+    Math.max(longest.trim() ? 1 : 0, bodyLineCount(longest, w, b, maxLines, opts.fonts?.body))
 
   let bodyMaxLines = Math.max(longest.trim() ? 2 : 0, linesFor(bodySize, 8))
   let h = stackH(titleSize, bodySize, bodyMaxLines)
+  // Whether the box has room to grow the type is judged at `contentW`, the
+  // column's whole width, even when each line is then set in a narrower
+  // `measure`. The gutter a measure keeps costs a line a word or two, and
+  // judged on it, the four cards on a brief page that grew their type
+  // before kept it at the floor, half the size (2026-10).
+  const roomH = opts.measure
+    ? stackH(titleSize, bodySize, Math.max(longest.trim() ? 2 : 0, linesFor(bodySize, 8, opts.contentW)), opts.contentW)
+    : h
 
-  if (opts.innerH > 0 && h < opts.innerH * 0.55) {
+  if (opts.innerH > 0 && roomH < opts.innerH * 0.55) {
     const lo0 = 1
     let hi = Math.min(cap / titleSize, Math.max(1.15, (opts.innerH * 0.78) / Math.max(h, 1)))
     hi = Math.max(lo0, hi)
