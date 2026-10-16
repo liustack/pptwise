@@ -21,6 +21,7 @@ import { buildThmxBytes, BRAND_THMX_COLORS, PATHOLOGICAL_THMX_COLORS } from "../
 import {
   applyDeckConfig,
   runAssemble,
+  runAssetBrief,
   runAudit,
   runBrandExtract,
   runDisassemble,
@@ -504,6 +505,38 @@ describe("runAudit (W6 task 2)", () => {
     const result = await runAudit(deckDir)
     expect(result.hasFindings).toBe(false)
     expect(result.output).toBe("audited 5 pages, 0 skipped, 0 findings")
+  })
+})
+
+describe("runAssetBrief with no image component", () => {
+  // A deck with no `image` component used to print `no image components
+  // found for theme "vermilion"`, which a model read as "this theme draws no
+  // pictures" and so gave the deck none. Every factory theme draws a photo
+  // page's picture: the empty brief has to say the deck lacks one.
+  it("says the deck holds no image component yet, without blaming the theme", async () => {
+    const d = await mkdtemp(join(tmpdir(), "pptwise-brief-empty-"))
+    const ir = { ...VALID_IR, theme: { id: "vermilion" } }
+    await writeFile(join(d, "deck.json"), JSON.stringify(ir))
+    const report = await runAssetBrief(join(d, "deck.json"), { cwd: d })
+    expect(report).toContain("no page in this deck holds an image component yet")
+    expect(report).toContain("every photo page takes a picture")
+    expect(report).not.toContain("vermilion")
+  })
+
+  it("names the picture components the brief does not list", async () => {
+    const d = await mkdtemp(join(tmpdir(), "pptwise-brief-grid-"))
+    const ir = {
+      ...VALID_IR,
+      assets: { images: { a: { src: "logo.png" }, b: { src: "logo.png" } } },
+      slides: [
+        VALID_IR.slides[0],
+        { type: "content", kind: "photo", heading: "Two views", components: [{ type: "image_grid", items: [{ asset_id: "a" }, { asset_id: "b" }] }] },
+      ],
+    }
+    await writeFile(join(d, "logo.png"), PNG_1PX)
+    await writeFile(join(d, "deck.json"), JSON.stringify(ir))
+    const report = await runAssetBrief(join(d, "deck.json"), { cwd: d })
+    expect(report).toContain("image_grid, image_compare, device_mockup and page backgrounds are not listed here.")
   })
 })
 

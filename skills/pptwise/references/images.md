@@ -28,7 +28,7 @@ Run the real renderer before sourcing any missing asset:
 pptwise asset-brief <target>
 ```
 
-The brief reports the actual frame, crop mode, safe zone, suggested pixel size, theme palette, and a paste-ready prompt. Match the reported aspect ratio and palette. It covers the pictures components draw. A page background is not in it: it fills the whole 16:9 slide.
+The brief reports the actual frame, crop mode, safe zone, suggested pixel size, theme palette, and a paste-ready prompt. Match the reported aspect ratio and palette. It lists every `image` component the pages hold. `image_grid`, `image_compare`, `device_mockup` and page backgrounds are not in it: a background fills the whole 16:9 slide. When it reports no image component, no page holds one yet. The theme is not the cause.
 
 ## Stock photos
 

@@ -850,6 +850,12 @@ function formatAssetBriefItem(item: AssetBriefItem): string {
   return lines.join("\n")
 }
 
+/** What `asset-brief` prints for a deck with no `image` component yet. */
+const EMPTY_ASSET_BRIEF = [
+  "no page in this deck holds an image component yet, so there is no frame to brief. The theme does not decide this: the brief reads the image components the pages hold. Write one into a page (every photo page takes a picture) and run asset-brief again.",
+  "image_grid, image_compare, device_mockup and page backgrounds are not listed here.",
+].join("\n")
+
 /**
  * Human-readable `pptwise asset-brief` report (asset-brief plan, task 1):
  * one {@link formatAssetBriefItem} block per image slot, followed by a
@@ -857,7 +863,12 @@ function formatAssetBriefItem(item: AssetBriefItem): string {
  * {@link formatAuditReport} already established for `audit`.
  */
 function formatAssetBriefReport(brief: AssetBrief): string {
-  if (brief.items.length === 0) return `no image components found for theme "${brief.theme}"`
+  // An empty brief says what the deck lacks, never what the theme lacks:
+  // the old wording ("no image components found for theme X") read as a
+  // verdict on the theme, and a model took it to mean the theme draws no
+  // pictures. Every factory theme draws a photo page's picture. The brief lists
+  // the `image` components the pages already hold.
+  if (brief.items.length === 0) return EMPTY_ASSET_BRIEF
   const missingCount = brief.items.filter((i) => i.missing).length
   const notRenderedCount = brief.items.filter((i) => !i.rendered).length
   const lines = brief.items.map(formatAssetBriefItem)
