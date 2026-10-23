@@ -2421,11 +2421,12 @@ window.__ModuleLoader__.load({
       // chat's document, and the page carried its own light/dark switch.
       // `preview.html` stays what harnesses without a plugin UI open.
 
-      /** Move the keyboard into a pane when it opens, and again on every navigation to it. */
-      function useAutoFocus(key) {
+      /** Move the keyboard into a pane when it opens, and again on every navigation to it, unless it opened quietly. */
+      function useAutoFocus(key, quiet) {
         var ref = react.useRef(null)
         useEffect(
           function () {
+            if (quiet) return
             var el = ref.current
             if (el && typeof el.focus === 'function') el.focus({ preventScroll: true })
           },
@@ -2628,7 +2629,8 @@ window.__ModuleLoader__.load({
       /** A theme wall full size: every theme as a numbered column of its cover over its content page. */
       function WallView(props) {
         var got = useRouteBundle(props.id)
-        var ref = useAutoFocus(props.revision)
+        // A wall the turn opened on its own leaves the keyboard where the user was typing.
+        var ref = useAutoFocus(props.revision, props.quiet)
         var bundle = got.bundle
         var themes = bundle && Array.isArray(bundle.themes) ? bundle.themes : []
         var slide = (bundle && bundle.slide) || { width: 1280, height: 720 }
@@ -2672,7 +2674,7 @@ window.__ModuleLoader__.load({
       /** Whichever pane a target names: `{ view: 'deck' | 'themes' | 'compare', id, page?, priorId?, version? }`. */
       function PaneBody(props) {
         var target = props.target
-        if (target.view === 'themes') return h(WallView, { id: target.id, revision: props.revision, onClose: props.onClose, closeButton: props.closeButton })
+        if (target.view === 'themes') return h(WallView, { id: target.id, revision: props.revision, quiet: target.quiet === true, onClose: props.onClose, closeButton: props.closeButton })
         if (target.view === 'compare') {
           return h(CompareView, {
             id: target.id,
@@ -2702,6 +2704,7 @@ window.__ModuleLoader__.load({
         var params = navigation.params || {}
         if (typeof params.page === 'number') target.page = params.page
         if (typeof params.version === 'number') target.version = params.version
+        if (params.quiet === true) target.quiet = true
         return h(PaneBody, {
           target: target,
           revision: navigation.revision,
@@ -2901,6 +2904,7 @@ window.__ModuleLoader__.load({
                   var params = {}
                   if (typeof target.page === 'number') params.page = target.page
                   if (typeof target.version === 'number') params.version = target.version
+                  if (target.quiet === true) params.quiet = true
                   scope.sidebarRight.openResource(paneAddress(target), { kind: VIEWER_KIND, params: params })
                   return true
                 } catch (error) {
@@ -2946,6 +2950,7 @@ window.__ModuleLoader__.load({
      * otherwise ask about pictures nobody can see. Only the open turn of the
      * session on screen counts, so scrolling back through history opens
      * nothing, and each wall opens once: a user who closes it keeps it closed.
+     * The wall opens quietly: the keyboard stays in the question being answered.
      */
     function registerWallOpener(ctx) {
       if (typeof ctx.inject !== 'function') return
@@ -2960,15 +2965,24 @@ window.__ModuleLoader__.load({
       })
     }
 
+    // The sidebar can name a session on screen before that session's surface
+    // exists, and refuses to open anything until it does. A refused wall is
+    // tried again on this clock, for a few seconds, then left to its card.
+    var WALL_RETRY_MS = 250
+    var WALL_RETRIES = 20
+
     function watchWalls(scope) {
       var mounted = scope.sidebarRight.mounted
       if (!mounted || typeof mounted.subscribe !== 'function') throw new Error('no session-on-screen store')
       var opened = new Set()
-      var leave = function () {}
+      var follower = null
 
+      // One follower per session on screen. Each owns its subscriptions and
+      // its timer, and a follower replaced while it was still subscribing
+      // drops what it had, so a switch mid-setup leaves nothing behind.
       function follow() {
-        leave()
-        leave = function () {}
+        if (follower) follower.stop()
+        follower = null
         var sessionId = mounted.getSnapshot()
         if (sessionId === undefined) return
         var binding = scope.sessions.binding(sessionId)
@@ -2980,35 +2994,71 @@ window.__ModuleLoader__.load({
           console.warn('[pptwise] this shell reports no open turn, theme walls stay in their cards')
           return
         }
+        var me = {
+          stopped: false,
+          offs: [],
+          timer: null,
+          tries: 0,
+          stop: function () {
+            me.stopped = true
+            if (me.timer !== null) clearTimeout(me.timer)
+            me.timer = null
+            me.offs.splice(0).forEach(function (off) {
+              off()
+            })
+          },
+        }
+        follower = me
+
+        // Checks wait for the stores to settle. A history replay publishes
+        // the chat before the open turn, so a check made at once would read a
+        // wall from the new history against a turn the replay is about to close.
+        function schedule(delay) {
+          if (me.stopped || me.timer !== null) return
+          me.timer = setTimeout(function () {
+            me.timer = null
+            check()
+          }, delay)
+        }
+
         function check() {
+          if (me.stopped) return
           var turn = openTurn.getSnapshot()
           var snapshot = chat.getSnapshot()
           if (turn === undefined || snapshot === undefined) return
           var list = snapshot.nodes.turnDataSource(Number(turn), ARTIFACT_KIND).getSnapshot()
-          var wall = null
-          for (var i = 0; i < list.length; i++) {
-            var entry = list[i]
-            if (entry && entry.kind === 'themes' && entry.id && !opened.has(entry.id)) {
+          var walls = list.filter(function (entry) {
+            return entry && entry.kind === 'themes' && entry.id && !opened.has(entry.id)
+          })
+          if (walls.length === 0) return
+          if (openInSidebar({ view: 'themes', id: walls[walls.length - 1].id, quiet: true })) {
+            walls.forEach(function (entry) {
               opened.add(entry.id)
-              wall = entry
-            }
+            })
+            me.tries = 0
+          } else if (++me.tries <= WALL_RETRIES) {
+            schedule(WALL_RETRY_MS)
           }
-          if (wall) openInSidebar({ view: 'themes', id: wall.id })
         }
-        var offChat = chat.subscribe(check)
-        var offTurn = openTurn.subscribe(check)
-        leave = function () {
-          offChat()
-          offTurn()
+
+        function keep(off) {
+          if (me.stopped) off()
+          else me.offs.push(off)
         }
-        check()
+        var later = function () {
+          schedule(0)
+        }
+        keep(chat.subscribe(later))
+        keep(openTurn.subscribe(later))
+        schedule(0)
       }
 
       var offMounted = mounted.subscribe(follow)
       follow()
       return function () {
         offMounted()
-        leave()
+        if (follower) follower.stop()
+        follower = null
       }
     }
 

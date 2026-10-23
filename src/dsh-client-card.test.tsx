@@ -57,15 +57,17 @@ interface TailKit {
   /** The tool cards from the same plugin instance, so they see its sidebar. */
   seats: Map<string, Card>
   /** What the plugin asked DSH's right sidebar to open. */
-  opened: { address: string; options: { kind?: string; params?: { page?: number; version?: number } } }[]
+  opened: { address: string; options: { kind?: string; params?: { page?: number; version?: number; quiet?: boolean } } }[]
   /** The sidebar tab type it registered, when there was a sidebar. */
   tabTypes: { id: string; kind: string; patterns: string[]; canOpen: (address: string) => boolean; title: (address: string) => string }[]
   PaneTab?: React.ComponentType<{ useTabInfo: () => TabInfo }>
   PaneTitle?: React.ComponentType<{ useTabInfo: () => TabInfo }>
+  /** Run the cleanups the plugin's effects returned, as Cordis does on unload. */
+  dispose: () => void
 }
 interface TabInfo {
   sidebar: { expanded: boolean; fullscreen: boolean }
-  tab: { title: string; navigation: { address: string; params?: { page?: number; version?: number }; revision: number }; actions: { close: () => void } }
+  tab: { title: string; navigation: { address: string; params?: { page?: number; version?: number; quiet?: boolean }; revision: number }; actions: { close: () => void } }
 }
 /** A store the way DSH hands one over: a current value and a way to hear it change. */
 interface Store<T> { getSnapshot: () => T; subscribe: (listener: () => void) => () => void }
@@ -78,6 +80,8 @@ interface TailSession {
   mounted?: Store<string | undefined>
   /** Each session's chat target and open turn, for the theme wall opener. */
   live?: Record<string, { chat: Store<unknown>; openTurn: Store<number | undefined> }>
+  /** Whether the sidebar refuses to open right now. */
+  refuse?: () => boolean
 }
 let makeTail: (session?: TailSession) => TailKit
 
@@ -158,8 +162,12 @@ beforeAll(async () => {
       id: session.live?.s1 ? "s1" : undefined,
       ctx: { get: (name: string) => (name === "conversation" ? session.conversation : undefined) },
     }
+    const cleanups: (() => void)[] = []
     const scope = {
-      effect: (fn: () => unknown) => fn(),
+      effect: (fn: () => unknown) => {
+        const off = fn()
+        if (typeof off === "function") cleanups.push(off as () => void)
+      },
       slots: {
         inject(_name: string, run: () => Generator<unknown>) {
           for (const _ of run()) {
@@ -178,6 +186,8 @@ beforeAll(async () => {
       },
       sidebarRight: {
         openResource: (address: string, options: TailKit["opened"][number]["options"]) => {
+          // DSH refuses while the session's surface is not up yet.
+          if (session.refuse?.()) throw new Error("sidebarRight: no session surface is mounted")
           opened.push({ address, options })
         },
         mounted: session.mounted ?? { getSnapshot: () => "s1", subscribe: () => () => {} },
@@ -219,6 +229,7 @@ beforeAll(async () => {
       tabTypes,
       PaneTab: panes.get("sidebar.right.pane.tab"),
       PaneTitle: panes.get("sidebar.right.pane.tab.title"),
+      dispose: () => cleanups.splice(0).forEach((off) => off()),
     }
   }
 })
@@ -2687,7 +2698,7 @@ describe("dsh full screen — DSH's right sidebar", () => {
 })
 
 describe("dsh theme wall — opened while the turn waits", () => {
-  function store<T>(value: T): Store<T> & { set: (next: T) => void } {
+  function store<T>(value: T): Store<T> & { set: (next: T) => void; listeners: () => number } {
     const listeners = new Set<() => void>()
     return {
       getSnapshot: () => value,
@@ -2699,6 +2710,7 @@ describe("dsh theme wall — opened while the turn waits", () => {
         value = next
         for (const listener of [...listeners]) listener()
       },
+      listeners: () => listeners.size,
     }
   }
 
@@ -2716,47 +2728,142 @@ describe("dsh theme wall — opened while the turn waits", () => {
     }
   }
 
-  const wall = (id: string) => ({ address: `dsh-resource://pptwise/themes/${id}`, options: { kind: "pptwise", params: {} } })
+  /** Let the opener's deferred check run. */
+  const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
+  const wall = (id: string) => ({ address: `dsh-resource://pptwise/themes/${id}`, options: { kind: "pptwise", params: { quiet: true } } })
 
-  it("opens the wall the open turn draws, once, and leaves the outline in its card", () => {
+  it("opens the wall the open turn draws, once, and leaves the outline in its card", async () => {
     const s1 = session({ 3: [{ kind: "outline", tool: "pptwise_outline", id: "o-1" }] }, 3)
     const kit = makeTail({ sidebar: true, live: { s1 } })
+    await settle()
     expect(kit.opened).toEqual([])
     s1.draw(3, { id: "w-1" })
+    await settle()
     expect(kit.opened).toEqual([wall("w-1")])
     // Later changes to the same turn do not open it again, even after the user closed it.
     s1.draw(3, { kind: "deck", tool: "pptwise_build", id: "d-1" })
+    await settle()
     expect(kit.opened).toEqual([wall("w-1")])
   })
 
-  it("opens nothing for walls of turns that have ended", () => {
+  it("opens nothing for walls of turns that have ended", async () => {
     const s1 = session({ 1: [{ id: "old-1" }] }, undefined)
     const kit = makeTail({ sidebar: true, live: { s1 } })
     s1.openTurn.set(2)
+    await settle()
     expect(kit.opened).toEqual([])
     s1.draw(2, { id: "w-2" })
+    await settle()
     expect(kit.opened).toEqual([wall("w-2")])
   })
 
-  it("follows the session on screen, and a wall it already opened stays as the user left it", () => {
+  it("reads a replayed history only once the open turn has caught up with it", async () => {
+    // A reconnect replaces the history: DSH publishes the chat, which now
+    // holds the wall and the turn's end, and only then closes the open turn.
+    const s1 = session({}, 1)
+    const kit = makeTail({ sidebar: true, live: { s1 } })
+    await settle()
+    s1.draw(1, { id: "w-offline" })
+    s1.openTurn.set(undefined)
+    await settle()
+    expect(kit.opened).toEqual([])
+  })
+
+  it("tries a refused wall again once the sidebar can take it, and gives up after a few seconds", async () => {
+    vi.useFakeTimers()
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      let refusing = true
+      const s1 = session({ 2: [{ id: "w-cold" }] }, 2)
+      const kit = makeTail({ sidebar: true, live: { s1 }, refuse: () => refusing })
+      await act(async () => { vi.advanceTimersByTime(1000) })
+      expect(kit.opened).toEqual([])
+      refusing = false
+      await act(async () => { vi.advanceTimersByTime(300) })
+      expect(kit.opened).toEqual([wall("w-cold")])
+      kit.dispose()
+
+      // A sidebar that never comes up is asked a bounded number of times.
+      warn.mockClear()
+      const s2 = session({ 1: [{ id: "w-never" }] }, 1)
+      const never = makeTail({ sidebar: true, live: { s1: s2 }, refuse: () => true })
+      await act(async () => { vi.advanceTimersByTime(60_000) })
+      expect(never.opened).toEqual([])
+      expect(warn.mock.calls.filter(([line]) => String(line).includes("would not open")).length).toBe(21)
+      expect(vi.getTimerCount()).toBe(0)
+      never.dispose()
+    } finally {
+      warn.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it("follows the session on screen, and a wall it already opened stays as the user left it", async () => {
     const s1 = session({ 1: [{ id: "w-1" }] }, 1)
     const s2 = session({}, 4)
     const mounted = store<string | undefined>("s1")
     const kit = makeTail({ sidebar: true, live: { s1, s2 }, mounted })
+    await settle()
     expect(kit.opened).toEqual([wall("w-1")])
     mounted.set("s2")
     s1.draw(1, { id: "w-1b" })
+    await settle()
     expect(kit.opened).toEqual([wall("w-1")])
+    expect(s1.chat.listeners()).toBe(0)
     s2.draw(4, { id: "w-4" })
+    await settle()
     expect(kit.opened).toEqual([wall("w-1"), wall("w-4")])
     mounted.set("s1")
+    await settle()
     // Back on s1, the wall drawn while away opens, the first one does not.
     expect(kit.opened).toEqual([wall("w-1"), wall("w-4"), wall("w-1b")])
+    kit.dispose()
+    expect([mounted.listeners(), s1.chat.listeners(), s1.openTurn.listeners(), s2.chat.listeners()]).toEqual([0, 0, 0, 0])
   })
 
-  it("keeps quiet in a shell that reports no open turn", () => {
+  it("leaves nothing subscribed when the session changes while the opener is still subscribing", async () => {
+    const s1 = session({}, 1)
+    const s2 = session({}, 1)
+    const mounted = store<string | undefined>("s1")
+    // DSH may call a new subscriber at once. Here that call switches the session.
+    const subscribe = s1.chat.subscribe
+    s1.chat.subscribe = (listener) => {
+      const off = subscribe(listener)
+      if (mounted.getSnapshot() === "s1") mounted.set("s2")
+      return off
+    }
+    const kit = makeTail({ sidebar: true, live: { s1, s2 }, mounted })
+    await settle()
+    expect([s1.chat.listeners(), s1.openTurn.listeners()]).toEqual([0, 0])
+    expect([s2.chat.listeners(), s2.openTurn.listeners()]).toEqual([1, 1])
+    kit.dispose()
+    expect([s2.chat.listeners(), s2.openTurn.listeners()]).toEqual([0, 0])
+  })
+
+  it("opens the wall without taking the keyboard, and takes it when the user opens the wall", async () => {
+    const kit = makeTail({ sidebar: true })
+    fetchMock.mockImplementation(async () => routeAnswer({ status: 200, json: { title: "黄州", slide: { width: 1280, height: 720 }, themes: [{ id: "ink", name: "Ink", pages: [page(1, "cover")] }] } }))
+    const answer = document.createElement("textarea")
+    document.body.appendChild(answer)
+    answer.focus()
+    const PaneTab = kit.PaneTab!
+    const address = "dsh-resource://pptwise/themes/w-1"
+    const info = (params: { quiet?: boolean }, revision: number) => () => ({
+      sidebar: { expanded: true, fullscreen: false },
+      tab: { title: "Themes", navigation: { address, params, revision }, actions: { close: vi.fn() } },
+    })
+    const { container, rerender } = render(<PaneTab useTabInfo={info({ quiet: true }, 1)} />)
+    await waitFor(() => expect(container.querySelector('[data-pptwise-wall="w-1"] [data-theme="ink"]')).not.toBeNull())
+    expect(document.activeElement).toBe(answer)
+    rerender(<PaneTab useTabInfo={info({}, 2)} />)
+    expect(document.activeElement).toBe(container.querySelector('[data-pptwise-wall="w-1"]'))
+    answer.remove()
+  })
+
+  it("keeps quiet in a shell that reports no open turn", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const kit = makeTail({ sidebar: true, snapshot: { nodes: { turnDataSource: () => ({ getSnapshot: () => [{ kind: "themes", id: "w-1" }] }) } } })
+    await settle()
     expect(kit.opened).toEqual([])
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("no open turn"))
     warn.mockRestore()
