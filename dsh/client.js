@@ -2780,6 +2780,7 @@ window.__ModuleLoader__.load({
       })
       registerTail(ctx, cards.tail)
       registerViewer(ctx, cards)
+      registerWallOpener(ctx)
     }
 
     /**
@@ -2935,6 +2936,80 @@ window.__ModuleLoader__.load({
           console.error('[pptwise] full screen stays in the card: ' + error)
         }
       })
+    }
+
+    /**
+     * Open a theme wall in the sidebar as soon as the running turn draws it.
+     * The wall's card sits with the turn's steps, which DSH folds while the
+     * turn runs, and the card under the turn appears only once the turn has
+     * ended. A turn that draws a wall then waits on the user's pick would
+     * otherwise ask about pictures nobody can see. Only the open turn of the
+     * session on screen counts, so scrolling back through history opens
+     * nothing, and each wall opens once: a user who closes it keeps it closed.
+     */
+    function registerWallOpener(ctx) {
+      if (typeof ctx.inject !== 'function') return
+      ctx.inject(['sidebarRight', 'sessions', 'uiConversation'], function (scope) {
+        try {
+          scope.effect(function () {
+            return watchWalls(scope)
+          }, 'pptwise: theme wall opener')
+        } catch (error) {
+          console.warn('[pptwise] theme walls stay in their cards: ' + error)
+        }
+      })
+    }
+
+    function watchWalls(scope) {
+      var mounted = scope.sidebarRight.mounted
+      if (!mounted || typeof mounted.subscribe !== 'function') throw new Error('no session-on-screen store')
+      var opened = new Set()
+      var leave = function () {}
+
+      function follow() {
+        leave()
+        leave = function () {}
+        var sessionId = mounted.getSnapshot()
+        if (sessionId === undefined) return
+        var binding = scope.sessions.binding(sessionId)
+        if (binding === undefined) return
+        var conversation = scope.uiConversation.binding(binding)
+        var chat = conversation.target('chat')
+        var openTurn = conversation.openTurn
+        if (!openTurn || typeof openTurn.subscribe !== 'function' || typeof chat.subscribe !== 'function') {
+          console.warn('[pptwise] this shell reports no open turn, theme walls stay in their cards')
+          return
+        }
+        function check() {
+          var turn = openTurn.getSnapshot()
+          var snapshot = chat.getSnapshot()
+          if (turn === undefined || snapshot === undefined) return
+          var list = snapshot.nodes.turnDataSource(Number(turn), ARTIFACT_KIND).getSnapshot()
+          var wall = null
+          for (var i = 0; i < list.length; i++) {
+            var entry = list[i]
+            if (entry && entry.kind === 'themes' && entry.id && !opened.has(entry.id)) {
+              opened.add(entry.id)
+              wall = entry
+            }
+          }
+          if (wall) openInSidebar({ view: 'themes', id: wall.id })
+        }
+        var offChat = chat.subscribe(check)
+        var offTurn = openTurn.subscribe(check)
+        leave = function () {
+          offChat()
+          offTurn()
+        }
+        check()
+      }
+
+      var offMounted = mounted.subscribe(follow)
+      follow()
+      return function () {
+        offMounted()
+        leave()
+      }
     }
 
     /**

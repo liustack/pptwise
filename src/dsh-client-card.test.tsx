@@ -67,7 +67,19 @@ interface TabInfo {
   sidebar: { expanded: boolean; fullscreen: boolean }
   tab: { title: string; navigation: { address: string; params?: { page?: number; version?: number }; revision: number }; actions: { close: () => void } }
 }
-let makeTail: (session?: { conversation?: unknown; snapshot?: unknown; sidebar?: boolean; primitives?: Record<string, unknown> | null }) => TailKit
+/** A store the way DSH hands one over: a current value and a way to hear it change. */
+interface Store<T> { getSnapshot: () => T; subscribe: (listener: () => void) => () => void }
+interface TailSession {
+  conversation?: unknown
+  snapshot?: unknown
+  sidebar?: boolean
+  primitives?: Record<string, unknown> | null
+  /** The session on screen, `s1` by default. */
+  mounted?: Store<string | undefined>
+  /** Each session's chat target and open turn, for the theme wall opener. */
+  live?: Record<string, { chat: Store<unknown>; openTurn: Store<number | undefined> }>
+}
+let makeTail: (session?: TailSession) => TailKit
 
 beforeAll(async () => {
   let captured: { factory: (require: (id: string) => unknown) => unknown } | null = null
@@ -142,7 +154,10 @@ beforeAll(async () => {
     const tabTypes: TailKit["tabTypes"] = []
     const panes = new Map<string, React.ComponentType<{ useTabInfo: () => TabInfo }>>()
     let tail: { component: TailKit["Tail"]; descriptor: { inject: TailKit["inject"]; name: string } } | undefined
-    const binding = { ctx: { get: (name: string) => (name === "conversation" ? session.conversation : undefined) } }
+    const binding: { id?: string; ctx: { get: (name: string) => unknown } } = {
+      id: session.live?.s1 ? "s1" : undefined,
+      ctx: { get: (name: string) => (name === "conversation" ? session.conversation : undefined) },
+    }
     const scope = {
       effect: (fn: () => unknown) => fn(),
       slots: {
@@ -165,7 +180,7 @@ beforeAll(async () => {
         openResource: (address: string, options: TailKit["opened"][number]["options"]) => {
           opened.push({ address, options })
         },
-        mounted: { getSnapshot: () => "s1" },
+        mounted: session.mounted ?? { getSnapshot: () => "s1", subscribe: () => () => {} },
       },
       sidebarRightTabs: {
         register: (definition: TailKit["tabTypes"][number]) => {
@@ -175,16 +190,21 @@ beforeAll(async () => {
       },
       uiConversation: {
         events: { register: (definition: unknown) => { registeredDefinitions.push(definition); return () => {} } },
-        binding: () => ({ target: () => ({ getSnapshot: () => session.snapshot }) }),
+        binding: (bound: { id?: string }) => {
+          const live = bound.id === undefined ? undefined : session.live?.[bound.id]
+          if (live) return { target: () => live.chat, openTurn: live.openTurn }
+          return { target: () => ({ getSnapshot: () => session.snapshot }) }
+        },
       },
-      sessions: { binding: (id: string) => (id === "s1" ? binding : undefined) },
+      sessions: { binding: (id: string) => (id === "s1" ? binding : session.live?.[id] ? { id, ctx: binding.ctx } : undefined) },
     }
     exportsObj.apply({
       slots: scope.slots,
       inject(names: string[], cb: (scope: unknown) => void) {
-        if (names.includes("uiConversation")) cb(scope)
-        // A shell without the right sidebar never applies the viewer's half.
-        if (names.includes("sidebarRight") && session.sidebar) cb(scope)
+        // A shell without the right sidebar never applies the halves that need it.
+        if (names.includes("sidebarRight")) {
+          if (session.sidebar) cb(scope)
+        } else if (names.includes("uiConversation")) cb(scope)
       },
     })
     if (!tail) throw new Error("the plugin registered no turn tail")
@@ -2663,6 +2683,83 @@ describe("dsh full screen — DSH's right sidebar", () => {
     })
     expect(within(compare as HTMLElement).getByText("Version 1 → version 2")).toBeInTheDocument()
     expect(document.activeElement).toBe(compare)
+  })
+})
+
+describe("dsh theme wall — opened while the turn waits", () => {
+  function store<T>(value: T): Store<T> & { set: (next: T) => void } {
+    const listeners = new Set<() => void>()
+    return {
+      getSnapshot: () => value,
+      subscribe: (listener) => {
+        listeners.add(listener)
+        return () => listeners.delete(listener)
+      },
+      set: (next) => {
+        value = next
+        for (const listener of [...listeners]) listener()
+      },
+    }
+  }
+
+  /** One session's chat: the pptwise entries each turn holds, and its open turn. */
+  function session(turns: Record<number, Partial<TailEntry>[]>, open: number | undefined) {
+    const entries = (turn: number) => (turns[turn] ?? []).map((over, i) => ({ callId: "c" + i, tool: "pptwise_themes", kind: "themes", id: "w", target: "", version: 1, priorId: null, ...over }))
+    const chat = store<unknown>({ nodes: { turnDataSource: (turn: number, kind: string) => ({ getSnapshot: () => (kind === "pptwise-artifact" ? entries(turn) : []) }) } })
+    return {
+      chat,
+      openTurn: store<number | undefined>(open),
+      draw(turn: number, over: Partial<TailEntry>) {
+        turns[turn] = [...(turns[turn] ?? []), over]
+        chat.set({ ...(chat.getSnapshot() as object) })
+      },
+    }
+  }
+
+  const wall = (id: string) => ({ address: `dsh-resource://pptwise/themes/${id}`, options: { kind: "pptwise", params: {} } })
+
+  it("opens the wall the open turn draws, once, and leaves the outline in its card", () => {
+    const s1 = session({ 3: [{ kind: "outline", tool: "pptwise_outline", id: "o-1" }] }, 3)
+    const kit = makeTail({ sidebar: true, live: { s1 } })
+    expect(kit.opened).toEqual([])
+    s1.draw(3, { id: "w-1" })
+    expect(kit.opened).toEqual([wall("w-1")])
+    // Later changes to the same turn do not open it again, even after the user closed it.
+    s1.draw(3, { kind: "deck", tool: "pptwise_build", id: "d-1" })
+    expect(kit.opened).toEqual([wall("w-1")])
+  })
+
+  it("opens nothing for walls of turns that have ended", () => {
+    const s1 = session({ 1: [{ id: "old-1" }] }, undefined)
+    const kit = makeTail({ sidebar: true, live: { s1 } })
+    s1.openTurn.set(2)
+    expect(kit.opened).toEqual([])
+    s1.draw(2, { id: "w-2" })
+    expect(kit.opened).toEqual([wall("w-2")])
+  })
+
+  it("follows the session on screen, and a wall it already opened stays as the user left it", () => {
+    const s1 = session({ 1: [{ id: "w-1" }] }, 1)
+    const s2 = session({}, 4)
+    const mounted = store<string | undefined>("s1")
+    const kit = makeTail({ sidebar: true, live: { s1, s2 }, mounted })
+    expect(kit.opened).toEqual([wall("w-1")])
+    mounted.set("s2")
+    s1.draw(1, { id: "w-1b" })
+    expect(kit.opened).toEqual([wall("w-1")])
+    s2.draw(4, { id: "w-4" })
+    expect(kit.opened).toEqual([wall("w-1"), wall("w-4")])
+    mounted.set("s1")
+    // Back on s1, the wall drawn while away opens, the first one does not.
+    expect(kit.opened).toEqual([wall("w-1"), wall("w-4"), wall("w-1b")])
+  })
+
+  it("keeps quiet in a shell that reports no open turn", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const kit = makeTail({ sidebar: true, snapshot: { nodes: { turnDataSource: () => ({ getSnapshot: () => [{ kind: "themes", id: "w-1" }] }) } } })
+    expect(kit.opened).toEqual([])
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no open turn"))
+    warn.mockRestore()
   })
 })
 
