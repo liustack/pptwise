@@ -2008,7 +2008,7 @@ function themesSummary(value) {
   const lines = [
     `pptwise-themes:${value.wallId} · drew ${value.themeCount} theme${value.themeCount === 1 ? '' : 's'} for "${value.title}", a cover and one content page each`,
     `Numbered on the wall: ${value.themes.map((theme, i) => `${i + 1} ${theme.id}`).join(', ')}.`,
-    'The wall opens beside the conversation, for the user to look at while they answer. Ask which theme they want with ask_user_question, in the same message as the outline and the picture direction, one option per theme in this order, each label starting with its number ("1 brief"), or, if they left the choice to you, name the one you picked and keep going. Name a theme by its number and id, never by where the wall sits on screen: no "above" or "below". Do not describe the pages or tell them to open a URL.',
+    'The wall opens in the sidebar, for the user to look at while they answer. Ask which theme they want with ask_user_question, in the same message as the outline and the picture direction, one option per theme in this order, each label starting with its number ("1 brief"), or, if they left the choice to you, name the one you picked and keep going. Name a theme by its number and id, never by where the wall sits on screen: no "above" or "below". Do not describe the pages or tell them to open a URL.',
   ]
   value.themes.forEach((theme, i) => {
     if (theme.base === undefined) return
