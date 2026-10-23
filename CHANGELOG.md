@@ -1,5 +1,20 @@
 # @liustack/pptwise
 
+## 0.49.0 - 2026-10-23
+
+### Minor Changes
+
+- acb9c43: `pptwise doctor` now has a Content packs section. With a license configured it makes one catalog request and says how many theme packs `pptwise sync` would install or update, or that the saved key is unknown, revoked, or held while its purchase is reviewed. A server it cannot reach is reported as not checked and never fails the report. `--json` carries the result as `packs`. Without a license it asks no server.
+- b2b70dd: `pptwise login [key]` checks a license key with the pack server, saves it, and installs the content packs it covers in one step. A key the server does not know or has revoked is not saved. A key whose purchase is still being reviewed is saved, and `pptwise packs sync` installs the packs once the review clears, which `packs sync` now also says when it meets such a key. `pptwise logout` removes the saved key and leaves installed packs in place.
+- 96b04c4: `pptwise self-update` now syncs content packs with the version it just installed when a license is configured, so packs that need the new version arrive in the same step. A sync that fails prints a note and leaves the update's own result alone.
+- 0e90902: `pptwise sync` installs or updates the content packs your license covers, the same as `pptwise packs sync`. The top-level help now shows `login`, `sync`, and `logout` for content packs. `license set/status/clear` and `packs sync/list` keep working and leave the help. Every hint that said `pptwise packs sync` now says `pptwise sync`, and a hint for a missing license points at `pptwise login <key>`.
+
+### Patch Changes
+
+- 55332b0: The docs, the skill, the CLI help, and its messages write the product name as PPTwise. Commands, the package name, the domain, file names, and config ids stay lowercase `pptwise`.
+- aea3b7e: `pptwise_themes` and `pptwise_outline` no longer tell the model the user is looking at their cards. The model now names themes by number and id instead of pointing to "the themes above", and puts the outline's page list in the question itself, since the outline card folds away with the turn's steps.
+- 86ab319: In DSH, a theme wall drawn during a turn now opens in the right sidebar right away. Before, its card sat with the turn's steps, which DSH folds while the turn runs, so a turn that drew the wall and then asked which theme to use showed the question with no pictures. Each wall opens once, only for the turn still running in the session on screen, and without taking the keyboard from the question being answered.
+
 ## 0.48.0 - 2026-10-16
 
 ### Minor Changes

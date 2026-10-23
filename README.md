@@ -65,7 +65,7 @@ Issues are welcome any time. [Open one](https://github.com/liustack/pptwise/issu
 
 > Install PPTwise following https://raw.githubusercontent.com/liustack/pptwise/main/INSTALL-dsh.md, then run the health check and tell me the result.
 
-**Adding it yourself in DeepSeek Harness Desktop?** Open **Plugins**, choose **Add plugin**, and enter the package name `@liustack/pptwise@0.48.0`, not the GitHub address. The GitHub source does not carry the built engine, so a plugin added from it installs but cannot make a deck.
+**Adding it yourself in DeepSeek Harness Desktop?** Open **Plugins**, choose **Add plugin**, and enter the package name `@liustack/pptwise@0.49.0`, not the GitHub address. The GitHub source does not carry the built engine, so a plugin added from it installs but cannot make a deck.
 
 There is no step 2. Your AI puts the skill folder where your harness reads it, and the skill brings its own version-pinned launcher, so there is no CLI to install by hand. PPTwise renders a PPTX entirely locally: no API key, no account, nothing to configure for render. Optional stock-photo search needs the user's own Pexels key. The only prerequisite is Node 22.19+ (or Bun).
 

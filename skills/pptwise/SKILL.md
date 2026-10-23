@@ -27,8 +27,8 @@ The launcher tries a compatible `pptwise` on `PATH`, then `npx`, then `bunx`. It
 If scripts are unavailable, use the first available route:
 
 1. `pptwise <args>` when the installed version is compatible with the pin: on a 0.x pin, the same major and minor and a patch at or above it. On 1.0 and later, the same major and at or above the pin.
-2. `npx --yes --package @liustack/pptwise@0.48.0 pptwise <args>`.
-3. `bunx --bun @liustack/pptwise@0.48.0 <args>`.
+2. `npx --yes --package @liustack/pptwise@0.49.0 pptwise <args>`.
+3. `bunx --bun @liustack/pptwise@0.49.0 <args>`.
 4. Otherwise ask the user to install Node 22.19+ or Bun.
 
 Run `pptwise doctor` after installation and whenever a failure is not explained by its own error. Relay the result instead of guessing. Content packs are installed at setup, not per deck. When the user has a license, `pptwise login <key>` is the installation step: it checks the key with the pack server, saves it, and installs the packs. Relay its answer. A key whose purchase is still being reviewed is saved, and `pptwise sync` installs the packs once the review clears. `pptwise sync` runs again only when the user asks to update packs, a review clears, the license changes, or `pptwise doctor` reports packs that can be updated. These are the only commands that write the PPTwise home folder (`~/.pptwise`), with `pptwise logout` and `config set`. Making a deck writes nothing there, so it works in a sandbox whose home folder is read-only. Never run `login`, `sync`, or `logout` as part of a deck task.

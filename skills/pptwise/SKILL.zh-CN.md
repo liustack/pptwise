@@ -29,8 +29,8 @@ powershell -ExecutionPolicy Bypass -File <skill-dir>\scripts\run.ps1 <args>  # W
 无法执行脚本时，使用第一条可行路径：
 
 1. 已安装版本与钉定版本兼容时，运行 `pptwise <args>`。钉定版本为 0.x 时要求主版本和次版本都相同，补丁版本不低于钉定值。1.0 及以后要求主版本相同，且不低于钉定版本。
-2. `npx --yes --package @liustack/pptwise@0.48.0 pptwise <args>`。
-3. `bunx --bun @liustack/pptwise@0.48.0 <args>`。
+2. `npx --yes --package @liustack/pptwise@0.49.0 pptwise <args>`。
+3. `bunx --bun @liustack/pptwise@0.49.0 <args>`。
 4. 都不可用时，请用户安装 Node 22.19+ 或 Bun。
 
 安装后运行 `pptwise doctor`。某个失败无法由错误信息本身解释时也先运行它。转告结果，不要猜。内容包在安装时装好，不按 deck 装。用户有 license 时，安装步骤是 `pptwise login <key>`：它向包服务器校验 key、保存 key 并装好内容包，转告它的结果。付款还在审核中的 key 会先保存，审核通过后由 `pptwise sync` 安装内容包。之后只在用户要求更新内容包、审核通过、换了 license，或 `pptwise doctor` 报告有包可更新时再跑 `pptwise sync`。除了 `pptwise logout` 和 `config set`，只有这几条命令会写 PPTwise 主目录（`~/.pptwise`）。做 deck 的过程一次都不写那里，所以主目录只读的沙箱里也能做。不要在 deck 任务里运行 `login`、`sync` 或 `logout`。
