@@ -340,7 +340,7 @@ describe("pptwise_themes", () => {
     expect(value.themes.at(-1)).toEqual({ id: "brief-brand", label: "BRIEF · brand", base: "brief", brand: "#C8102E" })
     matchesSchema(value, svc.themesTool.output.schema)
     const text = svc.themesTool.output.render({}, value)[0]!.text
-    expect(text).toContain("In the card, numbered: 1 brief, 2 swiss, 3 crayon, 4 brief-brand.")
+    expect(text).toContain("Numbered on the wall: 1 brief, 2 swiss, 3 crayon, 4 brief-brand.")
     expect(text).toContain(
       "4 brief-brand is brief repainted in the brand colors #C8102E. If the user picks it, run `pptwise theme fork brief --brand '#C8102E' -o <deck-dir>/theme.json --id <deck theme id>` and set that id as the spec's theme.",
     )
@@ -363,8 +363,12 @@ describe("pptwise_themes", () => {
 
     expect(text.split("\n")[0]).toBe(`pptwise-themes:${value.wallId} · drew 3 themes for "Q3 review", a cover and one content page each`)
     expect(text).toMatch(/Ask which theme they want/)
-    expect(text.split("\n")[1]).toBe("In the card, numbered: 1 brief, 2 swiss, 3 crayon.")
+    expect(text.split("\n")[1]).toBe("Numbered on the wall: 1 brief, 2 swiss, 3 crayon.")
     expect(text).toMatch(/one option per theme in this order, each label starting with its number/)
+    // The question box docks under the chat and the wall opens in the sidebar:
+    // a question that says "the themes above" points at nothing.
+    expect(text).not.toMatch(/is looking at them/)
+    expect(text).toContain('never by where the wall sits on screen: no "above" or "below"')
     expect(text).toContain("note: crayon left out its content (points) page: kind: not offered")
     expect(svc.themesTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-themes", wallId: value.wallId })
   })
@@ -696,6 +700,10 @@ describe("pptwise_outline", () => {
     expect(lines[0]).toBe(`pptwise-outline:${value.outlineId} · 4 pages, theme "brief"`)
     expect(lines[2]).toBe("2. [content/points] 本周完成 (三件事)")
     expect(text).toContain("ask_user_question")
+    // The card folds away with the turn's steps while the question waits, so
+    // the question carries the pages itself.
+    expect(text).toContain("with the page list in the question itself, one line per page")
+    expect(text).not.toMatch(/The user sees this outline/)
     expect(svc.outlineTool.output.presentationMeta({}, value)).toEqual({ card: "pptwise-outline", outlineId: value.outlineId })
 
     const bundle = await request(handler, `${route}/${value.outlineId}`)
